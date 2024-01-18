@@ -53,8 +53,6 @@ CPMAddPackage(expected
     TartanLlama/expected
     GIT_TAG v1.1.0)
 
-#find_package(tl)
-
 set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED

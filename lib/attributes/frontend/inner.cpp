@@ -31,7 +31,7 @@ struct InnerAttribute : public ParsedAttrInfo {
     return true;
   }
 };
-} // namespace okl
+} 
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::InnerAttribute> register_okl_inner(oklt::INNER_ATTR_NAME,

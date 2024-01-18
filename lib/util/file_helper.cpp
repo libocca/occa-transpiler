@@ -34,4 +34,4 @@ llvm::Error write_file_as_str(const std::filesystem::path &src_path,  std::strin
   return llvm::Error::success();
 }
 
-} // namespace okl::util
+} ::util

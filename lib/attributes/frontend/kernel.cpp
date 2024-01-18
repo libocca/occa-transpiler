@@ -47,7 +47,7 @@ struct KernelAttribute : public ParsedAttrInfo {
 
   std::vector<Expr *> mutable _attr_args;
 };
-} // namespace okl
+} 
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::KernelAttribute> register_okl_kernel(oklt::KERNEL_ATTR_NAME,

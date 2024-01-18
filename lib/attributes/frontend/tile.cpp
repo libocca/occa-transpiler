@@ -30,7 +30,7 @@ struct TileAttribute : public ParsedAttrInfo {
     return true;
   }
 };
-} // namespace okl
+} 
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::TileAttribute> register_okl_tile(oklt::TILE_ATTR_NAME, "");

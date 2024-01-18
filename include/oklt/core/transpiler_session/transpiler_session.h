@@ -51,7 +51,4 @@ protected:
   AttributeManager &_attrManager;
   std::any _userCtx;
 };
-
-
-
 }

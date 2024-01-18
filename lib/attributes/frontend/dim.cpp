@@ -46,7 +46,7 @@ struct DimAttribute : public ParsedAttrInfo {
   }
   std::vector<Expr *> mutable _attr_args;
 };
-} // namespace okl
+} 
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::DimAttribute> register_okl_sim(oklt::DIM_ATTR_NAME, "");

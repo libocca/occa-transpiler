@@ -42,7 +42,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
     return AttrHandling::AttributeApplied;
   }
 };
-} // namespace okl
+} 
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::RestrictAttribute>

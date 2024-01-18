@@ -34,7 +34,7 @@ struct BarrierAttribute : public ParsedAttrInfo {
     return true;
   }
 };
-} // namespace okl
+} 
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::BarrierAttribute>
