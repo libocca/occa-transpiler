@@ -3,17 +3,19 @@
 namespace oklt {
 using namespace clang;
 
-void CommonAttributeMap::registerHandler(std::string &&name, AttrDeclHandler &&handler) {
-  _declHandlers.insert(std::make_pair(std::move(name), std::move(handler)));
+bool CommonAttributeMap::registerHandler(std::string name, AttrDeclHandler handler) {
+  auto ret = _declHandlers.insert(std::make_pair(std::move(name), std::move(handler)));
+  return ret.second;
 }
 
-void CommonAttributeMap::registerHandler(std::string &&name, AttrStmtHandler &&handler) {
-   _stmtHandlers.insert(std::make_pair(std::move(name), std::move(handler)));
+bool CommonAttributeMap::registerHandler(std::string name, AttrStmtHandler handler) {
+  auto ret = _stmtHandlers.insert(std::make_pair(std::move(name), std::move(handler)));
+  return ret.second;
 }
 
 bool CommonAttributeMap::handleAttr(const Attr *attr,
                                     const Decl *decl,
-                                    TranspileSession &session)
+                                    SessionStage &session)
 {
   std::string name = attr->getNormalizedFullName();
   auto it = _declHandlers.find(name);
@@ -25,7 +27,7 @@ bool CommonAttributeMap::handleAttr(const Attr *attr,
 
 bool CommonAttributeMap::handleAttr(const Attr *attr,
                                     const Stmt *stmt,
-                                    TranspileSession &session)
+                                    SessionStage &session)
 {
   std::string name = attr->getNormalizedFullName();
   auto it = _stmtHandlers.find(name);

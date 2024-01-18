@@ -1,11 +1,11 @@
 #include "oklt/core/ast_traversal/ast_visitor.h"
-#include "oklt/core/transpile_session/transpile_session.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
 
 namespace oklt {
 using namespace clang;
 
-ASTVisitor::ASTVisitor(TranspileSession &session)
+ASTVisitor::ASTVisitor(SessionStage &session)
     :_session(session)
 {}
 
@@ -27,9 +27,9 @@ bool ASTVisitor::TraverseStmt(Stmt *stmt, DataRecursionQueue *queue) {
                                                                stmt,
                                                                _session);
   if(!expectedAttr) {
-    auto &errorReporter = _session.getErrorReporter();
+    // auto &errorReporter = _session.getErrorReporter();
     auto errorDescription = toString(expectedAttr.takeError());
-    errorReporter.emitError(stmt->getSourceRange(),errorDescription);
+    // errorReporter.emitError(stmt->getSourceRange(),errorDescription);
     return false;
   }
   const Attr* attr = expectedAttr.get();
@@ -46,9 +46,9 @@ bool ASTVisitor::VisitFunctionDecl(FunctionDecl *funcDecl) {
                                                                     funcDecl,
                                                                     _session);
   if(!expectedAttr) {
-    auto &errorReporter = _session.getErrorReporter();
+    // auto &errorReporter = _session.getErrorReporter();
     auto errorDescription = toString(expectedAttr.takeError());
-    errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
+    // errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
     return false;
   }
   const Attr* attr = expectedAttr.get();
@@ -65,9 +65,9 @@ bool ASTVisitor::VisitVarDecl(VarDecl *varDecl) {
                                                                      varDecl,
                                                                      _session);
   if(!expectedAttr) {
-    auto &errorReporter = _session.getErrorReporter();
+    // auto &errorReporter = _session.getErrorReporter();
     auto errorDescription = toString(expectedAttr.takeError());
-    errorReporter.emitError(varDecl->getSourceRange(),errorDescription);
+    // errorReporter.emitError(varDecl->getSourceRange(),errorDescription);
     return false;
   }
   const Attr* attr = expectedAttr.get();

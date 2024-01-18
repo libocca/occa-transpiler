@@ -16,19 +16,19 @@ public:
   BackendAttributeMap() = default;
   ~BackendAttributeMap() = default;
 
-  void registerHandler(KeyType &&key,
-                       AttrDeclHandler &&handler);
-  void registerHandler(KeyType &&key,
-                       AttrStmtHandler &&handler);
+  bool registerHandler(KeyType key,
+                       AttrDeclHandler handler);
+  bool registerHandler(KeyType key,
+                       AttrStmtHandler handler);
 
   bool handleAttr(const clang::Attr *attr,
                   const clang::Decl *decl,
-                  TranspileSession &session);
+                  SessionStage &session);
   bool handleAttr(const clang::Attr *attr,
                   const clang::Stmt *stmt,
-                  TranspileSession &session);
+                  SessionStage &session);
 
-  bool hasAttrHandler(TranspileSession &session, const std::string &name);
+  bool hasAttrHandler(SessionStage &session, const std::string &name);
 
 private:
   DeclHandlers _declHandlers;

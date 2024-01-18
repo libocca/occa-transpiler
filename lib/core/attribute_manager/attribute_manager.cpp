@@ -1,5 +1,5 @@
 #include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/transpile_session/transpile_session.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 using namespace clang;
@@ -9,32 +9,32 @@ AttributeManager &AttributeManager::instance() {
   return attrManager;
 }
 
-void AttributeManager::registerHandler(std::string &&name,
-                                       AttrDeclHandler &&handler)
+bool AttributeManager::registerHandler(std::string name,
+                                       AttrDeclHandler handler)
 {
-  _commonAttrs.registerHandler(std::move(name), std::move(handler));
+  return _commonAttrs.registerHandler(std::move(name), std::move(handler));
 }
 
-void AttributeManager::registerHandler(std::string &&name, AttrStmtHandler &&handler)
+bool AttributeManager::registerHandler(std::string name, AttrStmtHandler handler)
 {
-  _commonAttrs.registerHandler(std::move(name), std::move(handler));
+  return _commonAttrs.registerHandler(std::move(name), std::move(handler));
 }
 
-void AttributeManager::registerHandler(BackendAttributeMap::KeyType &&key,
-                                       AttrDeclHandler &&handler)
+bool AttributeManager::registerHandler(BackendAttributeMap::KeyType key,
+                                       AttrDeclHandler handler)
 {
-  _backendAttrs.registerHandler(std::move(key), std::move(handler));
+  return _backendAttrs.registerHandler(std::move(key), std::move(handler));
 }
 
-void AttributeManager::registerHandler(BackendAttributeMap::KeyType &&key,
-                                       AttrStmtHandler &&handler)
+bool AttributeManager::registerHandler(BackendAttributeMap::KeyType key,
+                                       AttrStmtHandler handler)
 {
-  _backendAttrs.registerHandler(std::move(key), std::move(handler));
+  return _backendAttrs.registerHandler(std::move(key), std::move(handler));
 }
 
 bool AttributeManager::handleAttr(const Attr* attr,
                                   const Decl *decl,
-                                  TranspileSession &session)
+                                  SessionStage &session)
 {
   std::string name = attr->getNormalizedFullName();
   if(_commonAttrs.hasAttrHandler(name)) {
@@ -48,7 +48,7 @@ bool AttributeManager::handleAttr(const Attr* attr,
 
 bool AttributeManager::handleAttr(const Attr* attr,
                                   const Stmt *stmt,
-                                  TranspileSession &session)
+                                  SessionStage &session)
 {
   std::string name = attr->getNormalizedFullName();
   if(_commonAttrs.hasAttrHandler(name)) {
@@ -62,7 +62,7 @@ bool AttributeManager::handleAttr(const Attr* attr,
 
 llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec &attrs,
                                                const Decl *decl,
-                                               TranspileSession &session)
+                                               SessionStage &session)
 {
   std::list<Attr*> collectedAttrs;
   for(auto &attr: attrs) {
@@ -90,7 +90,7 @@ llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec &a
 
 llvm::Expected<const Attr*> AttributeManager::checkAttrs(const ArrayRef<const Attr*> &attrs,
                                          const Stmt *decl,
-                                         TranspileSession &session)
+                                         SessionStage &session)
 {
   std::list<const Attr*> collectedAttrs;
   for(auto &attr: attrs) {

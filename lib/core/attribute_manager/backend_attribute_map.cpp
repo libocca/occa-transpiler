@@ -1,48 +1,50 @@
 #include "oklt/core/attribute_manager/backend_attribute_map.h"
-#include "oklt/core/transpile_session/transpile_session.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 using namespace clang;
 
-void BackendAttributeMap::registerHandler(KeyType &&key,
-                     AttrDeclHandler &&handler)
+bool BackendAttributeMap::registerHandler(KeyType key,
+                     AttrDeclHandler handler)
 {
-  _declHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+  auto ret = _declHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+  return ret.second;
 }
 
-void BackendAttributeMap::registerHandler(KeyType &&key,
-                     AttrStmtHandler &&handler)
+bool BackendAttributeMap::registerHandler(KeyType key,
+                     AttrStmtHandler handler)
 {
-  _stmtHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+  auto ret = _stmtHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+  return ret.second;
 }
 
 bool BackendAttributeMap::handleAttr(const Attr *attr,
                                      const Decl *decl,
-                                     TranspileSession &session)
+                                     SessionStage &session)
 {
   std::string name = attr->getNormalizedFullName();
   auto backend = session.getBackend();
   auto it = _declHandlers.find(std::make_tuple(backend, name));
-  if(it != _declHandlers.end()) {
-    return it->second.handle(attr, decl, session);
+  if(it == _declHandlers.end()) {
+    return false;
   }
-  return false;
+  return it->second.handle(attr, decl, session);
 }
 
 bool BackendAttributeMap::handleAttr(const Attr *attr,
                                      const Stmt *stmt,
-                                     TranspileSession &session)
+                                     SessionStage &session)
 {
   std::string name = attr->getNormalizedFullName();
   auto backend = session.getBackend();
   auto it = _stmtHandlers.find(std::make_tuple(backend, name));
-  if(it != _stmtHandlers.end()) {
-    return it->second.handle(attr, stmt, session);
+  if(it == _stmtHandlers.end()) {
+    return false;
   }
-  return false;
+  return it->second.handle(attr, stmt, session);
 }
 
-bool BackendAttributeMap::hasAttrHandler(TranspileSession &session,
+bool BackendAttributeMap::hasAttrHandler(SessionStage &session,
                                          const std::string &name)
 {
   auto key = std::make_tuple(session.getBackend(), name);

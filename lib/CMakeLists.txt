@@ -12,8 +12,7 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/backend_attribute_map.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/common_attribute_map.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpile_session/error_reporter.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpile_session/transpile_session.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/transpiler_session.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/config.h
@@ -40,8 +39,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/backend_attribute_map.cpp
     core/attribute_manager/common_attribute_map.cpp
 
-    core/transpile_session/error_reporter.cpp
-    core/transpile_session/transpile_session.cpp
+    core/transpiler_session/transpiler_session.cpp
     core/transpile.cpp
 
     core/utils/format.cpp
@@ -49,6 +47,13 @@ set (OCCA_TRANSPILER_SOURCES
     util/file_helper.cpp
 
 )
+
+CPMAddPackage(expected
+    GITHUB_REPOSITORY
+    TartanLlama/expected
+    GIT_TAG v1.1.0)
+
+#find_package(tl)
 
 set(LLVM_LINK_COMPONENTS Support)
 
@@ -68,6 +73,8 @@ target_include_directories(occa-transpiler
 )
 
 target_link_libraries(occa-transpiler
+    PUBLIC
+        tl::expected
     PRIVATE
         clangAST
         clangBasic

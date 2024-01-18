@@ -21,24 +21,26 @@ public:
 
   static AttributeManager &instance();
 
-  void registerHandler(std::string &&name, AttrDeclHandler &&handler);
-  void registerHandler(std::string &&name, AttrStmtHandler &&handler);
+  bool registerHandler(std::string name, AttrDeclHandler handler);
+  bool registerHandler(std::string name, AttrStmtHandler handler);
 
-  void registerHandler(BackendAttributeMap::KeyType &&key, AttrDeclHandler &&handler);
-  void registerHandler(BackendAttributeMap::KeyType &&key, AttrStmtHandler &&handler);
+  bool registerHandler(BackendAttributeMap::KeyType key, AttrDeclHandler handler);
+  bool registerHandler(BackendAttributeMap::KeyType key, AttrStmtHandler handler);
 
-  bool handleAttr(const clang::Attr* attr, const clang::Decl *decl, TranspileSession &session);
-  bool handleAttr(const clang::Attr* attr, const clang::Stmt *stmt, TranspileSession &session);
+  bool handleAttr(const clang::Attr* attr, const clang::Decl *decl, SessionStage &session);
+  bool handleAttr(const clang::Attr* attr, const clang::Stmt *stmt, SessionStage &session);
 
   llvm::Expected<const clang::Attr*> checkAttrs(const clang::AttrVec &attrs,
                                           const clang::Decl *decl,
-                                          TranspileSession &session);
+                                          SessionStage &session);
   llvm::Expected<const clang::Attr*> checkAttrs(const clang::ArrayRef<const clang::Attr*> &attrs,
                                            const clang::Stmt *decl,
-                                           TranspileSession &session);
+                                           SessionStage &session);
 private:
   //INFO: here should not be the same named attributes in both
   //      might need to handle uniqueness
+
+  //INFO: if build AttributeViwer just wrap into shared_ptr and copy it
   CommonAttributeMap _commonAttrs;
   BackendAttributeMap _backendAttrs;
 };

@@ -1,15 +1,49 @@
 #pragma once
 
 #include "oklt/core/config.h"
-
+#include "tl/expected.hpp"
+#include <optional>
 #include <filesystem>
 #include <iosfwd>
+#include <list>
+#include <filesystem>
 
-namespace okl {
-bool transpile(std::ostream &error_stream,
-               const std::filesystem::path &source_file,
-               const std::filesystem::path &output_file,
-               TRANSPILER_TYPE targetBackend,
-               bool need_normalization = true);
+//ADD SIDE LIB FOR expected ?
+
+namespace oklt {
+struct TranspilerResult {
+  struct {
+    std::string outCode;
+    std::string metadataJson;
+  } kernel;
+
+  struct {
+    std::string outCode;
+    std::string metadataJson;
+  }launcher;
+};
+
+struct TranspilerInput {
+  //INFO: add
+  // 1. metadata
+  // 2. include directlries
+  // 3. defines
+  // 4. source path ???
+  // 5. error handler ??
+  std::string sourceCode;
+  std::filesystem::path sourcePath;
+  std::list<std::filesystem::path> inlcudeDirectories;
+  std::list<std::string> defines;
+  TRANSPILER_TYPE targetBackend;
+  bool normalization;
+};
+
+//TODO: needs definition
+struct Error {
+  //INFO: temporary solution to have somethign at least
+  std::string desription;
+};
+
+tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input);
 }
 

@@ -14,11 +14,11 @@ public:
   CommonAttributeMap() = default;
   ~CommonAttributeMap() = default;
 
-  void registerHandler(std::string &&name, AttrDeclHandler &&handler);
-  void registerHandler(std::string &&name, AttrStmtHandler &&handler);
+  bool registerHandler(std::string name, AttrDeclHandler handler);
+  bool registerHandler(std::string name, AttrStmtHandler handler);
 
-  bool handleAttr(const clang::Attr *attr, const clang::Decl *decl, TranspileSession &session);
-  bool handleAttr(const clang::Attr *attr, const clang::Stmt *stmt, TranspileSession &session);
+  bool handleAttr(const clang::Attr *attr, const clang::Decl *decl, SessionStage &session);
+  bool handleAttr(const clang::Attr *attr, const clang::Stmt *stmt, SessionStage &session);
 
   bool hasAttrHandler(const std::string &name);
 

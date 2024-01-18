@@ -14,54 +14,49 @@ using namespace llvm;
 using namespace clang;
 using namespace clang::tooling;
 
-namespace okl {
-bool transpile(std::ostream &error_stream,
-               const std::filesystem::path &source_file,
-               const std::filesystem::path &output_file,
-               TRANSPILER_TYPE targetBackend,
-               bool need_normalization)
+namespace oklt {
+
+tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input)
 {
-    if(!std::filesystem::exists(source_file)) {
-        error_stream << "File not found" << std::endl;
-        return false;
-    }
-    std::shared_ptr<PCHContainerOperations> PCHContainerOps = std::make_shared<PCHContainerOperations>();
+  Twine tool_name = "okl-transpiler";
+  std::string rawFileName = input.sourcePath.filename().string();
+  Twine file_name(rawFileName);
+  std::vector<std::string> args = {
+      "-std=c++17",
+      "-fparse-all-comments",
+      "-I."
+  };
 
-    Twine tool_name = "okl-transpiler";
-    std::string rawFileName = source_file.filename().string();
-    Twine file_name(rawFileName);
-    std::vector<std::string> args = {
-        "-std=c++17",
-        "-fparse-all-comments",
-        "-I."
-    };
+  std::string sourceCode;
+  if(input.normalization) {
+    //TODO: needs implementation
+    //        //TODO add option for nomalizer method
+    //        //TODO error handing
+    //        sourceCode = okl::apply_gnu_attr_based_normalization(source_file).get();
+    //        //sourceCode = okl::normalize(source_file);
+  } else {
+    sourceCode = input.sourceCode;
+  }
 
-    std::string sourceCode;
-    if(need_normalization) {
-//TODO: needs implementation
-//        //TODO add option for nomalizer method
-//        //TODO error handing
-//        sourceCode = okl::apply_gnu_attr_based_normalization(source_file).get();
-//        //sourceCode = okl::normalize(source_file);
-    } else {
-        std::ifstream ifs(source_file.string());
-        if(ifs) {
-            sourceCode = {std::istreambuf_iterator<char>(ifs), {}};
-        } else {
-            return false;
-        }
-    }
+  oklt::TranspilerSession session {input.targetBackend};
 
-    Twine code(sourceCode);
-    std::ofstream ofs(output_file.string());
-    std::unique_ptr<oklt::TranspileFrontendAction> action = std::make_unique<oklt::TranspileFrontendAction>(targetBackend, ofs);
+  Twine code(sourceCode);
+  std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
+  std::unique_ptr<oklt::TranspileFrontendAction> action =
+      std::make_unique<oklt::TranspileFrontendAction>(session);
 
-    return runToolOnCodeWithArgs(std::move(action),
-                                 code,
-                                 args,
-                                 file_name,
-                                 tool_name,
-                                 std::move(PCHContainerOps));
+  bool ret = runToolOnCodeWithArgs(std::move(action),
+                               code,
+                               args,
+                               file_name,
+                               tool_name,
+                               std::move(pchOps));
+  if(ret) {
+    TranspilerResult result;
+    result.kernel.outCode = session.transpiledCode;
+    return result;
+  }
+  return tl::unexpected(std::vector<Error>{});
 }
 }
 

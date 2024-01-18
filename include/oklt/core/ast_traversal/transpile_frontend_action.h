@@ -1,22 +1,20 @@
 #pragma once
 
-#include "oklt/core/config.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 #include <clang/Frontend/FrontendAction.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <ostream>
+
 
 namespace oklt {
 class TranspileFrontendAction: public clang::ASTFrontendAction {
 public:
-  explicit TranspileFrontendAction(TRANSPILER_TYPE backendType,
-                                   std::ostream &output);
+  explicit TranspileFrontendAction(TranspilerSession &session);
   ~TranspileFrontendAction() override = default;
 
 protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &compiler, llvm::StringRef in_file) override;
 private:
-  TRANSPILER_TYPE _backend;
-  std::ostream &_output;
+  TranspilerSession &_session;
 };
 }

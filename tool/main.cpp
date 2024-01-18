@@ -3,9 +3,8 @@
 // #include <oklt/normalizer/MarkerBasedNormalizer.h>
 
 #include "oklt/core/transpile.h"
-
 #include <argparse/argparse.hpp>
-
+#include <fstream>
 #include <iostream>
 #include <filesystem>
 
@@ -75,19 +74,38 @@ int main(int argc, char *argv[]) {
             std::cout << "Normalization step is not implemented yet" << std::endl;
             return 0;
         } else {
-            auto input = std::filesystem::path(transpile_command.get("-i"));
+            auto source_path = std::filesystem::path(transpile_command.get("-i"));
             auto backend = backendFromString(transpile_command.get("-b"));
             auto need_normalize = transpile_command.get<bool>("--normalize");
             auto output = std::filesystem::path(transpile_command.get("-o"));
             if(output.empty()) {
-                output = build_output_filename(input);
+                output = build_output_filename(source_path);
             }
-            bool ret = okl::transpile(std::cout,
-                                      input,
-                                      output,
-                                      backend,
-                                      need_normalize);
-            std::cout << "Transpiling success :" << std::boolalpha << ret << std::endl;
+            if(need_normalize) {
+              std::cout << "Normalization step is not implemented yet" << std::endl;
+              return 0;
+            }
+
+            std::ifstream ifs(source_path.string());
+            std::string sourceCode {std::istreambuf_iterator<char>(ifs), {}};
+
+            oklt::TranspilerInput transpilerParams {
+                .sourceCode = sourceCode,
+                .sourcePath = source_path,
+                .inlcudeDirectories {},
+                .defines = {},
+                .targetBackend = backend,
+                .normalization = need_normalize
+            };
+            auto ret = oklt::transpile(transpilerParams);
+            if(ret) {
+              std::cout << "Transpiling success : true" << std::endl;
+            } else {
+              std::cout << "Transpiling errors: " << std::endl;
+              for(const auto &error: ret.error()) {
+                std::cout << error.desription << std::endl;
+              }
+            }
         }
     } catch(const std::exception &ex) {
         std::cout << "Parse arguments: " << ex.what() << std::endl;

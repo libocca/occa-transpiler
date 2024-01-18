@@ -5,11 +5,11 @@
 
 namespace oklt {
 
-class TranspileSession;
+class SessionStage;
 
 class ASTVisitor : public clang::RecursiveASTVisitor<ASTVisitor> {
 public:
-  explicit ASTVisitor(TranspileSession &session);
+  explicit ASTVisitor(SessionStage &session);
   virtual ~ASTVisitor() = default;
 
   bool TraverseDecl(clang::Decl *decl);
@@ -20,7 +20,7 @@ public:
   bool VisitVarDecl(clang::VarDecl *varDecl);
 
 protected:
-  TranspileSession &_session;
+  SessionStage &_session;
 };
 
 }

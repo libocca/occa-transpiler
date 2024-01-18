@@ -5,19 +5,19 @@
 
 namespace oklt {
 
-class TranspileSession;
+class SessionStage;
 
 class AttrStmtHandler {
 public:
-  using ParamsParserType = std::function<bool(const clang::Attr *, TranspileSession &)>;
-  using HandleType = std::function<bool(const clang::Attr*, const clang::Stmt*, TranspileSession &)>;
+  using ParamsParserType = std::function<bool(const clang::Attr *, SessionStage &)>;
+  using HandleType = std::function<bool(const clang::Attr*, const clang::Stmt*, SessionStage &)>;
 
   AttrStmtHandler(ParamsParserType pp, HandleType h);
   ~AttrStmtHandler() = default;
 
-  bool handle(const clang::Attr* attr, const clang::Stmt*, TranspileSession &session);
+  bool handle(const clang::Attr* attr, const clang::Stmt*, SessionStage &session);
 protected:
-  bool parseParams(const clang::Attr*, TranspileSession &session);
+  bool parseParams(const clang::Attr*, SessionStage &session);
 private:
   ParamsParserType _paramsParser;
   HandleType _handler;

@@ -1,5 +1,5 @@
 #include "oklt/core/attribute_manager/attr_stmt_handler.h"
-#include "oklt/core/transpile_session/transpile_session.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 using namespace clang;
@@ -10,7 +10,7 @@ AttrStmtHandler::AttrStmtHandler(ParamsParserType pp, HandleType h)
 
 bool AttrStmtHandler::handle(const clang::Attr *attr,
                              const clang::Stmt *stmt,
-                             TranspileSession &session)
+                             SessionStage &session)
 {
   if(parseParams(attr, session)) {
     return _handler(attr, stmt, session);
@@ -18,7 +18,7 @@ bool AttrStmtHandler::handle(const clang::Attr *attr,
   return false;
 }
 
-bool AttrStmtHandler::parseParams(const clang::Attr *attr, TranspileSession &session)
+bool AttrStmtHandler::parseParams(const clang::Attr *attr, SessionStage &session)
 {
   return _paramsParser(attr, session);
 }

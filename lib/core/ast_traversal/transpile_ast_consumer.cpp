@@ -3,11 +3,8 @@
 namespace oklt {
 using namespace clang;
 
-TranspileASTConsumer::TranspileASTConsumer(
-    TranspilerConfig &&config,
-    ASTContext &ctx)
-    :_config(std::move(config))
-    ,_session(_config, ctx)
+TranspileASTConsumer::TranspileASTConsumer(SessionStage session)
+    :_session(std::move(session))
     ,_visitor(_session)
 {}
 
