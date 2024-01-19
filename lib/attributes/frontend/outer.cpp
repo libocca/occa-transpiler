@@ -35,4 +35,4 @@ struct OuterAttribute : public ParsedAttrInfo {
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::OuterAttribute> register_okl_outer(oklt::OUTER_ATTR_NAME,
                                                                            "");
-} 
+} // namespace okl

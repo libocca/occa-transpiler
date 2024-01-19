@@ -1,9 +1,7 @@
 #include "oklt/core/attribute_names.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/Attr.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
-#include "clang/Sema/SemaDiagnostic.h"
+#include "clang/Basic/DiagnosticSema.h"
 
 using namespace clang;
 
@@ -34,9 +32,8 @@ struct BarrierAttribute : public ParsedAttrInfo {
     return true;
   }
 };
-} 
+} // namespace okl
 
-// INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::BarrierAttribute>
     register_okl_barrier(oklt::BARRIER_ATTR_NAME, "");
 

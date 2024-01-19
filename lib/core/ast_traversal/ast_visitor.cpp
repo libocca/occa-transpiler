@@ -10,7 +10,25 @@ ASTVisitor::ASTVisitor(SessionStage &session)
 {}
 
 bool ASTVisitor::TraverseDecl(Decl *decl) {
-  return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
+  if(!decl->hasAttrs()) {
+    return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
+  }
+  auto &attrManager = _session.getAttrManager();
+  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(decl->getAttrs(),
+                                                                    decl,
+                                                                    _session);
+  if(!expectedAttr) {
+    // auto &errorReporter = _session.getErrorReporter();
+    auto errorDescription = toString(expectedAttr.takeError());
+    // errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
+    return false;
+  }
+  const Attr* attr = expectedAttr.get();
+  //INFO: no OKL attributes to process, continue
+  if(!attr) {
+    return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
+  }
+  return attrManager.handleAttr(attr, decl, _session);
 }
 
 bool ASTVisitor::TraverseStmt(Stmt *stmt, DataRecursionQueue *queue) {
@@ -39,43 +57,4 @@ bool ASTVisitor::TraverseStmt(Stmt *stmt, DataRecursionQueue *queue) {
   }
   return attrManager.handleAttr(attr, subStmt, _session);
 }
-
-bool ASTVisitor::VisitFunctionDecl(FunctionDecl *funcDecl) {
-  auto &attrManager = _session.getAttrManager();
-  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(funcDecl->getAttrs(),
-                                                                    funcDecl,
-                                                                    _session);
-  if(!expectedAttr) {
-    // auto &errorReporter = _session.getErrorReporter();
-    auto errorDescription = toString(expectedAttr.takeError());
-    // errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
-    return false;
-  }
-  const Attr* attr = expectedAttr.get();
-  //INFO: no OKL attributes to process, continue
-  if(!attr) {
-    return true;
-  }
-  return attrManager.handleAttr(attr, funcDecl, _session);
-}
-
-bool ASTVisitor::VisitVarDecl(VarDecl *varDecl) {
-  auto &attrManager = _session.getAttrManager();
-  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(varDecl->getAttrs(),
-                                                                     varDecl,
-                                                                     _session);
-  if(!expectedAttr) {
-    // auto &errorReporter = _session.getErrorReporter();
-    auto errorDescription = toString(expectedAttr.takeError());
-    // errorReporter.emitError(varDecl->getSourceRange(),errorDescription);
-    return false;
-  }
-  const Attr* attr = expectedAttr.get();
-  //INFO: no OKL attributes to process, continue
-  if(!attr) {
-    return true;
-  }
-  return attrManager.handleAttr(attr, varDecl, _session);
-}
-
 }

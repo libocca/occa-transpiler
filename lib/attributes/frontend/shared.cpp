@@ -14,10 +14,10 @@ static constexpr ParsedAttrInfo::Spelling SHARED_ATTRIBUTE_SPELLINGS[] = {
 
 struct SharedAttribute : public ParsedAttrInfo {
   SharedAttribute() {
-    NumArgs = 0;
+    NumArgs = 1;
     OptArgs = 0;
     Spellings = SHARED_ATTRIBUTE_SPELLINGS;
-    //AttrKind = clang::AttributeCommonInfo::AT_Suppress;
+    AttrKind = clang::AttributeCommonInfo::AT_Annotate;
   }
 
   bool diagAppertainsToDecl(clang::Sema &sema, const clang::ParsedAttr &attr,
@@ -32,14 +32,8 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
     return true;
   }
-
-  AttrHandling handleDeclAttribute(Sema &s, Decl *d, const ParsedAttr &a) const override {
-    //d->addAttr(AnnotateAttr::Create(s.Context, okl::SHARED_ATTR_NAME, nullptr, 0, a));
-
-    return AttrHandling::AttributeApplied;
-  }
 };
-} 
+}
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::SharedAttribute> register_okl_shared(oklt::SHARED_ATTR_NAME,

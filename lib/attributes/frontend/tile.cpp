@@ -1,16 +1,14 @@
 #include "oklt/core/attribute_names.h"
-#include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Basic/DiagnosticSema.h"
 
 using namespace clang;
 
 namespace oklt {
 
 static constexpr ParsedAttrInfo::Spelling TILE_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "tile"},
-    {ParsedAttr::AS_CXX11, TILE_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_tile"}};
+    {ParsedAttr::AS_CXX11, "tile"}, {ParsedAttr::AS_CXX11, TILE_ATTR_NAME}};
 
 struct TileAttribute : public ParsedAttrInfo {
   TileAttribute() {
@@ -30,7 +28,7 @@ struct TileAttribute : public ParsedAttrInfo {
     return true;
   }
 };
-} 
+} // namespace oklt
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::TileAttribute> register_okl_tile(oklt::TILE_ATTR_NAME, "");

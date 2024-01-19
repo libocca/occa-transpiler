@@ -17,6 +17,7 @@ struct DimAttribute : public ParsedAttrInfo {
     NumArgs = 1;
     OptArgs = 6;
     Spellings = DIM_ATTRIBUTE_SPELLINGS;
+    AttrKind = clang::AttributeCommonInfo::AT_Annotate;
   }
 
   bool diagAppertainsToDecl(clang::Sema &sema, const clang::ParsedAttr &attr,
@@ -33,21 +34,8 @@ struct DimAttribute : public ParsedAttrInfo {
     }
     return true;
   }
-
-  AttrHandling handleDeclAttribute(Sema &s, Decl *d, const ParsedAttr &a) const override {
-    _attr_args.resize(a.getNumArgs());
-    for (int i = 0; i < a.getNumArgs(); i++) {
-      _attr_args[i] = a.getArgAsExpr(i);
-    }
-    d->addAttr(
-        AnnotateAttr::Create(s.Context, DIM_ATTR_NAME, _attr_args.data(), _attr_args.size(), a));
-
-    return AttrHandling::AttributeApplied;
-  }
-  std::vector<Expr *> mutable _attr_args;
 };
-} 
+}
 
-// INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::DimAttribute> register_okl_sim(oklt::DIM_ATTR_NAME, "");
 

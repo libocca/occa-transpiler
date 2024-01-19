@@ -51,12 +51,12 @@ tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput inpu
                                file_name,
                                tool_name,
                                std::move(pchOps));
-  if(ret) {
-    TranspilerResult result;
-    result.kernel.outCode = session.transpiledCode;
-    return result;
+  if(!ret) {
+    return tl::unexpected(std::vector<Error>{});
   }
-  return tl::unexpected(std::vector<Error>{});
+  TranspilerResult result;
+  result.kernel.outCode = session.transpiledCode;
+  return result;
 }
 }
 

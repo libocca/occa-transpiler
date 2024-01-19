@@ -14,9 +14,10 @@ static constexpr ParsedAttrInfo::Spelling RESTRICT_ATTRIBUTE_SPELLINGS[] = {
 
 struct RestrictAttribute : public ParsedAttrInfo {
   RestrictAttribute() {
-    NumArgs = 0;
+    NumArgs = 1;
     OptArgs = 0;
     Spellings = RESTRICT_ATTRIBUTE_SPELLINGS;
+    AttrKind = clang::AttributeCommonInfo::AT_Annotate;
   }
 
   bool diagAppertainsToDecl(clang::Sema &sema, const clang::ParsedAttr &attr,
@@ -35,14 +36,8 @@ struct RestrictAttribute : public ParsedAttrInfo {
     }
     return true;
   }
-
-  AttrHandling handleDeclAttribute(Sema &s, Decl *d, const ParsedAttr &a) const override {
-    d->addAttr(AnnotateAttr::Create(s.Context, oklt::RESTRICT_ATTR_NAME, nullptr, 0, a));
-
-    return AttrHandling::AttributeApplied;
-  }
 };
-} 
+}
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::RestrictAttribute>

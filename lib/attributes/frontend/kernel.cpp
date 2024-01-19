@@ -1,6 +1,4 @@
 #include "oklt/core/attribute_names.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/Attr.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Basic/DiagnosticSema.h"
@@ -15,9 +13,10 @@ static constexpr ParsedAttrInfo::Spelling KERNEL_ATTRIBUTE_SPELLINGS[] = {
 
 struct KernelAttribute : public ParsedAttrInfo {
   KernelAttribute() {
-    NumArgs = 0;
+    NumArgs = 1;
     OptArgs = 1;
     Spellings = KERNEL_ATTRIBUTE_SPELLINGS;
+    AttrKind = clang::AttributeCommonInfo::AT_Annotate;
   }
 
   bool diagAppertainsToDecl(clang::Sema &sema, const clang::ParsedAttr &attr,
@@ -32,22 +31,8 @@ struct KernelAttribute : public ParsedAttrInfo {
     }
     return true;
   }
-
-  AttrHandling handleDeclAttribute(Sema &s, Decl *d, const ParsedAttr &a) const override {
-    _attr_args.resize(a.getNumArgs());
-    for (int i = 0; i < a.getNumArgs(); i++) {
-      _attr_args[i] = a.getArgAsExpr(i);
-    }
-
-    d->addAttr(AnnotateAttr::Create(s.Context, oklt::KERNEL_ATTR_NAME, _attr_args.data(),
-                                    _attr_args.size(), a));
-
-    return AttrHandling::AttributeApplied;
-  }
-
-  std::vector<Expr *> mutable _attr_args;
 };
-} 
+} // namespace okl
 
 // INFO: can be moved to main
 static ParsedAttrInfoRegistry::Add<oklt::KernelAttribute> register_okl_kernel(oklt::KERNEL_ATTR_NAME,
