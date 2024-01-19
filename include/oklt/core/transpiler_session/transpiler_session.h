@@ -1,6 +1,6 @@
 #pragma once
 
-#include <clang/AST/ASTContext.h>
+#include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include "oklt/core/config.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
@@ -25,30 +25,29 @@ struct TranspilerSession {
 //      that is built for current session with set of interested attribute handlers
 class SessionStage {
 public:
-  explicit SessionStage(TranspilerSession &globalSession,
-                        clang::ASTContext &ctx);
+  explicit SessionStage(TranspilerSession &session,
+                        clang::CompilerInstance &compiler);
   ~SessionStage() = default;
 
+  clang::CompilerInstance &getCompiler();
+
   clang::Rewriter& getRewriter();
-  void setAstVisitor(ASTVisitor *visitor);
-  ASTVisitor *getVisitor();
+  std::string getRewriterResult();
+
   [[nodiscard]] TRANSPILER_TYPE getBackend() const;
   AttributeManager &getAttrManager();
-  [[nodiscard]] const AttributeManager &getAttrManager() const;
-  void writeTranspiledSource();
 
   //TODO: might need better redesign by design patterns
-  void setUserCtx(std::any userCtx);
-  std::any &getUserCtx();
-  [[nodiscard]] const std::any &getUserCtx() const;
+  bool setUserCtx(const std::string& key, std::any ctx);
+  std::any getUserCtx(const std::string& key);
 
 protected:
-  TranspilerSession &_globalSession;
-  //INFO: might be redunt here
-  clang::ASTContext &_ctx;
+  TranspilerSession &_session;
+
+  clang::CompilerInstance &_compiler;
   clang::Rewriter _rewriter;
-  ASTVisitor *_astVisitor;
-  AttributeManager &_attrManager;
-  std::any _userCtx;
+
+  //XXX discuss key
+  std::map<std::string, std::any> _userCtxMap;
 };
 }

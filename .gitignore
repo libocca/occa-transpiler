@@ -16,6 +16,9 @@
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
+### Vimspector debugger
+.vimspector.*
+
 # Local History for Visual Studio Code
 .history/
 

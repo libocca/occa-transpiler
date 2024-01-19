@@ -12,7 +12,6 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext &context)
 {
   TranslationUnitDecl *tu = context.getTranslationUnitDecl();
   _visitor.TraverseDecl(tu);
-  _session.writeTranspiledSource();
 }
 
 }
