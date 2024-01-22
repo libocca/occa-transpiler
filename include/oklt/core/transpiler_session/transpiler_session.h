@@ -37,6 +37,8 @@ public:
   [[nodiscard]] TRANSPILER_TYPE getBackend() const;
   AttributeManager &getAttrManager();
 
+  void addDiagnosticMessage(clang::StoredDiagnostic &&message);
+
   //TODO: might need better redesign by design patterns
   bool setUserCtx(const std::string& key, std::any ctx);
   std::any getUserCtx(const std::string& key);
@@ -46,6 +48,8 @@ protected:
 
   clang::CompilerInstance &_compiler;
   clang::Rewriter _rewriter;
+
+  llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
 
   //XXX discuss key
   std::map<std::string, std::any> _userCtxMap;

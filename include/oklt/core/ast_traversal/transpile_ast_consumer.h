@@ -8,10 +8,10 @@ namespace oklt {
 
 class TranspileASTConsumer : public clang::ASTConsumer {
 public:
-  explicit TranspileASTConsumer(SessionStage session);
+  explicit TranspileASTConsumer(SessionStage &session);
   void HandleTranslationUnit(clang::ASTContext &context) override;
 private:
-  SessionStage _session;
+  SessionStage &_session;
   ASTVisitor _visitor;
 };
 
