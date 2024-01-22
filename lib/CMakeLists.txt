@@ -18,7 +18,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/config.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpile.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/file_helper.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/util/io_helper.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/dim.cpp
@@ -44,8 +46,12 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/utils/format.cpp
 
-    util/file_helper.cpp
+    util/io_helper.cpp
 
+    pipeline/stages/normalizer/normalizer.cpp
+    pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
+    pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
+    pipeline/stages/normalizer/impl/okl_attr_traverser.cpp
 )
 
 CPMAddPackage(expected

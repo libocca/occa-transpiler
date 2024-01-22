@@ -13,7 +13,7 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(
     CompilerInstance &compiler, llvm::StringRef in_file)
 {
   return std::make_unique<TranspileASTConsumer>(
-      SessionStage { _session, compiler.getASTContext()});
+      SessionStage { _session, compiler});
 }
 
 }

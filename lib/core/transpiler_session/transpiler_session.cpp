@@ -1,73 +1,60 @@
-#include <clang/Basic/SourceManager.h>
-
 #include "oklt/core/transpiler_session/transpiler_session.h"
 #include "oklt/core/utils/format.h"
 
+#include <clang/Basic/SourceManager.h>
 
 namespace oklt {
 using namespace clang;
 
 TranspilerSession::TranspilerSession(TRANSPILER_TYPE backend)
-  :targetBackend(backend)
-  ,transpiledCode()
-{}
+    : targetBackend(backend), transpiledCode() {}
 
+SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
+    : _session(session),
+      _compiler(compiler),
+      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()) {}
 
-SessionStage::SessionStage(TranspilerSession &globalSession,
-                                     ASTContext &ctx)
-    :_globalSession(globalSession)
-    , _ctx(ctx)
-    ,_rewriter(ctx.getSourceManager(), ctx.getLangOpts())
-    ,_astVisitor(nullptr)
-    ,_attrManager(AttributeManager::instance())
-{}
-
+clang::CompilerInstance& SessionStage::getCompiler() {
+    return _compiler;
+}
 
 clang::Rewriter& SessionStage::getRewriter() {
-  return _rewriter;
+    return _rewriter;
 }
 
-void SessionStage::setAstVisitor(ASTVisitor *visitor) {
-  _astVisitor = visitor;
+AttributeManager& SessionStage::getAttrManager() {
+    return AttributeManager::instance();
 }
 
-ASTVisitor *SessionStage::getVisitor() {
-  assert(_astVisitor == nullptr);
-  return _astVisitor;
+std::string SessionStage::getRewriterResult() {
+    auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
+    if (!rewriteBuf || rewriteBuf->size() == 0) {
+        return "";
+    }
+
+    return std::string{rewriteBuf->begin(), rewriteBuf->end()};
 }
 
 TRANSPILER_TYPE SessionStage::getBackend() const {
-  return _globalSession.targetBackend;
+    return _session.targetBackend;
 }
 
-AttributeManager &SessionStage::getAttrManager() {
-  return _attrManager;
+bool SessionStage::setUserCtx(const std::string& key, std::any userCtx) {
+    auto it = _userCtxMap.find(key);
+    if (it != _userCtxMap.end()) {
+        return false;
+    }
+
+    _userCtxMap.insert({key, std::move(userCtx)});
+    return true;
 }
 
-const AttributeManager &SessionStage::getAttrManager() const {
-  return _attrManager;
+std::any SessionStage::getUserCtx(const std::string& key) {
+    auto it = _userCtxMap.find(key);
+    if (it == _userCtxMap.end()) {
+        return std::any{};
+    }
+    return it->second;
 }
 
-void SessionStage::writeTranspiledSource() {
-  SourceManager &sm = _ctx.getSourceManager();
-  const RewriteBuffer* rb = _rewriter.getRewriteBufferFor(sm.getMainFileID());
-  if (!rb) {
-    return;
-  }
-  std::string modifiedCode = std::string(rb->begin(), rb->end());
-  _globalSession.transpiledCode = format(modifiedCode);
-}
-
-void SessionStage::setUserCtx(std::any userCtx) {
-  _userCtx = userCtx;
-}
-
-std::any &SessionStage::getUserCtx() {
-  return _userCtx;
-}
-
-const std::any &SessionStage::getUserCtx() const {
-  return _userCtx;
-}
-
-}
+}  // namespace oklt
