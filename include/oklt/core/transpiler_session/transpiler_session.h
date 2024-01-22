@@ -48,6 +48,7 @@ protected:
 
   clang::CompilerInstance &_compiler;
   clang::Rewriter _rewriter;
+  llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
 
   llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
 
