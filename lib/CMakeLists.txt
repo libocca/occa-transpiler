@@ -41,6 +41,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/transpiler_session/transpiler_session.cpp
     core/transpile.cpp
+    core/config.cpp
 
     core/utils/format.cpp
 

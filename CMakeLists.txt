@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(occa-transpiler VERSION 0.0.1 LANGUAGES C CXX)
 
-option(TRANSPILER_TESTS "build transpiler library tests" OFF)
+option(TRANSPILER_TESTS "build transpiler library tests" ON)
 option(STATIC_LIBCLANG "Link to a statically compiled version of LLVM/libclang." ON)
 
 # Add custom modules path

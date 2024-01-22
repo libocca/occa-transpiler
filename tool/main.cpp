@@ -3,6 +3,7 @@
 // #include <oklt/normalizer/MarkerBasedNormalizer.h>
 
 #include "oklt/core/transpile.h"
+#include "oklt/core/config.h"
 #include <argparse/argparse.hpp>
 #include <fstream>
 #include <iostream>
@@ -12,19 +13,6 @@ std::string build_output_filename(const std::filesystem::path &input_file_path) 
     std::string out_file = input_file_path.filename().stem().string() + "_transpiled" +
                            input_file_path.filename().extension().string();
     return out_file;
-}
-
-const std::map<std::string,  TRANSPILER_TYPE> BACKENDS_MAP = {
-    {"cuda", TRANSPILER_TYPE::CUDA},
-    {"openmp", TRANSPILER_TYPE::OPENMP}
-};
-
-TRANSPILER_TYPE backendFromString(const std::string &type) {
-    auto it = BACKENDS_MAP.find(type);
-    if(it != BACKENDS_MAP.end()) {
-        return it->second;
-    }
-    throw std::runtime_error("used not registed backend");
 }
 
 
@@ -75,7 +63,7 @@ int main(int argc, char *argv[]) {
             return 0;
         } else {
             auto source_path = std::filesystem::path(transpile_command.get("-i"));
-            auto backend = backendFromString(transpile_command.get("-b"));
+            auto backend = oklt::backendFromString(transpile_command.get("-b"));
             auto need_normalize = transpile_command.get<bool>("--normalize");
             auto output = std::filesystem::path(transpile_command.get("-o"));
             if(output.empty()) {
@@ -83,6 +71,10 @@ int main(int argc, char *argv[]) {
             }
             if(need_normalize) {
               std::cout << "Normalization step is not implemented yet" << std::endl;
+              return 0;
+            }
+            if(!backend) {
+              std::cout << "Unknown backend is provided" << std::endl;
               return 0;
             }
 
@@ -94,7 +86,7 @@ int main(int argc, char *argv[]) {
                 .sourcePath = source_path,
                 .inlcudeDirectories {},
                 .defines = {},
-                .targetBackend = backend,
+                .targetBackend = backend.value(),
                 .normalization = need_normalize
             };
             auto ret = oklt::transpile(transpilerParams);
