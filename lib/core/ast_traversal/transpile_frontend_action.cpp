@@ -27,6 +27,8 @@ void TranspileFrontendAction::ExecuteAction() {
 
   DiagnosticsEngine &Diagnostics = getCompilerInstance().getDiagnostics();
   Diagnostics.setClient(_diag.get(), false);
+
+  ASTFrontendAction::ExecuteAction();
 }
 
 }
