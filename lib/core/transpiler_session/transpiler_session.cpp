@@ -39,6 +39,10 @@ TRANSPILER_TYPE SessionStage::getBackend() const {
     return _session.targetBackend;
 }
 
+void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &&message) {
+  _diagMessages.emplace_back(message);
+}
+
 bool SessionStage::setUserCtx(const std::string& key, std::any userCtx) {
     auto it = _userCtxMap.find(key);
     if (it != _userCtxMap.end()) {

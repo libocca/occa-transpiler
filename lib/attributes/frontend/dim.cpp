@@ -1,4 +1,5 @@
 #include "oklt/core/attribute_names.h"
+#include "oklt/core/diag/diag_handler.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Basic/DiagnosticSema.h"
@@ -35,7 +36,26 @@ struct DimAttribute : public ParsedAttrInfo {
     return true;
   }
 };
+
+class DimDiagHandler: public DiagHandler {
+public:
+  DimDiagHandler() : DiagHandler(diag::err_typecheck_call_not_function) {};
+
+  bool HandleDiagnostic(SessionStage &session, DiagLevel Level, const Diagnostic &Info) override {
+    if (Info.getArgKind(0) != DiagnosticsEngine::ak_qualtype)
+      return false;
+
+    QualType QT = QualType::getFromOpaquePtr(reinterpret_cast<void *>(Info.getRawArg(0)));
+
+//  TODO: Add custom attribute storage functionality to SessionStage
+//    if (AttrContext(AST).hasAttr<DimAttr>(QT))
+//      return true;
+
+    return false;
+  }
+};
+
 }
 
 static ParsedAttrInfoRegistry::Add<oklt::DimAttribute> register_okl_sim(oklt::DIM_ATTR_NAME, "");
-
+static oklt::DiagHandlerRegistry::Add<oklt::DimDiagHandler> diag_dim("DimDiagHandler", "");
