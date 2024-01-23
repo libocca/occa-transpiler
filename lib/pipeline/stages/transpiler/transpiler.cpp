@@ -38,7 +38,7 @@ ExpectTranspilerResult transpile(const TranspileData &input,
                                tool_name,
                                std::move(pchOps));
   if(!ret) {
-    return tl::unexpected(std::vector<Error>{});
+    return tl::unexpected(std::move(session.diagMessages));
   }
   TranspilerResult result;
   result.kernel.outCode = session.transpiledCode;

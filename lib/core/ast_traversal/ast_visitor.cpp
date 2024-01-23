@@ -40,7 +40,7 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
     return true;
   }
   if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
-    return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt);
+    return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt, queue);
   }
 
   auto* attrStmt = cast<AttributedStmt>(stmt);
@@ -56,7 +56,7 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
   const Attr* attr = expectedAttr.get();
   // INFO: no OKL attributes to process, continue
   if (!attr) {
-    return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt);
+    return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt, queue);
   }
 
   const Stmt* subStmt = attrStmt->getSubStmt();
@@ -66,4 +66,33 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
 
   return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt, queue);
 }
+
+bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr *expr, DataRecursionQueue *queue) {
+  auto subExpr = expr->subExpressions();
+  if (subExpr.empty()) {
+    return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
+  }
+
+  auto declRefExpr = dyn_cast<DeclRefExpr>(subExpr[0]);
+  if (!declRefExpr) {
+    return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
+  }
+
+  auto &attrStore = _session.getAttrStore();
+  auto attrs = attrStore.get(declRefExpr->getType());
+
+  auto &attrManager = _session.getAttrManager();
+  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(attrs, expr, _session);
+  if(!expectedAttr) {
+    return false;
+  }
+
+  const Attr* attr = expectedAttr.get();
+  if (!attrManager.handleAttr(attr, expr, _session)) {
+    return false;
+  }
+
+  return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
+}
+
 }  // namespace oklt

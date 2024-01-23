@@ -13,7 +13,7 @@ using DiagLevel = clang::DiagnosticsEngine::Level;
 class DiagHandler {
   friend class DiagConsumer;
 public:
-  DiagHandler(unsigned id): _id(id) {};
+  explicit DiagHandler(unsigned id): _id(id) {};
   virtual ~DiagHandler() = default;
   virtual bool HandleDiagnostic(SessionStage &session, DiagLevel level, const clang::Diagnostic &info) = 0;
 protected:

@@ -10,8 +10,10 @@ class SessionStage;
 
 class DiagConsumer : public clang::DiagnosticConsumer {
 public:
-  DiagConsumer(SessionStage &session);
+  explicit DiagConsumer(SessionStage &session);
   ~DiagConsumer() override = default;
+
+  inline SessionStage &getSession() { return _session; };
 
   void HandleDiagnostic(clang::DiagnosticsEngine::Level Level, const clang::Diagnostic &Info) override;
 

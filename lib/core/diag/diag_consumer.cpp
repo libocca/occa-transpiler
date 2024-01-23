@@ -22,8 +22,7 @@ getDiagDiagHandleInstances() {
   return *DiagHandleInstances;
 }
 
-DiagConsumer::DiagConsumer(SessionStage &session): _session(session), clang::DiagnosticConsumer() {
-};
+DiagConsumer::DiagConsumer(SessionStage &session): _session(session), clang::DiagnosticConsumer() {};
 
 void DiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Diagnostic &Info) {
   // Accept only Warning, Error and Fatal
@@ -34,6 +33,10 @@ void DiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Di
     if (Ptr->_id == Info.getID() && Ptr->HandleDiagnostic(_session, DiagLevel, Info))
       return;
   }
+
+//  SmallString<256> OutStr;
+//  Info.FormatDiagnostic(OutStr);
+//  llvm::errs() << OutStr << "\n";
 
   _session.pushDiagnosticMessage(StoredDiagnostic(DiagLevel, Info));
   DiagnosticConsumer::HandleDiagnostic(DiagLevel, Info);

@@ -1,7 +1,9 @@
 #include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/diag/diag_consumer.h"
 #include "oklt/core/utils/format.h"
 
 #include <clang/Basic/SourceManager.h>
+#include <clang/AST/ParentMapContext.h>
 
 namespace oklt {
 using namespace clang;
@@ -12,7 +14,8 @@ TranspilerSession::TranspilerSession(TRANSPILER_TYPE backend)
 SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
     : _session(session),
       _compiler(compiler),
-      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()) {}
+      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()),
+      _attrStore(_compiler.getASTContext()) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
     return _compiler;
@@ -59,6 +62,18 @@ std::any SessionStage::getUserCtx(const std::string& key) {
         return std::any{};
     }
     return it->second;
+}
+
+SessionStage& getStageFromASTContext(clang::ASTContext& ast) {
+  // NOTE:
+  // There are a few stable references/pointer that can point to our controlled classes and structures.
+  // getSourceManager().getFileManager -- Reference to FileManager. Can exist only one.
+  // getDiagnostics().getClient() -- Pointer to DiagnosticConsumer. Multiplex.
+
+  auto diag = dynamic_cast<DiagConsumer *>(ast.getDiagnostics().getClient());
+  assert(diag);
+
+  return diag->getSession();
 }
 
 }  // namespace oklt

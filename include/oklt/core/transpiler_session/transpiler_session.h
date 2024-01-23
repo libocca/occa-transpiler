@@ -1,9 +1,12 @@
 #pragma once
 
+#include "oklt/core/transpile.h"
+#include "oklt/core/attribute_manager/attribute_manager.h"
+#include "oklt/core/attribute_manager/attribute_store.h"
+#include "oklt/core/config.h"
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
-#include "oklt/core/config.h"
-#include "oklt/core/attribute_manager/attribute_manager.h"
 
 #include <any>
 
@@ -17,6 +20,7 @@ struct TranspilerSession {
 
   TRANSPILER_TYPE targetBackend;
   std::string transpiledCode;
+  std::vector<Error> diagMessages;
   //INFO: add fields here
 };
 
@@ -36,8 +40,10 @@ public:
 
   [[nodiscard]] TRANSPILER_TYPE getBackend() const;
   AttributeManager &getAttrManager();
+  AttributeStore &getAttrStore() { return _attrStore; };
 
   void pushDiagnosticMessage(clang::StoredDiagnostic &&message);
+  const llvm::SmallVector<clang::StoredDiagnostic>& getDiagnosticMessages() { return _diagMessages; };
 
   //TODO: might need better redesign by design patterns
   bool setUserCtx(const std::string& key, std::any ctx);
@@ -48,9 +54,13 @@ protected:
 
   clang::CompilerInstance &_compiler;
   clang::Rewriter _rewriter;
+  AttributeStore _attrStore;
   llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
 
   //XXX discuss key
   std::map<std::string, std::any> _userCtxMap;
 };
+
+SessionStage& getStageFromASTContext(clang::ASTContext &);
+
 }

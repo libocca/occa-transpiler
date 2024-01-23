@@ -14,6 +14,7 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_decl_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_stmt_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_manager.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_store.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/backend_attribute_map.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/common_attribute_map.h
 
@@ -53,6 +54,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp
+    core/attribute_manager/attribute_store.cpp
     core/attribute_manager/backend_attribute_map.cpp
     core/attribute_manager/common_attribute_map.cpp
 
