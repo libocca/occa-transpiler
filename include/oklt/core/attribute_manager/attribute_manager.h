@@ -21,11 +21,11 @@ public:
 
   static AttributeManager &instance();
 
-  bool registerHandler(std::string name, AttrDeclHandler handler);
-  bool registerHandler(std::string name, AttrStmtHandler handler);
+  bool registerCommonHandler(std::string name, AttrDeclHandler handler);
+  bool registerCommonHandler(std::string name, AttrStmtHandler handler);
 
-  bool registerHandler(BackendAttributeMap::KeyType key, AttrDeclHandler handler);
-  bool registerHandler(BackendAttributeMap::KeyType key, AttrStmtHandler handler);
+  bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrDeclHandler handler);
+  bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrStmtHandler handler);
 
   bool handleAttr(const clang::Attr* attr, const clang::Decl *decl, SessionStage &session);
   bool handleAttr(const clang::Attr* attr, const clang::Stmt *stmt, SessionStage &session);

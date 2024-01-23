@@ -23,11 +23,13 @@ bool ASTVisitor::TraverseDecl(Decl *decl) {
     // errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
     return false;
   }
+
   const Attr* attr = expectedAttr.get();
   //INFO: no OKL attributes to process, continue
   if(!attr) {
     return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
   }
+
   return attrManager.handleAttr(attr, decl, _session);
 }
 

@@ -34,6 +34,10 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    attributes/backend/cuda/kernel.cpp
+    attributes/backend/cuda/shared.cpp
+    attributes/backend/common/dim.cpp
+
     core/ast_traversal/ast_visitor.cpp
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
