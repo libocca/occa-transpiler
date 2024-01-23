@@ -3,11 +3,12 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Basic/DiagnosticSema.h"
 
+namespace {
+
 using namespace clang;
+using namespace oklt;
 
-namespace oklt {
-
-static constexpr ParsedAttrInfo::Spelling RESTRICT_ATTRIBUTE_SPELLINGS[] = {
+constexpr ParsedAttrInfo::Spelling RESTRICT_ATTRIBUTE_SPELLINGS[] = {
     {ParsedAttr::AS_CXX11, "restrict"},
     {ParsedAttr::AS_CXX11, RESTRICT_ATTR_NAME},
     {ParsedAttr::AS_GNU, "okl_restrict"}};
@@ -37,9 +38,8 @@ struct RestrictAttribute : public ParsedAttrInfo {
     return true;
   }
 };
-}
 
-// INFO: can be moved to main
-static ParsedAttrInfoRegistry::Add<oklt::RestrictAttribute>
-    register_okl_resitrct(oklt::RESTRICT_ATTR_NAME, "");
+ParsedAttrInfoRegistry::Add<RestrictAttribute>
+    register_okl_resitrct(RESTRICT_ATTR_NAME, "");
+}
 

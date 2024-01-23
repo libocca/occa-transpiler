@@ -15,7 +15,11 @@ bool handleDimAttrbute(const clang::Attr* a, const clang::Decl* d, SessionStage&
 }
 
 __attribute__((constructor)) void registerDimHandler() {
-  oklt::AttributeManager::instance().registerCommonHandler(DIM_ATTR_NAME,
-                                                           {parseDimAttribute, handleDimAttrbute});
+  auto ok = oklt::AttributeManager::instance().registerCommonHandler(
+    DIM_ATTR_NAME, {parseDimAttribute, handleDimAttrbute});
+
+  if (!ok) {
+    llvm::errs() << "failed to register " << DIM_ATTR_NAME << " attribute handler\n";
+  }
 }
 }  // namespace
