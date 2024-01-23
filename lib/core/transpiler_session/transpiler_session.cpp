@@ -40,7 +40,7 @@ TRANSPILER_TYPE SessionStage::getBackend() const {
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &&message) {
-  _diagMessages.push_back(message);
+  _diagMessages.emplace_back(message);
 }
 
 bool SessionStage::setUserCtx(const std::string& key, std::any userCtx) {
