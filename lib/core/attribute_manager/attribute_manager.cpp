@@ -9,24 +9,24 @@ AttributeManager &AttributeManager::instance() {
   return attrManager;
 }
 
-bool AttributeManager::registerHandler(std::string name,
+bool AttributeManager::registerCommonHandler(std::string name,
                                        AttrDeclHandler handler)
 {
   return _commonAttrs.registerHandler(std::move(name), std::move(handler));
 }
 
-bool AttributeManager::registerHandler(std::string name, AttrStmtHandler handler)
+bool AttributeManager::registerCommonHandler(std::string name, AttrStmtHandler handler)
 {
   return _commonAttrs.registerHandler(std::move(name), std::move(handler));
 }
 
-bool AttributeManager::registerHandler(BackendAttributeMap::KeyType key,
+bool AttributeManager::registerBackendHandler(BackendAttributeMap::KeyType key,
                                        AttrDeclHandler handler)
 {
   return _backendAttrs.registerHandler(std::move(key), std::move(handler));
 }
 
-bool AttributeManager::registerHandler(BackendAttributeMap::KeyType key,
+bool AttributeManager::registerBackendHandler(BackendAttributeMap::KeyType key,
                                        AttrStmtHandler handler)
 {
   return _backendAttrs.registerHandler(std::move(key), std::move(handler));
@@ -40,9 +40,11 @@ bool AttributeManager::handleAttr(const Attr* attr,
   if(_commonAttrs.hasAttrHandler(name)) {
     return _commonAttrs.handleAttr(attr, decl, session);
   }
+
   if(_backendAttrs.hasAttrHandler(session, name)) {
     return _backendAttrs.handleAttr(attr, decl, session);
   }
+
   return false;
 }
 

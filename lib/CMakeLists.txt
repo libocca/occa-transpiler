@@ -6,6 +6,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
 
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_handler.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_consumer.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_decl_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_stmt_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_manager.h
@@ -18,7 +21,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/config.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpile.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/file_helper.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/util/io_helper.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/dim.cpp
@@ -29,9 +34,15 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    attributes/backend/cuda/kernel.cpp
+    attributes/backend/cuda/shared.cpp
+    attributes/backend/common/dim.cpp
+
     core/ast_traversal/ast_visitor.cpp
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
+
+    core/diag/diag_consumer.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
@@ -45,8 +56,12 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/utils/format.cpp
 
-    util/file_helper.cpp
+    util/io_helper.cpp
 
+    pipeline/stages/normalizer/normalizer.cpp
+    pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
+    pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
+    pipeline/stages/normalizer/impl/okl_attr_traverser.cpp
 )
 
 CPMAddPackage(expected

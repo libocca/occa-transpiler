@@ -1,9 +1,6 @@
-//TODO: needs implementation
-// #include <oklt/normalizer/GnuAttrBasedNormalizer.h>
-// #include <oklt/normalizer/MarkerBasedNormalizer.h>
-
-#include "oklt/core/transpile.h"
-#include "oklt/core/config.h"
+#include <oklt/pipeline/stages/normalizer/normalizer.h>
+#include <oklt/core/transpile.h>
+#include <oklt/util/io_helper.h>
 #include <argparse/argparse.hpp>
 #include <fstream>
 #include <iostream>
@@ -58,8 +55,22 @@ int main(int argc, char *argv[]) {
             if(output.empty()) {
                 output = build_output_filename(input);
             }
-            //TODO: add implementation here for normalization
-            std::cout << "Normalization step is not implemented yet" << std::endl;
+
+            auto input_source = oklt::util::readFileAsStr(input);
+            if (!input_source) {
+              std::cout << "err: " << input_source.error() << " to read file " << input << '\n';
+              return 1;
+            }
+            oklt::TranspilerSession session{oklt::TRANSPILER_TYPE::CUDA};
+            auto normalizedSrc = oklt::normalize({.oklSource = std::move(input_source.value())}, session); 
+            if (!normalizedSrc) {
+              std::cout << "err to normalize file " << input << '\n';
+              return 1;                
+            }
+
+            std::cout << "file " << input << " is normalized\n\n" << normalizedSrc.value().cppSource;
+            oklt::util::writeFileAsStr(output, normalizedSrc.value().cppSource);
+
             return 0;
         } else {
             auto source_path = std::filesystem::path(transpile_command.get("-i"));
@@ -68,14 +79,6 @@ int main(int argc, char *argv[]) {
             auto output = std::filesystem::path(transpile_command.get("-o"));
             if(output.empty()) {
                 output = build_output_filename(source_path);
-            }
-            if(need_normalize) {
-              std::cout << "Normalization step is not implemented yet" << std::endl;
-              return 0;
-            }
-            if(!backend) {
-              std::cout << "Unknown backend is provided" << std::endl;
-              return 0;
             }
 
             std::ifstream ifs(source_path.string());
