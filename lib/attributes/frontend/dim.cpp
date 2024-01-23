@@ -58,4 +58,4 @@ public:
 }
 
 static ParsedAttrInfoRegistry::Add<oklt::DimAttribute> register_okl_sim(oklt::DIM_ATTR_NAME, "");
-
+static oklt::DiagHandlerRegistry::Add<oklt::DimDiagHandler> diag_dim("DimDiagHandler", "");
