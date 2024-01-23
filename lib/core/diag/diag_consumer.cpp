@@ -35,7 +35,7 @@ void DiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Di
       return;
   }
 
-  _session.addDiagnosticMessage(StoredDiagnostic(DiagLevel, Info));
+  _session.pushDiagnosticMessage(StoredDiagnostic(DiagLevel, Info));
   DiagnosticConsumer::HandleDiagnostic(DiagLevel, Info);
 }
 

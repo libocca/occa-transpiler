@@ -37,7 +37,7 @@ public:
   [[nodiscard]] TRANSPILER_TYPE getBackend() const;
   AttributeManager &getAttrManager();
 
-  void addDiagnosticMessage(clang::StoredDiagnostic &&message);
+  void pushDiagnosticMessage(clang::StoredDiagnostic &&message);
 
   //TODO: might need better redesign by design patterns
   bool setUserCtx(const std::string& key, std::any ctx);

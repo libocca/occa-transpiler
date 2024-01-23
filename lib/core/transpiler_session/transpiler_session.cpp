@@ -39,7 +39,7 @@ TRANSPILER_TYPE SessionStage::getBackend() const {
     return _session.targetBackend;
 }
 
-void SessionStage::addDiagnosticMessage(clang::StoredDiagnostic &&message) {
+void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &&message) {
   _diagMessages.push_back(message);
 }
 
