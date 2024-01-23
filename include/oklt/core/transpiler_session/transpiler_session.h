@@ -50,8 +50,6 @@ protected:
   clang::Rewriter _rewriter;
   llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
 
-  llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
-
   //XXX discuss key
   std::map<std::string, std::any> _userCtxMap;
 };
