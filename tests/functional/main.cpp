@@ -29,6 +29,7 @@ int main( int argc, char** argv )
         std::filesystem::path p(dataPath);
         if(!fs::exists(p) && fs::is_directory(p)) {
             std::cerr << "Provided invalid data_root" << std::endl;
+            return 1;
         }
         DataRootHolder::instance().dataRoot = p;
     }

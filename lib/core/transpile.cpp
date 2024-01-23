@@ -6,6 +6,7 @@
 //#include <oklt/normalizer/MarkerBasedNormalizer.h>
 
 #include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Support/JSON.h>
 #include <clang/Tooling/Tooling.h>
 
 #include <fstream>
@@ -15,6 +16,56 @@ using namespace clang;
 using namespace clang::tooling;
 
 namespace oklt {
+
+struct Config {
+  // std::string action;
+  std::string backend;
+  bool normalization;
+  std::vector<std::string> includes;
+  std::vector<std::string> defs;
+};
+
+//TODO: change error type
+tl::expected<TranspilerInput, std::string> make_transpile_input(const std::filesystem::path &sourceFile,
+                                                               const std::string &json)
+{
+  if(!std::filesystem::exists(sourceFile)) {
+    return tl::unexpected("Wrong file path");
+  }
+  std::ifstream sourceMapFile( sourceFile );
+  std::string sourceCode {std::istreambuf_iterator<char>(sourceMapFile), {}};
+  auto expectedObj = llvm::json::parse(json);
+
+  //TODO: convert llvm::Error to interface error type
+  if(!expectedObj) {
+    return tl::unexpected<std::string>("Can't parse JSON");
+  }
+  auto obj = expectedObj.get().getAsObject();
+  if(!obj) {
+    return tl::unexpected<std::string>("Json is not object");
+  }
+  auto backendOpt = obj->getString("backend");
+  if(!backendOpt) {
+    return tl::unexpected<std::string>("Backend field is missing");
+  }
+  auto expectBackend = backendFromString(backendOpt.value().str());
+  //TODO: check error cast to error interface type compatibility
+  if(!expectBackend) {
+    return tl::unexpected<std::string>(expectBackend.error());
+  }
+  auto normOpt = obj->getBoolean("normalization");
+  if(!normOpt) {
+    return tl::unexpected<std::string>("normalization field is missing");
+  }
+  return TranspilerInput {
+    .sourceCode = sourceCode,
+    .sourcePath = sourceFile,
+    .inlcudeDirectories = {},
+    .defines = {},
+    .targetBackend = expectBackend.value(),
+    .normalization = normOpt.value()
+  };
+}
 
 tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input)
 {

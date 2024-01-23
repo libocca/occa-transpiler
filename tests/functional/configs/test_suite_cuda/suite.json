@@ -1,0 +1,7 @@
+[
+    "cuda_inner.json",
+    "cuda_kernel.json",
+    "cuda_outer.json",
+    "cuda_shared.json",
+    "cuda_tile.json"
+]

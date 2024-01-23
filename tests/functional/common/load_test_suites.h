@@ -10,12 +10,7 @@ namespace oklt
 namespace tests
 {
 
-struct GenericSuite {
-    TRANSPILER_TYPE backendType;
-    std::list<std::filesystem::path> testCaseFiles;
-};
-
-std::vector<GenericSuite> loadTestsSuite();
+std::vector<std::filesystem::path> loadTestsSuite();
 
                                           
 }  // namespace tests

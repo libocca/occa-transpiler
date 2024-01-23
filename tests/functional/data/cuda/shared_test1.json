@@ -1,0 +1,7 @@
+{
+    "action": "transpilier",
+    "backend": "cuda",
+    "normalization": false,
+    "includes" : [],
+    "defs": []
+}

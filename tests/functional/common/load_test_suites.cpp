@@ -14,36 +14,27 @@ namespace fs = std::filesystem;
 namespace oklt::tests {
 
 
-std::vector<GenericSuite> loadTestsSuite()
+std::vector<std::filesystem::path> loadTestsSuite()
 {
-    fs::path suiteMapPath = DataRootHolder::instance().suitePath / "test_suite_map.json";
+    fs::path suitePath = DataRootHolder::instance().suitePath / "suite.json";
 
-    if ( !fs::exists( suiteMapPath ) )
+    if ( !fs::exists( suitePath ) )
     {
         //Test suites map file was not found
         return { };
     }
-    json suiteMap;
+    json suite;
     try {
-        std::ifstream suiteMapFile( suiteMapPath );
-        suiteMap = json::parse( suiteMapFile );
+        std::ifstream suiteFile( suitePath );
+        suite = json::parse( suiteFile );
     } catch (const std::exception &ex) {
         return {};
     }
 
-    std::vector<GenericSuite> suites;
-    for ( const auto& entry : suiteMap )
-    {
-        auto backend = entry[0].get<std::string>();
-        auto expectedBackend = backendFromString(backend);
-        if(expectedBackend) {
-            GenericSuite suite {expectedBackend.value(), std::list<std::filesystem::path> {}};
-            for(const auto &filePath: entry[0].get<std::vector<std::string>>()) {
-                std::filesystem::path p(filePath);
-                suite.testCaseFiles.push_back(p);
-            }
-        }
+    std::vector<std::filesystem::path> resultCases;
+    for ( const auto& jsonPath : suite ) {
+        resultCases.push_back(DataRootHolder::instance().suitePath / jsonPath.get<std::string>());
     }
-    return suites;
+    return resultCases;
 }   
 }
