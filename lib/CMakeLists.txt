@@ -6,6 +6,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
 
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_handler.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_consumer.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_decl_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_stmt_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_manager.h
@@ -38,6 +41,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_traversal/ast_visitor.cpp
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
+
+    core/diag/diag_consumer.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp

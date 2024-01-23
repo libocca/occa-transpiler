@@ -4,19 +4,18 @@
 namespace {
 using namespace oklt;
 
-bool parse_kernel_attr(const clang::Attr*, SessionStage&) {
+bool parseKernelAttribute(const clang::Attr*, SessionStage&) {
   llvm::outs() << "<<<parse kernel attr for cuda>>>\n";
   return true;
 }
 
-bool handle_kernel_attr(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
+bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
   llvm::outs() << "<<<handle kernel attr for cuda>>>\n";
   return true;
 }
 
-__attribute__((constructor)) void register_kernel_handler() {
+__attribute__((constructor)) void registerKernelHandler() {
   oklt::AttributeManager::instance().registerBackendHandler(
-      BackendAttributeMap::KeyType{TRANSPILER_TYPE::CUDA, KERNEL_ATTR_NAME},
-      AttrDeclHandler{parse_kernel_attr, handle_kernel_attr});
+    {TRANSPILER_TYPE::CUDA, KERNEL_ATTR_NAME}, {parseKernelAttribute, handleKernelAttribute});
 }
 }  // namespace
