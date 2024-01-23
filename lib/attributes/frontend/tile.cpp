@@ -3,11 +3,12 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Basic/DiagnosticSema.h"
 
+namespace {
+
 using namespace clang;
+using namespace oklt;
 
-namespace oklt {
-
-static constexpr ParsedAttrInfo::Spelling TILE_ATTRIBUTE_SPELLINGS[] = {
+constexpr ParsedAttrInfo::Spelling TILE_ATTRIBUTE_SPELLINGS[] = {
     {ParsedAttr::AS_CXX11, "tile"}, {ParsedAttr::AS_CXX11, TILE_ATTR_NAME}};
 
 struct TileAttribute : public ParsedAttrInfo {
@@ -28,8 +29,6 @@ struct TileAttribute : public ParsedAttrInfo {
     return true;
   }
 };
+
+ParsedAttrInfoRegistry::Add<TileAttribute> register_okl_tile(TILE_ATTR_NAME, "");
 } // namespace oklt
-
-// INFO: can be moved to main
-static ParsedAttrInfoRegistry::Add<oklt::TileAttribute> register_okl_tile(oklt::TILE_ATTR_NAME, "");
-

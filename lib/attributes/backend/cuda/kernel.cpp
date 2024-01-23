@@ -15,7 +15,11 @@ bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionSt
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-  oklt::AttributeManager::instance().registerBackendHandler(
+  auto ok = oklt::AttributeManager::instance().registerBackendHandler(
     {TRANSPILER_TYPE::CUDA, KERNEL_ATTR_NAME}, {parseKernelAttribute, handleKernelAttribute});
+
+  if (!ok) {
+    llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler\n";
+  }
 }
 }  // namespace
