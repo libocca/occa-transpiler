@@ -94,10 +94,6 @@ int main(int argc, char *argv[]) {
             if(output.empty()) {
                 output = build_output_filename(source_path);
             }
-            if(need_normalize) {
-              std::cout << "Normalization step is not implemented yet" << std::endl;
-              return 0;
-            }
 
             std::ifstream ifs(source_path.string());
             std::string sourceCode {std::istreambuf_iterator<char>(ifs), {}};

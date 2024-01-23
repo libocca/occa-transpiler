@@ -1,9 +1,6 @@
 #include "oklt/core/transpile.h"
 #include "oklt/core/ast_traversal/transpile_frontend_action.h"
-//TODO: needs implementation
-//#include <oklt/normalizer/Normalize.h>
-//#include <oklt/normalizer/GnuAttrBasedNormalizer.h>
-//#include <oklt/normalizer/MarkerBasedNormalizer.h>
+#include <oklt/pipeline/stages/normalizer/normalizer.h>
 
 #include <llvm/Support/raw_os_ostream.h>
 #include <clang/Tooling/Tooling.h>
@@ -28,12 +25,10 @@ tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput inpu
   };
 
   std::string sourceCode;
+  
   if(input.normalization) {
-    //TODO: needs implementation
-    //        //TODO add option for nomalizer method
-    //        //TODO error handing
-    //        sourceCode = okl::apply_gnu_attr_based_normalization(source_file).get();
-    //        //sourceCode = okl::normalize(source_file);
+    TranspilerSession session{TRANSPILER_TYPE::CUDA};
+    sourceCode = oklt::normalize({.oklSource = input.sourceCode}, session).value().cppSource;
   } else {
     sourceCode = input.sourceCode;
   }

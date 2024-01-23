@@ -106,6 +106,10 @@ int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
                                    Preprocessor& pp,
                                    OklAttrVisitor& visitor) {
   assert(!tokens.empty());
+  if (tokens.empty()) {
+    llvm::outs() << "no input tokens\n";
+    return -2;
+  }
 
   // set intial FSM state with clear attr data
   auto fsm = makeOklAttrParserFsm(pp, tokens);
