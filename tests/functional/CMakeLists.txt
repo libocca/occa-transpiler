@@ -8,11 +8,13 @@ CPMAddPackage(
   argparser
   GITHUB_REPOSITORY p-ranav/argparse
   GIT_TAG v3.0
+  OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
     VERSION 3.11.2
-    GITHUB_REPOSITORY nlohmann/json OPTIONS "JSON_BuildTests OFF")
+    GITHUB_REPOSITORY nlohmann/json
+    OPTIONS "JSON_BuildTests OFF")
 
 add_library(GTest::GTest INTERFACE IMPORTED)
 target_link_libraries(GTest::GTest INTERFACE gtest)
@@ -52,6 +54,11 @@ target_link_libraries(occa-transpiler-tests
 	nlohmann_json::nlohmann_json
         occa-transpiler
         ${CLANG_LIBS}
+)
+
+add_custom_command(TARGET occa-transpiler-tests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/configs ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/configs
 )
 
 gtest_discover_tests(

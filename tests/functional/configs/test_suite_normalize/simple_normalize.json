@@ -1,0 +1,9 @@
+[
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/simple/simple1.cpp"
+        },
+        "reference": "normalize/simple/simple1_ref.cpp"
+     }
+]

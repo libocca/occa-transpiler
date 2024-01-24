@@ -6,7 +6,7 @@
 #include "impl/gnu_to_std_cpp_stage.h"
 #include "impl/okl_to_gnu_stage.h"
 
-#define DEBUG_NORMALIZER
+// #define DEBUG_NORMALIZER
 
 using namespace clang;
 

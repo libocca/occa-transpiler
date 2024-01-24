@@ -34,6 +34,9 @@ int main( int argc, char** argv )
         DataRootHolder::instance().dataRoot = p;
     }
     catch (const std::exception& err) {
+        std::cerr << "Tests config error: " << err.what() << std::endl;
+        std::cerr << program.usage() << std::endl;
+        return 0;
     }
 
     ::testing::InitGoogleTest( &argc, argv );

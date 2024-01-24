@@ -81,8 +81,57 @@ void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& sta
   stage.getRewriter().InsertTextBefore(e.getBeginLoc(), normalizedAttrStr + " ");
 }
 
+bool tryToNormalizeAttr(Decl& decl, SessionStage& stage) {
+
+  if(!decl.hasAttrs()) {
+    return true;
+  }
+
+  for (const auto attr : decl.getAttrs()) {
+    if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
+      continue;
+    }
+
+    if (!hasAttrOklPrefix(*attr)) {
+      continue;
+    }
+
+    const auto* targetAttr = dyn_cast_or_null<AnnotateAttr>(attr);
+    if (!targetAttr) {
+      continue;
+    }
+
+    removeAttr(stage.getRewriter(), *attr);
+    insertNormalizedAttr<Decl, AnnotateAttr>(decl, *targetAttr, stage);
+  }
+  return true;
+}
+
+bool tryToNormalizeAttr(AttributedStmt& attrStmt, SessionStage& stage) {
+  for (const auto attr : attrStmt.getAttrs()) {
+    if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
+      continue;
+    }
+
+    if (!hasAttrOklPrefix(*attr)) {
+      continue;
+    }
+
+    const auto* targetAttr = dyn_cast_or_null<SuppressAttr>(attr);
+    if (!targetAttr) {
+      continue;
+    }
+
+    removeAttr(stage.getRewriter(), *attr);
+    insertNormalizedAttr(attrStmt, *targetAttr, stage);
+  }
+  return true;
+}
+
+#if OLD
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage) {
+
   for (const auto attr : e.getAttrs()) {
     if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
       continue;
@@ -103,6 +152,7 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage) {
 
   return true;
 }
+#endif
 
 // Traverse AST and normalize GMU attributes and fix markers to standard C++ attribute
 // representation
@@ -121,13 +171,13 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
   bool VisitDecl(Decl* d) {
     assert(d != nullptr && "declaration is nullptr");
 
-    return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage);
+    return tryToNormalizeAttr(*d, _stage);
   }
 
   bool VisitAttrStmt(AttributedStmt* as) {
     assert(as != nullptr && "attributed statement is nullptr");
 
-    return tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage);
+    return tryToNormalizeAttr(*as, _stage);
   }
 
   // Special visitor for attribute inside in 'for loop' statement

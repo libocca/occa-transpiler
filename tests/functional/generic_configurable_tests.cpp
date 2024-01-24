@@ -54,13 +54,13 @@ struct TranspileActionConfig {
                                  launcher)
 };
 
-class GenericTest : public testing::TestWithParam<fs::path>
+class GenericTest : public testing::TestWithParam<std::string>
 {};
 
 TEST_P( GenericTest, OCCATests )
 {
     auto dataDir = DataRootHolder::instance().dataRoot;
-    auto suitPath = GetParam();
+    fs::path suitPath = GetParam();
     std::ifstream testSuitFile(suitPath);
     json tests = json::parse( testSuitFile );
 
@@ -96,8 +96,8 @@ TEST_P( GenericTest, OCCATests )
               EXPECT_TRUE(false) << "Normalize error occur" << std::endl;
             }
 
-            std::ifstream ifs(referencePath);
-            std::string referenceSource {std::istreambuf_iterator<char>(sourceFile), {}};
+            std::ifstream referenceFile(referencePath);
+            std::string referenceSource {std::istreambuf_iterator<char>(referenceFile), {}};
             std::string formatedReference = oklt::format(referenceSource);
             std::string normalizedSource = oklt::format(normalizeResult.value().cppSource);
             EXPECT_EQ(formatedReference, normalizedSource);
@@ -135,15 +135,52 @@ TEST_P( GenericTest, OCCATests )
               EXPECT_TRUE(false) << "Transpile error:" << error << std::endl;
             }
 
-            std::ifstream ifs(referencePath);
-            std::string referenceSource {std::istreambuf_iterator<char>(sourceFile), {}};
+            std::ifstream referenceFile(referencePath);
+            std::string referenceSource {std::istreambuf_iterator<char>(referenceFile), {}};
             std::string formatedReference = oklt::format(referenceSource);
             std::string transpiledSource = oklt::format(transpileResult.value().kernel.outCode);
             EXPECT_EQ(formatedReference, transpiledSource);
           }break;
           case Action::NORMALIZE_AND_TRANSPILE:
           {
+            auto actionConfig = testCase.find("action_config");
+            if(actionConfig == testCase.cend()) {
+              GTEST_SKIP_("Can't get action_config field");
+              continue;
+            }
+            auto conf = actionConfig->get<TranspileActionConfig>();
 
+            auto expectedBackend = oklt::backendFromString(conf.backend);
+            if(!expectedBackend) {
+              EXPECT_TRUE(false) << expectedBackend.error() << std::endl;
+              continue;
+            }
+
+            auto sourceFullPath = dataDir / conf.source;
+            std::ifstream sourceFile {sourceFullPath};
+            std::string sourceCode {std::istreambuf_iterator<char>(sourceFile), {}};
+
+            auto transpileResult = oklt::normalize_and_transpile(oklt::TranspilerInput{
+              .sourceCode = sourceCode,
+              .sourcePath =sourceFullPath,
+              .inlcudeDirectories = conf.includes,
+              .defines = conf.defs,
+              .targetBackend = expectedBackend.value()
+            });
+
+            if(!transpileResult) {
+              std::string error;
+              for(const auto &e: transpileResult.error()) {
+                error += e.desription + "\n";
+              }
+              EXPECT_TRUE(false) << "Normalize & Transpile error:" << error << std::endl;
+            }
+
+            std::ifstream referenceFile(referencePath);
+            std::string referenceSource {std::istreambuf_iterator<char>(referenceFile), {}};
+            std::string formatedReference = oklt::format(referenceSource);
+            std::string transpiledSource = oklt::format(transpileResult.value().kernel.outCode);
+            EXPECT_EQ(formatedReference, transpiledSource);
           }break;
         }
     }

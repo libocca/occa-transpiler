@@ -3,16 +3,9 @@
 #include <list>
 #include <filesystem>
 
-#include "oklt/core/config.h"
-
-namespace oklt
+namespace oklt::tests
 {
-namespace tests
-{
+std::vector<std::string> loadTestsSuite();
 
-std::vector<std::filesystem::path> loadTestsSuite();
-
-                                          
-}  // namespace tests
 }  // namespace oklt
  

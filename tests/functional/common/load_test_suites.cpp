@@ -14,7 +14,7 @@ namespace fs = std::filesystem;
 namespace oklt::tests {
 
 
-std::vector<std::filesystem::path> loadTestsSuite()
+std::vector<std::string> loadTestsSuite()
 {
     fs::path suitePath = DataRootHolder::instance().suitePath / "suite.json";
 
@@ -31,9 +31,10 @@ std::vector<std::filesystem::path> loadTestsSuite()
         return {};
     }
 
-    std::vector<std::filesystem::path> resultCases;
+    std::vector<std::string> resultCases;
     for ( const auto& jsonPath : suite ) {
-        resultCases.push_back(DataRootHolder::instance().suitePath / jsonPath.get<std::string>());
+        resultCases.push_back(
+          (DataRootHolder::instance().suitePath / jsonPath.get<std::string>()).string());
     }
     return resultCases;
 }   
