@@ -1,8 +1,31 @@
 [
     {
-        "config": "",
-        "source": "",
-        "reference": "",
-        "launcher": ""
-    }
+        "action": "transpilier",
+        "action_config": {
+            "backend": "openmp",
+            "source": "",
+            "includes" : [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": ""
+     },
+     {
+        "action": "normalizer",
+        "action_config": {
+            "source": ""
+        },
+        "reference": ""
+     },
+     {
+        "action": "transpile_and_normalize",
+        "action_config": {
+            "backend": "openmp",
+            "source": "",
+            "includes" : [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": ""
+     }
 ]

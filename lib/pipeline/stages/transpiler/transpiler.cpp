@@ -1,5 +1,5 @@
-#include "oklt/core/transpile.h"
-#include "oklt/core/ast_traversal/transpile_frontend_action.h"
+#include <oklt/pipeline/stages/transpiler/transpiler.h>
+#include <oklt/core/ast_traversal/transpile_frontend_action.h>
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 
 #include <llvm/Support/raw_os_ostream.h>
@@ -17,7 +17,6 @@ namespace oklt {
 struct Config {
   // std::string action;
   std::string backend;
-  bool normalization;
   std::vector<std::string> includes;
   std::vector<std::string> defs;
 };
@@ -50,18 +49,13 @@ tl::expected<TranspilerInput, std::string> make_transpile_input(const std::files
   if(!expectBackend) {
     return tl::unexpected<std::string>(expectBackend.error());
   }
-  auto normOpt = obj->getBoolean("normalization");
-  if(!normOpt) {
-    return tl::unexpected<std::string>("normalization field is missing");
-  }
   return TranspilerInput {
     .sourceCode = sourceCode,
     .sourcePath = sourceFile,
     .inlcudeDirectories = {},
     .defines = {},
     .targetBackend = expectBackend.value(),
-    .normalization = normOpt.value()
-  };
+   };
 }
 
 tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input)
@@ -75,18 +69,8 @@ tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput inpu
       "-I."
   };
 
-  std::string sourceCode;
-  
-  if(input.normalization) {
-    TranspilerSession session{TRANSPILER_TYPE::CUDA};
-    sourceCode = oklt::normalize({.oklSource = input.sourceCode}, session).value().cppSource;
-  } else {
-    sourceCode = input.sourceCode;
-  }
-
   oklt::TranspilerSession session {input.targetBackend};
-
-  Twine code(sourceCode);
+  Twine code(input.sourceCode);
   std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
   std::unique_ptr<oklt::TranspileFrontendAction> action =
       std::make_unique<oklt::TranspileFrontendAction>(session);

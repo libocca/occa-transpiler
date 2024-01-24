@@ -1,10 +1,11 @@
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
-#include <oklt/core/transpile.h>
+#include <oklt/pipeline/stages/transpiler/transpiler.h>
 #include <oklt/util/io_helper.h>
 #include <argparse/argparse.hpp>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "oklt/pipeline/normalize_and_transpile.h"
 
 std::string build_output_filename(const std::filesystem::path &input_file_path) {
     std::string out_file = input_file_path.filename().stem().string() + "_transpiled" +
@@ -83,21 +84,25 @@ int main(int argc, char *argv[]) {
 
             std::ifstream ifs(source_path.string());
             std::string sourceCode {std::istreambuf_iterator<char>(ifs), {}};
-
             oklt::TranspilerInput transpilerParams {
-                .sourceCode = sourceCode,
-                .sourcePath = source_path,
-                .inlcudeDirectories {},
-                .defines = {},
-                .targetBackend = backend.value(),
-                .normalization = need_normalize
-            };
-            auto ret = oklt::transpile(transpilerParams);
-            if(ret) {
+                                                   .sourceCode = sourceCode,
+                                                   .sourcePath = source_path,
+                                                   .inlcudeDirectories {},
+                                                   .defines = {},
+                                                   .targetBackend = backend.value(),
+                                                   };
+            tl::expected<oklt::TranspilerResult,std::vector<oklt::Error>> expectResult;
+            if(need_normalize) {
+              expectResult = oklt::normalize_and_transpile(transpilerParams);
+            } else {
+              expectResult = oklt::transpile(transpilerParams);
+            }
+
+            if(expectResult) {
               std::cout << "Transpiling success : true" << std::endl;
             } else {
               std::cout << "Transpiling errors: " << std::endl;
-              for(const auto &error: ret.error()) {
+              for(const auto &error: expectResult.error()) {
                 std::cout << error.desription << std::endl;
               }
             }
