@@ -14,51 +14,8 @@ using namespace clang::tooling;
 
 namespace oklt {
 
-struct Config {
-  // std::string action;
-  std::string backend;
-  std::vector<std::string> includes;
-  std::vector<std::string> defs;
-};
-
-//TODO: change error type
-tl::expected<TranspilerInput, std::string> make_transpile_input(const std::filesystem::path &sourceFile,
-                                                               const std::string &json)
-{
-  if(!std::filesystem::exists(sourceFile)) {
-    return tl::unexpected("Wrong file path");
-  }
-  std::ifstream sourceMapFile( sourceFile );
-  std::string sourceCode {std::istreambuf_iterator<char>(sourceMapFile), {}};
-  auto expectedObj = llvm::json::parse(json);
-
-  //TODO: convert llvm::Error to interface error type
-  if(!expectedObj) {
-    return tl::unexpected<std::string>("Can't parse JSON");
-  }
-  auto obj = expectedObj.get().getAsObject();
-  if(!obj) {
-    return tl::unexpected<std::string>("Json is not object");
-  }
-  auto backendOpt = obj->getString("backend");
-  if(!backendOpt) {
-    return tl::unexpected<std::string>("Backend field is missing");
-  }
-  auto expectBackend = backendFromString(backendOpt.value().str());
-  //TODO: check error cast to error interface type compatibility
-  if(!expectBackend) {
-    return tl::unexpected<std::string>(expectBackend.error());
-  }
-  return TranspilerInput {
-    .sourceCode = sourceCode,
-    .sourcePath = sourceFile,
-    .inlcudeDirectories = {},
-    .defines = {},
-    .targetBackend = expectBackend.value(),
-   };
-}
-
-tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input)
+ExpectTranspilerResult transpile(const TranspileData &input,
+                                 TranspilerSession &session)
 {
   Twine tool_name = "okl-transpiler";
   std::string rawFileName = input.sourcePath.filename().string();
@@ -69,7 +26,6 @@ tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput inpu
       "-I."
   };
 
-  oklt::TranspilerSession session {input.targetBackend};
   Twine code(input.sourceCode);
   std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
   std::unique_ptr<oklt::TranspileFrontendAction> action =

@@ -1,7 +1,7 @@
 #include "common/data_directory.h"
 #include "common/load_test_suites.h"
-#include "oklt/pipeline/stages/transpiler/transpiler.h"
-#include "oklt/pipeline/stages/normalizer/normalizer.h"
+#include "oklt/pipeline/transpile.h"
+#include "oklt/pipeline/normalize.h"
 #include "oklt/pipeline/normalize_and_transpile.h"
 #include "oklt/core/config.h"
 #include "oklt/util/string_utils.h"
@@ -38,7 +38,15 @@ struct NormalizeActionConfig {
   std::filesystem::path source;
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(NormalizeActionConfig,
                                  source)
+  oklt::NormalizerInput build(const fs::path &dataDir) const;
 };
+
+oklt::NormalizerInput NormalizeActionConfig::build(const fs::path &dataDir) const {
+  auto sourceFullPath = dataDir / source;
+  std::ifstream sourceFile {sourceFullPath};
+  std::string sourceCode {std::istreambuf_iterator<char>(sourceFile), {}};
+  return oklt::NormalizerInput {sourceCode};
+}
 
 struct TranspileActionConfig {
   std::string backend;
@@ -52,7 +60,26 @@ struct TranspileActionConfig {
                                  includes,
                                  defs,
                                  launcher)
+  oklt::TranspileInput build(const fs::path &dataDir) const;
 };
+
+oklt::TranspileInput TranspileActionConfig::build(const fs::path &dataDir) const {
+  auto expectedBackend = oklt::backendFromString(backend);
+  if(!expectedBackend) {
+    throw std::logic_error(expectedBackend.error());
+  }
+  auto sourceFullPath = dataDir / source;
+  std::ifstream sourceFile {sourceFullPath};
+  std::string sourceCode {std::istreambuf_iterator<char>(sourceFile), {}};
+
+  return oklt::TranspileInput{
+    expectedBackend.value(),
+    std::move(sourceCode),
+    std::move(sourceFullPath),
+    includes,
+    defs
+  };
+}
 
 class GenericTest : public testing::TestWithParam<std::string>
 {};
@@ -85,13 +112,7 @@ TEST_P( GenericTest, OCCATests )
               continue;
             }
             auto conf = actionConfig->get<NormalizeActionConfig>();
-
-            auto sourceFullPath = dataDir / conf.source;
-            std::ifstream sourceFile {sourceFullPath};
-            std::string sourceCode {std::istreambuf_iterator<char>(sourceFile), {}};
-            //INFO: does not metter here
-            oklt::TranspilerSession session {oklt::TRANSPILER_TYPE::CUDA};
-            auto normalizeResult = oklt::normalize(oklt::NormalizerInput {sourceCode}, session);
+            auto normalizeResult = oklt::normalize(conf.build(dataDir));
             if(!normalizeResult) {
               EXPECT_TRUE(false) << "Normalize error occur" << std::endl;
             }
@@ -109,23 +130,7 @@ TEST_P( GenericTest, OCCATests )
               continue;
             }
             auto conf = actionConfig->get<TranspileActionConfig>();
-
-            auto expectedBackend = oklt::backendFromString(conf.backend);
-            if(!expectedBackend) {
-              EXPECT_TRUE(false) << expectedBackend.error() << std::endl;
-              continue;
-            }
-
-            auto sourceFullPath = dataDir / conf.source;
-            std::ifstream sourceFile {sourceFullPath};
-            std::string sourceCode {std::istreambuf_iterator<char>(sourceFile), {}};
-            auto transpileResult = oklt::transpile(oklt::TranspilerInput{
-              .sourceCode = sourceCode,
-              .sourcePath =sourceFullPath,
-              .inlcudeDirectories = conf.includes,
-              .defines = conf.defs,
-              .targetBackend = expectedBackend.value()
-            });
+            auto transpileResult = oklt::transpile(conf.build(dataDir));
 
             if(!transpileResult) {
               std::string error;
@@ -149,24 +154,7 @@ TEST_P( GenericTest, OCCATests )
               continue;
             }
             auto conf = actionConfig->get<TranspileActionConfig>();
-
-            auto expectedBackend = oklt::backendFromString(conf.backend);
-            if(!expectedBackend) {
-              EXPECT_TRUE(false) << expectedBackend.error() << std::endl;
-              continue;
-            }
-
-            auto sourceFullPath = dataDir / conf.source;
-            std::ifstream sourceFile {sourceFullPath};
-            std::string sourceCode {std::istreambuf_iterator<char>(sourceFile), {}};
-
-            auto transpileResult = oklt::normalize_and_transpile(oklt::TranspilerInput{
-              .sourceCode = sourceCode,
-              .sourcePath =sourceFullPath,
-              .inlcudeDirectories = conf.includes,
-              .defines = conf.defs,
-              .targetBackend = expectedBackend.value()
-            });
+            auto transpileResult = oklt::normalize_and_transpile(conf.build(dataDir));
 
             if(!transpileResult) {
               std::string error;

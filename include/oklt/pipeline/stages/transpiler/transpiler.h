@@ -1,6 +1,5 @@
 #pragma once
 
-#include "oklt/core/config.h"
 #include "tl/expected.hpp"
 #include <optional>
 #include <filesystem>
@@ -8,6 +7,7 @@
 #include <list>
 #include <filesystem>
 
+#include <oklt/core/transpiler_session/transpiler_session.h>
 
 namespace oklt {
 struct TranspilerResult {
@@ -22,12 +22,11 @@ struct TranspilerResult {
   }launcher;
 };
 
-struct TranspilerInput {
+struct TranspileData {
   std::string sourceCode;
   std::filesystem::path sourcePath;
   std::list<std::filesystem::path> inlcudeDirectories;
   std::list<std::string> defines;
-  TRANSPILER_TYPE targetBackend;
 };
 
 //TODO: needs definition
@@ -36,12 +35,10 @@ struct Error {
   std::string desription;
 };
 
+using ExpectTranspilerResult = tl::expected<TranspilerResult, std::vector<Error>>;
 
-//TODO: change error type
-tl::expected<TranspilerInput, std::string> make_transpile_input(const std::filesystem::path &sourceFile,
-                                                               const std::string &json);
-
-tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input);
+ExpectTranspilerResult transpile(const TranspileData &input,
+                                 TranspilerSession &session);
 
 }
 

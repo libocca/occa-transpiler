@@ -23,6 +23,8 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalize_and_transpile.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalize.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpile.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/util/io_helper.h
     ${CMAKE_SOURCE_DIR}/include/oklt/util/string_utils.h
@@ -60,7 +62,9 @@ set (OCCA_TRANSPILER_SOURCES
     util/io_helper.cpp
     util/string_utils.cpp
 
-    pipeline/stages/normalize_and_transpile.cpp
+    pipeline/normalize.cpp
+    pipeline/transpile.cpp
+    pipeline/normalize_and_transpile.cpp
     pipeline/stages/transpiler/transpiler.cpp
     pipeline/stages/normalizer/normalizer.cpp
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp

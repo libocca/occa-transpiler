@@ -33,27 +33,6 @@ tl::expected<void, int> writeFileAsStr(const std::filesystem::path &srcPath,  st
   outFile.write(srcStr.data(), srcStr.size());
   outFile.flush();
   return {};
-
-//  unsigned mode = sys::fs::all_read | sys::fs::all_write;
-//  Expected<sys::fs::TempFile> temp =
-//      sys::fs::TempFile::create(srcPath.string(), mode);
-//  if (!temp) {
-//    llvm::consumeError(std::move(temp.takeError()));
-//    //TODO somehow fetch error code from temp
-//    return tl::make_unexpected(-1);
-//  }
-
-//  auto tempFile = std::move(temp.get());
-//  raw_fd_ostream out(tempFile.FD, false);
-
-//  out.write(srcStr.data(), srcStr.size());
-//  if (out.has_error()) {
-//    return tl::make_unexpected(out.error().value());
-//  }
-
-//  out.flush();
-//  llvm::consumeError(tempFile.discard());
-//  return {};
 }
 
 }

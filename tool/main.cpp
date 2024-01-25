@@ -84,13 +84,13 @@ int main(int argc, char *argv[]) {
 
             std::ifstream ifs(source_path.string());
             std::string sourceCode {std::istreambuf_iterator<char>(ifs), {}};
-            oklt::TranspilerInput transpilerParams {
-                                                   .sourceCode = sourceCode,
-                                                   .sourcePath = source_path,
-                                                   .inlcudeDirectories {},
-                                                   .defines = {},
-                                                   .targetBackend = backend.value(),
-                                                   };
+            oklt::TranspileInput transpilerParams {
+              backend.value(),
+              sourceCode,
+              source_path,
+              {},
+              {},
+            };
             tl::expected<oklt::TranspilerResult,std::vector<oklt::Error>> expectResult;
             if(need_normalize) {
               expectResult = oklt::normalize_and_transpile(transpilerParams);
