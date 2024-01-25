@@ -19,7 +19,7 @@ bool ASTVisitor::TraverseDecl(Decl* decl) {
     // auto &errorReporter = _session.getErrorReporter();
     auto errorDescription = toString(expectedAttr.takeError());
     // errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
-    return true;
+    return false;
   }
 
   const Attr* attr = expectedAttr.get();

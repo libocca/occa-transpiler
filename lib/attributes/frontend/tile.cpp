@@ -5,8 +5,8 @@
 
 namespace {
 
-using namespace clang;
 using namespace oklt;
+using namespace clang;
 
 constexpr ParsedAttrInfo::Spelling TILE_ATTRIBUTE_SPELLINGS[] = {
   {ParsedAttr::AS_CXX11, "tile"},

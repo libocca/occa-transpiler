@@ -9,7 +9,7 @@
 using namespace oklt;
 using namespace clang;
 
-// #define DEBUG_NORMALIZER
+// #define NORMALIZER_DEBUG_LOG
 //
 namespace {
 struct AttrNormalizerCtx {
@@ -172,7 +172,7 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
   // Override the method that gets called for each parsed top-level
   // declaration.
   void HandleTranslationUnit(ASTContext& ctx) override {
-#ifdef DEBUG_NORMALIZER
+#ifdef NORMALIZER_DEBUG_LOG
     ctx.getTranslationUnitDecl()->dump(llvm::outs());
 #endif
     TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
