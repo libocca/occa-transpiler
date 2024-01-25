@@ -1,17 +1,21 @@
 #include "oklt/core/attribute_manager/attribute_store.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 
-#include <clang/AST/ASTContext.h>
 #include <clang/AST/Attr.h>
 
 using namespace oklt;
 using namespace clang;
 using namespace llvm;
 
-AttributeStore::AttributeStore(ASTContext& ctx): _ctx(ctx) {};
+AttributeStore::AttributeStore(SessionStage& session): _ctx(session.getCompiler().getASTContext()) {};
+
+AttributeStore::~AttributeStore() {
+  clear();
+}
 
 void AttributeStore::add(const DynTypedNode& node, Attr *attr) {
-  if (!attr || !isa<AnnotateAttr, AnnotateTypeAttr, SuppressAttr>(attr))
-    return;
+  assert(attr && "Null attribute");
+  assert((isa<AnnotateAttr>(attr) || isa<AnnotateTypeAttr>(attr) || isa<SuppressAttr>(attr)) && "Non user attribute");
 
   auto [it, _] = _attrMap.try_emplace(node, AttrVec());
   it->getSecond().push_back(attr);
@@ -44,7 +48,7 @@ AttrVec AttributeStore::get(const QualType& qt) {
   return ret;
 }
 
-bool AttributeStore::has(const DynTypedNode& node, const SmallVector<StringRef> ids) {
+bool AttributeStore::has(const DynTypedNode& node, const SmallVector<StringRef>& ids) {
   for (auto attr: get(node)) {
     if (std::find(ids.begin(), ids.end(), attr->getNormalizedFullName()) != ids.end())
       return true;
@@ -53,7 +57,7 @@ bool AttributeStore::has(const DynTypedNode& node, const SmallVector<StringRef> 
   return false;
 }
 
-bool AttributeStore::has(const QualType& qt, const SmallVector<StringRef> ids) {
+bool AttributeStore::has(const QualType& qt, const SmallVector<StringRef>& ids) {
   AttrVec ret = {};
 
   auto cur = qt, par = cur;
@@ -66,4 +70,11 @@ bool AttributeStore::has(const QualType& qt, const SmallVector<StringRef> ids) {
   } while (par != cur);
 
   return false;
+}
+
+void AttributeStore::clear() {
+  for (auto &v : _attrMap) {
+    v.getSecond().clear();
+  }
+  _attrMap.clear();
 }

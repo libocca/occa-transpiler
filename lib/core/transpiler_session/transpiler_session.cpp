@@ -14,8 +14,7 @@ TranspilerSession::TranspilerSession(TRANSPILER_TYPE backend)
 SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
     : _session(session),
       _compiler(compiler),
-      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()),
-      _attrStore(_compiler.getASTContext()) {}
+      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
     return _compiler;
@@ -54,29 +53,25 @@ void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &message) {
   _session.diagMessages.emplace_back(Error{ ss.str() });
 }
 
-bool SessionStage::setUserCtx(const std::string& key, std::any userCtx) {
-    auto it = _userCtxMap.find(key);
-    if (it != _userCtxMap.end()) {
-        return false;
-    }
-
-    _userCtxMap.insert({key, std::move(userCtx)});
-    return true;
+bool SessionStage::hasUserCtx(const std::string& key) {
+  auto it = _userCtxMap.find(key);
+  return (it != _userCtxMap.find(key));
 }
 
-std::any SessionStage::getUserCtx(const std::string& key) {
-    auto it = _userCtxMap.find(key);
-    if (it == _userCtxMap.end()) {
-        return std::any{};
-    }
-    return it->second;
+bool SessionStage::setUserCtx(const std::string& key, const std::any& userCtx) {
+  auto [_, ret] = _userCtxMap.try_emplace(key, userCtx);
+  return ret;
+}
+
+std::any& SessionStage::getUserCtx(const std::string& key) {
+  return _userCtxMap[key];
 }
 
 SessionStage& getStageFromASTContext(clang::ASTContext& ast) {
   // NOTE:
   // There are a few stable references/pointer that can point to our controlled classes and structures.
-  // getSourceManager().getFileManager -- Reference to FileManager. Can exist only one.
-  // getDiagnostics().getClient() -- Pointer to DiagnosticConsumer. Multiplex.
+  // getSourceManager().getFileManager -- Reference to FileManager. Initialized before CompilerInstance, exist only one.
+  // getDiagnostics().getClient() -- Pointer to DiagnosticConsumer. Initialized during ExecuteAction, can be multiplexed.
 
   auto diag = dynamic_cast<DiagConsumer *>(ast.getDiagnostics().getClient());
   assert(diag);

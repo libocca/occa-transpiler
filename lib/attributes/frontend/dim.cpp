@@ -1,5 +1,6 @@
 #include "oklt/core/attribute_names.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/attribute_manager/attribute_store.h"
 #include "oklt/core/diag/diag_handler.h"
 #include "oklt/core/diag/diag_consumer.h"
 
@@ -60,7 +61,7 @@ struct DimAttribute : public ParsedAttrInfo {
     // TypeDecl:
     //   TypedefDecl -- typedef
 
-    auto &attrStore = getStageFromASTContext(sema.Context).getAttrStore();
+    auto &attrStore = getStageFromASTContext(sema.Context).getUserCtx<AttributeStore>();
     
     // Apply Attr to Type
     // ParmVarDecl, VarDecl, FieldDecl, etc.
@@ -97,7 +98,7 @@ class DimDiagHandler : public DiagHandler {
 
     QualType qt = QualType::getFromOpaquePtr(reinterpret_cast<void*>(info.getRawArg(0)));
 
-    auto &attrStore = session.getAttrStore();
+    auto &attrStore = session.getUserCtx<AttributeStore>();
     if (attrStore.has(qt, { "dim", DIM_ATTR_NAME, "okl_dim"}))
       return true;
 
