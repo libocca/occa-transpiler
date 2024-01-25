@@ -15,7 +15,7 @@ constexpr ParsedAttrInfo::Spelling BARRIER_ATTRIBUTE_SPELLINGS[] = {
 
 struct BarrierAttribute : public ParsedAttrInfo {
   BarrierAttribute() {
-    NumArgs = 0;
+    NumArgs = 1;
     OptArgs = 2;
     Spellings = BARRIER_ATTRIBUTE_SPELLINGS;
     AttrKind = clang::AttributeCommonInfo::AT_Suppress;

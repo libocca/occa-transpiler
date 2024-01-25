@@ -4,13 +4,13 @@
 namespace {
 using namespace oklt;
 
-bool parseKernelAttribute(const clang::Attr*, SessionStage&) {
-  llvm::outs() << "<<<parse kernel attr for cuda>>>\n";
+bool parseKernelAttribute(const clang::Attr* a, SessionStage&) {
+  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 
 bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
-  llvm::outs() << "<<<handle kernel attr for cuda>>>\n";
+  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 
