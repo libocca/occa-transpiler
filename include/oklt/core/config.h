@@ -12,4 +12,5 @@ enum struct TRANSPILER_TYPE: unsigned char {
 };
 
 tl::expected<TRANSPILER_TYPE, std::string> backendFromString(const std::string &type);
+std::string backendToString(TRANSPILER_TYPE backend);
 }

@@ -18,4 +18,14 @@ tl::expected<TRANSPILER_TYPE, std::string> backendFromString(const std::string &
     }
     return tl::unexpected("unknown backend is requisted");
 }
+
+std::string backendToString(TRANSPILER_TYPE backend) {
+  switch(backend) {
+  case TRANSPILER_TYPE::CUDA:
+    return std::string {"cuda"};
+  case TRANSPILER_TYPE::OPENMP:
+    return std::string {"openmp"};
+  }
+  return {};
+}
 }
