@@ -34,11 +34,9 @@ void DiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Di
       return;
   }
 
-//  SmallString<256> OutStr;
-//  Info.FormatDiagnostic(OutStr);
-//  llvm::errs() << OutStr << "\n";
+  auto msg = StoredDiagnostic(DiagLevel, Info);
+  _session.pushDiagnosticMessage(msg);
 
-  _session.pushDiagnosticMessage(StoredDiagnostic(DiagLevel, Info));
   DiagnosticConsumer::HandleDiagnostic(DiagLevel, Info);
 }
 

@@ -42,8 +42,7 @@ public:
   AttributeManager &getAttrManager();
   AttributeStore &getAttrStore() { return _attrStore; };
 
-  void pushDiagnosticMessage(clang::StoredDiagnostic &&message);
-  const llvm::SmallVector<clang::StoredDiagnostic>& getDiagnosticMessages() { return _diagMessages; };
+  void pushDiagnosticMessage(clang::StoredDiagnostic &message);
 
   //TODO: might need better redesign by design patterns
   bool setUserCtx(const std::string& key, std::any ctx);
@@ -55,7 +54,6 @@ protected:
   clang::CompilerInstance &_compiler;
   clang::Rewriter _rewriter;
   AttributeStore _attrStore;
-  llvm::SmallVector<clang::StoredDiagnostic> _diagMessages;
 
   //XXX discuss key
   std::map<std::string, std::any> _userCtxMap;

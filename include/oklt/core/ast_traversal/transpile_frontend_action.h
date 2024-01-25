@@ -9,7 +9,7 @@ namespace oklt {
 class TranspileFrontendAction: public clang::ASTFrontendAction {
 public:
   explicit TranspileFrontendAction(TranspilerSession &session);
-  ~TranspileFrontendAction() override;
+  ~TranspileFrontendAction() override = default;
 
 protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(

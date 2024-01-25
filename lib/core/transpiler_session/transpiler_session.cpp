@@ -42,8 +42,16 @@ TRANSPILER_TYPE SessionStage::getBackend() const {
     return _session.targetBackend;
 }
 
-void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &&message) {
-  _diagMessages.emplace_back(message);
+void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &message) {
+  // TODO: Fixup sourceLocation
+  auto msg = message.getMessage();
+  auto lineNo = message.getLocation().getLineNumber();
+
+  std::stringstream ss;
+  ss << "line " << lineNo << ": ";
+  ss << msg.str();
+
+  _session.diagMessages.emplace_back(Error{ ss.str() });
 }
 
 bool SessionStage::setUserCtx(const std::string& key, std::any userCtx) {

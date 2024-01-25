@@ -12,24 +12,6 @@ TranspileFrontendAction::TranspileFrontendAction(TranspilerSession &session)
     : _session(session)
 {}
 
-TranspileFrontendAction::~TranspileFrontendAction() {
-  if (!_stage)
-    return;
-
-  // Convert all produced diagnostic messages.
-  // TODO: Fixup sourceLocation
-  for (auto& diag : _stage->getDiagnosticMessages()) {
-    auto msg = diag.getMessage();
-    auto lineNo = diag.getLocation().getLineNumber();
-
-    std::stringstream ss;
-    ss << "line " << lineNo << ": ";
-    ss << msg.str();
-
-    _session.diagMessages.emplace_back(Error{ ss.str() });
-  }
-}
-
 std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(
     CompilerInstance &compiler, llvm::StringRef in_file)
 {
