@@ -1,7 +1,0 @@
-[
-    "openmp_inner.json",
-    "openmp_kernel.json",
-    "openmp_outer.json",
-    "openmp_shared.json",
-    "openmp_tile.json"
-]
