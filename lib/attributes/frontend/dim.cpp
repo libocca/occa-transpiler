@@ -50,10 +50,8 @@ struct DimAttribute : public ParsedAttrInfo {
       args.push_back(attr.getArgAsExpr(i));
     }
 
-    auto &attrStore = getStageFromASTContext(sema.Context).getAttrStore();
-
-    auto *ctxAttr = AnnotateTypeAttr::Create(sema.Context, name, args.data(), args.size(), attr);
-    sema.Context.addDestruction(ctxAttr);
+    auto *ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
+    decl->addAttr(ctxAttr);
 
     // ValueDecl:
     //   ParmVarDecl -- func param
@@ -62,6 +60,8 @@ struct DimAttribute : public ParsedAttrInfo {
     // TypeDecl:
     //   TypedefDecl -- typedef
 
+    auto &attrStore = getStageFromASTContext(sema.Context).getAttrStore();
+    
     // Apply Attr to Type
     // ParmVarDecl, VarDecl, FieldDecl, etc.
     if (auto val = dyn_cast<ValueDecl>(decl)) {
