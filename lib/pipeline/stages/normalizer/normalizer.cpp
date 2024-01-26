@@ -6,8 +6,6 @@
 #include "impl/gnu_to_std_cpp_stage.h"
 #include "impl/okl_to_gnu_stage.h"
 
-#define DEBUG_NORMALIZER
-
 using namespace clang;
 
 namespace {
@@ -37,7 +35,7 @@ tl::expected<NormalizerOutput, NormalizerError>
 applyGnuAttrBasedNormalization(NormalizerInput input, TranspilerSession &session) {
   // TODO error handling
   //
-#ifdef DEBUG_NORMALIZER
+#ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "stage 0 OKL source:\n\n" << input.oklSource << '\n';
 #endif
 
@@ -49,7 +47,7 @@ applyGnuAttrBasedNormalization(NormalizerInput input, TranspilerSession &session
     return tl::make_unexpected(NormalizerError{});
   }
 
-#ifdef DEBUG_NORMALIZER
+#ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "stage 1 GNU cpp source:\n\n" << firstStageOutput->gnuCppSrc << '\n';
 #endif
 
@@ -64,7 +62,7 @@ applyGnuAttrBasedNormalization(NormalizerInput input, TranspilerSession &session
     return tl::make_unexpected(NormalizerError{});
   }
 
-#ifdef DEBUG_NORMALIZER
+#ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "stage 2 STD cpp source:\n\n" << secondStageOutput->stdCppSrc << '\n';
 #endif
 
