@@ -66,7 +66,7 @@ struct DimAttribute : public ParsedAttrInfo {
     // TypeDecl:
     //   TypedefDecl -- typedef
 
-    auto & attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>("AttributedTypeMap");
+    auto & attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
     // Apply Attr to Type
     // ParmVarDecl, VarDecl, FieldDecl, etc.
@@ -102,6 +102,9 @@ class DimDiagHandler : public DiagHandler {
       return false;
 
     QualType qt = QualType::getFromOpaquePtr(reinterpret_cast<void*>(info.getRawArg(0)));
+    if (auto aqt = dyn_cast_or_null<ArrayType>(qt)) {
+      qt = aqt->getElementType();
+    }
 
     static llvm::ManagedStatic<SmallVector<StringRef>> attrNames = {};
     if (attrNames->empty()) {

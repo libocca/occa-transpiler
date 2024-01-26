@@ -36,15 +36,15 @@ AttrVec AttributedTypeMap::get(clang::ASTContext& ctx, const QualType& qt) {
 }
 
 bool AttributedTypeMap::has(clang::ASTContext& ctx, const QualType& qt, const SmallVector<StringRef>& ids) {
-  AttrVec ret = {};
-
   auto cur = qt, par = cur;
   do {
     const auto *key = cur.getTypePtrOrNull();
     auto it = _attrMap.find(key);
     if (it != _attrMap.end()) {
-      auto *attr = it->second;
-      auto isAttrMatch = std::any_of(ids.begin(), ids.end(), [attr](auto name){ return attr->getNormalizedFullName() == name;});
+      auto* attr = it->second;
+      auto isAttrMatch = std::any_of(ids.begin(), ids.end(), [attr](auto name) {
+        return attr->getNormalizedFullName() == name;
+      });
       if (isAttrMatch) {
         return true;
       }

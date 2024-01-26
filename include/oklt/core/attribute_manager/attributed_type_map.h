@@ -15,7 +15,7 @@ public:
 
   bool add(const clang::QualType& qt, clang::Attr *attr);
   clang::AttrVec get(clang::ASTContext& ctx, const clang::QualType& qt);
-  bool has(clang::ASTContext& _ctx, const clang::QualType& qt, const llvm::SmallVector<clang::StringRef>& ids);
+  bool has(clang::ASTContext& ctx, const clang::QualType& qt, const llvm::SmallVector<clang::StringRef>& ids);
 
 private:
   llvm::DenseMap<const clang::Type *, clang::Attr *> _attrMap;
