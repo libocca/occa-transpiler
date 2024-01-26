@@ -1,4 +1,5 @@
 #include "gnu_to_std_cpp_stage.h"
+#include "oklt/core/diag/diag_consumer.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -113,9 +114,9 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
  public:
   explicit GnuToCppAttrNormalizer(SessionStage& stage) : _stage(stage) {
     auto anyCtx = _stage.getUserCtx("input");
-    if (anyCtx.has_value()) {
+    if (anyCtx && anyCtx->has_value()) {
       // use non-throw api by passing pointer to any
-      _input = *(std::any_cast<GnuToStdCppStageInput*>(&anyCtx));
+      _input = *(std::any_cast<GnuToStdCppStageInput*>(anyCtx));
     } else {
       _input = nullptr;
     }
@@ -206,13 +207,26 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
     return std::make_unique<GnuToCppAttrNormalizerConsumer>(*_stage);
   }
 
+  void ExecuteAction() override {
+    if (!_stage)
+      return;
+
+    _diag = std::make_unique<DiagConsumer>(*_stage);
+
+    DiagnosticsEngine &Diagnostics = getCompilerInstance().getDiagnostics();
+    Diagnostics.setClient(_diag.get(), false);
+
+    ASTFrontendAction::ExecuteAction();
+  }
+
   void EndSourceFileAction() override { _output.stdCppSrc = _stage->getRewriterResult(); }
 
  private:
   oklt::GnuToStdCppStageInput _input;
   oklt::GnuToStdCppStageOutput& _output;
   TranspilerSession& _session;
-  std::unique_ptr<SessionStage> _stage;
+  std::unique_ptr<SessionStage> _stage = nullptr;
+  std::unique_ptr<clang::DiagnosticConsumer> _diag = nullptr;
 };
 
 }  // namespace

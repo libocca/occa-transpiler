@@ -14,6 +14,7 @@ public:
 
   bool TraverseDecl(clang::Decl *decl);
   bool TraverseStmt(clang::Stmt *stmt, DataRecursionQueue *queue = nullptr);
+  bool TraverseRecoveryExpr(clang::RecoveryExpr *expr, DataRecursionQueue *queue = nullptr);
 protected:
   SessionStage &_session;
 };
