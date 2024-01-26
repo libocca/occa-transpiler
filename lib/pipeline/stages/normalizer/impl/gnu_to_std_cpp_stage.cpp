@@ -113,9 +113,9 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
  public:
   explicit GnuToCppAttrNormalizer(SessionStage& stage) : _stage(stage) {
     auto anyCtx = _stage.getUserCtx("input");
-    if (anyCtx.has_value()) {
+    if (anyCtx && anyCtx->has_value()) {
       // use non-throw api by passing pointer to any
-      _input = *(std::any_cast<GnuToStdCppStageInput*>(&anyCtx));
+      _input = *(std::any_cast<GnuToStdCppStageInput*>(anyCtx));
     } else {
       _input = nullptr;
     }

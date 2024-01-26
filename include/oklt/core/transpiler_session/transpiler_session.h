@@ -41,20 +41,28 @@ public:
 
   void pushDiagnosticMessage(clang::StoredDiagnostic &message);
 
-  //TODO: might need better redesign by design patterns
-  bool hasUserCtx(const std::string& key);
-  bool setUserCtx(const std::string& key, const std::any& ctx);
-  std::any& getUserCtx(const std::string& key);
+  bool hasUserCtx(const std::string& key) {
+    auto it = _userCtxMap.find(key);
+    return (it != _userCtxMap.end());
+  };
+  bool setUserCtx(const std::string& key, const std::any& ctx) {
+    auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
+    return ret;
+  }
+  std::any* getUserCtx(const std::string& key) {
+    auto it = _userCtxMap.find(key);
+    if (it == _userCtxMap.end())
+      return nullptr;
 
-  template<typename T>
-  T& getUserCtx(const std::string& key = "") {
-    assert(_compiler.hasASTContext() && "getUserCtx called prematurely");
+    return &it->second;
+  }
 
-    auto keyT = key.empty() ? std::string(typeid(T).name()) : key;
-    if (!hasUserCtx(keyT))
-      setUserCtx(keyT, std::make_any<T>(*this));
+  template<typename T, typename... Args>
+  T& tryEmplaceUserCtx(const std::string& key = typeid(T).name(), Args&&... args) {
+    if (!hasUserCtx(key))
+      setUserCtx(key, std::make_any<T>(std::forward<Args>(args)...));
 
-    return std::any_cast<T &>(getUserCtx(keyT));
+    return std::any_cast<T &>(_userCtxMap[key]);
   }
 
 protected:
@@ -67,6 +75,6 @@ protected:
   std::map<std::string, std::any> _userCtxMap;
 };
 
-SessionStage& getStageFromASTContext(clang::ASTContext &);
+SessionStage* getStageFromASTContext(clang::ASTContext &);
 
 }

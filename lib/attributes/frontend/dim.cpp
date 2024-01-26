@@ -1,8 +1,8 @@
 #include "oklt/core/attribute_names.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
-#include "oklt/core/attribute_manager/attribute_store.h"
-#include "oklt/core/diag/diag_handler.h"
 #include "oklt/core/diag/diag_consumer.h"
+#include "oklt/core/diag/diag_handler.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/attribute_manager/attributed_type_map.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -39,6 +39,11 @@ struct DimAttribute : public ParsedAttrInfo {
   }
 
   AttrHandling handleDeclAttribute(clang::Sema &sema, clang::Decl *decl, const clang::ParsedAttr &attr) const override {
+    auto *stage = getStageFromASTContext(sema.Context);
+    if (!stage) {
+      return AttributeNotApplied;
+    }
+
     StringRef name;
     if (!sema.checkStringLiteralArgumentAttr(attr, 0, name)) {
       return AttributeNotApplied;
@@ -61,8 +66,8 @@ struct DimAttribute : public ParsedAttrInfo {
     // TypeDecl:
     //   TypedefDecl -- typedef
 
-    auto &attrStore = getStageFromASTContext(sema.Context).getUserCtx<AttributeStore>();
-    
+    auto & attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>("AttributedTypeMap");
+
     // Apply Attr to Type
     // ParmVarDecl, VarDecl, FieldDecl, etc.
     if (auto val = dyn_cast<ValueDecl>(decl)) {
@@ -70,7 +75,7 @@ struct DimAttribute : public ParsedAttrInfo {
       QualType newType = sema.Context.getAttributedType(attr::AnnotateType, origType, origType);
       val->setType(newType);
 
-      attrStore.add(newType, ctxAttr);
+      attrTypeMap.add(newType, ctxAttr);
       return AttributeApplied;
     }
 
@@ -80,7 +85,7 @@ struct DimAttribute : public ParsedAttrInfo {
       QualType newType = sema.Context.getAttributedType(attr::AnnotateType, origType, origType);
       typ->setTypeForDecl(newType.getTypePtr());
 
-      attrStore.add(newType, ctxAttr);
+      attrTypeMap.add(newType, ctxAttr);
       return AttributeApplied;
     }
 
@@ -98,8 +103,9 @@ class DimDiagHandler : public DiagHandler {
 
     QualType qt = QualType::getFromOpaquePtr(reinterpret_cast<void*>(info.getRawArg(0)));
 
-    auto &attrStore = session.getUserCtx<AttributeStore>();
-    if (attrStore.has(qt, { "dim", DIM_ATTR_NAME, "okl_dim"}))
+    auto & ctx = session.getCompiler().getASTContext();
+    auto & attrTypeMap = session.tryEmplaceUserCtx<AttributedTypeMap>();
+    if (attrTypeMap.has(ctx, qt, { "dim", DIM_ATTR_NAME, "okl_dim"}))
       return true;
 
     return false;

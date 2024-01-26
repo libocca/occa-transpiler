@@ -1,6 +1,6 @@
 #include "oklt/core/ast_traversal/ast_visitor.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/attribute_manager/attribute_store.h"
+#include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
@@ -79,8 +79,9 @@ bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr *expr, DataRecursionQueue *qu
     return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
   }
 
-  auto &attrStore = _session.getUserCtx<AttributeStore>();
-  auto attrs = attrStore.get(declRefExpr->getType());
+  auto & ctx = _session.getCompiler().getASTContext();
+  auto & attrTypeMap = _session.tryEmplaceUserCtx<AttributedTypeMap>();
+  auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
 
   auto &attrManager = _session.getAttrManager();
   llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(attrs, expr, _session);

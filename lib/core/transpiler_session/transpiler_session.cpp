@@ -53,30 +53,18 @@ void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic &message) {
   _session.diagMessages.emplace_back(Error{ ss.str() });
 }
 
-bool SessionStage::hasUserCtx(const std::string& key) {
-  auto it = _userCtxMap.find(key);
-  return (it != _userCtxMap.find(key));
-}
-
-bool SessionStage::setUserCtx(const std::string& key, const std::any& userCtx) {
-  auto [_, ret] = _userCtxMap.try_emplace(key, userCtx);
-  return ret;
-}
-
-std::any& SessionStage::getUserCtx(const std::string& key) {
-  return _userCtxMap[key];
-}
-
-SessionStage& getStageFromASTContext(clang::ASTContext& ast) {
+SessionStage* getStageFromASTContext(clang::ASTContext& ast) {
   // NOTE:
   // There are a few stable references/pointer that can point to our controlled classes and structures.
   // getSourceManager().getFileManager -- Reference to FileManager. Initialized before CompilerInstance, exist only one.
   // getDiagnostics().getClient() -- Pointer to DiagnosticConsumer. Initialized during ExecuteAction, can be multiplexed.
 
   auto diag = dynamic_cast<DiagConsumer *>(ast.getDiagnostics().getClient());
-  assert(diag);
+  if (!diag) {
+    return nullptr;
+  }
 
-  return diag->getSession();
+  return &diag->getSession();
 }
 
 }  // namespace oklt
