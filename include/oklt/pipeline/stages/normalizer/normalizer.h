@@ -16,5 +16,8 @@ struct NormalizerOutput {
   std::string cppSource;
 };
 
-tl::expected<NormalizerOutput, NormalizerError> normalize(NormalizerInput input, oklt::TranspilerSession& session);
+using ExpecteNormalizerResult = tl::expected<NormalizerOutput, NormalizerError>;
+
+ExpecteNormalizerResult normalize(NormalizerInput input,
+                                  TranspilerSession& session);
 } // namespace oklt

@@ -1,8 +1,9 @@
-#include "oklt/core/transpile.h"
-#include "oklt/core/ast_traversal/transpile_frontend_action.h"
+#include <oklt/pipeline/stages/transpiler/transpiler.h>
+#include <oklt/core/ast_traversal/transpile_frontend_action.h>
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 
 #include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Support/JSON.h>
 #include <clang/Tooling/Tooling.h>
 
 #include <fstream>
@@ -13,7 +14,8 @@ using namespace clang::tooling;
 
 namespace oklt {
 
-tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input)
+ExpectTranspilerResult transpile(const TranspileData &input,
+                                 TranspilerSession &session)
 {
   Twine tool_name = "okl-transpiler";
   std::string rawFileName = input.sourcePath.filename().string();
@@ -24,18 +26,7 @@ tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput inpu
       "-I."
   };
 
-  std::string sourceCode;
-  
-  if(input.normalization) {
-    TranspilerSession session{TRANSPILER_TYPE::CUDA};
-    sourceCode = oklt::normalize({.oklSource = input.sourceCode}, session).value().cppSource;
-  } else {
-    sourceCode = input.sourceCode;
-  }
-
-  oklt::TranspilerSession session {input.targetBackend};
-
-  Twine code(sourceCode);
+  Twine code(input.sourceCode);
   std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
   std::unique_ptr<oklt::TranspileFrontendAction> action =
       std::make_unique<oklt::TranspileFrontendAction>(session);

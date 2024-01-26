@@ -1,6 +1,5 @@
 #pragma once
 
-#include "oklt/core/config.h"
 #include "tl/expected.hpp"
 #include <optional>
 #include <filesystem>
@@ -8,6 +7,7 @@
 #include <list>
 #include <filesystem>
 
+#include <oklt/core/transpiler_session/transpiler_session.h>
 
 namespace oklt {
 struct TranspilerResult {
@@ -22,19 +22,11 @@ struct TranspilerResult {
   }launcher;
 };
 
-struct TranspilerInput {
-  //INFO: add
-  // 1. metadata
-  // 2. include directlries
-  // 3. defines
-  // 4. source path ???
-  // 5. error handler ??
+struct TranspileData {
   std::string sourceCode;
   std::filesystem::path sourcePath;
   std::list<std::filesystem::path> inlcudeDirectories;
   std::list<std::string> defines;
-  TRANSPILER_TYPE targetBackend;
-  bool normalization;
 };
 
 //TODO: needs definition
@@ -43,6 +35,10 @@ struct Error {
   std::string desription;
 };
 
-tl::expected<TranspilerResult,std::vector<Error>> transpile(TranspilerInput input);
+using ExpectTranspilerResult = tl::expected<TranspilerResult, std::vector<Error>>;
+
+ExpectTranspilerResult transpile(const TranspileData &input,
+                                 TranspilerSession &session);
+
 }
 

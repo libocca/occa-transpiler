@@ -21,11 +21,15 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/config.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpile.h
 
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalize_and_transpile.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalize.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpile.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/util/io_helper.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/util/string_utils.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/dim.cpp
@@ -53,12 +57,17 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/common_attribute_map.cpp
 
     core/transpiler_session/transpiler_session.cpp
-    core/transpile.cpp
+    core/config.cpp
 
     core/utils/format.cpp
 
     util/io_helper.cpp
+    util/string_utils.cpp
 
+    pipeline/normalize.cpp
+    pipeline/transpile.cpp
+    pipeline/normalize_and_transpile.cpp
+    pipeline/stages/transpiler/transpiler.cpp
     pipeline/stages/normalizer/normalizer.cpp
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
@@ -68,7 +77,9 @@ set (OCCA_TRANSPILER_SOURCES
 CPMAddPackage(expected
     GITHUB_REPOSITORY
     TartanLlama/expected
-    GIT_TAG v1.1.0)
+    GIT_TAG v1.1.0
+    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" ""
+)
 
 set(LLVM_LINK_COMPONENTS Support)
 

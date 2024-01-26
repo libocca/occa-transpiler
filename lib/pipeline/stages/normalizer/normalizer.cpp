@@ -6,6 +6,7 @@
 #include "impl/gnu_to_std_cpp_stage.h"
 #include "impl/okl_to_gnu_stage.h"
 
+
 using namespace clang;
 
 namespace {
@@ -72,8 +73,9 @@ applyGnuAttrBasedNormalization(NormalizerInput input, TranspilerSession &session
 } // namespace
 namespace oklt {
 
-tl::expected<NormalizerOutput, NormalizerError> normalize(NormalizerInput input,
-                                                          oklt::TranspilerSession &session) {
+ExpecteNormalizerResult normalize(NormalizerInput input,
+                                  TranspilerSession &session)
+{
   return applyGnuAttrBasedNormalization(std::move(input), session);
 }
 } // namespace oklt

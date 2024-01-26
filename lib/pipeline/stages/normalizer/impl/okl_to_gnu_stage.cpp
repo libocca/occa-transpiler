@@ -104,7 +104,6 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
 
   bool BeginSourceFileAction(CompilerInstance& compiler) override {
     auto& pp = compiler.getPreprocessor();
-    pp.Initialize(compiler.getTarget());
     pp.EnterMainSourceFile();
     auto tokens = fetchTokens(pp);
 

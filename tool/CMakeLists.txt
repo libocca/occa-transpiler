@@ -5,6 +5,7 @@ CPMAddPackage(
   argparser
   GITHUB_REPOSITORY p-ranav/argparse
   GIT_TAG v3.0
+  OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 add_executable(occa-tool

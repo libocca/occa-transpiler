@@ -85,6 +85,7 @@ void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& sta
 
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage) {
+
   for (const auto attr : e.getAttrs()) {
     if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
       continue;
@@ -123,6 +124,9 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
   bool VisitDecl(Decl* d) {
     assert(d != nullptr && "declaration is nullptr");
 
+    if(!d->hasAttrs()) {
+      return true;
+    }
     return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage);
   }
 
