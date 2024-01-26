@@ -4,13 +4,13 @@
 namespace {
 using namespace oklt;
 
-bool parseDimAttribute(const clang::Attr*, SessionStage&) {
-  llvm::outs() << "<<<parse dim attr for cuda>>>\n";
+bool parseDimAttribute(const clang::Attr* a, SessionStage&) {
+  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 
 bool handleDimAttrbute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
-  llvm::outs() << "<<<handle dim attr for cuda>>>\n";
+  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 

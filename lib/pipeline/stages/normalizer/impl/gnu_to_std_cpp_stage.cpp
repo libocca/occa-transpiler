@@ -9,6 +9,8 @@
 using namespace oklt;
 using namespace clang;
 
+// #define NORMALIZER_DEBUG_LOG
+//
 namespace {
 struct AttrNormalizerCtx {
   ASTContext* astCtx;
@@ -78,7 +80,7 @@ template <typename Expr, typename AttrType>
 void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& stage) {
   auto oklAttr           = toOklAttr(attr, stage.getCompiler().getASTContext());
   auto normalizedAttrStr = wrapAsSpecificCxxAttr(oklAttr);
-  stage.getRewriter().InsertTextBefore(e.getBeginLoc(), normalizedAttrStr + " ");
+  stage.getRewriter().InsertTextBefore(e.getBeginLoc(), normalizedAttrStr);
 }
 
 template <typename AttrType, typename Expr>
@@ -128,10 +130,14 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
     return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage);
   }
 
-  bool VisitAttrStmt(AttributedStmt* as) {
+  bool TraverseAttributedStmt(AttributedStmt* as) {
     assert(as != nullptr && "attributed statement is nullptr");
 
-    return tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage);
+    if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage)){
+      return false;
+    }
+
+    return RecursiveASTVisitor<GnuToCppAttrNormalizer>::TraverseAttributedStmt(as);
   }
 
   // Special visitor for attribute inside in 'for loop' statement
@@ -170,6 +176,9 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
   // Override the method that gets called for each parsed top-level
   // declaration.
   void HandleTranslationUnit(ASTContext& ctx) override {
+#ifdef NORMALIZER_DEBUG_LOG
+    ctx.getTranslationUnitDecl()->dump(llvm::outs());
+#endif
     TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
     _normalizer_visitor.TraverseDecl(decl);
   }

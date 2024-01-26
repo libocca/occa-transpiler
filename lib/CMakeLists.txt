@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.26)
 project (occa-transpiler VERSION 0.0.1 LANGUAGES CXX)
 
+option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
+
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
@@ -83,6 +85,10 @@ set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED
     ${OCCA_TRANSPILER_SOURCES})
+
+if (NORMALIZER_DEBUG_LOG)
+  target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
+endif()
 
 # target_compile_definitions(occa-transpile-lib PUBLIC ${LLVM_DEFINITIONS})
 target_include_directories(occa-transpiler

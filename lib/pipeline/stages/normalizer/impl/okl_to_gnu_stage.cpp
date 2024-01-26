@@ -7,7 +7,7 @@
 #include "okl_attr_traverser.h"
 #include "okl_to_gnu_stage.h"
 
-// #define DEBUG_NORMALIZER
+// #define NORMALIZER_DEBUG_LOG
 
 namespace {
 
@@ -63,7 +63,7 @@ void replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     gnu_markers.push_back({oklAttr, attr_loc_start});
   }
 
-#ifdef DEBUG_NORMALIZER
+#ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "removed attr: " << oklAttr.name
                << " at loc: " << oklAttr.begin_loc.printToString(pp.getSourceManager()) << '\n';
 #endif

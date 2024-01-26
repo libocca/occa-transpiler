@@ -4,13 +4,13 @@
 namespace {
 using namespace oklt;
 
-bool parseSharedAttribute(const clang::Attr*, SessionStage&) {
-  llvm::outs() << "<<<parse shared attr for cuda>>>\n";
+bool parseSharedAttribute(const clang::Attr* a, SessionStage&) {
+  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 
 bool handleSharedAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
-  llvm::outs() << "<<<handle shared attr for cuda>>>\n";
+  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 
