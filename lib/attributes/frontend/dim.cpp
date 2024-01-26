@@ -103,9 +103,16 @@ class DimDiagHandler : public DiagHandler {
 
     QualType qt = QualType::getFromOpaquePtr(reinterpret_cast<void*>(info.getRawArg(0)));
 
+    static llvm::ManagedStatic<SmallVector<StringRef>> attrNames = {};
+    if (attrNames->empty()) {
+      for (auto v : DIM_ATTRIBUTE_SPELLINGS) {
+        attrNames->push_back(v.NormalizedFullName);
+      }
+    };
+
     auto & ctx = session.getCompiler().getASTContext();
     auto & attrTypeMap = session.tryEmplaceUserCtx<AttributedTypeMap>();
-    if (attrTypeMap.has(ctx, qt, { "dim", DIM_ATTR_NAME, "okl_dim"}))
+    if (attrTypeMap.has(ctx, qt, *attrNames))
       return true;
 
     return false;

@@ -41,15 +41,15 @@ public:
 
   void pushDiagnosticMessage(clang::StoredDiagnostic &message);
 
-  bool hasUserCtx(const std::string& key) {
+  inline bool hasUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);
     return (it != _userCtxMap.end());
   };
-  bool setUserCtx(const std::string& key, const std::any& ctx) {
+  inline bool setUserCtx(const std::string& key, const std::any& ctx) {
     auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
     return ret;
   }
-  std::any* getUserCtx(const std::string& key) {
+  inline std::any* getUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);
     if (it == _userCtxMap.end())
       return nullptr;
@@ -58,7 +58,7 @@ public:
   }
 
   template<typename T, typename... Args>
-  T& tryEmplaceUserCtx(const std::string& key = typeid(T).name(), Args&&... args) {
+  inline T& tryEmplaceUserCtx(const std::string& key = typeid(T).name(), Args&&... args) {
     if (!hasUserCtx(key))
       setUserCtx(key, std::make_any<T>(std::forward<Args>(args)...));
 

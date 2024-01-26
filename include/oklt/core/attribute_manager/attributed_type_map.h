@@ -5,8 +5,6 @@
 
 namespace oklt {
 
-class SessionStage;
-
 /// Holds a map of nodes and their custom attributes.
 ///
 /// This class does not call attribute destructors,
