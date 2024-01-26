@@ -1,7 +1,7 @@
 #pragma once
 
-#include "oklt/core/transpile.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
+#include "oklt/core/diag/error.h"
 #include "oklt/core/config.h"
 
 #include <clang/Frontend/CompilerInstance.h>

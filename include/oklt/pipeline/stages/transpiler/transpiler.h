@@ -29,12 +29,6 @@ struct TranspileData {
   std::list<std::string> defines;
 };
 
-//TODO: needs definition
-struct Error {
-  //INFO: temporary solution to have somethign at least
-  std::string desription;
-};
-
 using ExpectTranspilerResult = tl::expected<TranspilerResult, std::vector<Error>>;
 
 ExpectTranspilerResult transpile(const TranspileData &input,
