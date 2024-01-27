@@ -22,14 +22,12 @@ struct OklAttributePrarserFsm {
 };
 
 OklAttributePrarserFsm makeOklAttrParserFsm(Preprocessor& pp, const std::vector<Token>& tokens) {
-  return {.token_cursor = 0,
-          .state        = OklAttributeParserState::SearchingAttrStart,
-          .attr         = {},
-          .pp           = pp};
+  return {
+    .token_cursor = 0, .state = OklAttributeParserState::SearchingAttrStart, .attr = {}, .pp = pp};
 }
 
 void resetFsmAttrState(OklAttributePrarserFsm& fsm) {
-  fsm.attr  = {};
+  fsm.attr = {};
   fsm.state = OklAttributeParserState::SearchingAttrStart;
 }
 
@@ -82,8 +80,8 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
         fsm.attr.params += [&](const auto& token) {
           auto token_str = fsm.pp.getSpelling(token);
           return token.getKind() != tok::string_literal
-                     ? token_str
-                     : std::string(llvm::formatv("\"{0}\"", token_str));
+                   ? token_str
+                   : std::string(llvm::formatv("\"{0}\"", token_str));
         }(token);
         return FsmStepStatus::TokenProcessed;
       }
@@ -122,7 +120,7 @@ int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
     }
     // process one by one token
     const auto& processing_token = tokens[fsm.token_cursor];
-    auto status                  = processTokenByFsm(fsm, processing_token);
+    auto status = processTokenByFsm(fsm, processing_token);
 
     if (status == FsmStepStatus::Error) {
       llvm::outs() << "error during parsing okl attr\n"

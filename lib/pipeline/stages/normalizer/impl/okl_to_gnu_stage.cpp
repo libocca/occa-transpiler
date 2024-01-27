@@ -50,7 +50,7 @@ void replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
 
   // fix malformed C++ syntax like for(init;cond;step;@outer) to for(init;cond;step) and mark source
   // location to fix it on AST traversal
-  auto left_neigbour   = getLeftNeigbour(oklAttr, tokens);
+  auto left_neigbour = getLeftNeigbour(oklAttr, tokens);
   auto right_neighbour = getRightNeigbour(oklAttr, tokens);
   auto attr_loc_start(tokens[oklAttr.tok_indecies.front()].getLocation());
   if (left_neigbour.is(tok::semi) && right_neighbour.is(tok::r_paren)) {
@@ -111,13 +111,13 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
     auto& rewriter = stage.getRewriter();
 
     auto ret =
-        visitOklAttributes(tokens, pp,
-                           [this, &rewriter](const OklAttribute& attr,
-                                             const std::vector<Token>& tokens, Preprocessor& pp) {
-                             replaceOklByGnuAttribute(_output.gnuMarkers, _output.recoveryMarkers,
-                                                      attr, tokens, pp, rewriter);
-                             return true;
-                           });
+      visitOklAttributes(tokens, pp,
+                         [this, &rewriter](const OklAttribute& attr,
+                                           const std::vector<Token>& tokens, Preprocessor& pp) {
+                           replaceOklByGnuAttribute(_output.gnuMarkers, _output.recoveryMarkers,
+                                                    attr, tokens, pp, rewriter);
+                           return true;
+                         });
     if (ret) {
       // TODO error handling
       return false;
@@ -149,8 +149,8 @@ tl::expected<OklToGnuStageOutput, int> convertOklToGnuAttribute(OklToGnuStageInp
   auto input_file = std::move(input.oklCppSrc);
 
   tooling::runToolOnCodeWithArgs(
-      std::make_unique<OklToGnuAttributeNormalizerAction>(std::move(input), output, session),
-      input_file, args, file_name, tool_name);
+    std::make_unique<OklToGnuAttributeNormalizerAction>(std::move(input), output, session),
+    input_file, args, file_name, tool_name);
 
   return std::move(output);
 }

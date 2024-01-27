@@ -1,8 +1,8 @@
+#include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/attribute_names.h"
 #include "oklt/core/diag/diag_consumer.h"
 #include "oklt/core/diag/diag_handler.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
-#include "oklt/core/attribute_manager/attributed_type_map.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -38,8 +38,10 @@ struct DimAttribute : public ParsedAttrInfo {
     return true;
   }
 
-  AttrHandling handleDeclAttribute(clang::Sema &sema, clang::Decl *decl, const clang::ParsedAttr &attr) const override {
-    auto *stage = getStageFromASTContext(sema.Context);
+  AttrHandling handleDeclAttribute(clang::Sema& sema,
+                                   clang::Decl* decl,
+                                   const clang::ParsedAttr& attr) const override {
+    auto* stage = getStageFromASTContext(sema.Context);
     if (!stage) {
       return AttributeNotApplied;
     }
@@ -49,14 +51,14 @@ struct DimAttribute : public ParsedAttrInfo {
       return AttributeNotApplied;
     }
 
-    llvm::SmallVector<Expr *, 4> args;
+    llvm::SmallVector<Expr*, 4> args;
     args.reserve(attr.getNumArgs() - 1);
     for (unsigned i = 1; i < attr.getNumArgs(); i++) {
       assert(!attr.isArgIdent(i));
       args.push_back(attr.getArgAsExpr(i));
     }
 
-    auto *ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
+    auto* ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
     decl->addAttr(ctxAttr);
 
     // ValueDecl:
@@ -66,7 +68,7 @@ struct DimAttribute : public ParsedAttrInfo {
     // TypeDecl:
     //   TypedefDecl -- typedef
 
-    auto & attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
+    auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
     // Apply Attr to Type
     // ParmVarDecl, VarDecl, FieldDecl, etc.
@@ -113,8 +115,8 @@ class DimDiagHandler : public DiagHandler {
       }
     };
 
-    auto & ctx = session.getCompiler().getASTContext();
-    auto & attrTypeMap = session.tryEmplaceUserCtx<AttributedTypeMap>();
+    auto& ctx = session.getCompiler().getASTContext();
+    auto& attrTypeMap = session.tryEmplaceUserCtx<AttributedTypeMap>();
     if (attrTypeMap.has(ctx, qt, *attrNames))
       return true;
 
@@ -125,4 +127,4 @@ class DimDiagHandler : public DiagHandler {
 ParsedAttrInfoRegistry::Add<DimAttribute> register_okl_sim(DIM_ATTR_NAME, "");
 oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
 
-} // namespace
+}  // namespace

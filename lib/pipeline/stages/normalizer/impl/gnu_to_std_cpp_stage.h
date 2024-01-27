@@ -1,7 +1,7 @@
 #pragma once
 
-#include "okl_attr_marker.h"
 #include <oklt/core/transpiler_session/transpiler_session.h>
+#include "okl_attr_marker.h"
 
 #include <list>
 #include <tl/expected.hpp>
@@ -19,6 +19,5 @@ struct GnuToStdCppStageInput {
 };
 
 tl::expected<GnuToStdCppStageOutput, int> convertGnuToStdCppAttribute(GnuToStdCppStageInput input,
-                                                                      TranspilerSession &session);
-} // namespace oklt
-
+                                                                      TranspilerSession& session);
+}  // namespace oklt

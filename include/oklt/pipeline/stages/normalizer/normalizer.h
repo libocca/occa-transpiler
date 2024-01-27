@@ -18,6 +18,5 @@ struct NormalizerOutput {
 
 using ExpecteNormalizerResult = tl::expected<NormalizerOutput, NormalizerError>;
 
-ExpecteNormalizerResult normalize(NormalizerInput input,
-                                  TranspilerSession& session);
-} // namespace oklt
+ExpecteNormalizerResult normalize(NormalizerInput input, TranspilerSession& session);
+}  // namespace oklt

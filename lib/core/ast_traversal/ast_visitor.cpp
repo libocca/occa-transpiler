@@ -68,7 +68,7 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
   return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt, queue);
 }
 
-bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr *expr, DataRecursionQueue *queue) {
+bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr* expr, DataRecursionQueue* queue) {
   auto subExpr = expr->subExpressions();
   if (subExpr.empty()) {
     return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
@@ -79,13 +79,13 @@ bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr *expr, DataRecursionQueue *qu
     return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
   }
 
-  auto & ctx = _session.getCompiler().getASTContext();
-  auto & attrTypeMap = _session.tryEmplaceUserCtx<AttributedTypeMap>();
+  auto& ctx = _session.getCompiler().getASTContext();
+  auto& attrTypeMap = _session.tryEmplaceUserCtx<AttributedTypeMap>();
   auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
 
-  auto &attrManager = _session.getAttrManager();
+  auto& attrManager = _session.getAttrManager();
   llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(attrs, expr, _session);
-  if(!expectedAttr) {
+  if (!expectedAttr) {
     return false;
   }
 

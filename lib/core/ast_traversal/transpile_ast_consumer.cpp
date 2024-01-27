@@ -3,15 +3,12 @@
 namespace oklt {
 using namespace clang;
 
-TranspileASTConsumer::TranspileASTConsumer(SessionStage &session)
-    :_session(session)
-    ,_visitor(_session)
-{}
+TranspileASTConsumer::TranspileASTConsumer(SessionStage& session)
+    : _session(session), _visitor(_session) {}
 
-void TranspileASTConsumer::HandleTranslationUnit(ASTContext &context)
-{
-  TranslationUnitDecl *tu = context.getTranslationUnitDecl();
+void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
+  TranslationUnitDecl* tu = context.getTranslationUnitDecl();
   _visitor.TraverseDecl(tu);
 }
 
-}
+}  // namespace oklt

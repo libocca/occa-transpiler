@@ -36,4 +36,3 @@ struct BarrierAttribute : public ParsedAttrInfo {
 
 ParsedAttrInfoRegistry::Add<BarrierAttribute> register_okl_barrier(BARRIER_ATTR_NAME, "");
 }  // namespace
-

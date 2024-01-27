@@ -38,4 +38,3 @@ struct KernelAttribute : public ParsedAttrInfo {
 
 ParsedAttrInfoRegistry::Add<KernelAttribute> register_okl_kernel(KERNEL_ATTR_NAME, "");
 }  // namespace
-

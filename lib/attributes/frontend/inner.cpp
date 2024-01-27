@@ -36,4 +36,3 @@ struct InnerAttribute : public ParsedAttrInfo {
 
 ParsedAttrInfoRegistry::Add<InnerAttribute> register_okl_inner(INNER_ATTR_NAME, "");
 }  // namespace
-

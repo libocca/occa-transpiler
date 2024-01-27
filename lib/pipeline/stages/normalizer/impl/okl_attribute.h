@@ -11,4 +11,4 @@ struct OklAttribute {
   std::vector<size_t> tok_indecies;
 };
 
-}
+}  // namespace oklt

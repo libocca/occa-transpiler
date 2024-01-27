@@ -5,8 +5,8 @@
 namespace oklt::tests {
 
 struct DataRootHolder {
-    std::filesystem::path dataRoot;
-    std::filesystem::path suitePath;
-    static DataRootHolder& instance();
+  std::filesystem::path dataRoot;
+  std::filesystem::path suitePath;
+  static DataRootHolder& instance();
 };
-}
+}  // namespace oklt::tests

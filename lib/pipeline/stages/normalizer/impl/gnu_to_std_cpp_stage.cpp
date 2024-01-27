@@ -59,10 +59,10 @@ bool hasAttrOklPrefix(const Attr& attr) {
 }
 
 OklAttribute toOklAttr(const AnnotateAttr& attr, ASTContext& ast) {
-  return OklAttribute{.raw          = "",
-                      .name         = attr.getAttrName()->getName().split('_').second.str(),
-                      .params       = attr.getAnnotation().str(),
-                      .begin_loc    = SourceLocation(),
+  return OklAttribute{.raw = "",
+                      .name = attr.getAttrName()->getName().split('_').second.str(),
+                      .params = attr.getAnnotation().str(),
+                      .begin_loc = SourceLocation(),
                       .tok_indecies = {}};
 }
 
@@ -70,23 +70,22 @@ OklAttribute toOklAttr(const SuppressAttr& attr, ASTContext& ast) {
   assert(attr.diagnosticIdentifiers_size() != 0 && "suppress attr has 0 args");
 
   const auto* args_str = attr.diagnosticIdentifiers_begin()->data();
-  return OklAttribute{.raw          = "",
-                      .name         = attr.getAttrName()->getName().split('_').second.str(),
-                      .params       = args_str,
-                      .begin_loc    = SourceLocation(),
+  return OklAttribute{.raw = "",
+                      .name = attr.getAttrName()->getName().split('_').second.str(),
+                      .params = args_str,
+                      .begin_loc = SourceLocation(),
                       .tok_indecies = {}};
 }
 
 template <typename Expr, typename AttrType>
 void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& stage) {
-  auto oklAttr           = toOklAttr(attr, stage.getCompiler().getASTContext());
+  auto oklAttr = toOklAttr(attr, stage.getCompiler().getASTContext());
   auto normalizedAttrStr = wrapAsSpecificCxxAttr(oklAttr);
   stage.getRewriter().InsertTextBefore(e.getBeginLoc(), normalizedAttrStr);
 }
 
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage) {
-
   for (const auto attr : e.getAttrs()) {
     if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
       continue;
@@ -125,7 +124,7 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
   bool VisitDecl(Decl* d) {
     assert(d != nullptr && "declaration is nullptr");
 
-    if(!d->hasAttrs()) {
+    if (!d->hasAttrs()) {
       return true;
     }
     return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage);
@@ -134,7 +133,7 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
   bool TraverseAttributedStmt(AttributedStmt* as) {
     assert(as != nullptr && "attributed statement is nullptr");
 
-    if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage)){
+    if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage)) {
       return false;
     }
 
@@ -151,12 +150,11 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
     }
 
     const auto& marker = _input->recoveryMarkers.front();
-    auto s_range       = s->getSourceRange();
+    auto s_range = s->getSourceRange();
     // if marker is inside of loop source location range it means loop should be decorated
     // by attribute in marker
     if (s_range.getBegin() <= marker.loc || marker.loc <= s_range.getEnd()) {
-      _stage.getRewriter().InsertTextBefore(s_range.getBegin(),
-                                            wrapAsSpecificCxxAttr(marker.attr));
+      _stage.getRewriter().InsertTextBefore(s_range.getBegin(), wrapAsSpecificCxxAttr(marker.attr));
       _input->recoveryMarkers.pop_front();
     }
 
@@ -213,7 +211,7 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
 
     _diag = std::make_unique<DiagConsumer>(*_stage);
 
-    DiagnosticsEngine &Diagnostics = getCompilerInstance().getDiagnostics();
+    DiagnosticsEngine& Diagnostics = getCompilerInstance().getDiagnostics();
     Diagnostics.setClient(_diag.get(), false);
 
     ASTFrontendAction::ExecuteAction();
@@ -243,8 +241,8 @@ tl::expected<GnuToStdCppStageOutput, int> convertGnuToStdCppAttribute(GnuToStdCp
   auto input_file = std::move(input.gnuCppSrc);
 
   tooling::runToolOnCodeWithArgs(
-      std::make_unique<GnuToStdCppAttributeNormalizerAction>(std::move(input), output, session),
-      input_file, args, file_name, tool_name);
+    std::make_unique<GnuToStdCppAttributeNormalizerAction>(std::move(input), output, session),
+    input_file, args, file_name, tool_name);
 
   return output;
 }

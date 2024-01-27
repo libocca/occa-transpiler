@@ -4,10 +4,10 @@
 
 namespace oklt {
 
-//TODO: needs definition
+// TODO: needs definition
 struct Error {
-  //INFO: temporary solution to have something at least
+  // INFO: temporary solution to have something at least
   std::string desription;
 };
 
-} // namespace oklt
+}  // namespace oklt

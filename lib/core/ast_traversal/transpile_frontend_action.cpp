@@ -8,13 +8,10 @@ namespace oklt {
 
 using namespace clang;
 
-TranspileFrontendAction::TranspileFrontendAction(TranspilerSession &session)
-    : _session(session)
-{}
+TranspileFrontendAction::TranspileFrontendAction(TranspilerSession& session) : _session(session) {}
 
-std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(
-    CompilerInstance &compiler, llvm::StringRef in_file)
-{
+std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(CompilerInstance& compiler,
+                                                                        llvm::StringRef in_file) {
   _stage = std::make_unique<SessionStage>(_session, compiler);
   return std::make_unique<TranspileASTConsumer>(*_stage);
 }
@@ -25,10 +22,10 @@ void TranspileFrontendAction::ExecuteAction() {
 
   _diag = std::make_unique<DiagConsumer>(*_stage);
 
-  DiagnosticsEngine &Diagnostics = getCompilerInstance().getDiagnostics();
+  DiagnosticsEngine& Diagnostics = getCompilerInstance().getDiagnostics();
   Diagnostics.setClient(_diag.get(), false);
 
   ASTFrontendAction::ExecuteAction();
 }
 
-}
+}  // namespace oklt

@@ -7,8 +7,8 @@ using namespace oklt;
 using namespace clang;
 using namespace llvm;
 
-bool AttributedTypeMap::add(const QualType& qt, Attr *attr) {
-  const auto *key = qt.getTypePtrOrNull();
+bool AttributedTypeMap::add(const QualType& qt, Attr* attr) {
+  const auto* key = qt.getTypePtrOrNull();
   if (!key || !isa<AnnotateAttr, AnnotateTypeAttr, SuppressAttr>(attr)) {
     return false;
   }
@@ -22,7 +22,7 @@ AttrVec AttributedTypeMap::get(clang::ASTContext& ctx, const QualType& qt) {
 
   auto cur = qt, par = cur;
   do {
-    const auto *key = cur.getTypePtrOrNull();
+    const auto* key = cur.getTypePtrOrNull();
     auto it = _attrMap.find(key);
     if (it != _attrMap.end()) {
       ret.push_back(it->second);
@@ -35,10 +35,12 @@ AttrVec AttributedTypeMap::get(clang::ASTContext& ctx, const QualType& qt) {
   return ret;
 }
 
-bool AttributedTypeMap::has(clang::ASTContext& ctx, const QualType& qt, const SmallVector<StringRef>& ids) {
+bool AttributedTypeMap::has(clang::ASTContext& ctx,
+                            const QualType& qt,
+                            const SmallVector<StringRef>& ids) {
   auto cur = qt, par = cur;
   do {
-    const auto *key = cur.getTypePtrOrNull();
+    const auto* key = cur.getTypePtrOrNull();
     auto it = _attrMap.find(key);
     if (it != _attrMap.end()) {
       auto* attr = it->second;

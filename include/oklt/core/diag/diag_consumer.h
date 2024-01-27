@@ -1,7 +1,7 @@
 #pragma once
 
-#include <clang/Basic/Diagnostic.h>
 #include <clang/AST/ASTContext.h>
+#include <clang/Basic/Diagnostic.h>
 #include <llvm/Support/Registry.h>
 
 namespace oklt {
@@ -9,16 +9,17 @@ namespace oklt {
 class SessionStage;
 
 class DiagConsumer : public clang::DiagnosticConsumer {
-public:
-  explicit DiagConsumer(SessionStage &session);
+ public:
+  explicit DiagConsumer(SessionStage& session);
   ~DiagConsumer() override = default;
 
-  inline SessionStage &getSession() { return _session; };
+  inline SessionStage& getSession() { return _session; };
 
-  void HandleDiagnostic(clang::DiagnosticsEngine::Level Level, const clang::Diagnostic &Info) override;
+  void HandleDiagnostic(clang::DiagnosticsEngine::Level Level,
+                        const clang::Diagnostic& Info) override;
 
-protected:
-  SessionStage &_session;
+ protected:
+  SessionStage& _session;
 };
 
-}
+}  // namespace oklt

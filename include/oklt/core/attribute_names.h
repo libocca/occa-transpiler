@@ -9,4 +9,4 @@ constexpr const char SHARED_ATTR_NAME[] = "okl::shared";
 constexpr const char DIM_ATTR_NAME[] = "okl::dim";
 constexpr const char RESTRICT_ATTR_NAME[] = "okl::restrict";
 constexpr const char BARRIER_ATTR_NAME[] = "okl::barrier";
-}
+}  // namespace oklt

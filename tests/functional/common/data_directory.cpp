@@ -4,8 +4,8 @@
 
 namespace oklt::tests {
 
-DataRootHolder & DataRootHolder::instance() {
-    static DataRootHolder holder;
-    return holder;
+DataRootHolder& DataRootHolder::instance() {
+  static DataRootHolder holder;
+  return holder;
 }
-}
+}  // namespace oklt::tests

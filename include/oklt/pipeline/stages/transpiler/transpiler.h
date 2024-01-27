@@ -1,11 +1,10 @@
 #pragma once
 
-#include "tl/expected.hpp"
-#include <optional>
 #include <filesystem>
 #include <iosfwd>
 #include <list>
-#include <filesystem>
+#include <optional>
+#include "tl/expected.hpp"
 
 #include <oklt/core/transpiler_session/transpiler_session.h>
 
@@ -19,7 +18,7 @@ struct TranspilerResult {
   struct {
     std::string outCode;
     std::string metadataJson;
-  }launcher;
+  } launcher;
 };
 
 struct TranspileData {
@@ -31,8 +30,6 @@ struct TranspileData {
 
 using ExpectTranspilerResult = tl::expected<TranspilerResult, std::vector<Error>>;
 
-ExpectTranspilerResult transpile(const TranspileData &input,
-                                 TranspilerSession &session);
+ExpectTranspilerResult transpile(const TranspileData& input, TranspilerSession& session);
 
-}
-
+}  // namespace oklt
