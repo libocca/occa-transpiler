@@ -1,7 +1,5 @@
 #include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/attribute_names.h"
-#include "oklt/core/diag/diag_consumer.h"
-#include "oklt/core/diag/diag_handler.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -13,16 +11,16 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-constexpr ParsedAttrInfo::Spelling DIM_ATTRIBUTE_SPELLINGS[] = {
-  {ParsedAttr::AS_CXX11, "dim"},
-  {ParsedAttr::AS_CXX11, DIM_ATTR_NAME},
-  {ParsedAttr::AS_GNU, "okl_dim"}};
+constexpr ParsedAttrInfo::Spelling DIMORDER_ATTRIBUTE_SPELLINGS[] = {
+  {ParsedAttr::AS_CXX11, "dimOrder"},
+  {ParsedAttr::AS_CXX11, DIMORDER_ATTR_NAME},
+  {ParsedAttr::AS_GNU, "okl_dimOrder"}};
 
-struct DimAttribute : public ParsedAttrInfo {
-  DimAttribute() {
+struct DimOrderAttribute : public ParsedAttrInfo {
+  DimOrderAttribute() {
     NumArgs = 1;
     OptArgs = 6;
-    Spellings = DIM_ATTRIBUTE_SPELLINGS;
+    Spellings = DIMORDER_ATTRIBUTE_SPELLINGS;
     IsType = 1;
     HasCustomParsing = 1;
   }
@@ -95,36 +93,6 @@ struct DimAttribute : public ParsedAttrInfo {
   }
 };
 
-class DimDiagHandler : public DiagHandler {
- public:
-  DimDiagHandler() : DiagHandler(diag::err_typecheck_call_not_function){};
-
-  bool HandleDiagnostic(SessionStage& session, DiagLevel level, const Diagnostic& info) override {
-    if (info.getArgKind(0) != DiagnosticsEngine::ak_qualtype)
-      return false;
-
-    QualType qt = QualType::getFromOpaquePtr(reinterpret_cast<void*>(info.getRawArg(0)));
-    if (auto aqt = dyn_cast_or_null<ArrayType>(qt)) {
-      qt = aqt->getElementType();
-    }
-
-    static llvm::ManagedStatic<SmallVector<StringRef>> attrNames = {};
-    if (attrNames->empty()) {
-      for (auto v : DIM_ATTRIBUTE_SPELLINGS) {
-        attrNames->push_back(v.NormalizedFullName);
-      }
-    };
-
-    auto& ctx = session.getCompiler().getASTContext();
-    auto& attrTypeMap = session.tryEmplaceUserCtx<AttributedTypeMap>();
-    if (attrTypeMap.has(ctx, qt, *attrNames))
-      return true;
-
-    return false;
-  }
-};
-
-ParsedAttrInfoRegistry::Add<DimAttribute> register_okl_dim(DIM_ATTR_NAME, "");
-oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
+ParsedAttrInfoRegistry::Add<DimOrderAttribute> register_okl_dimOrder(DIMORDER_ATTR_NAME, "");
 
 }  // namespace
