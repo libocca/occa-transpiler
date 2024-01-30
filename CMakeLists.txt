@@ -28,6 +28,11 @@ include(cmake/CPM.cmake)
 
 find_package(LLVM 17 REQUIRED CONFIG)
 find_package(Clang 17 REQUIRED CONFIG)
+
+
+set(LLVM_ENABLE_RTTI ON)
+set(LLVM_REQUIRES_RTTI ON)
+
 include(AddLLVM)
 
 if (STATIC_LIBCLANG)

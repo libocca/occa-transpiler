@@ -86,13 +86,12 @@ CPMAddPackage(expected
 set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED
-    ${OCCA_TRANSPILER_SOURCES})
+     ${OCCA_TRANSPILER_SOURCES})
 
 if (NORMALIZER_DEBUG_LOG)
   target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
 endif()
 
-# target_compile_definitions(occa-transpile-lib PUBLIC ${LLVM_DEFINITIONS})
 target_include_directories(occa-transpiler
         PUBLIC
 
@@ -116,4 +115,5 @@ target_link_libraries(occa-transpiler
         clangToolingRefactoring
         clangASTMatchers
         clangTransformer
+        ${CLANG_LIBS}
   )

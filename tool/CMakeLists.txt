@@ -21,13 +21,5 @@ target_link_libraries(occa-tool
         PRIVATE
         occa-transpiler
         argparse
-        clangAST
-        clangBasic
-        clangFrontend
-        clangSerialization
-        clangTooling
-        clangToolingRefactoring
-        clangASTMatchers
-        clangTransformer
 )
 
