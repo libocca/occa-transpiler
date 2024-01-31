@@ -1,6 +1,6 @@
 #include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/attribute_names.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
