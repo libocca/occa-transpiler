@@ -1,0 +1,16 @@
+[
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/dim/attr_placement.cpp"
+        },
+        "reference": "normalize/dim/attr_placement_ref.cpp"
+    },
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/dim/attr_use.cpp"
+        },
+        "reference": "normalize/dim/attr_use_ref.cpp"
+    }
+]
