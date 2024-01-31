@@ -103,7 +103,6 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
 int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
                                    Preprocessor& pp,
                                    OklAttrVisitor& visitor) {
-  assert(!tokens.empty());
   if (tokens.empty()) {
     llvm::outs() << "no input tokens\n";
     return -2;

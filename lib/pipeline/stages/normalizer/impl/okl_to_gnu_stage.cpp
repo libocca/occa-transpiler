@@ -105,7 +105,12 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
   bool BeginSourceFileAction(CompilerInstance& compiler) override {
     auto& pp = compiler.getPreprocessor();
     pp.EnterMainSourceFile();
+
     auto tokens = fetchTokens(pp);
+    if (tokens.empty()) {
+      // TODO error handling
+      return false;
+    }
 
     SessionStage stage{_session, compiler};
     auto& rewriter = stage.getRewriter();

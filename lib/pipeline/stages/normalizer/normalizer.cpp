@@ -36,6 +36,10 @@ tl::expected<NormalizerOutput, NormalizerError> applyGnuAttrBasedNormalization(
   TranspilerSession& session) {
   // TODO error handling
   //
+  if (input.oklSource.empty()) {
+    llvm::outs() << "input source string is empty\n";
+    return tl::make_unexpected(NormalizerError{});
+  }
 #ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "stage 0 OKL source:\n\n" << input.oklSource << '\n';
 #endif
