@@ -4,10 +4,9 @@
 #include <tl/expected.hpp>
 
 namespace oklt {
-struct TranspilerSession;
-}
 
-namespace oklt {
+struct TranspilerSession;
+
 struct NormalizerError {};
 
 struct NormalizerInput {

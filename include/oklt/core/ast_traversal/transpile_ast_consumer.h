@@ -5,20 +5,18 @@
 #include "oklt/core/ast_traversal/ast_visitor.h"
 
 namespace oklt {
-class SessionStage;
-}
 
-namespace oklt {
+class SessionStage;
 
 class TranspileASTConsumer : public clang::ASTConsumer {
  public:
-  explicit TranspileASTConsumer(SessionStage& session);
+  explicit TranspileASTConsumer(SessionStage& stage);
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
   SessionStage &getSessionStage();
   ASTVisitor &getAstVisitor();
  private:
-  SessionStage &_session;
+  SessionStage &_stage;
   ASTVisitor _visitor;
 
 };

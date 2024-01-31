@@ -7,11 +7,9 @@
 #include <tl/expected.hpp>
 
 namespace oklt {
+
 struct TranspilerSession;
 struct Error;
-}
-
-namespace oklt {
 
 struct TranspilerResult {
   struct {

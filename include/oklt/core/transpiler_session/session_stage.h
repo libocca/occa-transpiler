@@ -7,12 +7,10 @@
 #include <any>
 
 namespace oklt {
+
 class ASTVisitor;
 class AttributeManager;
 struct TranspilerSession;
-}
-
-namespace oklt {
 
 // INFO: could hold not the reference to the global AttributeManager
 //       but hold the pointer to the AttributeManagerView

@@ -4,11 +4,10 @@
 #include <clang/Frontend/FrontendAction.h>
 
 namespace oklt {
+
 class TranspilerSession;
 class SessionStage;
-}
 
-namespace oklt {
 class TranspileFrontendAction : public clang::ASTFrontendAction {
  public:
   explicit TranspileFrontendAction(TranspilerSession& session);
