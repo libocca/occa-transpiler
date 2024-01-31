@@ -7,6 +7,7 @@ constexpr const char INNER_ATTR_NAME[] = "okl::inner";
 constexpr const char TILE_ATTR_NAME[] = "okl::tile";
 constexpr const char SHARED_ATTR_NAME[] = "okl::shared";
 constexpr const char DIM_ATTR_NAME[] = "okl::dim";
+constexpr const char DIMORDER_ATTR_NAME[] = "okl::dimOrder";
 constexpr const char RESTRICT_ATTR_NAME[] = "okl::restrict";
 constexpr const char BARRIER_ATTR_NAME[] = "okl::barrier";
 }  // namespace oklt
