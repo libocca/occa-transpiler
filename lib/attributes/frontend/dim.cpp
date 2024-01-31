@@ -1,8 +1,8 @@
 #include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/attribute_names.h"
-#include "oklt/core/diag/diag_consumer.h"
+// #include "oklt/core/diag/diag_consumer.h"
 #include "oklt/core/diag/diag_handler.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -41,6 +41,7 @@ struct DimAttribute : public ParsedAttrInfo {
   AttrHandling handleDeclAttribute(clang::Sema& sema,
                                    clang::Decl* decl,
                                    const clang::ParsedAttr& attr) const override {
+
     auto* stage = getStageFromASTContext(sema.Context);
     if (!stage) {
       return AttributeNotApplied;

@@ -1,9 +1,11 @@
 #pragma once
 
-#include <oklt/core/transpiler_session/transpiler_session.h>
-
 #include <string>
 #include <tl/expected.hpp>
+
+namespace oklt {
+struct TranspilerSession;
+}
 
 namespace oklt {
 struct NormalizerError {};

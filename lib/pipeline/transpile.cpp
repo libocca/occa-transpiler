@@ -1,4 +1,6 @@
+#include <oklt/core/transpiler_session/transpiler_session.h>
 #include <oklt/pipeline/transpile.h>
+#include <oklt/core/diag/error.h>
 
 namespace oklt {
 

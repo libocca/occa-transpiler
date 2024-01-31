@@ -2,7 +2,12 @@
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendAction.h>
-#include "oklt/core/transpiler_session/transpiler_session.h"
+// #include "oklt/core/transpiler_session/transpiler_session.h"
+
+namespace oklt {
+class TranspilerSession;
+class SessionStage;
+}
 
 namespace oklt {
 class TranspileFrontendAction : public clang::ASTFrontendAction {
@@ -13,11 +18,9 @@ class TranspileFrontendAction : public clang::ASTFrontendAction {
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                         llvm::StringRef in_file) override;
-  void ExecuteAction() override;
-
- private:
+private:
   TranspilerSession& _session;
-  std::unique_ptr<SessionStage> _stage = nullptr;
-  std::unique_ptr<clang::DiagnosticConsumer> _diag = nullptr;
+  //INFO: it must leave longer than ASTConsumer for Diagnostic Consumer
+  std::unique_ptr<SessionStage> _stage;
 };
 }  // namespace oklt

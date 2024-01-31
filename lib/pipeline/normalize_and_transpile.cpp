@@ -3,6 +3,7 @@
 #include <oklt/core/transpiler_session/transpiler_session.h>
 #include <oklt/pipeline/normalize_and_transpile.h>
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
+#include <oklt/core/diag/error.h>
 
 using namespace llvm;
 using namespace clang;

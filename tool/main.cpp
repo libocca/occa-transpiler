@@ -1,5 +1,7 @@
+#include <oklt/core/transpiler_session/transpiler_session.h>
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 #include <oklt/pipeline/stages/transpiler/transpiler.h>
+#include <oklt/core/diag/error.h>
 #include <oklt/util/io_helper.h>
 #include <argparse/argparse.hpp>
 #include <filesystem>

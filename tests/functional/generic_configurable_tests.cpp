@@ -3,12 +3,14 @@
 #include <nlohmann/json.hpp>
 #include "common/data_directory.h"
 #include "common/load_test_suites.h"
-#include "oklt/core/config.h"
-#include "oklt/core/utils/format.h"
-#include "oklt/pipeline/normalize.h"
-#include "oklt/pipeline/normalize_and_transpile.h"
-#include "oklt/pipeline/transpile.h"
-#include "oklt/util/string_utils.h"
+#include <oklt/core/config.h>
+#include <oklt/core/utils/format.h>
+#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <oklt/core/diag/error.h>
+#include <oklt/pipeline/normalize.h>
+#include <oklt/pipeline/normalize_and_transpile.h>
+#include <oklt/pipeline/transpile.h>
+#include <oklt/util/string_utils.h>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;

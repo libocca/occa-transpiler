@@ -4,11 +4,15 @@
 #include <iosfwd>
 #include <list>
 #include <optional>
-#include "tl/expected.hpp"
-
-#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <tl/expected.hpp>
 
 namespace oklt {
+struct TranspilerSession;
+struct Error;
+}
+
+namespace oklt {
+
 struct TranspilerResult {
   struct {
     std::string outCode;
