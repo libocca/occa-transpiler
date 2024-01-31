@@ -1,7 +1,9 @@
 #include <oklt/core/ast_traversal/transpile_frontend_action.h>
+#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <oklt/core/transpiler_session/session_stage.h>
+#include <oklt/core/diag/error.h>
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 #include <oklt/pipeline/stages/transpiler/transpiler.h>
-
 #include <clang/Tooling/Tooling.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/raw_os_ostream.h>

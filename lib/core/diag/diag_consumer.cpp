@@ -1,6 +1,6 @@
 #include "oklt/core/diag/diag_consumer.h"
 #include "oklt/core/diag/diag_handler.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 
 #include "llvm/Support/ManagedStatic.h"
 

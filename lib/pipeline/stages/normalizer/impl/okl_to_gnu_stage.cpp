@@ -6,6 +6,7 @@
 
 #include "okl_attr_traverser.h"
 #include "okl_to_gnu_stage.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 
 // #define NORMALIZER_DEBUG_LOG
 

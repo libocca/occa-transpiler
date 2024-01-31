@@ -1,3 +1,4 @@
+#include <oklt/core/transpiler_session/transpiler_session.h>
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 #include <oklt/util/io_helper.h>
 

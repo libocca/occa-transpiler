@@ -39,10 +39,6 @@ target_include_directories(occa-transpiler-tests
         ${CMAKE_SOURCE_DIR}/include
     )
 
-if (NOT STATIC_LIBCLANG)
-    llvm_config(occa-transpiler-tests USE_SHARED support)
-endif()
-
 target_compile_definitions(occa-transpiler-tests
        	PRIVATE
         ${LLVM_DEFINITIONS})
@@ -53,7 +49,6 @@ target_link_libraries(occa-transpiler-tests
         argparse
 	nlohmann_json::nlohmann_json
         occa-transpiler
-        ${CLANG_LIBS}
 )
 
 add_custom_command(TARGET occa-transpiler-tests POST_BUILD

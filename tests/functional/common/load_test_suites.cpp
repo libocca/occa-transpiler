@@ -1,11 +1,9 @@
-
 #include "load_test_suites.h"
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
 #include "common/data_directory.h"
-#include "oklt/core/config.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;

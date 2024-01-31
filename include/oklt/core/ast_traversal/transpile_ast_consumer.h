@@ -1,19 +1,24 @@
 #pragma once
 
 #include <clang/AST/ASTConsumer.h>
+#include <clang/Frontend/CompilerInstance.h>
 #include "oklt/core/ast_traversal/ast_visitor.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 
+class SessionStage;
+
 class TranspileASTConsumer : public clang::ASTConsumer {
  public:
-  explicit TranspileASTConsumer(SessionStage& session);
+  explicit TranspileASTConsumer(SessionStage& stage);
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
+  SessionStage &getSessionStage();
+  ASTVisitor &getAstVisitor();
  private:
-  SessionStage& _session;
+  SessionStage &_stage;
   ASTVisitor _visitor;
+
 };
 
 }  // namespace oklt
