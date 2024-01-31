@@ -29,6 +29,12 @@ AttrVec AttributedTypeMap::get(clang::ASTContext& ctx, const QualType& qt) {
     }
 
     par = cur;
+
+    if (auto aqt = dyn_cast_or_null<clang::ArrayType>(par)) {
+      cur = aqt->getElementType();
+      continue;
+    }
+
     cur = par.getSingleStepDesugaredType(ctx);
   } while (par != cur);
 
@@ -53,6 +59,12 @@ bool AttributedTypeMap::has(clang::ASTContext& ctx,
     }
 
     par = cur;
+
+    if (auto aqt = dyn_cast_or_null<clang::ArrayType>(par)) {
+      cur = aqt->getElementType();
+      continue;
+    }
+
     cur = par.getSingleStepDesugaredType(ctx);
   } while (par != cur);
 

@@ -35,6 +35,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     attributes/frontend/barrier.cpp
     attributes/frontend/dim.cpp
+    attributes/frontend/dimOrder.cpp
     attributes/frontend/inner.cpp
     attributes/frontend/kernel.cpp
     attributes/frontend/outer.cpp
