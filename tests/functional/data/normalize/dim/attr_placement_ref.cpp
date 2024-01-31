@@ -16,7 +16,7 @@ typedef [[okl::dim("(4,4)")]] float *mat4;
     // Multiple
     {
       [[okl::dim("(x,y)")]] int arr1_1[12], arr1_2[12];
-      [[okl::dim("(x,y)")]] int arr2_1[12], arr2_2[12];
+      int [[okl::dim("(x,y)")]] arr2_1[12], arr2_2[12];
       int [[okl::dim("(x,y)")]] arr3_1[12], [[okl::dim("(y,x)")]] arr3_2[12];
     };
   };
