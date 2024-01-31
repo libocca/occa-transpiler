@@ -1,6 +1,5 @@
 #include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/attribute_names.h"
-// #include "oklt/core/diag/diag_consumer.h"
 #include "oklt/core/diag/diag_handler.h"
 #include "oklt/core/transpiler_session/session_stage.h"
 
