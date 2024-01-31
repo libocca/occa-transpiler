@@ -11,22 +11,20 @@ int main(int argc, char* argv[]) {
   argparse::ArgumentParser program("occa-transpiler-tests");
   program.add_argument("-s", "--suite").default_value("").help("set suite path");
   program.add_argument("-d", "--data_root").default_value("").help("set data root folder");
-  program.add_argument("--gtest_filter").default_value("*");
-  program.add_argument("--gtest_color").default_value("no");
   try {
-    program.parse_args(argc, argv);
+    program.parse_known_args(argc, argv);
     auto suite = program.get<std::string>("--suite");
     std::filesystem::path suitePath(suite);
     if (!fs::exists(suitePath)) {
       std::cerr << "Can't find suite folder path" << std::endl;
-      return 1;
+      return 0;
     }
     DataRootHolder::instance().suitePath = suitePath;
     auto dataPath = program.get<std::string>("--data_root");
     std::filesystem::path p(dataPath);
     if (!fs::exists(p) && fs::is_directory(p)) {
       std::cerr << "Provided invalid data_root" << std::endl;
-      return 1;
+      return 0;
     }
     DataRootHolder::instance().dataRoot = p;
   } catch (const std::exception& err) {
