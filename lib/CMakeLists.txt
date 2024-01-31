@@ -107,14 +107,5 @@ target_include_directories(occa-transpiler
 target_link_libraries(occa-transpiler
     PUBLIC
         tl::expected
-    PRIVATE
-        clangAST
-        clangBasic
-        clangFrontend
-        clangSerialization
         clangTooling
-        clangToolingRefactoring
-        clangASTMatchers
-        clangTransformer
-        ${CLANG_LIBS}
   )
