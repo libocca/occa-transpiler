@@ -19,6 +19,7 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/common_attribute_map.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/transpiler_session.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_stage.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/config.h
@@ -60,6 +61,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/common_attribute_map.cpp
 
     core/transpiler_session/transpiler_session.cpp
+    core/transpiler_session/session_stage.cpp
     core/config.cpp
 
     core/utils/format.cpp
@@ -108,13 +110,5 @@ target_link_libraries(occa-transpiler
     PUBLIC
         tl::expected
     PRIVATE
-        clangAST
-        clangBasic
-        clangFrontend
-        clangSerialization
-        clangTooling
-        clangToolingRefactoring
-        clangASTMatchers
-        clangTransformer
         ${CLANG_LIBS}
   )

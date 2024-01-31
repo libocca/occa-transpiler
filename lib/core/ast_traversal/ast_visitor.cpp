@@ -1,4 +1,5 @@
 #include "oklt/core/ast_traversal/ast_visitor.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
 #include "oklt/core/attribute_manager/attributed_type_map.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
