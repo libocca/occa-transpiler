@@ -15,8 +15,6 @@ int main(int argc, char* argv[]) {
   argparse::ArgumentParser program("occa-transpiler-tests");
   program.add_argument("-s", "--suite").default_value(defaultSuit.string()).help("set suite path");
   program.add_argument("-d", "--data_root").default_value(defaultData.string()).help("set data root folder");
-  program.add_argument("--gtest_list_tests").flag().default_value("");
-  program.add_argument("--gtest_filter").default_value("*");
 
   try {
     program.parse_known_args(argc, argv);
