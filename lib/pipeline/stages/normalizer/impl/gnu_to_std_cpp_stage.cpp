@@ -82,12 +82,17 @@ template <typename Expr, typename AttrType>
 void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& stage) {
   auto oklAttr = toOklAttr(attr, stage.getCompiler().getASTContext());
   auto normalizedAttrStr = wrapAsSpecificCxxAttr(oklAttr);
-  stage.getRewriter().InsertTextBefore(e.getBeginLoc(), normalizedAttrStr);
+  stage.getRewriter().InsertTextAfter(e.getBeginLoc(), normalizedAttrStr);
 }
 
 template <typename AttrType, typename Expr>
-bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage) {
-  for (const auto attr : e.getAttrs()) {
+bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
+  assert(lastProccesedAttr);
+  for (auto* attr : e.getAttrs()) {
+    if ((*lastProccesedAttr) && ((*lastProccesedAttr)->getLoc() == attr->getLoc())) {
+      continue;
+    }
+
     if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
       continue;
     }
@@ -103,6 +108,7 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage) {
 
     removeAttr(stage.getRewriter(), *attr);
     insertNormalizedAttr(e, *targetAttr, stage);
+    *lastProccesedAttr = attr;
   }
 
   return true;
@@ -128,13 +134,13 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
     if (!d->hasAttrs()) {
       return true;
     }
-    return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage);
+    return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage, &_lastProccesedAttr);
   }
 
   bool TraverseAttributedStmt(AttributedStmt* as) {
     assert(as != nullptr && "attributed statement is nullptr");
 
-    if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage)) {
+    if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage, &_lastProccesedAttr)) {
       return false;
     }
 
@@ -163,6 +169,7 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
   }
 
  private:
+  const Attr* _lastProccesedAttr{nullptr};
   SessionStage& _stage;
   GnuToStdCppStageInput* _input;
 };
