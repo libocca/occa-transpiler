@@ -157,4 +157,16 @@ TEST_P(GenericTest, OCCATests) {
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(GenericSuiteTests, GenericTest, testing::ValuesIn(loadTestsSuite()));
+struct GenericConfigTestNamePrinter {
+  std::string operator()(const testing::TestParamInfo<std::string>& info) const {
+    std::filesystem::path fullPath(info.param);
+    auto fileName = fullPath.stem();
+    return oklt::util::toCamelCase(fileName.string());
+  }
+};
+
+
+INSTANTIATE_TEST_SUITE_P(GenericSuiteTests,
+                         GenericTest,
+                         testing::ValuesIn(loadTestsSuite()),
+                         GenericConfigTestNamePrinter());

@@ -58,6 +58,7 @@ add_custom_command(TARGET occa-transpiler-tests POST_BUILD
 
 gtest_discover_tests(
         occa-transpiler-tests
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
         EXTRA_ARGS -s ./configs/test_suite_normalize -d data
         TEST_SUFFIX .noArgs
         TEST_LIST noArgsTests
