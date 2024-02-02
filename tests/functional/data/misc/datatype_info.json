@@ -1,0 +1,20 @@
+[
+     {
+          "name": "int",
+          "type": "builtin"
+     },
+     {
+          "name": "float",
+          "type": "builtin"
+     },
+     {
+          "bytes": 0,
+          "name": "none",
+          "type": "custom"
+     },
+     {
+          "bytes": 4,
+          "name": "none",
+          "type": "custom"
+     }
+]

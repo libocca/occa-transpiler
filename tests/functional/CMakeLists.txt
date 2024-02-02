@@ -28,6 +28,7 @@ set(TESTS_SOURCES
     common/data_directory.h
     common/data_directory.cpp
     generic_configurable_tests.cpp
+    internal/test_kernel_info.cpp
     main.cpp
 )
 
