@@ -3,7 +3,7 @@
 namespace oklt {
 using json = nlohmann::json;
 
-void to_json(json& j, const DatatypeInfo& dt)
+void to_json(json& j, const DataType& dt)
 {
   if(dt.type == DatatypeCategory::BUILTIN) {
     j = json { {"name", dt.name}, {"type", "builtin"}};
@@ -12,7 +12,7 @@ void to_json(json& j, const DatatypeInfo& dt)
   }
 }
 
-void from_json(const json& j, DatatypeInfo& dt)
+void from_json(const json& j, DataType& dt)
 {
   auto dtCategory = j.at("type").get<std::string>();
   if(dtCategory == "builtin") {
@@ -43,19 +43,19 @@ void from_json(const json& j, ArgumentInfo& argInfo)
   j.at("ptr").get_to(argInfo.is_ptr);
 }
 
-void to_json(json& j, const KernelMetaInfo& kernelMeta) {
+void to_json(json& j, const ParsedKernelInfo& kernelMeta) {
   j = json {
     {"arguments", kernelMeta.arguments},
     {"name", kernelMeta.name}
   };
 }
 
-void from_json(const json& j, KernelMetaInfo& kernelMeta) {
+void from_json(const json& j, ParsedKernelInfo& kernelMeta) {
   j.at("arguments").get_to(kernelMeta.arguments);
   j.at("name").get_to(kernelMeta.name);
 }
 
-void to_json(json& j, const KernelInfo& kernelInfo)
+void to_json(json& j, const KernelMetadata& kernelInfo)
 {
   if(kernelInfo.props.has_value()) {
     j = json {
@@ -74,7 +74,7 @@ void to_json(json& j, const KernelInfo& kernelInfo)
   }
 }
 
-void from_json(const json& j, KernelInfo& kernelInfo)
+void from_json(const json& j, KernelMetadata& kernelInfo)
 {
   kernelInfo.dependencies = std::nullopt;
   const auto &value = j.at("props");

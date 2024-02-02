@@ -17,9 +17,9 @@ TEST(TestKernelInfo, DatatypeInfoJsonTest )
   std::ifstream datatypeJsonFile(datatypeJsonPath);
   json tests = json::parse(datatypeJsonFile);
 
-  std::vector<DatatypeInfo> deserialized;
+  std::vector<DataType> deserialized;
   for(const auto &obj: tests) {
-    DatatypeInfo dt;
+    DataType dt;
     obj.get_to(dt);
     deserialized.emplace_back(std::move(dt));
   }
@@ -94,7 +94,7 @@ TEST(TestKernelInfo, KernelMetaJsonTest )
   std::ifstream kernelMetaJsonFile(kernelMetaJsonPath);
   json test = json::parse(kernelMetaJsonFile);
 
-  KernelMetaInfo kernelMeta;
+  ParsedKernelInfo kernelMeta;
   EXPECT_NO_THROW(test.get_to(kernelMeta));
 
   EXPECT_EQ(4, kernelMeta.arguments.size());
@@ -109,7 +109,7 @@ TEST(TestKernelInfo, KernelInfoJsonTest)
   std::ifstream kernelInfoJsonFile(kernelInfoJsonPath);
   json test = json::parse(kernelInfoJsonFile);
 
-  KernelInfo info;
+  KernelMetadata info;
   EXPECT_NO_THROW(test.get_to(info));
   EXPECT_FALSE(info.dependencies.has_value());
   EXPECT_EQ(std::string("28e58002e281fe6b18589982a2871141d4b0bea8d0691c6564edf0d25c583d93"), info.hash);

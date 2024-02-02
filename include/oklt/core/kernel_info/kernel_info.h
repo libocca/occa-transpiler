@@ -19,7 +19,7 @@ enum struct DatatypeCategory {
 //  {DatatypeCategory::CUSTOM, "custom"},
 //});
 
-struct DatatypeInfo {
+struct DataType {
   std::string name;
   DatatypeCategory type;
   int bytes;
@@ -27,12 +27,12 @@ struct DatatypeInfo {
 
 struct ArgumentInfo {
   bool is_const;
-  DatatypeInfo dtype;
+  DataType dtype;
   std::string name;
   bool is_ptr;
 };
 
-struct KernelMetaInfo {
+struct ParsedKernelInfo {
   std::vector<ArgumentInfo> arguments;
   std::string name;
   //INFO: for launcher template generation only
@@ -58,27 +58,27 @@ struct PropertyInfo {
                                  verbose);
 };
 
-struct KernelInfo {
+struct KernelMetadata {
   std::optional<DependeciesInfo> dependencies = std::nullopt;
   std::string hash;
-  std::vector<KernelMetaInfo> metadata;
+  std::vector<ParsedKernelInfo> metadata;
   std::optional<PropertyInfo> props = std::nullopt;
 };
 
 //INFO: because of different behaviour of presense field bytes when category is builtin
-void to_json(nlohmann::json& json, const DatatypeInfo& dt);
-void from_json(const nlohmann::json& json, DatatypeInfo& dt);
+void to_json(nlohmann::json& json, const DataType& dt);
+void from_json(const nlohmann::json& json, DataType& dt);
 
 //INFO: needs custom function because of `const` field name
 void to_json(nlohmann::json& json, const ArgumentInfo& argInfo);
 void from_json(const nlohmann::json& json, ArgumentInfo& argInfo);
 
 //INFO: skip some fields in serialization/deserialization process
-void to_json(nlohmann::json& json, const KernelMetaInfo& kernelMeta);
-void from_json(const nlohmann::json& json, KernelMetaInfo& kernelMeta);
+void to_json(nlohmann::json& json, const ParsedKernelInfo& kernelMeta);
+void from_json(const nlohmann::json& json, ParsedKernelInfo& kernelMeta);
 
 //INFO: using optional to be able to have empty json object
-void to_json(nlohmann::json& json, const KernelInfo& kernelInfo);
-void from_json(const nlohmann::json& json, KernelInfo& kernelInfo);
+void to_json(nlohmann::json& json, const KernelMetadata& kernelInfo);
+void from_json(const nlohmann::json& json, KernelMetadata& kernelInfo);
 
 }
