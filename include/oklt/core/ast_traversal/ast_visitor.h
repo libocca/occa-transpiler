@@ -17,7 +17,7 @@ class ASTVisitor : public clang::RecursiveASTVisitor<ASTVisitor> {
   bool TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRecursionQueue* queue = nullptr);
 
  protected:
-  SessionStage& _session;
+  SessionStage& _stage;
 };
 
 }  // namespace oklt

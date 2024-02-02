@@ -15,10 +15,10 @@ class AttrStmtHandler {
   AttrStmtHandler(ParamsParserType pp, HandleType h);
   ~AttrStmtHandler() = default;
 
-  bool handle(const clang::Attr* attr, const clang::Stmt*, SessionStage& session);
+  bool handle(const clang::Attr* attr, const clang::Stmt*, SessionStage& stage);
 
  protected:
-  bool parseParams(const clang::Attr*, SessionStage& session);
+  bool parseParams(const clang::Attr*, SessionStage& stage);
 
  private:
   ParamsParserType _paramsParser;

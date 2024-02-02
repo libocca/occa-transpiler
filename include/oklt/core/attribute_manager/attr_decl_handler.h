@@ -15,10 +15,10 @@ class AttrDeclHandler {
   AttrDeclHandler(ParamsParserType pp, HandleType h);
   ~AttrDeclHandler() = default;
 
-  bool handle(const clang::Attr* attr, const clang::Decl*, SessionStage& session);
+  bool handle(const clang::Attr* attr, const clang::Decl*, SessionStage& stage);
 
  protected:
-  bool parseParams(const clang::Attr*, SessionStage& session);
+  bool parseParams(const clang::Attr*, SessionStage& stage);
 
  private:
   ParamsParserType _paramsParser;

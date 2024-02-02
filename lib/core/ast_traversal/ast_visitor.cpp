@@ -7,16 +7,16 @@
 namespace oklt {
 using namespace clang;
 
-ASTVisitor::ASTVisitor(SessionStage& session) : _session(session) {}
+ASTVisitor::ASTVisitor(SessionStage& session) : _stage(session) {}
 
 bool ASTVisitor::TraverseDecl(Decl* decl) {
   if (!decl->hasAttrs()) {
     return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
   }
 
-  auto& attrManager = _session.getAttrManager();
+  auto& attrManager = _stage.getAttrManager();
   llvm::Expected<const Attr*> expectedAttr =
-    attrManager.checkAttrs(decl->getAttrs(), decl, _session);
+    attrManager.checkAttrs(decl->getAttrs(), decl, _stage);
   if (!expectedAttr) {
     // auto &errorReporter = _session.getErrorReporter();
     auto errorDescription = toString(expectedAttr.takeError());
@@ -30,7 +30,7 @@ bool ASTVisitor::TraverseDecl(Decl* decl) {
     return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
   }
 
-  if (!attrManager.handleAttr(attr, decl, _session)) {
+  if (!attrManager.handleAttr(attr, decl, _stage)) {
     return false;
   }
 
@@ -46,8 +46,8 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
   }
 
   auto* attrStmt = cast<AttributedStmt>(stmt);
-  auto& attrManager = _session.getAttrManager();
-  auto expectedAttr = attrManager.checkAttrs(attrStmt->getAttrs(), stmt, _session);
+  auto& attrManager = _stage.getAttrManager();
+  auto expectedAttr = attrManager.checkAttrs(attrStmt->getAttrs(), stmt, _stage);
   if (!expectedAttr) {
     // auto &errorReporter = _session.getErrorReporter();
     auto errorDescription = toString(expectedAttr.takeError());
@@ -62,7 +62,7 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
   }
 
   const Stmt* subStmt = attrStmt->getSubStmt();
-  if (!attrManager.handleAttr(attr, subStmt, _session)) {
+  if (!attrManager.handleAttr(attr, subStmt, _stage)) {
     return false;
   }
 
@@ -80,18 +80,18 @@ bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr* expr, DataRecursionQueue* qu
     return RecursiveASTVisitor<ASTVisitor>::TraverseRecoveryExpr(expr, queue);
   }
 
-  auto& ctx = _session.getCompiler().getASTContext();
-  auto& attrTypeMap = _session.tryEmplaceUserCtx<AttributedTypeMap>();
+  auto& ctx = _stage.getCompiler().getASTContext();
+  auto& attrTypeMap = _stage.tryEmplaceUserCtx<AttributedTypeMap>();
   auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
 
-  auto& attrManager = _session.getAttrManager();
-  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(attrs, expr, _session);
+  auto& attrManager = _stage.getAttrManager();
+  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(attrs, expr, _stage);
   if (!expectedAttr) {
     return false;
   }
 
   const Attr* attr = expectedAttr.get();
-  if (!attrManager.handleAttr(attr, expr, _session)) {
+  if (!attrManager.handleAttr(attr, expr, _stage)) {
     return false;
   }
 

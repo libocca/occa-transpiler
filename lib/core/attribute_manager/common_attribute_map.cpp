@@ -13,20 +13,20 @@ bool CommonAttributeMap::registerHandler(std::string name, AttrStmtHandler handl
   return ret.second;
 }
 
-bool CommonAttributeMap::handleAttr(const Attr* attr, const Decl* decl, SessionStage& session) {
+bool CommonAttributeMap::handleAttr(const Attr* attr, const Decl* decl, SessionStage& stage) {
   std::string name = attr->getNormalizedFullName();
   auto it = _declHandlers.find(name);
   if (it != _declHandlers.end()) {
-    return it->second.handle(attr, decl, session);
+    return it->second.handle(attr, decl, stage);
   }
   return false;
 }
 
-bool CommonAttributeMap::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& session) {
+bool CommonAttributeMap::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
   std::string name = attr->getNormalizedFullName();
   auto it = _stmtHandlers.find(name);
   if (it != _stmtHandlers.end()) {
-    return it->second.handle(attr, stmt, session);
+    return it->second.handle(attr, stmt, stage);
   }
   return false;
 }

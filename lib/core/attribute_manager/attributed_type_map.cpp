@@ -1,5 +1,4 @@
 #include "oklt/core/attribute_manager/attributed_type_map.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
 
 #include <clang/AST/Attr.h>
 

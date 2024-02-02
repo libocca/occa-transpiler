@@ -1,5 +1,5 @@
 #include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 
 namespace oklt {
 using namespace clang;
@@ -27,33 +27,33 @@ bool AttributeManager::registerBackendHandler(BackendAttributeMap::KeyType key,
   return _backendAttrs.registerHandler(std::move(key), std::move(handler));
 }
 
-bool AttributeManager::handleAttr(const Attr* attr, const Decl* decl, SessionStage& session) {
+bool AttributeManager::handleAttr(const Attr* attr, const Decl* decl, SessionStage& stage) {
   std::string name = attr->getNormalizedFullName();
   if (_commonAttrs.hasAttrHandler(name)) {
-    return _commonAttrs.handleAttr(attr, decl, session);
+    return _commonAttrs.handleAttr(attr, decl, stage);
   }
 
-  if (_backendAttrs.hasAttrHandler(session, name)) {
-    return _backendAttrs.handleAttr(attr, decl, session);
+  if (_backendAttrs.hasAttrHandler(stage, name)) {
+    return _backendAttrs.handleAttr(attr, decl, stage);
   }
 
   return false;
 }
 
-bool AttributeManager::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& session) {
+bool AttributeManager::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
   std::string name = attr->getNormalizedFullName();
   if (_commonAttrs.hasAttrHandler(name)) {
-    return _commonAttrs.handleAttr(attr, stmt, session);
+    return _commonAttrs.handleAttr(attr, stmt, stage);
   }
-  if (_backendAttrs.hasAttrHandler(session, name)) {
-    return _backendAttrs.handleAttr(attr, stmt, session);
+  if (_backendAttrs.hasAttrHandler(stage, name)) {
+    return _backendAttrs.handleAttr(attr, stmt, stage);
   }
   return false;
 }
 
 llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec& attrs,
                                                                 const Decl* decl,
-                                                                SessionStage& session) {
+                                                                SessionStage& stage) {
   std::list<Attr*> collectedAttrs;
   for (auto& attr : attrs) {
     auto name = attr->getNormalizedFullName();
@@ -61,7 +61,7 @@ llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec& a
       collectedAttrs.push_back(attr);
       continue;
     }
-    if (_backendAttrs.hasAttrHandler(session, name)) {
+    if (_backendAttrs.hasAttrHandler(stage, name)) {
       collectedAttrs.push_back(attr);
       continue;
     }
@@ -80,7 +80,7 @@ llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec& a
 
 llvm::Expected<const Attr*> AttributeManager::checkAttrs(const ArrayRef<const Attr*>& attrs,
                                                          const Stmt* decl,
-                                                         SessionStage& session) {
+                                                         SessionStage& stage) {
   std::list<const Attr*> collectedAttrs;
   for (auto& attr : attrs) {
     auto name = attr->getNormalizedFullName();
@@ -88,7 +88,7 @@ llvm::Expected<const Attr*> AttributeManager::checkAttrs(const ArrayRef<const At
       collectedAttrs.push_back(attr);
       continue;
     }
-    if (_backendAttrs.hasAttrHandler(session, name)) {
+    if (_backendAttrs.hasAttrHandler(stage, name)) {
       collectedAttrs.push_back(attr);
       continue;
     }
