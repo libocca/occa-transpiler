@@ -1,6 +1,9 @@
 #include "gnu_to_std_cpp_stage.h"
-#include "oklt/core/diag/diag_consumer.h"
-#include "oklt/core/transpiler_session/session_stage.h"
+
+#include <oklt/core/diag/diag_consumer.h>
+#include <oklt/core/error.h>
+#include <oklt/core/transpiler_session/session_stage.h>
+#include <oklt/pipeline/stages/normalizer/error_codes.h>
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -177,10 +180,8 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
 // ASTConsumer to run GNU to C++ attribute replacing
 class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
  public:
-  explicit GnuToCppAttrNormalizerConsumer(SessionStage &stage)
-      : _stage(stage)
-      , _normalizer_visitor(_stage)
-  {}
+  explicit GnuToCppAttrNormalizerConsumer(SessionStage& stage)
+      : _stage(stage), _normalizer_visitor(_stage) {}
 
   // Override the method that gets called for each parsed top-level
   // declaration.
@@ -192,28 +193,23 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
     _normalizer_visitor.TraverseDecl(decl);
   }
 
-private:
-  SessionStage &_stage;
+ private:
+  SessionStage& _stage;
   GnuToCppAttrNormalizer _normalizer_visitor;
 };
 
 struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
-  explicit GnuToStdCppAttributeNormalizerAction(oklt::GnuToStdCppStageInput input,
-                                                oklt::GnuToStdCppStageOutput& output,
-                                                TranspilerSession& session)
-      : _input(std::move(input))
-       , _output(output)
-       , _session(session)
-       , _stage(nullptr)
-  {}
+  explicit GnuToStdCppAttributeNormalizerAction(oklt::GnuToStdCppStageInput& input,
+                                                oklt::GnuToStdCppStageOutput& output)
+      : _input(input), _output(output), _session(*input.session), _stage(nullptr) {}
 
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                         llvm::StringRef in_file) override {
     _stage = std::make_unique<SessionStage>(_session, compiler);
-    if(!_stage->setUserCtx("input", &_input)) {
-      //TODO: internal error here
-      _stage.reset();
+    if (!_stage->setUserCtx("input", &_input)) {
+      _stage->pushError(std::error_code(),
+                        "failed to set user ctx for GnuToStdCppAttributeNormalizerAction");
       return nullptr;
     }
     auto consumer = std::make_unique<GnuToCppAttrNormalizerConsumer>(*_stage);
@@ -222,15 +218,15 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
   }
 
   void EndSourceFileAction() override {
-    if(!_stage) {
-      //TODO: internal error here
+    if (!_stage) {
+      _stage->pushError(std::error_code(), "where is my stage???");
       return;
     }
     _output.stdCppSrc = _stage->getRewriterResult();
   }
 
  private:
-  oklt::GnuToStdCppStageInput _input;
+  oklt::GnuToStdCppStageInput& _input;
   oklt::GnuToStdCppStageOutput& _output;
   TranspilerSession& _session;
   std::unique_ptr<SessionStage> _stage;
@@ -239,19 +235,31 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
 }  // namespace
 
 namespace oklt {
-tl::expected<GnuToStdCppStageOutput, int> convertGnuToStdCppAttribute(GnuToStdCppStageInput input,
-                                                                      TranspilerSession& session) {
-  // TODO error handling
+GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
+  if (input.gnuCppSrc.empty()) {
+    llvm::outs() << "input source string is empty\n";
+    auto error = makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING,
+                                     "input source string is empty");
+    return tl::make_unexpected(std::vector<Error>{error});
+  }
+
   Twine tool_name = "okl-transpiler-normalization-to-cxx";
   Twine file_name("gnu-kernel-to-cxx.cpp");
   std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
-  GnuToStdCppStageOutput output;
   auto input_file = std::move(input.gnuCppSrc);
+  GnuToStdCppStageOutput output = {.session = input.session};
+  auto ok = tooling::runToolOnCodeWithArgs(
+    std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output), input_file, args,
+    file_name, tool_name);
 
-  tooling::runToolOnCodeWithArgs(
-    std::make_unique<GnuToStdCppAttributeNormalizerAction>(std::move(input), output, session),
-    input_file, args, file_name, tool_name);
+  if (!ok) {
+    return tl::make_unexpected(std::move(output.session->getErrors()));
+  }
+
+#ifdef NORMALIZER_DEBUG_LOG
+  llvm::outs() << "stage 2 STD cpp source:\n\n" << output.stdCppSrc << '\n';
+#endif
 
   return output;
 }

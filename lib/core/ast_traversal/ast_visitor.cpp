@@ -1,7 +1,7 @@
 #include "oklt/core/ast_traversal/ast_visitor.h"
-#include "oklt/core/transpiler_session/session_stage.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
 #include "oklt/core/attribute_manager/attributed_type_map.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
@@ -15,16 +15,16 @@ bool ASTVisitor::TraverseDecl(Decl* decl) {
   }
 
   auto& attrManager = _stage.getAttrManager();
-  llvm::Expected<const Attr*> expectedAttr =
-    attrManager.checkAttrs(decl->getAttrs(), decl, _stage);
+  auto expectedAttr = attrManager.checkAttrs(decl->getAttrs(), decl, _stage);
   if (!expectedAttr) {
-    // auto &errorReporter = _session.getErrorReporter();
-    auto errorDescription = toString(expectedAttr.takeError());
-    // errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
+    // TODO report diagnostic error using clang tooling
+    //  auto &errorReporter = _session.getErrorReporter();
+    //  auto errorDescription = expectedAttr.error().message();
+    //  errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
     return false;
   }
 
-  const Attr* attr = expectedAttr.get();
+  const Attr* attr = expectedAttr.value();
   // INFO: no OKL attributes to process, continue
   if (!attr) {
     return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
@@ -49,13 +49,14 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
   auto& attrManager = _stage.getAttrManager();
   auto expectedAttr = attrManager.checkAttrs(attrStmt->getAttrs(), stmt, _stage);
   if (!expectedAttr) {
-    // auto &errorReporter = _session.getErrorReporter();
-    auto errorDescription = toString(expectedAttr.takeError());
-    // errorReporter.emitError(stmt->getSourceRange(),errorDescription);
+    // TODO report diagnostic error using clang tooling
+    //  auto &errorReporter = _session.getErrorReporter();
+    //  auto errorDescription = expectedAttr.error().message();
+    //  errorReporter.emitError(stmt->getSourceRange(),errorDescription);
     return false;
   }
 
-  const Attr* attr = expectedAttr.get();
+  const Attr* attr = expectedAttr.value();
   // INFO: no OKL attributes to process, continue
   if (!attr) {
     return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt, queue);
@@ -85,12 +86,13 @@ bool ASTVisitor::TraverseRecoveryExpr(RecoveryExpr* expr, DataRecursionQueue* qu
   auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
 
   auto& attrManager = _stage.getAttrManager();
-  llvm::Expected<const Attr*> expectedAttr = attrManager.checkAttrs(attrs, expr, _stage);
+  auto expectedAttr = attrManager.checkAttrs(attrs, expr, _stage);
   if (!expectedAttr) {
+    // TODO report diagnostic error using clang tooling
     return false;
   }
 
-  const Attr* attr = expectedAttr.get();
+  const Attr* attr = expectedAttr.value();
   if (!attrManager.handleAttr(attr, expr, _stage)) {
     return false;
   }

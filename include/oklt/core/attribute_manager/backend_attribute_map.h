@@ -4,12 +4,12 @@
 #include <tuple>
 #include "oklt/core/attribute_manager/attr_decl_handler.h"
 #include "oklt/core/attribute_manager/attr_stmt_handler.h"
-#include "oklt/core/config.h"
+#include "oklt/core/target_backends.h"
 
 namespace oklt {
 class BackendAttributeMap {
  public:
-  using KeyType = std::tuple<TRANSPILER_TYPE, std::string>;
+  using KeyType = std::tuple<TargetBackend, std::string>;
   using DeclHandlers = std::map<KeyType, AttrDeclHandler>;
   using StmtHandlers = std::map<KeyType, AttrStmtHandler>;
 

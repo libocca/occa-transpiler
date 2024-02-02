@@ -1,10 +1,8 @@
 #include "oklt/core/transpiler_session/session_stage.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
-#include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/diag/error.h"
 #include "oklt/core/diag/diag_consumer.h"
-
+#include "oklt/core/error.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
@@ -38,20 +36,15 @@ std::string SessionStage::getRewriterResult() {
   return std::string{rewriteBuf->begin(), rewriteBuf->end()};
 }
 
-TRANSPILER_TYPE SessionStage::getBackend() const {
-  return _session.targetBackend;
+TargetBackend SessionStage::getBackend() const {
+  return _session.input.backend;
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
-  // TODO: Fixup sourceLocation
-  auto msg = message.getMessage();
-  auto lineNo = message.getLocation().getLineNumber();
-
-  std::stringstream ss;
-  ss << "line " << lineNo << ": ";
-  ss << msg.str();
-
-  _session.diagMessages.emplace_back(Error{ss.str()});
+  _session.pushDiagnosticMessage(message);
+}
+void SessionStage::pushError(std::error_code ec, std::string desc) {
+  _session.pushError(ec, std::move(desc));
 }
 
 SessionStage* getStageFromASTContext(clang::ASTContext& ast) {

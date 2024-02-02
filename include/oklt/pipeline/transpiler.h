@@ -4,5 +4,5 @@
 #include <oklt/core/transpiler_session/transpiler_session.h>
 
 namespace oklt {
-TranspilerSessionResult runNormalizerStage(SharedTranspilerSession session);
+TranspilerSessionResult transpile(SharedTranspilerSession session);
 }  // namespace oklt

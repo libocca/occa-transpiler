@@ -1,16 +1,40 @@
-#include <oklt/core/transpiler_session/transpiler_session.h>
+#include "impl/gnu_to_std_cpp_stage.h"
+#include "impl/okl_to_gnu_stage.h"
+
+#include <oklt/core/error.h>
+
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 #include <oklt/util/io_helper.h>
 
 #include <llvm/Support/raw_os_ostream.h>
 
-#include "impl/gnu_to_std_cpp_stage.h"
-#include "impl/okl_to_gnu_stage.h"
-
 using namespace clang;
 
 namespace {
 using namespace oklt;
+
+OklToGnuStageInput toOkltoGnuInput(SharedTranspilerSession session) {
+  return {
+    .oklCppSrc = std::move(session->input.sourceCode),
+    .session = session,
+  };
+}
+
+GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
+  return {.gnuCppSrc = std::move(output.gnuCppSrc),
+          .gnuMarkers = std::move(output.gnuMarkers),
+          .recoveryMarkers = std::move(output.recoveryMarkers),
+          .session = output.session};
+}
+
+TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
+  output.session->output.normalized.outCode = std::move(output.stdCppSrc);
+  return output.session;
+}
+
+GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
+  return convertGnuToStdCppAttribute(toStdCppStageInput(output));
+}
 // Normalization is done in two steps:
 // 1. Replace all OKL specific attributes by GNU C++ attributes comments
 //    at the same source location.
@@ -32,53 +56,17 @@ using namespace oklt;
 //   for (int i=0; i<N; ++i)
 //  with saving source location of original attribute. After AST is parsed each source range for
 //  'for' stmt is tested against stored corner case to restore OKL attribute as C++ one.
-tl::expected<NormalizerOutput, NormalizerError> applyGnuAttrBasedNormalization(
-  NormalizerInput input,
-  TranspilerSession& session) {
-  // TODO error handling
-  //
-  if (input.oklSource.empty()) {
-    llvm::outs() << "input source string is empty\n";
-    return tl::make_unexpected(NormalizerError{});
-  }
-#ifdef NORMALIZER_DEBUG_LOG
-  llvm::outs() << "stage 0 OKL source:\n\n" << input.oklSource << '\n';
-#endif
-
-  auto firstStageOutput =
-    convertOklToGnuAttribute({.oklCppSrc = std::move(input.oklSource)}, session);
-
-  if (!firstStageOutput) {
-    llvm::outs() << "error " << firstStageOutput.error() << " on first stage of normalizer\n";
-    return tl::make_unexpected(NormalizerError{});
-  }
-
-#ifdef NORMALIZER_DEBUG_LOG
-  llvm::outs() << "stage 1 GNU cpp source:\n\n" << firstStageOutput->gnuCppSrc << '\n';
-#endif
-
-  auto secondStageOutput =
-    convertGnuToStdCppAttribute({.gnuCppSrc = std::move(firstStageOutput->gnuCppSrc),
-                                 .gnuMarkers = std::move(firstStageOutput->gnuMarkers),
-                                 .recoveryMarkers = std::move(firstStageOutput->recoveryMarkers)},
-                                session);
-
-  if (!secondStageOutput) {
-    llvm::outs() << "error " << secondStageOutput.error() << " on second stage of normalizer\n";
-    return tl::make_unexpected(NormalizerError{});
-  }
-
-#ifdef NORMALIZER_DEBUG_LOG
-  llvm::outs() << "stage 2 STD cpp source:\n\n" << secondStageOutput->stdCppSrc << '\n';
-#endif
-
-  return NormalizerOutput{.cppSource = std::move(secondStageOutput->stdCppSrc)};
+//
+TranspilerSessionResult applyGnuAttrBasedNormalization(SharedTranspilerSession session) {
+  return convertOklToGnuAttribute(toOkltoGnuInput(session))
+    .and_then(runGnuToStdConverter)
+    .and_then(toSessionResult);
 }
 
 }  // namespace
 namespace oklt {
 
-ExpecteNormalizerResult normalize(NormalizerInput input, TranspilerSession& session) {
-  return applyGnuAttrBasedNormalization(std::move(input), session);
+TranspilerSessionResult runNormalizerStage(SharedTranspilerSession session) {
+  return applyGnuAttrBasedNormalization(session);
 }
 }  // namespace oklt

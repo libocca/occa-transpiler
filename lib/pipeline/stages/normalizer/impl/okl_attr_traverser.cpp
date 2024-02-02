@@ -1,5 +1,6 @@
 #include "okl_attr_traverser.h"
 #include <llvm/Support/FormatVariadic.h>
+#include <oklt/pipeline/stages/normalizer/error_codes.h>
 
 namespace {
 using namespace clang;
@@ -18,12 +19,28 @@ struct OklAttributePrarserFsm {
   size_t token_cursor{0};
   OklAttributeParserState state{OklAttributeParserState::SearchingAttrStart};
   OklAttribute attr;
+  const std::vector<Token>* tokens{nullptr};
   Preprocessor& pp;
 };
 
 OklAttributePrarserFsm makeOklAttrParserFsm(Preprocessor& pp, const std::vector<Token>& tokens) {
-  return {
-    .token_cursor = 0, .state = OklAttributeParserState::SearchingAttrStart, .attr = {}, .pp = pp};
+  return {.token_cursor = 0,
+          .state = OklAttributeParserState::SearchingAttrStart,
+          .attr = {},
+          .tokens = &tokens,
+          .pp = pp};
+}
+
+bool areAllTokensProcessed(const OklAttributePrarserFsm& fsm) {
+  return fsm.token_cursor >= fsm.tokens->size();
+}
+
+const Token& getCurrentToken(const OklAttributePrarserFsm& fsm) {
+  return fsm.tokens->at(fsm.token_cursor);
+}
+
+void incCurrsorToken(OklAttributePrarserFsm& fsm) {
+  ++fsm.token_cursor;
 }
 
 void resetFsmAttrState(OklAttributePrarserFsm& fsm) {
@@ -100,12 +117,13 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
   return FsmStepStatus::TokenProcessed;
 }
 
-int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
-                                   Preprocessor& pp,
-                                   OklAttrVisitor& visitor) {
+tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
+                                                         Preprocessor& pp,
+                                                         OklAttrVisitor& visitor) {
   if (tokens.empty()) {
     llvm::outs() << "no input tokens\n";
-    return -2;
+    return tl::make_unexpected(
+      makeError(OkltNormalizerErrorCode::NO_TOKENS_FROM_SOURCE, "no tokens in source"));
   }
 
   // set intial FSM state with clear attr data
@@ -114,21 +132,24 @@ int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
   // feed fsm all tokens
   // early termination is possible on malformed OKL attribure syntax
   while (true) {
-    if (fsm.token_cursor >= tokens.size()) {
-      return 0;
+    if (areAllTokensProcessed(fsm)) {
+      return {};
     }
     // process one by one token
-    const auto& processing_token = tokens[fsm.token_cursor];
+    const auto& processing_token = getCurrentToken(fsm);
     auto status = processTokenByFsm(fsm, processing_token);
 
     if (status == FsmStepStatus::Error) {
       llvm::outs() << "error during parsing okl attr\n"
                    << tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager());
-      return -1;
+      return tl::make_unexpected(
+        makeError(OkltNormalizerErrorCode::OKL_ATTR_PARSIN_ERR,
+                  "error on token at: " +
+                    tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager())));
     }
 
     if (status == FsmStepStatus::TokenProcessed) {
-      ++fsm.token_cursor;
+      incCurrsorToken(fsm);
       continue;
     }
 
@@ -136,7 +157,7 @@ int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
     if (status == FsmStepStatus::OklAttrParsed) {
       auto cont = visitor(fsm.attr, tokens, pp);
       if (!cont) {
-        return 1;
+        return {};
       }
 
       // reset FSM to parse next OKL attrbute
@@ -146,14 +167,14 @@ int parseAndVisitOklAttrFromTokens(const std::vector<Token>& tokens,
     }
   }
 
-  return 0;
+  return {};
 }
 }  // namespace
 
 namespace oklt {
-int visitOklAttributes(const std::vector<Token>& tokens,
-                       clang::Preprocessor& pp,
-                       OklAttrVisitor visitor) {
+tl::expected<void, Error> visitOklAttributes(const std::vector<Token>& tokens,
+                                             clang::Preprocessor& pp,
+                                             OklAttrVisitor visitor) {
   return parseAndVisitOklAttrFromTokens(tokens, pp, visitor);
 }
 

@@ -40,7 +40,6 @@ struct DimAttribute : public ParsedAttrInfo {
   AttrHandling handleDeclAttribute(clang::Sema& sema,
                                    clang::Decl* decl,
                                    const clang::ParsedAttr& attr) const override {
-
     auto* stage = getStageFromASTContext(sema.Context);
     if (!stage) {
       return AttributeNotApplied;
