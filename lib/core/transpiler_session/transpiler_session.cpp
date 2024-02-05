@@ -5,12 +5,20 @@
 
 namespace oklt {
 
+SharedTranspilerSession TranspilerSession::make(UserInput input) {
+  return std::make_shared<TranspilerSession>(std::move(input));
+}
+
+SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::string sourceCode) {
+  return std::make_shared<TranspilerSession>(backend, sourceCode);
+}
+
 TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
   input.backend = backend;
   input.sourceCode = std::move(sourceCode);
 }
 
-TranspilerSession::TranspilerSession(TranspilerSession::UserInput input_)
+TranspilerSession::TranspilerSession(UserInput input_)
     : input(std::move(input_)) {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {

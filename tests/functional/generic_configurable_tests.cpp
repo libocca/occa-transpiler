@@ -37,15 +37,16 @@ tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
 struct NormalizeActionConfig {
   std::filesystem::path source;
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(NormalizeActionConfig, source)
-  std::shared_ptr<oklt::TranspilerSession> build(const fs::path& dataDir) const;
+  oklt::UserInput build(const fs::path& dataDir) const;
 };
 
-std::shared_ptr<oklt::TranspilerSession> NormalizeActionConfig::build(
-  const fs::path& dataDir) const {
+oklt::UserInput NormalizeActionConfig::build(const fs::path& dataDir) const {
   auto sourceFullPath = dataDir / source;
   std::ifstream sourceFile{sourceFullPath};
   std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
-  return std::make_shared<oklt::TranspilerSession>(oklt::TargetBackend::CUDA, sourceCode);
+  return oklt::UserInput {
+    .backend = oklt::TargetBackend::CUDA, .sourceCode = std::move(sourceCode)
+  };
 }
 
 struct TranspileActionConfig {
@@ -55,11 +56,10 @@ struct TranspileActionConfig {
   std::vector<std::string> mutable defs;
   std::filesystem::path launcher;
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(TranspileActionConfig, backend, source, includes, defs, launcher)
-  std::shared_ptr<oklt::TranspilerSession> build(const fs::path& dataDir) const;
+  oklt::UserInput build(const fs::path& dataDir) const;
 };
 
-std::shared_ptr<oklt::TranspilerSession> TranspileActionConfig::build(
-  const fs::path& dataDir) const {
+oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
   auto expectedBackend = oklt::backendFromString(backend);
   if (!expectedBackend) {
     throw std::logic_error(expectedBackend.error());
@@ -68,8 +68,11 @@ std::shared_ptr<oklt::TranspilerSession> TranspileActionConfig::build(
   std::ifstream sourceFile{sourceFullPath};
   std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
-  return std::make_shared<oklt::TranspilerSession>(oklt::TranspilerSession::UserInput{
-    expectedBackend.value(), std::move(sourceCode), std::move(sourceFullPath), includes, defs});
+  return oklt::UserInput{.backend = expectedBackend.value(),
+                         .sourceCode = std::move(sourceCode),
+                         .sourcePath = std::move(sourceFullPath),
+                         .inlcudeDirectories = includes,
+                         .defines = defs};
 }
 
 class GenericTest : public testing::TestWithParam<std::string> {};
@@ -110,7 +113,7 @@ TEST_P(GenericTest, OCCATests) {
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
         std::string normalizedSource =
-          oklt::format(normalizeResult.value()->output.normalized.outCode);
+          oklt::format(normalizeResult.value().normalized.sourceCode);
         EXPECT_EQ(formatedReference, normalizedSource);
       } break;
       case Action::TRANSPILER: {
@@ -133,7 +136,7 @@ TEST_P(GenericTest, OCCATests) {
         std::ifstream referenceFile(referencePath);
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
-        std::string transpiledSource = oklt::format(transpileResult.value()->output.kernel.outCode);
+        std::string transpiledSource = oklt::format(transpileResult.value().kernel.sourceCode);
         EXPECT_EQ(formatedReference, transpiledSource);
       } break;
       case Action::NORMALIZE_AND_TRANSPILE: {
@@ -156,7 +159,7 @@ TEST_P(GenericTest, OCCATests) {
         std::ifstream referenceFile(referencePath);
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
-        std::string transpiledSource = oklt::format(transpileResult.value()->output.kernel.outCode);
+        std::string transpiledSource = oklt::format(transpileResult.value().kernel.sourceCode);
         EXPECT_EQ(formatedReference, transpiledSource);
       } break;
     }

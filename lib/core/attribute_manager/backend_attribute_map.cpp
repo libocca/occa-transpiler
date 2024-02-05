@@ -34,8 +34,8 @@ bool BackendAttributeMap::handleAttr(const Attr* attr, const Stmt* stmt, Session
   return it->second.handle(attr, stmt, stage);
 }
 
-bool BackendAttributeMap::hasAttrHandler(SessionStage& session, const std::string& stage) {
-  auto key = std::make_tuple(session.getBackend(), stage);
+bool BackendAttributeMap::hasAttrHandler(SessionStage& stage, const std::string& name) {
+  auto key = std::make_tuple(stage.getBackend(), name);
   auto declIt = _declHandlers.find(key);
   if (declIt != _declHandlers.cend()) {
     return true;

@@ -3,7 +3,9 @@
 #include <oklt/pipeline/stages/transpiler/transpiler.h>
 
 namespace oklt {
-TranspilerSessionResult normalizeAndTranspile(SharedTranspilerSession session) {
-  return runNormalizerStage(session).and_then(runTranspilerStage);
+UserResult normalizeAndTranspile(UserInput input) {
+  return runNormalizerStage(TranspilerSession::make(std::move(input)))
+    .and_then(runTranspilerStage)
+    .and_then(toUserResult);
 }
 }  // namespace oklt

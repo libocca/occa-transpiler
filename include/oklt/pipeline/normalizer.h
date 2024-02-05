@@ -1,9 +1,8 @@
 #pragma once
 
-#include <oklt/core/transpiler_session/session_result.h>
-#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <oklt/core/transpiler_session/user_input.h>
+#include <oklt/core/transpiler_session/user_output.h>
 
 namespace oklt {
-
-TranspilerSessionResult normalize(SharedTranspilerSession session);
+UserResult normalize(UserInput input);
 }

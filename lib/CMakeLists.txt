@@ -21,9 +21,14 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/transpiler_session.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_stage.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_result.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_info/kernel_info.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
@@ -53,6 +58,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_traversal/transpile_frontend_action.cpp
 
     core/diag/diag_consumer.cpp
+
+    core/kernel_info/kernel_info.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
@@ -89,6 +96,11 @@ CPMAddPackage(expected
     OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" ""
 )
 
+CPMAddPackage(NAME nlohmann_json
+    VERSION 3.11.2
+    GITHUB_REPOSITORY nlohmann/json
+    OPTIONS "JSON_BuildTests OFF")
+
 set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED
@@ -112,6 +124,7 @@ target_include_directories(occa-transpiler
 target_link_libraries(occa-transpiler
     PUBLIC
         tl::expected
+        nlohmann_json::nlohmann_json
     PRIVATE
         ${CLANG_LIBS}
   )

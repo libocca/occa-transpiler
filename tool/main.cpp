@@ -57,9 +57,9 @@ int main(int argc, char* argv[]) {
         std::cout << "err: " << input_source.error() << " to read file " << input << '\n';
         return 1;
       }
-      auto session = std::make_shared<oklt::TranspilerSession>(oklt::TargetBackend::CUDA,
-                                                               std::move(input_source.value()));
-      auto result = oklt::normalize(session);
+
+      auto result = oklt::normalize(
+        {.backend = oklt::TargetBackend::CUDA, .sourceCode = std::move(input_source.value())});
       if (!result) {
         std::cout << "Normalization errors: " << std::endl;
         for (const auto& error : result.error()) {
@@ -69,9 +69,8 @@ int main(int argc, char* argv[]) {
         return 1;
       }
 
-      std::cout << "file " << input << " is normalized\n\n"
-                << result.value()->output.normalized.outCode;
-      oklt::util::writeFileAsStr(output, result.value()->output.normalized.outCode);
+      std::cout << "file " << input << " is normalized\n\n" << result.value().normalized.sourceCode;
+      oklt::util::writeFileAsStr(output, result.value().normalized.sourceCode);
 
       return 0;
     } else {
@@ -85,16 +84,19 @@ int main(int argc, char* argv[]) {
 
       std::ifstream ifs(source_path.string());
       std::string sourceCode{std::istreambuf_iterator<char>(ifs), {}};
-      auto session = std::make_shared<oklt::TranspilerSession>(
-        oklt::TranspilerSession::UserInput{backend.value(), sourceCode, source_path, {}, {}});
+      oklt::UserInput input{.backend = backend.value(),
+                            .sourceCode = sourceCode,
+                            .sourcePath = source_path,
+                            .inlcudeDirectories = {},
+                            .defines = {}};
 
-      oklt::TranspilerSessionResult result = [&](auto need_normalize) {
+      oklt::UserResult result = [](auto&& input, auto need_normalize) {
         if (need_normalize) {
-          return oklt::normalizeAndTranspile(session);
+          return oklt::normalizeAndTranspile(input);
         } else {
-          return oklt::transpile(session);
+          return oklt::transpile(input);
         }
-      }(need_normalize);
+      }(std::move(input), need_normalize);
 
       if (result) {
         std::cout << "Transpiling success : true" << std::endl;

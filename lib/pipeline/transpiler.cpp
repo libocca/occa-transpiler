@@ -3,7 +3,7 @@
 
 namespace oklt {
 
-TranspilerSessionResult transpile(SharedTranspilerSession session) {
-  return runTranspilerStage(session);
+UserResult transpile(UserInput input) {
+  return runTranspilerStage(TranspilerSession::make(std::move(input))).and_then(toUserResult);
 }
 }  // namespace oklt

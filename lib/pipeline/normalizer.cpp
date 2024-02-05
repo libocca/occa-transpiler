@@ -2,7 +2,7 @@
 #include <oklt/pipeline/stages/normalizer/normalizer.h>
 
 namespace oklt {
-TranspilerSessionResult normalize(SharedTranspilerSession session) {
-  return runNormalizerStage(session);
+UserResult normalize(UserInput input) {
+  return runNormalizerStage(TranspilerSession::make(std::move(input))).and_then(toUserResult);
 }
 }  // namespace oklt
