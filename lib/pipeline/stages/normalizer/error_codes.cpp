@@ -13,7 +13,7 @@ const char* NormalizerErrorsCategory::name() const noexcept {
 std::string NormalizerErrorsCategory::message(int ev) const {
   switch (static_cast<OkltNormalizerErrorCode>(ev)) {
     case OkltNormalizerErrorCode::EMPTY_SOURCE_STRING:
-      return "input sourece string is empty";
+      return "input source string is empty";
     case OkltNormalizerErrorCode::NO_TOKENS_FROM_SOURCE:
       return "no tokens fetched from input source";
     case OkltNormalizerErrorCode::OTHER_ERROR:
