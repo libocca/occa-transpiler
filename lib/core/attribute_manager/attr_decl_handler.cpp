@@ -7,9 +7,13 @@ using namespace clang;
 AttrDeclHandler::AttrDeclHandler(ParamsParserType pp, HandleType h)
     : _paramsParser(std::move(pp)), _handler(std::move(h)) {}
 
-bool AttrDeclHandler::handle(const Attr* attr, const Decl* decl, SessionStage& stage) {
+bool AttrDeclHandler::handle(const Attr* attr,
+                             const Decl* decl,
+                             SessionStage& stage,
+                             HandledChanges callback)
+{
   if (parseParams(attr, stage)) {
-    return _handler(attr, decl, stage);
+    return _handler(attr, decl, stage, callback);
   }
   return false;
 }

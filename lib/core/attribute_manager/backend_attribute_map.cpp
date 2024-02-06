@@ -14,27 +14,35 @@ bool BackendAttributeMap::registerHandler(KeyType key, AttrStmtHandler handler) 
   return ret.second;
 }
 
-bool BackendAttributeMap::handleAttr(const Attr* attr, const Decl* decl, SessionStage& stage) {
+bool BackendAttributeMap::handleAttr(const Attr* attr,
+                                     const Decl* decl,
+                                     SessionStage& stage,
+                                     HandledChanges callback)
+{
   std::string name = attr->getNormalizedFullName();
   auto backend = stage.getBackend();
   auto it = _declHandlers.find(std::make_tuple(backend, name));
   if (it == _declHandlers.end()) {
     return false;
   }
-  return it->second.handle(attr, decl, stage);
+  return it->second.handle(attr, decl, stage, callback);
 }
 
-bool BackendAttributeMap::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
+bool BackendAttributeMap::handleAttr(const Attr* attr,
+                                     const Stmt* stmt,
+                                     SessionStage& stage,
+                                     HandledChanges callback)
+{
   std::string name = attr->getNormalizedFullName();
   auto backend = stage.getBackend();
   auto it = _stmtHandlers.find(std::make_tuple(backend, name));
   if (it == _stmtHandlers.end()) {
     return false;
   }
-  return it->second.handle(attr, stmt, stage);
+  return it->second.handle(attr, stmt, stage, callback);
 }
 
-bool BackendAttributeMap::hasAttrHandler(SessionStage& stage, const std::string& name) {
+bool BackendAttributeMap::hasAttrHandler(SessionStage& stage, const std::string& name) const {
   auto key = std::make_tuple(stage.getBackend(), name);
   auto declIt = _declHandlers.find(key);
   if (declIt != _declHandlers.cend()) {

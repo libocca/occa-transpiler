@@ -19,10 +19,16 @@ class BackendAttributeMap {
   bool registerHandler(KeyType key, AttrDeclHandler handler);
   bool registerHandler(KeyType key, AttrStmtHandler handler);
 
-  bool handleAttr(const clang::Attr* attr, const clang::Decl* decl, SessionStage& stage);
-  bool handleAttr(const clang::Attr* attr, const clang::Stmt* stmt, SessionStage& stage);
+  bool handleAttr(const clang::Attr* attr,
+                  const clang::Decl* decl,
+                  SessionStage& stage,
+                  HandledChanges callback);
+  bool handleAttr(const clang::Attr* attr,
+                  const clang::Stmt* stmt,
+                  SessionStage& stage,
+                  HandledChanges callback);
 
-  bool hasAttrHandler(SessionStage& stage, const std::string& name);
+  [[nodiscard]] bool hasAttrHandler(SessionStage& stage, const std::string& name) const;
 
  private:
   DeclHandlers _declHandlers;

@@ -13,25 +13,33 @@ bool CommonAttributeMap::registerHandler(std::string name, AttrStmtHandler handl
   return ret.second;
 }
 
-bool CommonAttributeMap::handleAttr(const Attr* attr, const Decl* decl, SessionStage& stage) {
+bool CommonAttributeMap::handleAttr(const Attr* attr,
+                                    const Decl* decl,
+                                    SessionStage& stage,
+                                    HandledChanges callback)
+{
   std::string name = attr->getNormalizedFullName();
   auto it = _declHandlers.find(name);
   if (it != _declHandlers.end()) {
-    return it->second.handle(attr, decl, stage);
+    return it->second.handle(attr, decl, stage, callback);
   }
   return false;
 }
 
-bool CommonAttributeMap::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
+bool CommonAttributeMap::handleAttr(const Attr* attr,
+                                    const Stmt* stmt,
+                                    SessionStage& stage,
+                                    HandledChanges callback)
+{
   std::string name = attr->getNormalizedFullName();
   auto it = _stmtHandlers.find(name);
   if (it != _stmtHandlers.end()) {
-    return it->second.handle(attr, stmt, stage);
+    return it->second.handle(attr, stmt, stage, callback);
   }
   return false;
 }
 
-bool CommonAttributeMap::hasAttrHandler(const std::string& name) {
+bool CommonAttributeMap::hasAttrHandler(const std::string& name) const {
   auto declIt = _declHandlers.find(name);
   if (declIt != _declHandlers.cend()) {
     return true;

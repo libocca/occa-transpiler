@@ -4,13 +4,16 @@ project (occa-transpiler VERSION 0.0.1 LANGUAGES CXX)
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
+    # ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_category.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_analyzer.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_consumer.h
 
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/transpile_changes.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_decl_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_stmt_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_manager.h
@@ -49,7 +52,9 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/shared.cpp
     attributes/backend/common/dim.cpp
 
-    core/ast_traversal/ast_visitor.cpp
+    # core/ast_traversal/ast_visitor.cpp
+    core/ast_traversal/semantic_category.cpp
+    core/ast_traversal/semantic_analyzer.cpp
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
 

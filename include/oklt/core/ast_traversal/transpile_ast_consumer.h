@@ -2,7 +2,8 @@
 
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include "oklt/core/ast_traversal/ast_visitor.h"
+// #include "oklt/core/ast_traversal/ast_visitor.h"
+#include <oklt/core/ast_traversal/semantic_analyzer.h>
 
 namespace oklt {
 
@@ -14,10 +15,10 @@ class TranspileASTConsumer : public clang::ASTConsumer {
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
   SessionStage &getSessionStage();
-  ASTVisitor &getAstVisitor();
+  SemanticAnalyzer &getSemaAnalyzer();
  private:
   SessionStage &_stage;
-  ASTVisitor _visitor;
+  SemanticAnalyzer _semaAnalyzer;
 
 };
 

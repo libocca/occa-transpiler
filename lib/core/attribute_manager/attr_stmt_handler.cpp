@@ -8,9 +8,10 @@ AttrStmtHandler::AttrStmtHandler(ParamsParserType pp, HandleType h)
 
 bool AttrStmtHandler::handle(const clang::Attr* attr,
                              const clang::Stmt* stmt,
-                             SessionStage& stage) {
+                             SessionStage& stage,
+                             HandledChanges callback) {
   if (parseParams(attr, stage)) {
-    return _handler(attr, stmt, stage);
+    return _handler(attr, stmt, stage, callback);
   }
   return false;
 }

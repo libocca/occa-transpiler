@@ -27,16 +27,16 @@ class AttributeManager {
   bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrDeclHandler handler);
   bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrStmtHandler handler);
 
-  bool handleAttr(const clang::Attr* attr, const clang::Decl* decl, SessionStage& stage);
-  bool handleAttr(const clang::Attr* attr, const clang::Stmt* stmt, SessionStage& stage);
+  bool handleAttr(const clang::Attr* attr,
+                  const clang::Decl* decl,
+                  SessionStage& stage,
+                  HandledChanges callback);
+  bool handleAttr(const clang::Attr* attr,
+                  const clang::Stmt* stmt,
+                  SessionStage& stage,
+                  HandledChanges callback);
 
-  llvm::Expected<const clang::Attr*> checkAttrs(const clang::AttrVec& attrs,
-                                                const clang::Decl* decl,
-                                                SessionStage& stage);
-  llvm::Expected<const clang::Attr*> checkAttrs(const clang::ArrayRef<const clang::Attr*>& attrs,
-                                                const clang::Stmt* decl,
-                                                SessionStage& stage);
-
+  bool hasAttrHandler(const clang::Attr *occaAttr, SessionStage& stage) const;
  private:
   // INFO: here should not be the same named attributes in both
   //       might need to handle uniqueness
