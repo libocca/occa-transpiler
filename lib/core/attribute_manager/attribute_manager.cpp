@@ -51,9 +51,9 @@ bool AttributeManager::handleAttr(const Attr* attr, const Stmt* stmt, SessionSta
   return false;
 }
 
-llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec& attrs,
-                                                                const Decl* decl,
-                                                                SessionStage& stage) {
+tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
+                                                                     const Decl* decl,
+                                                                     SessionStage& stage) {
   std::list<Attr*> collectedAttrs;
   for (auto& attr : attrs) {
     auto name = attr->getNormalizedFullName();
@@ -69,18 +69,22 @@ llvm::Expected<const clang::Attr*> AttributeManager::checkAttrs(const AttrVec& a
   // INFO: there are no OKL attributes at all
   //       might need better solution for this
   if (collectedAttrs.empty()) {
-    return llvm::Expected<const clang::Attr*>{nullptr};
+    return {nullptr};
   }
+
   if (collectedAttrs.size() > 1) {
-    return llvm::createStringError(std::error_code(), std::string{"Multiple attributes are used"});
+    return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "multiple attr"});
   }
+
   const Attr* attr = collectedAttrs.front();
+
   return attr;
 }
 
-llvm::Expected<const Attr*> AttributeManager::checkAttrs(const ArrayRef<const Attr*>& attrs,
-                                                         const Stmt* decl,
-                                                         SessionStage& stage) {
+tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
+  const ArrayRef<const Attr*>& attrs,
+  const Stmt* decl,
+  SessionStage& stage) {
   std::list<const Attr*> collectedAttrs;
   for (auto& attr : attrs) {
     auto name = attr->getNormalizedFullName();
@@ -96,12 +100,15 @@ llvm::Expected<const Attr*> AttributeManager::checkAttrs(const ArrayRef<const At
   // INFO: there are no OKL attributes at all
   //       might need better solution for this
   if (collectedAttrs.empty()) {
-    return llvm::Expected<const clang::Attr*>{nullptr};
+    return nullptr;
   }
+
   if (collectedAttrs.size() > 1) {
-    return llvm::createStringError(std::error_code(), std::string{"Multiple attributes are used"});
+    return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "multiple attr"});
   }
+
   const Attr* attr = collectedAttrs.front();
+
   return attr;
 }
 }  // namespace oklt

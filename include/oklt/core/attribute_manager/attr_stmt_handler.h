@@ -12,6 +12,7 @@ class AttrStmtHandler {
   using ParamsParserType = std::function<bool(const clang::Attr*, SessionStage&)>;
   using HandleType = std::function<bool(const clang::Attr*, const clang::Stmt*, SessionStage&)>;
 
+  AttrStmtHandler(AttrStmtHandler&&) = default;
   AttrStmtHandler(ParamsParserType pp, HandleType h);
   ~AttrStmtHandler() = default;
 

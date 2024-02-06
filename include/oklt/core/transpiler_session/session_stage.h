@@ -1,8 +1,8 @@
 #pragma once
 
-#include "oklt/core/config.h"
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
+#include "oklt/core/target_backends.h"
 
 #include <any>
 
@@ -25,10 +25,11 @@ class SessionStage {
   clang::Rewriter& getRewriter();
   std::string getRewriterResult();
 
-  [[nodiscard]] TRANSPILER_TYPE getBackend() const;
-  AttributeManager& getAttrManager();
+  [[nodiscard]] TargetBackend getBackend() const;
+  static AttributeManager& getAttrManager();
 
   void pushDiagnosticMessage(clang::StoredDiagnostic& message);
+  void pushError(std::error_code ec, std::string desc);
 
   inline bool hasUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);
@@ -60,7 +61,7 @@ class SessionStage {
   clang::CompilerInstance& _compiler;
   clang::Rewriter _rewriter;
 
-          // XXX discuss key
+  // XXX discuss key
   std::map<std::string, std::any> _userCtxMap;
 };
 

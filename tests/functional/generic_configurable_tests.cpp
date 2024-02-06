@@ -1,16 +1,19 @@
-#include <gtest/gtest.h>
-#include <fstream>
-#include <nlohmann/json.hpp>
 #include "common/data_directory.h"
 #include "common/load_test_suites.h"
-#include <oklt/core/config.h>
-#include <oklt/core/utils/format.h>
+
+#include <oklt/core/error.h>
+#include <oklt/core/target_backends.h>
 #include <oklt/core/transpiler_session/transpiler_session.h>
-#include <oklt/core/diag/error.h>
-#include <oklt/pipeline/normalize.h>
-#include <oklt/pipeline/normalize_and_transpile.h>
-#include <oklt/pipeline/transpile.h>
+#include <oklt/core/utils/format.h>
+#include <oklt/pipeline/normalizer.h>
+#include <oklt/pipeline/normalizer_and_transpiler.h>
+#include <oklt/pipeline/transpiler.h>
 #include <oklt/util/string_utils.h>
+
+#include <nlohmann/json.hpp>
+
+#include <gtest/gtest.h>
+#include <fstream>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -34,27 +37,29 @@ tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
 struct NormalizeActionConfig {
   std::filesystem::path source;
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(NormalizeActionConfig, source)
-  oklt::NormalizerInput build(const fs::path& dataDir) const;
+  oklt::UserInput build(const fs::path& dataDir) const;
 };
 
-oklt::NormalizerInput NormalizeActionConfig::build(const fs::path& dataDir) const {
+oklt::UserInput NormalizeActionConfig::build(const fs::path& dataDir) const {
   auto sourceFullPath = dataDir / source;
   std::ifstream sourceFile{sourceFullPath};
   std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
-  return oklt::NormalizerInput{sourceCode};
+  return oklt::UserInput {
+    .backend = oklt::TargetBackend::CUDA, .sourceCode = std::move(sourceCode)
+  };
 }
 
 struct TranspileActionConfig {
   std::string backend;
   std::filesystem::path source;
-  std::list<std::filesystem::path> includes;
-  std::list<std::string> defs;
+  std::vector<std::filesystem::path> mutable includes;
+  std::vector<std::string> mutable defs;
   std::filesystem::path launcher;
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(TranspileActionConfig, backend, source, includes, defs, launcher)
-  oklt::TranspileInput build(const fs::path& dataDir) const;
+  oklt::UserInput build(const fs::path& dataDir) const;
 };
 
-oklt::TranspileInput TranspileActionConfig::build(const fs::path& dataDir) const {
+oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
   auto expectedBackend = oklt::backendFromString(backend);
   if (!expectedBackend) {
     throw std::logic_error(expectedBackend.error());
@@ -63,8 +68,11 @@ oklt::TranspileInput TranspileActionConfig::build(const fs::path& dataDir) const
   std::ifstream sourceFile{sourceFullPath};
   std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
-  return oklt::TranspileInput{expectedBackend.value(), std::move(sourceCode),
-                              std::move(sourceFullPath), includes, defs};
+  return oklt::UserInput{.backend = expectedBackend.value(),
+                         .sourceCode = std::move(sourceCode),
+                         .sourcePath = std::move(sourceFullPath),
+                         .inlcudeDirectories = includes,
+                         .defines = defs};
 }
 
 class GenericTest : public testing::TestWithParam<std::string> {};
@@ -104,7 +112,8 @@ TEST_P(GenericTest, OCCATests) {
         std::ifstream referenceFile(referencePath);
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
-        std::string normalizedSource = oklt::format(normalizeResult.value().cppSource);
+        std::string normalizedSource =
+          oklt::format(normalizeResult.value().normalized.sourceCode);
         EXPECT_EQ(formatedReference, normalizedSource);
       } break;
       case Action::TRANSPILER: {
@@ -119,7 +128,7 @@ TEST_P(GenericTest, OCCATests) {
         if (!transpileResult) {
           std::string error;
           for (const auto& e : transpileResult.error()) {
-            error += e.desription + "\n";
+            error += e.desc + "\n";
           }
           EXPECT_TRUE(false) << "Transpile error:" << error << std::endl;
         }
@@ -127,7 +136,7 @@ TEST_P(GenericTest, OCCATests) {
         std::ifstream referenceFile(referencePath);
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
-        std::string transpiledSource = oklt::format(transpileResult.value().kernel.outCode);
+        std::string transpiledSource = oklt::format(transpileResult.value().kernel.sourceCode);
         EXPECT_EQ(formatedReference, transpiledSource);
       } break;
       case Action::NORMALIZE_AND_TRANSPILE: {
@@ -137,12 +146,12 @@ TEST_P(GenericTest, OCCATests) {
           continue;
         }
         auto conf = actionConfig->get<TranspileActionConfig>();
-        auto transpileResult = oklt::normalize_and_transpile(conf.build(dataDir));
+        auto transpileResult = oklt::normalizeAndTranspile(conf.build(dataDir));
 
         if (!transpileResult) {
           std::string error;
           for (const auto& e : transpileResult.error()) {
-            error += e.desription + "\n";
+            error += e.desc + "\n";
           }
           EXPECT_TRUE(false) << "Normalize & Transpile error:" << error << std::endl;
         }
@@ -150,7 +159,7 @@ TEST_P(GenericTest, OCCATests) {
         std::ifstream referenceFile(referencePath);
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
-        std::string transpiledSource = oklt::format(transpileResult.value().kernel.outCode);
+        std::string transpiledSource = oklt::format(transpileResult.value().kernel.sourceCode);
         EXPECT_EQ(formatedReference, transpiledSource);
       } break;
     }
@@ -164,7 +173,6 @@ struct GenericConfigTestNamePrinter {
     return oklt::util::toCamelCase(fileName.string());
   }
 };
-
 
 INSTANTIATE_TEST_SUITE_P(GenericSuiteTests,
                          GenericTest,

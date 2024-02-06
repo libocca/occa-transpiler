@@ -1,13 +1,16 @@
+#include <oklt/core/error.h>
 #include <oklt/core/transpiler_session/transpiler_session.h>
-#include <oklt/pipeline/stages/normalizer/normalizer.h>
-#include <oklt/pipeline/stages/transpiler/transpiler.h>
-#include <oklt/core/diag/error.h>
+
+#include <oklt/pipeline/normalizer.h>
+#include <oklt/pipeline/normalizer_and_transpiler.h>
+#include <oklt/pipeline/transpiler.h>
+
 #include <oklt/util/io_helper.h>
+
 #include <argparse/argparse.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include "oklt/pipeline/normalize_and_transpile.h"
 
 std::string build_output_filename(const std::filesystem::path& input_file_path) {
   std::string out_file = input_file_path.filename().stem().string() + "_transpiled" +
@@ -54,15 +57,20 @@ int main(int argc, char* argv[]) {
         std::cout << "err: " << input_source.error() << " to read file " << input << '\n';
         return 1;
       }
-      oklt::TranspilerSession session{oklt::TRANSPILER_TYPE::CUDA};
-      auto normalizedSrc = oklt::normalize({.oklSource = std::move(input_source.value())}, session);
-      if (!normalizedSrc) {
+
+      auto result = oklt::normalize(
+        {.backend = oklt::TargetBackend::CUDA, .sourceCode = std::move(input_source.value())});
+      if (!result) {
+        std::cout << "Normalization errors: " << std::endl;
+        for (const auto& error : result.error()) {
+          std::cout << error.desc << std::endl;
+        }
         std::cout << "err to normalize file " << input << '\n';
         return 1;
       }
 
-      std::cout << "file " << input << " is normalized\n\n" << normalizedSrc.value().cppSource;
-      oklt::util::writeFileAsStr(output, normalizedSrc.value().cppSource);
+      std::cout << "file " << input << " is normalized\n\n" << result.value().normalized.sourceCode;
+      oklt::util::writeFileAsStr(output, result.value().normalized.sourceCode);
 
       return 0;
     } else {
@@ -76,22 +84,26 @@ int main(int argc, char* argv[]) {
 
       std::ifstream ifs(source_path.string());
       std::string sourceCode{std::istreambuf_iterator<char>(ifs), {}};
-      oklt::TranspileInput transpilerParams{
-        backend.value(), sourceCode, source_path, {}, {},
-      };
-      tl::expected<oklt::TranspilerResult, std::vector<oklt::Error>> expectResult;
-      if (need_normalize) {
-        expectResult = oklt::normalize_and_transpile(transpilerParams);
-      } else {
-        expectResult = oklt::transpile(transpilerParams);
-      }
+      oklt::UserInput input{.backend = backend.value(),
+                            .sourceCode = sourceCode,
+                            .sourcePath = source_path,
+                            .inlcudeDirectories = {},
+                            .defines = {}};
 
-      if (expectResult) {
+      oklt::UserResult result = [](auto&& input, auto need_normalize) {
+        if (need_normalize) {
+          return oklt::normalizeAndTranspile(input);
+        } else {
+          return oklt::transpile(input);
+        }
+      }(std::move(input), need_normalize);
+
+      if (result) {
         std::cout << "Transpiling success : true" << std::endl;
       } else {
         std::cout << "Transpiling errors: " << std::endl;
-        for (const auto& error : expectResult.error()) {
-          std::cout << error.desription << std::endl;
+        for (const auto& error : result.error()) {
+          std::cout << error.desc << std::endl;
         }
       }
     }

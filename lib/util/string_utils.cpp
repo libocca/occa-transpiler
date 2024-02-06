@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace oklt::util {
-std::string toLower(const std::string &str) {
+std::string toLower(const std::string& str) {
   std::string result;
   result.reserve(str.size());
   std::transform(str.begin(), str.end(), std::back_inserter(result), ::tolower);
@@ -14,7 +14,7 @@ std::string toCamelCase(std::string str) {
   for (int i = 0; i < str.length(); i++) {
     // check for spaces in the sentence
     if (str[i] == ' ' || str[i] == '_') {
-    // conversion into upper case
+      // conversion into upper case
       str[i + 1] = ::toupper(str[i + 1]);
       continue;
     }
@@ -23,7 +23,7 @@ std::string toCamelCase(std::string str) {
       str[res_ind++] = str[i];
     }
   }
-          // return string to main
+  // return string to main
   return str.substr(0, res_ind);
 }
 

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "oklt/core/attribute_manager/backend_attribute_map.h"
-#include "oklt/core/attribute_manager/common_attribute_map.h"
+#include <oklt/core/attribute_manager/backend_attribute_map.h>
+#include <oklt/core/attribute_manager/common_attribute_map.h>
+#include <oklt/core/error.h>
 
-#include <llvm/Support/Error.h>
 #include <string>
+#include <tl/expected.hpp>
 
 namespace oklt {
 
@@ -30,12 +31,13 @@ class AttributeManager {
   bool handleAttr(const clang::Attr* attr, const clang::Decl* decl, SessionStage& stage);
   bool handleAttr(const clang::Attr* attr, const clang::Stmt* stmt, SessionStage& stage);
 
-  llvm::Expected<const clang::Attr*> checkAttrs(const clang::AttrVec& attrs,
-                                                const clang::Decl* decl,
-                                                SessionStage& stage);
-  llvm::Expected<const clang::Attr*> checkAttrs(const clang::ArrayRef<const clang::Attr*>& attrs,
-                                                const clang::Stmt* decl,
-                                                SessionStage& stage);
+  tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
+                                                     const clang::Decl* decl,
+                                                     SessionStage& stage);
+  tl::expected<const clang::Attr*, Error> checkAttrs(
+    const clang::ArrayRef<const clang::Attr*>& attrs,
+    const clang::Stmt* decl,
+    SessionStage& stage);
 
  private:
   // INFO: here should not be the same named attributes in both

@@ -16,9 +16,10 @@ class TranspileFrontendAction : public clang::ASTFrontendAction {
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                         llvm::StringRef in_file) override;
-private:
+
+ private:
   TranspilerSession& _session;
-  //INFO: it must leave longer than ASTConsumer for Diagnostic Consumer
+  // INFO: it must leave longer than ASTConsumer for Diagnostic Consumer
   std::unique_ptr<SessionStage> _stage;
 };
 }  // namespace oklt

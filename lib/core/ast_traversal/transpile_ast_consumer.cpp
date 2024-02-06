@@ -4,8 +4,7 @@
 namespace oklt {
 using namespace clang;
 
-TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage)
-    : _stage(stage), _visitor(_stage) {}
+TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage) : _stage(stage), _visitor(_stage) {}
 
 void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
   TranslationUnitDecl* tu = context.getTranslationUnitDecl();

@@ -20,17 +20,21 @@ set (OCCA_TRANSPILER_SOURCES
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/transpiler_session.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_stage.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_result.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/config.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_info/kernel_info.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalize_and_transpile.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalize.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpile.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/util/io_helper.h
     ${CMAKE_SOURCE_DIR}/include/oklt/util/string_utils.h
@@ -66,18 +70,20 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
-    core/config.cpp
+    core/target_backends.cpp
 
     core/utils/format.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp
 
-    pipeline/normalize.cpp
-    pipeline/transpile.cpp
-    pipeline/normalize_and_transpile.cpp
+    pipeline/normalizer.cpp
+    pipeline/transpiler.cpp
+    pipeline/normalizer_and_transpiler.cpp
     pipeline/stages/transpiler/transpiler.cpp
+
     pipeline/stages/normalizer/normalizer.cpp
+    pipeline/stages/normalizer/error_codes.cpp
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
     pipeline/stages/normalizer/impl/okl_attr_traverser.cpp

@@ -1,16 +1,14 @@
-#include <nlohmann/json.hpp>
-#include <oklt/core/kernel_info/kernel_info.h>
 #include <gtest/gtest.h>
-#include "common/data_directory.h"
+#include <oklt/core/kernel_info/kernel_info.h>
 #include <fstream>
-
+#include <nlohmann/json.hpp>
+#include "common/data_directory.h"
 
 using namespace oklt;
 using namespace oklt::tests;
 using json = nlohmann::json;
 
-TEST(TestKernelInfo, DatatypeInfoJsonTest )
-{
+TEST(TestKernelInfo, DatatypeInfoJsonTest) {
   auto dataDir = DataRootHolder::instance().dataRoot;
   auto miscDir = dataDir / "misc";
   auto datatypeJsonPath = miscDir / "datatype_info.json";
@@ -18,7 +16,7 @@ TEST(TestKernelInfo, DatatypeInfoJsonTest )
   json tests = json::parse(datatypeJsonFile);
 
   std::vector<DataType> deserialized;
-  for(const auto &obj: tests) {
+  for (const auto& obj : tests) {
     DataType dt;
     obj.get_to(dt);
     deserialized.emplace_back(std::move(dt));
@@ -46,8 +44,7 @@ TEST(TestKernelInfo, DatatypeInfoJsonTest )
   EXPECT_EQ(originFormatedJson, testedFormatedJson);
 }
 
-TEST(TestKernelInfo, ArgumentInfoJsonTest )
-{
+TEST(TestKernelInfo, ArgumentInfoJsonTest) {
   auto dataDir = DataRootHolder::instance().dataRoot;
   auto miscDir = dataDir / "misc";
   auto argsJsonPath = miscDir / "argument_info.json";
@@ -55,7 +52,7 @@ TEST(TestKernelInfo, ArgumentInfoJsonTest )
   json tests = json::parse(argsJsonFile);
 
   std::vector<ArgumentInfo> deserialized;
-  for(const auto &obj: tests) {
+  for (const auto& obj : tests) {
     ArgumentInfo dt;
     obj.get_to(dt);
     deserialized.emplace_back(std::move(dt));
@@ -86,8 +83,7 @@ TEST(TestKernelInfo, ArgumentInfoJsonTest )
   EXPECT_EQ(originFormatedJson, testedFormatedJson);
 }
 
-TEST(TestKernelInfo, KernelMetaJsonTest )
-{
+TEST(TestKernelInfo, KernelMetaJsonTest) {
   auto dataDir = DataRootHolder::instance().dataRoot;
   auto miscDir = dataDir / "misc";
   auto kernelMetaJsonPath = miscDir / "kernel_meta.json";
@@ -101,8 +97,7 @@ TEST(TestKernelInfo, KernelMetaJsonTest )
   EXPECT_EQ(std::string("_occa_addVectors_0"), kernelMeta.name);
 }
 
-TEST(TestKernelInfo, KernelInfoJsonTest)
-{
+TEST(TestKernelInfo, KernelInfoJsonTest) {
   auto dataDir = DataRootHolder::instance().dataRoot;
   auto miscDir = dataDir / "misc";
   auto kernelInfoJsonPath = miscDir / "kernel_info.json";
@@ -112,7 +107,8 @@ TEST(TestKernelInfo, KernelInfoJsonTest)
   KernelMetadata info;
   EXPECT_NO_THROW(test.get_to(info));
   EXPECT_FALSE(info.dependencies.has_value());
-  EXPECT_EQ(std::string("28e58002e281fe6b18589982a2871141d4b0bea8d0691c6564edf0d25c583d93"), info.hash);
+  EXPECT_EQ(std::string("28e58002e281fe6b18589982a2871141d4b0bea8d0691c6564edf0d25c583d93"),
+            info.hash);
   EXPECT_EQ(1, info.metadata.size());
   EXPECT_EQ(std::string("_occa_addVectors_0"), info.metadata[0].name);
   EXPECT_TRUE(info.props.has_value());
