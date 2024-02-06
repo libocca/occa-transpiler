@@ -1,23 +1,7 @@
 #pragma once
 
-#include <string>
-#include <tl/expected.hpp>
+#include <oklt/core/transpiler_session/session_result.h>
 
 namespace oklt {
-
-struct TranspilerSession;
-
-struct NormalizerError {};
-
-struct NormalizerInput {
-  std::string oklSource;
-};
-
-struct NormalizerOutput {
-  std::string cppSource;
-};
-
-using ExpecteNormalizerResult = tl::expected<NormalizerOutput, NormalizerError>;
-
-ExpecteNormalizerResult normalize(NormalizerInput input, TranspilerSession& session);
+TranspilerSessionResult runNormalizerStage(SharedTranspilerSession session);
 }  // namespace oklt

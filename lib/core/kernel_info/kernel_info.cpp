@@ -3,19 +3,17 @@
 namespace oklt {
 using json = nlohmann::json;
 
-void to_json(json& j, const DataType& dt)
-{
-  if(dt.type == DatatypeCategory::BUILTIN) {
-    j = json { {"name", dt.name}, {"type", "builtin"}};
+void to_json(json& j, const DataType& dt) {
+  if (dt.type == DatatypeCategory::BUILTIN) {
+    j = json{{"name", dt.name}, {"type", "builtin"}};
   } else {
-    j = json { {"name", "none"}, {"type", "custom"}, {"bytes", dt.bytes}};
+    j = json{{"name", "none"}, {"type", "custom"}, {"bytes", dt.bytes}};
   }
 }
 
-void from_json(const json& j, DataType& dt)
-{
+void from_json(const json& j, DataType& dt) {
   auto dtCategory = j.at("type").get<std::string>();
-  if(dtCategory == "builtin") {
+  if (dtCategory == "builtin") {
     dt.type = DatatypeCategory::BUILTIN;
     j.at("name").get_to(dt.name);
   } else {
@@ -25,18 +23,14 @@ void from_json(const json& j, DataType& dt)
   }
 }
 
-void to_json(json& j, const ArgumentInfo& argInfo)
-{
-  j = json {
-    {"const", argInfo.is_const},
-    {"dtype", argInfo.dtype},
-    {"name", argInfo.name},
-    {"ptr", argInfo.is_ptr}
-  };
+void to_json(json& j, const ArgumentInfo& argInfo) {
+  j = json{{"const", argInfo.is_const},
+           {"dtype", argInfo.dtype},
+           {"name", argInfo.name},
+           {"ptr", argInfo.is_ptr}};
 }
 
-void from_json(const json& j, ArgumentInfo& argInfo)
-{
+void from_json(const json& j, ArgumentInfo& argInfo) {
   j.at("const").get_to(argInfo.is_const);
   j.at("dtype").get_to(argInfo.dtype);
   j.at("name").get_to(argInfo.name);
@@ -44,10 +38,7 @@ void from_json(const json& j, ArgumentInfo& argInfo)
 }
 
 void to_json(json& j, const ParsedKernelInfo& kernelMeta) {
-  j = json {
-    {"arguments", kernelMeta.arguments},
-    {"name", kernelMeta.name}
-  };
+  j = json{{"arguments", kernelMeta.arguments}, {"name", kernelMeta.name}};
 }
 
 void from_json(const json& j, ParsedKernelInfo& kernelMeta) {
@@ -55,30 +46,24 @@ void from_json(const json& j, ParsedKernelInfo& kernelMeta) {
   j.at("name").get_to(kernelMeta.name);
 }
 
-void to_json(json& j, const KernelMetadata& kernelInfo)
-{
-  if(kernelInfo.props.has_value()) {
-    j = json {
-      {"dependencies", json::object()}, //INFO: always empty object, can't define the type
-      {"hash", kernelInfo.hash},
-      {"metadata", kernelInfo.metadata},
-      {"props", kernelInfo.props.value()}
-    };
+void to_json(json& j, const KernelMetadata& kernelInfo) {
+  if (kernelInfo.props.has_value()) {
+    j = json{{"dependencies", json::object()},  // INFO: always empty object, can't define the type
+             {"hash", kernelInfo.hash},
+             {"metadata", kernelInfo.metadata},
+             {"props", kernelInfo.props.value()}};
   } else {
-    j = json {
-      {"dependencies", json::object()}, //INFO: always empty object, can't define the type
-      {"hash", kernelInfo.hash},
-      {"metadata", kernelInfo.metadata},
-      {"props", json::object()}
-    };
+    j = json{{"dependencies", json::object()},  // INFO: always empty object, can't define the type
+             {"hash", kernelInfo.hash},
+             {"metadata", kernelInfo.metadata},
+             {"props", json::object()}};
   }
 }
 
-void from_json(const json& j, KernelMetadata& kernelInfo)
-{
+void from_json(const json& j, KernelMetadata& kernelInfo) {
   kernelInfo.dependencies = std::nullopt;
-  const auto &value = j.at("props");
-  if(value.is_object() && !value.empty()) {
+  const auto& value = j.at("props");
+  if (value.is_object() && !value.empty()) {
     j.at("hash").get_to(kernelInfo.hash);
     j.at("metadata").get_to(kernelInfo.metadata);
     PropertyInfo prop;
@@ -90,4 +75,4 @@ void from_json(const json& j, KernelMetadata& kernelInfo)
     kernelInfo.props = std::nullopt;
   }
 }
-}
+}  // namespace oklt

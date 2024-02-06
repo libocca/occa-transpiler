@@ -16,6 +16,7 @@ class AttrStmtHandler {
                                         SessionStage&,
                                         HandledChanges callback)>;
 
+  AttrStmtHandler(AttrStmtHandler&&) = default;
   AttrStmtHandler(ParamsParserType pp, HandleType h);
   ~AttrStmtHandler() = default;
 

@@ -7,14 +7,15 @@ namespace fs = std::filesystem;
 using namespace oklt::tests;
 
 int main(int argc, char* argv[]) {
-
   auto currentWorkingDirectory = fs::current_path();
   auto defaultSuit = currentWorkingDirectory / fs::path("configs/test_suite_normalize/");
   auto defaultData = currentWorkingDirectory / fs::path("data");
 
   argparse::ArgumentParser program("occa-transpiler-tests");
   program.add_argument("-s", "--suite").default_value(defaultSuit.string()).help("set suite path");
-  program.add_argument("-d", "--data_root").default_value(defaultData.string()).help("set data root folder");
+  program.add_argument("-d", "--data_root")
+    .default_value(defaultData.string())
+    .help("set data root folder");
 
   try {
     program.parse_known_args(argc, argv);

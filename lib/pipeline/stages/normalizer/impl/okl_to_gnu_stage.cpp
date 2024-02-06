@@ -1,14 +1,15 @@
+#include "okl_to_gnu_stage.h"
+#include "okl_attr_traverser.h"
+
+#include <oklt/core/error.h>
+#include <oklt/core/transpiler_session/session_stage.h>
+#include <oklt/pipeline/stages/normalizer/error_codes.h>
+
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
-
-#include "okl_attr_traverser.h"
-#include "okl_to_gnu_stage.h"
-#include "oklt/core/transpiler_session/session_stage.h"
-
-// #define NORMALIZER_DEBUG_LOG
 
 namespace {
 
@@ -92,10 +93,10 @@ std::vector<Token> fetchTokens(Preprocessor& pp) {
 }
 
 struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
-  explicit OklToGnuAttributeNormalizerAction(OklToGnuStageInput input,
-                                             OklToGnuStageOutput& output,
-                                             TranspilerSession& session)
-      : _input(std::move(input)), _output(output), _session(session) {}
+  explicit OklToGnuAttributeNormalizerAction(OklToGnuStageInput& input, OklToGnuStageOutput& output)
+      : _input(input), _output(output), _session(*input.session) {
+    (void)_input;
+  }
 
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
@@ -109,14 +110,14 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
 
     auto tokens = fetchTokens(pp);
     if (tokens.empty()) {
-      // TODO error handling
+      _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "no tokens in source?");
       return false;
     }
 
     SessionStage stage{_session, compiler};
     auto& rewriter = stage.getRewriter();
 
-    auto ret =
+    auto result =
       visitOklAttributes(tokens, pp,
                          [this, &rewriter](const OklAttribute& attr,
                                            const std::vector<Token>& tokens, Preprocessor& pp) {
@@ -124,8 +125,8 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
                                                     attr, tokens, pp, rewriter);
                            return true;
                          });
-    if (ret) {
-      // TODO error handling
+    if (!result) {
+      _session.pushError(result.error().ec, result.error().desc);
       return false;
     }
 
@@ -137,27 +138,44 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
   }
 
  private:
-  OklToGnuStageInput _input;
+  OklToGnuStageInput& _input;
   OklToGnuStageOutput& _output;
   TranspilerSession& _session;
 };
 }  // namespace
 namespace oklt {
 
-tl::expected<OklToGnuStageOutput, int> convertOklToGnuAttribute(OklToGnuStageInput input,
-                                                                TranspilerSession& session) {
-  // TODO error handling
+OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
+  if (input.oklCppSrc.empty()) {
+    llvm::outs() << "input source string is empty\n";
+    auto error =
+      makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
+    return tl::make_unexpected(std::vector<Error>{error});
+  }
+
+#ifdef NORMALIZER_DEBUG_LOG
+  llvm::outs() << "stage 0 OKL source:\n\n" << input.oklCppSrc << '\n';
+#endif
+
   Twine tool_name = "okl-transpiler-normalization-to-gnu";
   Twine file_name("okl-kernel-to-gnu.cpp");
   std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
-  OklToGnuStageOutput output;
   auto input_file = std::move(input.oklCppSrc);
 
-  tooling::runToolOnCodeWithArgs(
-    std::make_unique<OklToGnuAttributeNormalizerAction>(std::move(input), output, session),
-    input_file, args, file_name, tool_name);
+  OklToGnuStageOutput output = {.session = input.session};
+  auto ok = tooling::runToolOnCodeWithArgs(
+    std::make_unique<OklToGnuAttributeNormalizerAction>(input, output), input_file, args, file_name,
+    tool_name);
 
-  return std::move(output);
+  if (!ok) {
+    return tl::make_unexpected(std::move(output.session->getErrors()));
+  }
+
+#ifdef NORMALIZER_DEBUG_LOG
+  llvm::outs() << "stage 1 GNU cpp source:\n\n" << output.gnuCppSrc << '\n';
+#endif
+
+  return output;
 }
 }  // namespace oklt

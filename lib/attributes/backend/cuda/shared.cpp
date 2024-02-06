@@ -24,7 +24,7 @@ bool handleSharedAttribute(const clang::Attr* a, const clang::Decl* d, SessionSt
 
 __attribute__((constructor)) void registerSharedHandler() {
   auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-    {TRANSPILER_TYPE::CUDA, SHARED_ATTR_NAME}, {parseSharedAttribute, handleSharedAttribute});
+    {TargetBackend::CUDA, SHARED_ATTR_NAME}, {parseSharedAttribute, handleSharedAttribute});
 
   if (!ok) {
     llvm::errs() << "failed to register " << SHARED_ATTR_NAME << " attribute handler\n";

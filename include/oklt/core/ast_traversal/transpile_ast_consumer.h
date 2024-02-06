@@ -14,12 +14,11 @@ class TranspileASTConsumer : public clang::ASTConsumer {
   explicit TranspileASTConsumer(SessionStage& stage);
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
-  SessionStage &getSessionStage();
-  SemanticAnalyzer &getSemaAnalyzer();
+  SessionStage& getSessionStage();
+  SemanticAnalyzer& getSemaAnalyzer();
  private:
-  SessionStage &_stage;
+  SessionStage& _stage;
   SemanticAnalyzer _semaAnalyzer;
-
 };
 
 }  // namespace oklt

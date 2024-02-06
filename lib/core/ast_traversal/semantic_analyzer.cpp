@@ -21,7 +21,7 @@ inline DatatypeCategory makeDatatypeCategory(const QualType &qt) {
   return DatatypeCategory::CUSTOM;
 }
 
-SemanticAnalyzer::SemanticAnalyzer(SEMANTIC_CATEGORY category,
+SemanticAnalyzer::SemanticAnalyzer(SemanticCategory category,
                                    SessionStage& stage)
     : _category(category)
     , _stage(stage)
@@ -90,7 +90,7 @@ bool SemanticAnalyzer::TraverseFunctionDecl(clang::FunctionDecl *funcDecl)
   auto attrHandleFunc =
     [this, funcDecl](const clang::Attr*attr) -> bool {
     auto& attrManager = _stage.getAttrManager();
-    if(_category == SEMANTIC_CATEGORY::HOST_KERNEL_CATEGORY) {
+    if(_category == SemanticCategory::HOST_KERNEL_CATEGORY) {
       if (!attrManager.handleAttr(attr, funcDecl, _stage, nullptr)) {
         return false;
       }

@@ -1,14 +1,12 @@
 #define W 100
 #define H 100
 
-typedef @dim(W, H, "rowMajor") int *Mat2d;
+typedef @dim(W, H, "rowMajor") int* Mat2d;
 
 template <class T>
-void f(T *a) {
+void f(T* a) {}
 
-}
-
-@kernel void f0(@ restrict int *a, @ restrict int *b) {
+@kernel void f0(@ restrict int* a, @ restrict int* b) {
   Mat2d mat[100];
   @barrier;
 
@@ -36,9 +34,9 @@ void f(T *a) {
   f(c);
   c(0, 0) = 0;
 
-  @dim(3,3,3) int d[100];
+  @dim(3, 3, 3) int d[100];
   d(0, 0, 2) = 0;
 
   Mat2d cc[100][100];
-  cc[0][0](1,2) = 0;
+  cc[0][0](1, 2) = 0;
 }

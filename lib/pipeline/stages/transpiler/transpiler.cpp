@@ -1,14 +1,12 @@
 #include <oklt/core/ast_traversal/transpile_frontend_action.h>
-#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <oklt/core/error.h>
+#include <oklt/core/transpiler_session/session_result.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/core/diag/error.h>
-#include <oklt/pipeline/stages/normalizer/normalizer.h>
-#include <oklt/pipeline/stages/transpiler/transpiler.h>
-#include <clang/Tooling/Tooling.h>
-#include <llvm/Support/JSON.h>
-#include <llvm/Support/raw_os_ostream.h>
+#include <oklt/core/transpiler_session/transpiler_session.h>
 
-#include <fstream>
+#include <clang/Tooling/Tooling.h>
+
+#include <llvm/Support/raw_os_ostream.h>
 
 using namespace llvm;
 using namespace clang;
@@ -16,7 +14,9 @@ using namespace clang::tooling;
 
 namespace oklt {
 
-ExpectTranspilerResult transpile(const TranspileData& input, TranspilerSession& session) {
+TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
+  auto& input = session->input;
+
   Twine tool_name = "okl-transpiler";
   std::string rawFileName = input.sourcePath.filename().string();
   Twine file_name(rawFileName);
@@ -25,15 +25,14 @@ ExpectTranspilerResult transpile(const TranspileData& input, TranspilerSession& 
   Twine code(input.sourceCode);
   std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
   std::unique_ptr<oklt::TranspileFrontendAction> action =
-    std::make_unique<oklt::TranspileFrontendAction>(session);
+    std::make_unique<oklt::TranspileFrontendAction>(*session);
 
   bool ret =
     runToolOnCodeWithArgs(std::move(action), code, args, file_name, tool_name, std::move(pchOps));
   if (!ret) {
-    return tl::unexpected(std::move(session.diagMessages));
+    return tl::make_unexpected(std::move(session->getErrors()));
   }
-  TranspilerResult result;
-  result.kernel.outCode = session.transpiledCode;
-  return result;
+
+  return session;
 }
 }  // namespace oklt

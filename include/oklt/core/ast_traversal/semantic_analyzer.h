@@ -14,8 +14,8 @@ class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer> {
  public:
 
   using KernelInfoT = decltype(KernelMetadata::metadata);
-
-  explicit SemanticAnalyzer(SEMANTIC_CATEGORY category,
+  
+  explicit SemanticAnalyzer(SemanticCategory category,
                             SessionStage& session);
   virtual ~SemanticAnalyzer() = default;
 
@@ -56,8 +56,8 @@ class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer> {
     std::string funcName;
     std::vector<std::string> params;
   };
-
-  SEMANTIC_CATEGORY _category;
+  
+  SemanticCategory _category;
   SessionStage& _stage;
   KernelInfoT _kernels;
   std::list<KernelASTInfo> _astKernels;
