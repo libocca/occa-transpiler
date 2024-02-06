@@ -2,16 +2,11 @@
 #include "oklt/core/transpiler_session/session_stage.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
 #include "oklt/core/attribute_manager/attributed_type_map.h"
+#include "visit_overload.hpp"
 
 namespace oklt {
 using namespace clang;
 
-
-template<typename ... Ts>
-struct Overload : Ts ... {
-  using Ts::operator() ...;
-};
-template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
 
 //INFO: simple mapping
 inline DatatypeCategory makeDatatypeCategory(const QualType &qt) {
@@ -23,12 +18,16 @@ inline DatatypeCategory makeDatatypeCategory(const QualType &qt) {
 
 SemanticAnalyzer::SemanticAnalyzer(SemanticCategory category,
                                    SessionStage& stage)
-    : _category(category)
-    , _stage(stage)
+    :SemanticASTVisitorBase(stage)
+    , _category(category)
     , _kernels()
     , _astKernels()
 
 {}
+
+bool SemanticAnalyzer::traverseTranslationUnit(clang::Decl* decl) {
+  return TraverseDecl(decl);
+}
 
 SemanticAnalyzer::KernelInfoT& SemanticAnalyzer::getKernelInfo() {
   return _kernels;
@@ -157,7 +156,7 @@ bool SemanticAnalyzer::TraverseAttributedStmt(clang::AttributedStmt *attrStmt,
       if (!attrManager.handleAttr(attr, subStmt, _stage, nullptr)) {
         return false;
       }
-      return true;
+      return RecursiveASTVisitor<SemanticAnalyzer>::TraverseAttributedStmt(attrStmt, queue);
     },
     [this, attrStmt, queue](const NoOKLAttrs&) -> bool{
       return RecursiveASTVisitor<SemanticAnalyzer>::TraverseAttributedStmt(attrStmt, queue);
@@ -167,33 +166,6 @@ bool SemanticAnalyzer::TraverseAttributedStmt(clang::AttributedStmt *attrStmt,
     },
   };
   return std::visit(validationHandlers, validationResult);
-}
-
-SemanticAnalyzer::ValidationResult SemanticAnalyzer::validateAttribute(const clang::ArrayRef<const clang::Attr *> &attrs)
-{
-  std::list<const Attr*> collectedAttrs;
-  auto &attrManager = _stage.getAttrManager();
-  for (const auto& attr : attrs) {
-    auto name = attr->getNormalizedFullName();
-    if(attrManager.hasAttrHandler(attr, _stage)) {
-      collectedAttrs.push_back(attr);
-    }
-  }
-  if (collectedAttrs.empty()) {
-    return SemanticAnalyzer::NoOKLAttrs{};
-  }
-
-  if (collectedAttrs.size() > 1) {
-    const Attr* first = collectedAttrs.front();
-    DiagnosticsEngine &de = _stage.getCompiler().getDiagnostics();
-    auto id = de.getCustomDiagID(DiagnosticsEngine::Error, "Multiple OKL attributes are used, total occurenses: %1");
-    de.Report(first->getScopeLoc(), id)
-      .AddTaggedVal(collectedAttrs.size(),
-                    DiagnosticsEngine::ArgumentKind::ak_uint);
-    return ErrorFired {};
-  }
-  const Attr* attr = collectedAttrs.front();
-  return attr;
 }
 
 }

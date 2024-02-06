@@ -2,23 +2,26 @@
 
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <oklt/core/ast_traversal/semantic_category.h>
+#include <oklt/core/ast_traversal/semantic_base.h>
 #include <oklt/core/kernel_info/kernel_info.h>
-// #include <oklt/core/diag/error.h>
 #include <variant>
 
 namespace oklt {
 
 class SessionStage;
 
-class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer> {
+class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer>
+                         , public SemanticASTVisitorBase
+{
  public:
 
   using KernelInfoT = decltype(KernelMetadata::metadata);
   
   explicit SemanticAnalyzer(SemanticCategory category,
                             SessionStage& session);
-  virtual ~SemanticAnalyzer() = default;
+  ~SemanticAnalyzer() override = default;
 
+  bool traverseTranslationUnit(clang::Decl* decl) override;
   KernelInfoT& getKernelInfo();
 
   bool TraverseDecl(clang::Decl* decl);
@@ -27,16 +30,6 @@ class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer> {
 
   bool TraverseFunctionDecl(clang::FunctionDecl *funcDecl);
   bool TraverseAttributedStmt(clang::AttributedStmt *attrStmt, DataRecursionQueue* queue = nullptr);
-
- protected:
-  struct NoOKLAttrs {};
-  struct ErrorFired {};
-
-  using ValidationResult = std::variant<const clang::Attr*,
-                                      NoOKLAttrs,
-                                      ErrorFired>;
-
-  ValidationResult validateAttribute(const clang::ArrayRef<const clang::Attr *> &attrs);
 
  protected:
 
@@ -57,8 +50,8 @@ class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer> {
     std::vector<std::string> params;
   };
   
+  // SessionStage& _stage;
   SemanticCategory _category;
-  SessionStage& _stage;
   KernelInfoT _kernels;
   std::list<KernelASTInfo> _astKernels;
 
