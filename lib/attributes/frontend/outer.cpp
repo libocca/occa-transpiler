@@ -15,22 +15,32 @@ constexpr ParsedAttrInfo::Spelling OUTER_ATTRIBUTE_SPELLINGS[] = {
 
 struct OuterAttribute : public ParsedAttrInfo {
   OuterAttribute() {
-    NumArgs = 0;
-    OptArgs = 2;
+    NumArgs = 1;
+    OptArgs = 0;
     Spellings = OUTER_ATTRIBUTE_SPELLINGS;
     AttrKind = clang::AttributeCommonInfo::AT_Suppress;
     IsStmt = true;
   }
 
-  bool diagAppertainsToDecl(clang::Sema& sema,
+
+  bool diagAppertainsToStmt(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
-                            const clang::Decl* decl) const override {
-    if (decl->getFriendObjectKind()) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+                            const clang::Stmt* stmt) const override {
+    if (!isa<ForStmt>(stmt)) {
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
         << attr << attr.isDeclspecAttribute() << "for statement";
       return false;
     }
     return true;
+  }
+
+  bool diagAppertainsToDecl(clang::Sema& sema,
+                            const clang::ParsedAttr& attr,
+                            const clang::Decl* decl) const override {
+    // INFO: fail for all decls
+    sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+      << attr << attr.isDeclspecAttribute() << "for statement";
+    return false;
   }
 };
 

@@ -5,42 +5,43 @@
 
 namespace {
 
-using namespace oklt;
 using namespace clang;
+using namespace oklt;
 
-constexpr ParsedAttrInfo::Spelling TILE_ATTRIBUTE_SPELLINGS[] = {
-  {ParsedAttr::AS_CXX11, "tile"},
-  {ParsedAttr::AS_CXX11, TILE_ATTR_NAME},
-  {ParsedAttr::AS_GNU, "okl_tile"}};
+constexpr ParsedAttrInfo::Spelling NOBARRIER_ATTRIBUTE_SPELLINGS[] = {
+  {ParsedAttr::AS_CXX11, "nobarrier"},
+  {ParsedAttr::AS_CXX11, NOBARRIER_ATTR_NAME},
+  {ParsedAttr::AS_GNU, "okl_nobarrier"}};
 
-struct TileAttribute : public ParsedAttrInfo {
-  TileAttribute() {
+struct NoBarrierAttribute : public ParsedAttrInfo {
+  NoBarrierAttribute() {
     NumArgs = 1;
     OptArgs = 0;
-    Spellings = TILE_ATTRIBUTE_SPELLINGS;
+    Spellings = NOBARRIER_ATTRIBUTE_SPELLINGS;
     AttrKind = clang::AttributeCommonInfo::AT_Suppress;
     IsStmt = true;
   }
+
   bool diagAppertainsToStmt(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
                             const clang::Stmt* stmt) const override {
-    if (!isa<ForStmt>(stmt)) {
+    if (!isa<NullStmt>(stmt)) {
       sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-        << attr << attr.isDeclspecAttribute() << "for statement";
+        << attr << attr.isDeclspecAttribute() << "empty statement";
       return false;
     }
     return true;
   }
-
+  
   bool diagAppertainsToDecl(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
                             const clang::Decl* decl) const override {
     // INFO: fail for all decls
     sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-      << attr << attr.isDeclspecAttribute() << "for statement";
+      << attr << attr.isDeclspecAttribute() << "empty statements";
     return false;
   }
 };
 
-ParsedAttrInfoRegistry::Add<TileAttribute> register_okl_tile(TILE_ATTR_NAME, "");
+ParsedAttrInfoRegistry::Add<NoBarrierAttribute> register_okl_nobarrier(NOBARRIER_ATTR_NAME, "");
 }  // namespace
