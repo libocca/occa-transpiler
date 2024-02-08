@@ -40,6 +40,15 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
     return true;
   }
+
+  bool diagAppertainsToStmt(clang::Sema& sema,
+                            const clang::ParsedAttr& attr,
+                            const clang::Stmt* stmt) const override {
+    // INFO: fail for all statements
+    sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+      << attr << attr.isDeclspecAttribute() << "variable or type declaration";
+    return false;
+  }
 };
 
 ParsedAttrInfoRegistry::Add<SharedAttribute> register_okl_shared(SHARED_ATTR_NAME, "");
