@@ -4,11 +4,12 @@
 
   {
     float b;
-    b = a+b @atomic;
     @atomic b = a+b;
   }
 
-  {
-    a *= 1 @atomic;
+  int c = 0;
+  @atomic{
+    a *= 1;
+    c += a;
   }
 }
