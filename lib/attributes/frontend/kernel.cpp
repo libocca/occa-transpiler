@@ -16,7 +16,7 @@ constexpr ParsedAttrInfo::Spelling KERNEL_ATTRIBUTE_SPELLINGS[] = {
 struct KernelAttribute : public ParsedAttrInfo {
   KernelAttribute() {
     NumArgs = 1;
-    OptArgs = 1;
+    OptArgs = 0;
     Spellings = KERNEL_ATTRIBUTE_SPELLINGS;
     AttrKind = clang::AttributeCommonInfo::AT_Annotate;
   }
@@ -28,7 +28,7 @@ struct KernelAttribute : public ParsedAttrInfo {
     //       in this case there is no need to make attribute !!!
     // INFO: this attribute appertains to functions only.
     if (!isa<FunctionDecl>(decl)) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
         << attr << attr.isDeclspecAttribute() << "functions";
       return false;
     }

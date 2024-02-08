@@ -54,9 +54,18 @@ bool hasAttrOklPrefix(const Attr& attr) {
   return attr.getAttrName()->getName().startswith(OKL_PREFIX);
 }
 
+std::string getArgAsStr(const SuppressAttr& attr) {
+  auto str = attr.diagnosticIdentifiers_begin()->data();
+  return str != nullptr ? str : "";
+}
+
+std::string getOklName(const Attr& attr) {
+  return attr.getAttrName()->getName().split('_').second.str();
+}
+
 OklAttribute toOklAttr(const AnnotateAttr& attr, ASTContext& ast) {
   return OklAttribute{.raw = "",
-                      .name = attr.getAttrName()->getName().split('_').second.str(),
+                      .name = getOklName(attr),
                       .params = attr.getAnnotation().str(),
                       .begin_loc = SourceLocation(),
                       .tok_indecies = {}};
@@ -64,11 +73,9 @@ OklAttribute toOklAttr(const AnnotateAttr& attr, ASTContext& ast) {
 
 OklAttribute toOklAttr(const SuppressAttr& attr, ASTContext& ast) {
   assert(attr.diagnosticIdentifiers_size() != 0 && "suppress attr has 0 args");
-
-  const auto* args_str = attr.diagnosticIdentifiers_begin()->data();
   return OklAttribute{.raw = "",
-                      .name = attr.getAttrName()->getName().split('_').second.str(),
-                      .params = args_str,
+                      .name = getOklName(attr),
+                      .params = getArgAsStr(attr),
                       .begin_loc = SourceLocation(),
                       .tok_indecies = {}};
 }

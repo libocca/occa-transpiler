@@ -40,6 +40,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/util/string_utils.h
 
     attributes/frontend/barrier.cpp
+    attributes/frontend/nobarrier.cpp
+    attributes/frontend/exclusive.cpp
+    attributes/frontend/atomic.cpp
     attributes/frontend/dim.cpp
     attributes/frontend/dimOrder.cpp
     attributes/frontend/inner.cpp
