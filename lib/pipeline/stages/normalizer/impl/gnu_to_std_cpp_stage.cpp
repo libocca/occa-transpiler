@@ -14,8 +14,6 @@
 using namespace oklt;
 using namespace clang;
 
-// #define NORMALIZER_DEBUG_LOG
-//
 namespace {
 struct AttrNormalizerCtx {
   ASTContext* astCtx;
@@ -23,19 +21,13 @@ struct AttrNormalizerCtx {
   std::list<OklAttrMarker> markers;
 };
 
-std::string wrapAsSpecificCxxAttr(const OklAttribute& attr) {
-  if (attr.params.empty()) {
-    return "[[okl::" + attr.name + R"((")" + "(void)" + "\")]]";
-  }
-
-  return "[[okl::" + attr.name + R"((")" + attr.params + "\")]]";
-}
 // TODO move to helper functions header
-constexpr uint32_t CXX11_ATTR_PREFIX_LEN = 2u;
-constexpr uint32_t CXX11_ATTR_SUFFIX_LEN = 2u;
+constexpr int32_t CXX11_ATTR_PREFIX_LEN = 2;
+constexpr int32_t CXX11_ATTR_SUFFIX_LEN = 2;
 
-constexpr uint32_t GNU_ATTR_PREFIX_LEN = 15u;
-constexpr uint32_t GNU_ATTR_SUFFIX_LEN = 2u;
+constexpr int32_t GNU_ATTR_PREFIX_LEN = 15;
+constexpr int32_t GNU_ATTR_SUFFIX_LEN = 2;
+
 SourceRange getAttrFullSourceRange(const Attr& attr) {
   auto arange = attr.getRange();
 
