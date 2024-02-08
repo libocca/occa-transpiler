@@ -24,8 +24,6 @@ struct AtomicAttribute : public ParsedAttrInfo {
   bool diagAppertainsToStmt(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
                             const clang::Stmt* stmt) const override {
-    // TODO: doesn't work for expressions (for ex. @atomic a += 1;) for some reason -- 
-    //      (expected unqualified-id)
     if (!isa<Expr, CompoundStmt>(stmt)) {
       sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
         << attr << attr.isDeclspecAttribute() << "expression or compound statement";
