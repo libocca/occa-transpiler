@@ -4,11 +4,12 @@
 
   {
     float b;
-    [[okl::atomic("")]]b = a+b ;
     [[okl::atomic("")]] b = a+b;
   }
 
-  {
-    [[okl::atomic("")]]a *= 1 ;
+  int c = 0;
+  [[okl::atomic("")]]{
+    a *= 1;
+    c += a;
   }
 }
