@@ -1,6 +1,6 @@
 [[okl::dim("(4,4)")]] typedef float* mat4;
 
-[[okl::kernel("(void)")]] void addVectors(const int entries,
+[[okl::kernel("")]] void addVectors(const int entries,
                                           [[okl::dim("(x,y)")]] const float* a,
                                           [[okl::dim("(y,x)")]] const float* b,
                                           float* ab) {

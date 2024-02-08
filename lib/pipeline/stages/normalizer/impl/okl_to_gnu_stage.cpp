@@ -16,12 +16,8 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-std::string wrapAsSpecificGnuAttr(const OklAttribute& attr) {
-  if (attr.params.empty()) {
-    return "__attribute__((okl_" + attr.name + R"((")" + "(void)" + "\")))";
-  }
-
-  return "__attribute__((okl_" + attr.name + R"((")" + attr.params + "\")))";
+bool isOklForStmtExtenstion(Token left, Token right) {
+  return left.is(tok::semi) && right.is(tok::r_paren);
 }
 
 Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {
@@ -42,7 +38,7 @@ void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, R
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
-void replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
+bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
                               std::list<OklAttrMarker>& recovery_markers,
                               const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
@@ -52,23 +48,43 @@ void replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
 
   // fix malformed C++ syntax like for(init;cond;step;@outer) to for(init;cond;step) and mark source
   // location to fix it on AST traversal
-  auto left_neigbour = getLeftNeigbour(oklAttr, tokens);
-  auto right_neighbour = getRightNeigbour(oklAttr, tokens);
-  auto attr_loc_start(tokens[oklAttr.tok_indecies.front()].getLocation());
-  if (left_neigbour.is(tok::semi) && right_neighbour.is(tok::r_paren)) {
-    rewriter.ReplaceText(left_neigbour.getLocation(), 1, ")");
-    rewriter.ReplaceText(right_neighbour.getLocation(), 1, " ");
-    recovery_markers.push_back({oklAttr, attr_loc_start});
+  auto leftNeigbour = getLeftNeigbour(oklAttr, tokens);
+  auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
+  auto insertLoc(tokens[oklAttr.tok_indecies.front()].getLocation());
+  if (isOklForStmtExtenstion(leftNeigbour, rightNeighbour)) {
+    rewriter.ReplaceText(leftNeigbour.getLocation(), 1, ")");
+    rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
+    recovery_markers.push_back({oklAttr, insertLoc});
+  } else if (oklAttr.name == "atomic") {
+    auto atomicLoc = [&]() {
+      if ((leftNeigbour.is(tok::semi) || leftNeigbour.is(tok::l_brace)) &&
+          !rightNeighbour.is(tok::semi)) {
+        return insertLoc;
+      }
+      auto it = std::find_if(tokens.rend() - (long)oklAttr.tok_indecies.front(), tokens.rend(),
+                             [](const Token& t) { return t.isOneOf(tok::semi, tok::l_brace); });
+      if (it == tokens.rend()) {
+        return insertLoc;
+      }
+
+      return (--it)->getLocation();
+    }();
+
+    auto cppAttr = wrapAsSpecificCxxAttr(oklAttr);
+    rewriter.InsertTextBefore(atomicLoc, cppAttr);
   } else {
-    auto gnu_attr = wrapAsSpecificGnuAttr(oklAttr);
-    rewriter.InsertTextBefore(attr_loc_start, gnu_attr);
-    gnu_markers.push_back({oklAttr, attr_loc_start});
+    auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
+
+    rewriter.InsertTextBefore(insertLoc, gnuAttr);
+    gnu_markers.push_back({oklAttr, insertLoc});
   }
 
 #ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "removed attr: " << oklAttr.name
                << " at loc: " << oklAttr.begin_loc.printToString(pp.getSourceManager()) << '\n';
 #endif
+
+  return true;
 }
 
 std::vector<Token> fetchTokens(Preprocessor& pp) {
