@@ -10,11 +10,15 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+#include <set>
 
 namespace {
 
 using namespace clang;
 using namespace oklt;
+
+// INFO: GNU doesn't handle these attributes correctly in the statement
+std::set<std::string> gnuExcepStmtAttrs{"atomic", "shared"};
 
 bool isOklForStmtExtenstion(Token left, Token right) {
   return left.is(tok::semi) && right.is(tok::r_paren);
@@ -55,7 +59,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     rewriter.ReplaceText(leftNeigbour.getLocation(), 1, ")");
     rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
     recovery_markers.push_back({oklAttr, insertLoc});
-  } else if (oklAttr.name == "atomic") {
+  } else if (gnuExcepStmtAttrs.count(oklAttr.name)) {   // TODO: fix this ugly guess
     auto atomicLoc = [&]() {
       if ((leftNeigbour.is(tok::semi) || leftNeigbour.is(tok::l_brace)) &&
           !rightNeighbour.is(tok::semi)) {
