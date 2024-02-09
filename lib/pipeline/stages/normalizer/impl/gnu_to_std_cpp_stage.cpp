@@ -256,6 +256,12 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
     return tl::make_unexpected(std::move(output.session->getErrors()));
   }
 
+  // no errors and empty output could mean that the source is already normalized
+  // so use input as output and lets the next stage try to figure out
+  if (output.stdCppSrc.empty()) {
+    output.stdCppSrc = std::move(input_file);
+  }
+
 #ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "stage 2 STD cpp source:\n\n" << output.stdCppSrc << '\n';
 #endif
