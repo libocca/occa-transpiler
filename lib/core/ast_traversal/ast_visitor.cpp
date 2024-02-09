@@ -11,7 +11,16 @@ ASTVisitor::ASTVisitor(SessionStage& session) : _stage(session) {}
 
 bool ASTVisitor::TraverseDecl(Decl* decl) {
   if (!decl->hasAttrs()) {
-    return RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
+    auto cont = _stage.getAttrManager().handleDecl(decl, _stage);
+    if (!cont) {
+      return cont;
+    }
+    llvm::outs() << "validate decl: " << decl->getDeclKindName() << "\n";
+    cont = RecursiveASTVisitor<ASTVisitor>::TraverseDecl(decl);
+    llvm::outs() << "handle decl: " << decl->getDeclKindName() << "\n";
+    if (!cont) {
+      return cont;
+    }
   }
 
   auto& attrManager = _stage.getAttrManager();
@@ -42,6 +51,10 @@ bool ASTVisitor::TraverseStmt(Stmt* stmt, DataRecursionQueue* queue) {
     return true;
   }
   if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
+    auto cont = _stage.getAttrManager().handleStmt(stmt, _stage);
+    if (!cont) {
+      return cont;
+    }
     return RecursiveASTVisitor<ASTVisitor>::TraverseStmt(stmt, queue);
   }
 

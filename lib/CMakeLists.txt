@@ -17,6 +17,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attributed_type_map.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/backend_attribute_map.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/common_attribute_map.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/implicit_handlers/implicit_handler_map.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/implicit_handlers/decl_handler.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/implicit_handlers/stmt_handler.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/transpiler_session.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_stage.h
@@ -54,6 +57,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/shared.cpp
+    attributes/backend/cuda/global_constant.cpp
     attributes/backend/common/dim.cpp
 
     core/ast_traversal/ast_visitor.cpp
@@ -70,6 +74,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/attributed_type_map.cpp
     core/attribute_manager/backend_attribute_map.cpp
     core/attribute_manager/common_attribute_map.cpp
+    core/attribute_manager/implcit_handlers/implicit_handler_map.cpp
+    core/attribute_manager/implcit_handlers/decl_handler.cpp
+    core/attribute_manager/implcit_handlers/stmt_handler.cpp
 
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp

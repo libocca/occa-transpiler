@@ -2,6 +2,7 @@
 
 #include <oklt/core/attribute_manager/backend_attribute_map.h>
 #include <oklt/core/attribute_manager/common_attribute_map.h>
+#include <oklt/core/attribute_manager/implicit_handlers/implicit_handler_map.h>
 #include <oklt/core/error.h>
 
 #include <string>
@@ -28,8 +29,14 @@ class AttributeManager {
   bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrDeclHandler handler);
   bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrStmtHandler handler);
 
+  bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, DeclHandler handler);
+  bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, StmtHandler handler);
+
   bool handleAttr(const clang::Attr* attr, const clang::Decl* decl, SessionStage& stage);
   bool handleAttr(const clang::Attr* attr, const clang::Stmt* stmt, SessionStage& stage);
+
+  bool handleDecl(const clang::Decl* decl, SessionStage& stage);
+  bool handleStmt(const clang::Stmt* stmt, SessionStage& stage);
 
   tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
                                                      const clang::Decl* decl,
@@ -46,5 +53,6 @@ class AttributeManager {
   // INFO: if build AttributeViwer just wrap into shared_ptr and copy it
   CommonAttributeMap _commonAttrs;
   BackendAttributeMap _backendAttrs;
+  ImplicitHandlerMap _implicitHandlers;
 };
 }  // namespace oklt
