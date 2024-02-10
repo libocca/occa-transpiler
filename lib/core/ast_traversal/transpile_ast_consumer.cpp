@@ -1,22 +1,22 @@
-#include "oklt/core/ast_traversal/transpile_ast_consumer.h"
-#include "oklt/core/transpiler_session/session_stage.h"
+#include <oklt/core/ast_processor_manager/ast_processor_manager.h>
+#include <oklt/core/ast_traversal/preorder_traversal_nlr.h>
+#include <oklt/core/ast_traversal/transpile_ast_consumer.h>
+#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace oklt {
 using namespace clang;
 
-TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage) : _stage(stage), _visitor(_stage) {}
+TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage) : _stage(stage) {}
 
 void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
   TranslationUnitDecl* tu = context.getTranslationUnitDecl();
-  _visitor.TraverseDecl(tu);
+
+  PreorderNlrTraversal traversal(AstProcessorManager::instance(), _stage);
+  traversal.TraverseTranslationUnitDecl(tu);
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {
   return _stage;
-}
-
-ASTVisitor& TranspileASTConsumer::getAstVisitor() {
-  return _visitor;
 }
 
 }  // namespace oklt

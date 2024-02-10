@@ -27,5 +27,4 @@ inline static std::string wrapAsSpecificCxxAttr(const OklAttribute& attr) {
   return "[[okl::" + attr.name + R"((")" + attr.params + "\")]]";
 }
 
-
 }  // namespace oklt

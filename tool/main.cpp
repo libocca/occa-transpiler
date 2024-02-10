@@ -39,6 +39,10 @@ int main(int argc, char* argv[]) {
     .implicit_value(true)
     .help("should normalize before transpiling");
   transpile_command.add_argument("-o", "--output").default_value("").help("optional output file");
+  transpile_command.add_argument("-s", "--sema")
+    .help("sema: {no-sema, with-sema}")
+    .required()
+    .default_value("with-sema");
 
   program.add_subparser(normalize_command);
   program.add_subparser(transpile_command);
@@ -82,9 +86,18 @@ int main(int argc, char* argv[]) {
         output = build_output_filename(source_path);
       }
 
+      oklt::AstProcessorType procType = [&]() {
+        auto semaType = transpile_command.get("-s");
+        if (semaType == "with-sema") {
+          return oklt::AstProcessorType::OKL_PROGRAM_PROCESSOR_WITH_SEMA;
+        }
+        return oklt::AstProcessorType::OKL_PROGRAM_PROCESSOR_WITHOUT_SEMA;
+      }();
+
       std::ifstream ifs(source_path.string());
       std::string sourceCode{std::istreambuf_iterator<char>(ifs), {}};
       oklt::UserInput input{.backend = backend.value(),
+                            .astProcType = procType,
                             .sourceCode = sourceCode,
                             .sourcePath = source_path,
                             .inlcudeDirectories = {},
