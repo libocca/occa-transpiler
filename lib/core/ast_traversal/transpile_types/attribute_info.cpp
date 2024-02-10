@@ -24,29 +24,4 @@ ConvertedAttributeInfo::ConvertedAttributeInfo(std::string &&converted)
 std::string ConvertedAttributeInfo::toString() const {
   return _converted;
 }
-
-//struct AttributeInfoBase {
-//  virtual ~AttributeInfoBase() = 0;
-//  [[nodiscard]] virtual std::string toString() const = 0;
-//};
-
-//struct OriginAttributeInfo : public AttributeInfoBase {
-//  OriginAttributeInfo::OriginAttributeInfo(clang::Attr *attr, clang::ASTContext &ctx)
-//  {}
-//  ~OriginAttributeInfo() override = default;
-//  [[nodiscard]]  std::string OriginAttributeInfo::toString() const override;
-// private:
-//  clang::Attr *_attr;
-//  clang::ASTContext &_ctx;
-//};
-
-//struct ConvertedAttributeInfo : public AttributeInfoBase {
-//  explicit ConvertedAttributeInfo(std::string &&converted);
-//  ~ConvertedAttributeInfo() override = default;
-//  [[nodiscard]]  std::string toString() const override;
-// private:
-//  std::string _converted;
-//};
-
-
 }

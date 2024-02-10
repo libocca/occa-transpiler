@@ -2,11 +2,7 @@
 
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-
-//#include <oklt/core/ast_traversal/semantic_category.h>
-//#include <oklt/core/ast_traversal/semantic_base.h>
 #include <oklt/core/kernel_info/kernel_info.h>
-//#include <oklt/core/ast_traversal/validate_attributes.h>
 
 namespace oklt {
 

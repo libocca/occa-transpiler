@@ -13,7 +13,6 @@ namespace oklt {
 using SemanticProcessor = CompositeSema<
   DefaultTraverseSema<clang::Decl>,
   DefaultTraverseSema<clang::Stmt>,
-  //DefaultTraverseSema<clang::RecoveryExpr>,
   RecoveryExprSema,
   KernelFunctionSema,
   ParamSema,

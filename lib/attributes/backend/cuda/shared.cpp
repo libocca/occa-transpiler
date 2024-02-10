@@ -11,14 +11,6 @@ bool parseSharedAttribute(const clang::Attr* a, SessionStage&) {
 
 bool handleSharedAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
   llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
-//  if(callback) {
-//    TranspileChanges kernelChange {
-//      .from = std::string("[[okl::shared]]"),
-//      .to = std::string("__shared__"),
-//      .range = clang::SourceRange()
-//    };
-//    callback({kernelChange});
-//  }
   return true;
 }
 

@@ -9,8 +9,8 @@
 namespace oklt {
 
 class SessionStage;
-//INFO: if needed to achive different behaviour
-//      add your own validator and
+//INFO: if needed to achive different behaviour add your own validator method
+//      and change its usage in sema analyzers
 
 using ValidatorResult = tl::expected<const clang::Attr*, Error>;
 ValidatorResult validateAttributes(const clang::ArrayRef<const clang::Attr *> &attrs,
