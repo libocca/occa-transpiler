@@ -9,16 +9,8 @@ bool parseKernelAttribute(const clang::Attr* a, SessionStage&) {
   return true;
 }
 
-bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s, HandledChanges callback) {
+bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
   llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
-  if(callback) {
-    TranspileChanges kernelChange {
-      .from = std::string("[[okl::kernel]]"),
-      .to = std::string("__global__"),
-      .range = clang::SourceRange()
-    };
-    callback({kernelChange});
-  }
   return true;
 }
 

@@ -1,5 +1,6 @@
 #include "oklt/core/attribute_manager/attribute_manager.h"
 #include "oklt/core/transpiler_session/session_stage.h"
+#include <oklt/pipeline/stages/transpiler/error_codes.h>
 
 namespace oklt {
 using namespace clang;
@@ -29,33 +30,34 @@ bool AttributeManager::registerBackendHandler(BackendAttributeMap::KeyType key,
 
 bool AttributeManager::handleAttr(const Attr* attr,
                                   const Decl* decl,
-                                  SessionStage& stage,
-                                  HandledChanges callback)
+                                  SessionStage& stage)
 {
   std::string name = attr->getNormalizedFullName();
   if (_commonAttrs.hasAttrHandler(name)) {
-    return _commonAttrs.handleAttr(attr, decl, stage, callback);
+    return _commonAttrs.handleAttr(attr, decl, stage);
   }
 
   if (_backendAttrs.hasAttrHandler(stage, name)) {
-    return _backendAttrs.handleAttr(attr, decl, stage, callback);
+    return _backendAttrs.handleAttr(attr, decl, stage);
   }
-
+  std::string description = "Backend attribute handler for declaration is missing";
+  stage.pushError(make_error_code(OkltTranspilerErrorCode::ATTRIBUTE_HANDLER_IS_MISSING), description);
   return false;
 }
 
 bool AttributeManager::handleAttr(const Attr* attr,
                                   const Stmt* stmt,
-                                  SessionStage& stage,
-                                  HandledChanges callback)
+                                  SessionStage& stage)
 {
   std::string name = attr->getNormalizedFullName();
   if (_commonAttrs.hasAttrHandler(name)) {
-    return _commonAttrs.handleAttr(attr, stmt, stage, callback);
+    return _commonAttrs.handleAttr(attr, stmt, stage);
   }
   if (_backendAttrs.hasAttrHandler(stage, name)) {
-    return _backendAttrs.handleAttr(attr, stmt, stage, callback);
+    return _backendAttrs.handleAttr(attr, stmt, stage);
   }
+  std::string description = "Backend attribute handler for statement is missing";
+  stage.pushError(make_error_code(OkltTranspilerErrorCode::ATTRIBUTE_HANDLER_IS_MISSING), description);
   return false;
 }
 

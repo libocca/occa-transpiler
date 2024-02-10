@@ -15,6 +15,7 @@ class SemanticASTVisitorBase {
   virtual bool traverseTranslationUnit(clang::Decl* decl) = 0;
 
  protected:
+  //TODO: tl::expected but with ErrorFired
   struct NoOKLAttrs {};
   struct ErrorFired {};
 

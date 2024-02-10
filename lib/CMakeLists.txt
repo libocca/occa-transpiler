@@ -6,10 +6,22 @@ option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_category.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_base.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_mock.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_analyzer.h
+#    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_category.h
+#    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_mock.h
+#    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_analyzer.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/validate_attributes.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_traversal.hpp
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/composite_sema.hpp
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/default_sema.hpp
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/kernel_sema.hpp
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/params_sema.hpp
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/mock_processor.hpp
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_types/for_stmt_info.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_types/function_info.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_types/param_info.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_types/attribute_info.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_consumer.h
@@ -35,7 +47,9 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_info/kernel_info.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/error_codes.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/error_codes.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
@@ -57,14 +71,16 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/shared.cpp
     attributes/backend/common/dim.cpp
 
-    # core/ast_traversal/ast_visitor.cpp
-    core/ast_traversal/visit_overload.hpp
-    core/ast_traversal/semantic_category.cpp
-    core/ast_traversal/semantic_base.cpp
-    core/ast_traversal/semantic_mock.cpp
-    core/ast_traversal/semantic_analyzer.cpp
+#    core/ast_traversal/ast_traversal.cpp
+#    core/ast_traversal/semantic_category.cpp
+#    core/ast_traversal/semantic_mock.cpp
+#    core/ast_traversal/semantic_analyzer.cpp
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
+    core/ast_traversal/validate_attributes.cpp
+    core/ast_traversal/transpile_types/function_info.cpp
+    core/ast_traversal/transpile_types/param_info.cpp
+    core/ast_traversal/transpile_types/attribute_info.cpp
 
     core/diag/diag_consumer.cpp
 
@@ -90,6 +106,7 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/transpiler.cpp
     pipeline/normalizer_and_transpiler.cpp
     pipeline/stages/transpiler/transpiler.cpp
+    pipeline/stages/transpiler/error_codes.cpp
 
     pipeline/stages/normalizer/normalizer.cpp
     pipeline/stages/normalizer/error_codes.cpp

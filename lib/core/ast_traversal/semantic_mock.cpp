@@ -2,20 +2,18 @@
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include "oklt/core/attribute_manager/attributed_type_map.h"
 #include <oklt/core/transpiler_session/session_stage.h>
-#include "visit_overload.hpp"
+#include <variant>
+// #include "visit_overload.hpp"
 
 
 namespace oklt {
 using namespace clang;
 
-SemanticMockVisitor::SemanticMockVisitor(SessionStage& stage)
-    :SemanticASTVisitorBase(stage)
+SemanticMockVisitor::SemanticMockVisitor(SessionStage& stage,
+                                         AttrValidatorFnType attrValidateFn)
+    :_stage(stage)
+    , _attrValidator(attrValidateFn)
 {}
-
-bool SemanticMockVisitor::traverseTranslationUnit(clang::Decl* decl)
-{
-  return TraverseDecl(decl);
-}
 
 bool SemanticMockVisitor::TraverseDecl(clang::Decl* decl)
 {
@@ -24,23 +22,20 @@ bool SemanticMockVisitor::TraverseDecl(clang::Decl* decl)
   }
   auto attrs = decl->getAttrs();
 
-  auto validationResult = SemanticASTVisitorBase::validateAttribute(attrs);
-  auto validationHandlers = Overload {
-    [this, decl](const clang::Attr*attr) -> bool {
-      auto& attrManager = _stage.getAttrManager();
-      if (!attrManager.handleAttr(attr, decl, _stage, nullptr)) {
-        return false;
-      }
-      return RecursiveASTVisitor<SemanticMockVisitor>::TraverseDecl(decl);
-    },
-    [this, decl](const NoOKLAttrs&) -> bool{
-      return RecursiveASTVisitor<SemanticMockVisitor>::TraverseDecl(decl);
-    },
-    [](const ErrorFired&) -> bool {
-      return false;
-    },
-  };
-  return std::visit(validationHandlers, validationResult);
+  auto validationResult = _attrValidator(attrs, _stage);
+  if(!validationResult) {
+    return false;
+  }
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    return RecursiveASTVisitor<SemanticMockVisitor>::TraverseDecl(decl);
+  }
+  auto& attrManager = _stage.getAttrManager();
+  auto handlerResult = attrManager.handleAttr(maybeAttr, decl, _stage);
+  if(!handlerResult) {
+    return false;
+  }
+  return RecursiveASTVisitor<SemanticMockVisitor>::TraverseDecl(decl);
 }
 
 bool SemanticMockVisitor::TraverseStmt(clang::Stmt* stmt, DataRecursionQueue* queue)
@@ -55,24 +50,21 @@ bool SemanticMockVisitor::TraverseStmt(clang::Stmt* stmt, DataRecursionQueue* qu
   auto* attrStmt = cast<AttributedStmt>(stmt);
   auto attrs = attrStmt->getAttrs();
 
-  auto validationResult = SemanticASTVisitorBase::validateAttribute(attrs);
-  auto validationHandlers = Overload {
-    [this, attrStmt, queue, stmt](const clang::Attr*attr) -> bool {
-      auto& attrManager = _stage.getAttrManager();
-      const Stmt* subStmt = attrStmt->getSubStmt();
-      if (!attrManager.handleAttr(attr, subStmt, _stage, nullptr)) {
-        return false;
-      }
-      return RecursiveASTVisitor<SemanticMockVisitor>::TraverseStmt(stmt, queue);;
-    },
-    [this, stmt, queue](const NoOKLAttrs&) -> bool{
-      return RecursiveASTVisitor<SemanticMockVisitor>::TraverseStmt(stmt, queue);
-    },
-    [](const ErrorFired&) -> bool {
-      return false;
-    },
-  };
-  return std::visit(validationHandlers, validationResult);
+  auto validationResult = _attrValidator(attrs, _stage);
+  if(!validationResult) {
+    return false;
+  }
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    return RecursiveASTVisitor<SemanticMockVisitor>::TraverseStmt(stmt, queue);
+  }
+  auto& attrManager = _stage.getAttrManager();
+  const Stmt* subStmt = attrStmt->getSubStmt();
+  auto handleResult = attrManager.handleAttr(maybeAttr, subStmt, _stage);
+  if (!handleResult) {
+    return false;
+  }
+  return RecursiveASTVisitor<SemanticMockVisitor>::TraverseStmt(stmt, queue);
 }
 
 bool SemanticMockVisitor::TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRecursionQueue* queue)
@@ -91,23 +83,21 @@ bool SemanticMockVisitor::TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRe
   auto& attrTypeMap = _stage.tryEmplaceUserCtx<AttributedTypeMap>();
   auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
 
-  auto validationResult = SemanticASTVisitorBase::validateAttribute(attrs);
-  auto validationHandlers = Overload {
-    [this, expr, queue](const clang::Attr* attr) -> bool {
-      auto& attrManager = _stage.getAttrManager();
-      if (!attrManager.handleAttr(attr, expr, _stage, nullptr)) {
-        return false;
-      }
-      return RecursiveASTVisitor<SemanticMockVisitor>::TraverseRecoveryExpr(expr, queue);;
-    },
-    [this, expr, queue](const NoOKLAttrs&) -> bool{
-      return RecursiveASTVisitor<SemanticMockVisitor>::TraverseRecoveryExpr(expr, queue);
-    },
-    [](const ErrorFired&) -> bool {
-      return false;
-    },
-  };
-  return std::visit(validationHandlers, validationResult);
+  auto validationResult = _attrValidator(attrs, _stage);
+  if(!validationResult) {
+    return false;
+  }
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    return RecursiveASTVisitor<SemanticMockVisitor>::TraverseRecoveryExpr(expr, queue);
+  }
+
+  auto& attrManager = _stage.getAttrManager();
+  auto handleResult = attrManager.handleAttr(maybeAttr, expr, _stage);
+  if (!handleResult) {
+    return false;
+  }
+  return RecursiveASTVisitor<SemanticMockVisitor>::TraverseRecoveryExpr(expr, queue);
 }
 
 }  // namespace oklt

@@ -16,8 +16,14 @@ std::string TranspilerErrorsCategory::message(int ev) const {
       return "input sourece string is empty";
     case OkltTranspilerErrorCode::NO_TOKENS_FROM_SOURCE:
       return "no tokens fetched from input source";
+    case OkltTranspilerErrorCode::OKL_ATTR_PARSIN_ERR:
+      return "";
     case OkltTranspilerErrorCode::OTHER_ERROR:
       return "other error";
+    case OkltTranspilerErrorCode::MULTIPLE_ATTRIBUTES_USED:
+      return "multiple attributes are used";
+    case OkltTranspilerErrorCode::ATTRIBUTE_HANDLER_IS_MISSING:
+      return "attribute handler is missing";
   }
   return "unrecognized error";
 }

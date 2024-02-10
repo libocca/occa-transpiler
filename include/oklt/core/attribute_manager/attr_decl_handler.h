@@ -2,8 +2,6 @@
 
 #include <clang/AST/Attr.h>
 #include <functional>
-#include <oklt/core/attribute_manager/transpile_changes.h>
-
 
 namespace oklt {
 
@@ -14,16 +12,14 @@ class AttrDeclHandler {
   using ParamsParserType = std::function<bool(const clang::Attr*, SessionStage&)>;
   using HandleType = std::function<bool(const clang::Attr*,
                                         const clang::Decl*,
-                                        SessionStage&,
-                                        HandledChanges callback)>;
+                                        SessionStage&)>;
 
   AttrDeclHandler(ParamsParserType pp, HandleType h);
   ~AttrDeclHandler() = default;
 
   bool handle(const clang::Attr* attr,
               const clang::Decl*,
-              SessionStage& stage,
-              HandledChanges callback);
+              SessionStage& stage);
 
  protected:
   bool parseParams(const clang::Attr*, SessionStage& stage);

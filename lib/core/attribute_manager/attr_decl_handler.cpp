@@ -9,13 +9,13 @@ AttrDeclHandler::AttrDeclHandler(ParamsParserType pp, HandleType h)
 
 bool AttrDeclHandler::handle(const Attr* attr,
                              const Decl* decl,
-                             SessionStage& stage,
-                             HandledChanges callback)
+                             SessionStage& stage)
 {
-  if (parseParams(attr, stage)) {
-    return _handler(attr, decl, stage, callback);
+  auto parseResult = parseParams(attr, stage);
+  if(!parseResult) {
+    return false;
   }
-  return false;
+  return _handler(attr, decl, stage);
 }
 
 bool AttrDeclHandler::parseParams(const Attr* attr, SessionStage& stage) {

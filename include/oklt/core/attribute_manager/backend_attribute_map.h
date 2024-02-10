@@ -21,12 +21,10 @@ class BackendAttributeMap {
 
   bool handleAttr(const clang::Attr* attr,
                   const clang::Decl* decl,
-                  SessionStage& stage,
-                  HandledChanges callback);
+                  SessionStage& stage);
   bool handleAttr(const clang::Attr* attr,
                   const clang::Stmt* stmt,
-                  SessionStage& stage,
-                  HandledChanges callback);
+                  SessionStage& stage);
 
   [[nodiscard]] bool hasAttrHandler(SessionStage& stage, const std::string& name) const;
 

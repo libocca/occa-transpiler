@@ -9,19 +9,13 @@ bool parseDimAttribute(const clang::Attr* a, SessionStage&) {
   return true;
 }
 
-bool handleDimDeclAttrbute(const clang::Attr* a, const clang::Decl* decl, SessionStage& s, HandledChanges callback) {
+bool handleDimDeclAttrbute(const clang::Attr* a, const clang::Decl* decl, SessionStage& s) {
   llvm::outs() << "handle decl attribute: " << a->getNormalizedFullName() << '\n';
-  if(callback) {
-    callback({});
-  }
   return true;
 }
 
-bool handleDimStmtAttrbute(const clang::Attr* a, const clang::Stmt* stmt, SessionStage& s, HandledChanges callback) {
+bool handleDimStmtAttrbute(const clang::Attr* a, const clang::Stmt* stmt, SessionStage& s) {
   llvm::outs() << "handle stmt attribute: " << a->getNormalizedFullName() << '\n';
-  if(callback) {
-    callback({});
-  }
   return true;
 }
 

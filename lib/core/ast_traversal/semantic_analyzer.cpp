@@ -1,8 +1,8 @@
-#include "oklt/core/ast_traversal/semantic_analyzer.h"
-#include "oklt/core/transpiler_session/session_stage.h"
-#include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/attribute_manager/attributed_type_map.h"
-#include "visit_overload.hpp"
+#include <oklt/core/ast_traversal/semantic_analyzer.h>
+#include <oklt/core/transpiler_session/session_stage.h>
+#include <oklt/core/attribute_manager/attribute_manager.h>
+#include <oklt/core/attribute_manager/attributed_type_map.h>
+#include <oklt/core/ast_traversal/transpile_types/function_info.h>
 
 namespace oklt {
 using namespace clang;
@@ -16,18 +16,14 @@ inline DatatypeCategory makeDatatypeCategory(const QualType &qt) {
   return DatatypeCategory::CUSTOM;
 }
 
-SemanticAnalyzer::SemanticAnalyzer(SemanticCategory category,
-                                   SessionStage& stage)
-    :SemanticASTVisitorBase(stage)
+SemanticAnalyzer::SemanticAnalyzer(SessionStage& stage,
+                                   SemanticCategory category,
+                                   AttrValidatorFnType attrValidateFunc)
+    :_stage(stage)
     , _category(category)
+    , _attrValidator(attrValidateFunc)
     , _kernels()
-    , _astKernels()
-
 {}
-
-bool SemanticAnalyzer::traverseTranslationUnit(clang::Decl* decl) {
-  return TraverseDecl(decl);
-}
 
 SemanticAnalyzer::KernelInfoT& SemanticAnalyzer::getKernelInfo() {
   return _kernels;
@@ -57,25 +53,21 @@ bool SemanticAnalyzer::TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRecur
   auto& attrTypeMap = _stage.tryEmplaceUserCtx<AttributedTypeMap>();
   auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
 
-  auto validationHandlers = Overload {
-    [this, expr](const clang::Attr*attr) -> bool {
-      auto& attrManager = _stage.getAttrManager();
-      if (!attrManager.handleAttr(attr, expr, _stage, nullptr)) {
-        return false;
-      }
-      return true;
-    },
-    [this](const NoOKLAttrs&) -> bool {
+  auto validationResult = _attrValidator(attrs, _stage);
 
-      return true;
-    },
-    [this](const ErrorFired& error) -> bool {
-      return false;
-    },
-  };
+  if(!validationResult) {
+    return false;
+  }
 
-  auto validationResult = validateAttribute(attrs);
-  return std::visit(validationHandlers, validationResult);
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    return RecursiveASTVisitor<SemanticAnalyzer>::TraverseRecoveryExpr(expr, queue);
+  }
+  auto& attrManager = _stage.getAttrManager();
+  if (!attrManager.handleAttr(maybeAttr, expr, _stage)) {
+    return false;
+  }
+  return true;
 }
 
 bool SemanticAnalyzer::TraverseFunctionDecl(clang::FunctionDecl *funcDecl)
@@ -84,88 +76,114 @@ bool SemanticAnalyzer::TraverseFunctionDecl(clang::FunctionDecl *funcDecl)
     return RecursiveASTVisitor<SemanticAnalyzer>::TraverseFunctionDecl(funcDecl);
   }
   auto &attrs = funcDecl->getAttrs();
-  auto validationResult = validateAttribute(attrs);
+  auto validationResult = _attrValidator(attrs, _stage);
 
-  auto attrHandleFunc =
-    [this, funcDecl](const clang::Attr*attr) -> bool {
-    auto& attrManager = _stage.getAttrManager();
-    if(_category == SemanticCategory::HOST_KERNEL_CATEGORY) {
-      if (!attrManager.handleAttr(attr, funcDecl, _stage, nullptr)) {
-        return false;
-      }
-      _astKernels.push_back(KernelASTInfo { funcDecl, {}});
-      std::vector<ArgumentInfo> args;
-      for(const auto &param : funcDecl->parameters()) {
-        auto paramQualType = param->getType();
-        auto typeInfo = param->getASTContext().getTypeInfo(paramQualType);
-        args.push_back(ArgumentInfo {
-          .is_const = paramQualType.isConstQualified(),
-          .dtype = DataType {
-            .name = paramQualType.getAsString(),
-            .type = makeDatatypeCategory(paramQualType),
-            .bytes = static_cast<int>(typeInfo.Width),
-          },
-          .name = param->getNameAsString(),
-          .is_ptr = paramQualType->isPointerType(),
-        });
-      }
-      ParsedKernelInfo info {
-        .arguments = std::move(args),
-        .name = funcDecl->getNameAsString()
-      };
-      _kernels.push_back(std::move(info));
-      return true;
-    } else {
-      std::string functionSignature;
-      auto changesHandler = [&functionSignature](const Changes &changes) {
-        if(changes.empty()) {
-          //TODO: INTERNAL error
-        }
-        functionSignature = changes[0].to;
-      };
-      if (!attrManager.handleAttr(attr, funcDecl, _stage, changesHandler)) {
-        return false;
-      }
-      functionSignature += " " + funcDecl->getNameAsString();
-      _astKernels.push_back(KernelASTInfo { funcDecl, {}});
-      return true;
-    }
-  };
+  if(!validationResult) {
+    return false;
+  }
 
-  auto validationHandlers = Overload {
-    attrHandleFunc,
-    [this, funcDecl](const NoOKLAttrs&) -> bool{
-      return RecursiveASTVisitor<SemanticAnalyzer>::TraverseDecl(funcDecl);
-    },
-    [](const ErrorFired&) -> bool {
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    return RecursiveASTVisitor<SemanticAnalyzer>::TraverseFunctionDecl(funcDecl);
+  }
+
+  FunctionInfo functionInfoCtx;
+  _stage.setUserCtx(FunctionInfo::STAGE_NAME, &functionInfoCtx);
+
+  //INFO: needs manual travers to make the signature before traversin the body
+  for(auto &param: funcDecl->parameters()) {
+    bool ret = RecursiveASTVisitor<SemanticAnalyzer>::TraverseParmVarDecl(param);
+    if(!ret) {
       return false;
-    },
-  };
-  return std::visit(validationHandlers, validationResult);
+    }
+  }
+  auto& attrManager = SessionStage::getAttrManager();
+  auto handledResult = attrManager.handleAttr(maybeAttr, funcDecl, _stage);
+
+  if(!handledResult) {
+    return false;
+  }
+
+  //TODO: check double traversing the Params
+  bool ret = RecursiveASTVisitor<SemanticAnalyzer>::TraverseFunctionDecl(funcDecl);
+  if(ret) {
+    auto infos = std::move(functionInfoCtx.makeParsedKernelInfo());
+    _kernels.insert(_kernels.end(), infos.begin(), infos.end());
+  }
+  return ret;
 }
+
+bool SemanticAnalyzer::TraverseParmVarDecl(clang::ParmVarDecl *param) {
+  auto ctxPtr = _stage.getUserCtx(FunctionInfo::STAGE_NAME);
+  if(!ctxPtr) {
+    //TODO: internal error
+    return false;
+  }
+  if(!ctxPtr->has_value()) {
+    //TODO: internal error
+    return false;
+  }
+  FunctionInfo *ctx = std::any_cast<FunctionInfo*>(*ctxPtr);
+  if(!ctx) {
+    //TODO: logical error
+    return false;
+  }
+
+  if(!param->hasAttrs()) {
+    bool ret = RecursiveASTVisitor<SemanticAnalyzer>::TraverseParmVarDecl(param);
+    if(ret) {
+      ctx->parameters.push_back(std::make_shared<OriginalParamInfo>(param));
+    }
+    return ret;
+  }
+  auto attrs = param->getAttrs();
+  auto validationResult = _attrValidator(attrs, _stage);
+
+  if(!validationResult) {
+    return false;
+  }
+
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    bool ret = RecursiveASTVisitor<SemanticAnalyzer>::TraverseParmVarDecl(param);
+    if(ret) {
+      ctx->parameters.push_back(std::make_shared<OriginalParamInfo>(param));
+    }
+    return ret;
+  }
+
+  auto& attrManager = SessionStage::getAttrManager();
+  auto handledResult = attrManager.handleAttr(maybeAttr, param, _stage);
+
+  if(!handledResult) {
+    return false;
+  }
+
+}
+
 
 bool SemanticAnalyzer::TraverseAttributedStmt(clang::AttributedStmt *attrStmt,
                                               DataRecursionQueue* queue)
 {
   auto attrs = attrStmt->getAttrs();
-  auto validationResult = validateAttribute(attrs);
-  auto validationHandlers = Overload {
-    [this, attrStmt, queue](const clang::Attr*attr) -> bool {
-      auto& attrManager = _stage.getAttrManager();
-      const Stmt* subStmt = attrStmt->getSubStmt();
-      if (!attrManager.handleAttr(attr, subStmt, _stage, nullptr)) {
-        return false;
-      }
-      return RecursiveASTVisitor<SemanticAnalyzer>::TraverseAttributedStmt(attrStmt, queue);
-    },
-    [this, attrStmt, queue](const NoOKLAttrs&) -> bool{
-      return RecursiveASTVisitor<SemanticAnalyzer>::TraverseAttributedStmt(attrStmt, queue);
-    },
-    [](const ErrorFired&) -> bool {
-      return false;
-    },
-  };
-  return std::visit(validationHandlers, validationResult);
+  auto validationResult = _attrValidator(attrs, _stage);
+
+  if(!validationResult) {
+    return false;
+  }
+
+  auto maybeAttr = validationResult.value();
+  if(!maybeAttr) {
+    return RecursiveASTVisitor<SemanticAnalyzer>::TraverseAttributedStmt(attrStmt, queue);
+  }
+
+  auto& attrManager = _stage.getAttrManager();
+  const Stmt* subStmt = attrStmt->getSubStmt();
+  auto handledResult = attrManager.handleAttr(maybeAttr, subStmt, _stage);
+  if (!handledResult) {
+    return false;
+  }
+  return RecursiveASTVisitor<SemanticAnalyzer>::TraverseAttributedStmt(attrStmt, queue);
 }
 
 }

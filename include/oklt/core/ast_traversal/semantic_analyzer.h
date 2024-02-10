@@ -4,24 +4,28 @@
 #include <oklt/core/ast_traversal/semantic_category.h>
 #include <oklt/core/ast_traversal/semantic_base.h>
 #include <oklt/core/kernel_info/kernel_info.h>
-#include <variant>
+#include <oklt/core/ast_traversal/validate_attributes.h>
 
 namespace oklt {
 
 class SessionStage;
 
+//TODO:
+// 1. remove hiearchy, strategy pattern in function style
+// 2. handlers with custom return type (tl::expected<std::any, Error>
+// 3. remove Variant - report errors directly to stage
+
+
 class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer>
-                         , public SemanticASTVisitorBase
 {
  public:
 
   using KernelInfoT = decltype(KernelMetadata::metadata);
   
-  explicit SemanticAnalyzer(SemanticCategory category,
-                            SessionStage& session);
-  ~SemanticAnalyzer() override = default;
-
-  bool traverseTranslationUnit(clang::Decl* decl) override;
+  explicit SemanticAnalyzer(SessionStage& session,
+                            SemanticCategory category,
+                            AttrValidatorFnType attrValidateFunc = validateAttributes);
+  ~SemanticAnalyzer() = default;
   KernelInfoT& getKernelInfo();
 
   bool TraverseDecl(clang::Decl* decl);
@@ -29,32 +33,15 @@ class SemanticAnalyzer : public clang::RecursiveASTVisitor<SemanticAnalyzer>
   bool TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRecursionQueue* queue = nullptr);
 
   bool TraverseFunctionDecl(clang::FunctionDecl *funcDecl);
+  bool TraverseParmVarDecl(clang::ParmVarDecl *param);
   bool TraverseAttributedStmt(clang::AttributedStmt *attrStmt, DataRecursionQueue* queue = nullptr);
 
  protected:
 
-  struct OuterForStmt {
-    clang::ForStmt *outer;
-    std::vector<clang::ForStmt> inners;
-  };
-
-  struct KernelASTInfo {
-    clang::FunctionDecl *currentKernel;
-    std::vector<OuterForStmt> outers;
-  };
-
-  struct FunctionSignature {
-    std::string attrs;
-    std::string returnType;
-    std::string funcName;
-    std::vector<std::string> params;
-  };
-  
-  // SessionStage& _stage;
+  SessionStage &_stage;
   SemanticCategory _category;
+  AttrValidatorFnType _attrValidator;
   KernelInfoT _kernels;
-  std::list<KernelASTInfo> _astKernels;
-
 };
 
 }  // namespace oklt

@@ -30,12 +30,10 @@ class AttributeManager {
 
   bool handleAttr(const clang::Attr* attr,
                   const clang::Decl* decl,
-                  SessionStage& stage,
-                  HandledChanges callback);
+                  SessionStage& stage);
   bool handleAttr(const clang::Attr* attr,
                   const clang::Stmt* stmt,
-                  SessionStage& stage,
-                  HandledChanges callback);
+                  SessionStage& stage);
 
   bool hasAttrHandler(const clang::Attr *occaAttr, SessionStage& stage) const;
  private:

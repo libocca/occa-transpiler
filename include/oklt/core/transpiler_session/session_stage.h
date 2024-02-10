@@ -35,9 +35,14 @@ class SessionStage {
     auto it = _userCtxMap.find(key);
     return (it != _userCtxMap.end());
   };
+
   inline bool setUserCtx(const std::string& key, const std::any& ctx) {
-    auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
-    return ret;
+    auto [it, ret] = _userCtxMap.try_emplace(key, ctx);
+    //INFO: this must have ability to update the ctx with the same key
+    if(!ret) {
+      it->second = ctx;
+    }
+    return true;
   }
   inline std::any* getUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);
