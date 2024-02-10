@@ -4,10 +4,9 @@
 
 namespace oklt {
 
-
 struct OuterForStmt {
-  clang::AttributedStmt *outerForStmt;
+  clang::AttributedStmt* outerForStmt;
   std::vector<clang::AttributedStmt*> innerForStmts;
 };
 
-}
+}  // namespace oklt

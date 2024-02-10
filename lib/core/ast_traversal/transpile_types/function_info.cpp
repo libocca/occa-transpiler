@@ -2,18 +2,17 @@
 
 namespace oklt {
 
-FunctionInfo::FunctionInfo(clang::FunctionDecl *funDecl)
-    : astNode(funDecl)
-    , attrs()
-    , returnType()
-    , name()
-    , parameters()
-    , outForStmts()
-    ,_is_valid(false)
-{}
+FunctionInfo::FunctionInfo(clang::FunctionDecl* funDecl)
+    : astNode(funDecl),
+      attrs(),
+      returnType(),
+      name(),
+      parameters(),
+      outForStmts(),
+      _is_valid(false) {}
 
-void FunctionInfo::makeValid(const std::string &functionName) {
-  if(!functionName.empty()) {
+void FunctionInfo::makeValid(const std::string& functionName) {
+  if (!functionName.empty()) {
     name = functionName;
     _is_valid = true;
   }
@@ -23,22 +22,22 @@ bool FunctionInfo::isValid() const {
   return _is_valid;
 }
 
-//TODO: add implementation
+// TODO: add implementation
 std::vector<ParsedKernelInfo> FunctionInfo::makeParsedKernelInfo() const {
-  if(!isValid()) {
-    //TODO: internal error
+  if (!isValid()) {
+    // TODO: internal error
     return {};
   }
   return {};
 }
 
-//TODO: add implementation
+// TODO: add implementation
 std::string FunctionInfo::getFunctionSignature() const {
-  if(!isValid()) {
-    //TODO: internal error
+  if (!isValid()) {
+    // TODO: internal error
     return {};
   }
   return {};
 }
 
-}
+}  // namespace oklt
