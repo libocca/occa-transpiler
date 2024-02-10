@@ -44,6 +44,11 @@ class SessionStage {
     }
     return true;
   }
+
+  inline void removeUserCtx(const std::string &key) {
+    _userCtxMap.erase(key);
+  }
+
   inline std::any* getUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);
     if (it == _userCtxMap.end())

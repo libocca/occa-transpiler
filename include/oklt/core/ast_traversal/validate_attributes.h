@@ -11,7 +11,6 @@ namespace oklt {
 class SessionStage;
 //INFO: if needed to achive different behaviour
 //      add your own validator and
-//      just pass to your implementation of Semantic Analyzer
 
 using ValidatorResult = tl::expected<const clang::Attr*, Error>;
 ValidatorResult validateAttributes(const clang::ArrayRef<const clang::Attr *> &attrs,

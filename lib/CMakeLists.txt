@@ -7,16 +7,17 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
 #    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_category.h
-#    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_mock.h
-#    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/semantic_analyzer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/validate_attributes.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_traversal.hpp
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/composite_sema.hpp
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/default_sema.hpp
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/kernel_sema.hpp
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/params_sema.hpp
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/mock_processor.hpp
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/kernel_sema.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/params_sema.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/attr_stmt_sema.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/recovery_expr_sema.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/sema/sema.hpp
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_types/for_stmt_info.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_types/function_info.h
@@ -71,16 +72,19 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/shared.cpp
     attributes/backend/common/dim.cpp
 
-#    core/ast_traversal/ast_traversal.cpp
 #    core/ast_traversal/semantic_category.cpp
-#    core/ast_traversal/semantic_mock.cpp
-#    core/ast_traversal/semantic_analyzer.cpp
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
     core/ast_traversal/validate_attributes.cpp
+
     core/ast_traversal/transpile_types/function_info.cpp
     core/ast_traversal/transpile_types/param_info.cpp
     core/ast_traversal/transpile_types/attribute_info.cpp
+
+    core/ast_traversal/sema/kernel_sema.cpp
+    core/ast_traversal/sema/param_sema.cpp
+    core/ast_traversal/sema/attr_stmt_sema.cpp
+    core/ast_traversal/sema/recovery_expr_sema.cpp
 
     core/diag/diag_consumer.cpp
 
