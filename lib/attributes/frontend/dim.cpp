@@ -20,7 +20,7 @@ constexpr ParsedAttrInfo::Spelling DIM_ATTRIBUTE_SPELLINGS[] = {
 struct DimAttribute : public ParsedAttrInfo {
   DimAttribute() {
     NumArgs = 1;
-    OptArgs = 6;
+    OptArgs = 0;
     Spellings = DIM_ATTRIBUTE_SPELLINGS;
     IsType = 1;
     HasCustomParsing = 1;
@@ -29,12 +29,23 @@ struct DimAttribute : public ParsedAttrInfo {
   bool diagAppertainsToDecl(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
                             const clang::Decl* decl) const override {
-    if (!isa<VarDecl, ParmVarDecl, TypedefDecl, FieldDecl>(decl)) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
-        << attr << attr.isDeclspecAttribute() << "typedefs or variable declarations";
+    if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+        << attr << attr.isDeclspecAttribute()
+        << "type, struct/union/class field or variable declarations";
       return false;
     }
     return true;
+  }
+
+  bool diagAppertainsToStmt(clang::Sema& sema,
+                            const clang::ParsedAttr& attr,
+                            const clang::Stmt* stmt) const override {
+    // INFO: fail for all statements
+    sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+      << attr << attr.isDeclspecAttribute()
+      << "type, struct/union/class field or variable declarations";
+    return false;
   }
 
   AttrHandling handleDeclAttribute(clang::Sema& sema,

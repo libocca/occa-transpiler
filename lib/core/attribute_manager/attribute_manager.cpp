@@ -28,10 +28,17 @@ bool AttributeManager::registerBackendHandler(BackendAttributeMap::KeyType key,
   return _backendAttrs.registerHandler(std::move(key), std::move(handler));
 }
 
-bool AttributeManager::handleAttr(const Attr* attr,
-                                  const Decl* decl,
-                                  SessionStage& stage)
-{
+bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
+                                               DeclHandler handler) {
+  return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
+}
+
+bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
+                                               StmtHandler handler) {
+  return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
+}
+
+bool AttributeManager::handleAttr(const Attr* attr, const Decl* decl, SessionStage& stage) {
   std::string name = attr->getNormalizedFullName();
   if (_commonAttrs.hasAttrHandler(name)) {
     return _commonAttrs.handleAttr(attr, decl, stage);
@@ -45,10 +52,15 @@ bool AttributeManager::handleAttr(const Attr* attr,
   return false;
 }
 
-bool AttributeManager::handleAttr(const Attr* attr,
-                                  const Stmt* stmt,
-                                  SessionStage& stage)
-{
+bool AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
+  return _implicitHandlers(stmt, stage);
+}
+
+bool AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
+  return _implicitHandlers(decl, stage);
+}
+
+bool AttributeManager::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
   std::string name = attr->getNormalizedFullName();
   if (_commonAttrs.hasAttrHandler(name)) {
     return _commonAttrs.handleAttr(attr, stmt, stage);

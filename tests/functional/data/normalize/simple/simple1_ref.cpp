@@ -1,8 +1,8 @@
-[[okl::kernel("(void)")]] void simple_function([[okl::restrict("(void)")]] const float* inputArray,
+[[okl::kernel("")]] void simple_function([[okl::restrict("")]] const float* inputArray,
                                                float* outputArray,
                                                float value,
                                                int size) {
-  [[okl::outer("(void)")]] for (int i = 0; i < size; ++i) {
+  [[okl::outer("")]] for (int i = 0; i < size; ++i) {
     outputArray[i] = inputArray[i] + value;
   }
 }

@@ -15,8 +15,8 @@ constexpr ParsedAttrInfo::Spelling INNER_ATTRIBUTE_SPELLINGS[] = {
 
 struct InnerAttribute : public ParsedAttrInfo {
   InnerAttribute() {
-    NumArgs = 0;
-    OptArgs = 2;
+    NumArgs = 1;
+    OptArgs = 0;
     Spellings = INNER_ATTRIBUTE_SPELLINGS;
     AttrKind = clang::AttributeCommonInfo::AT_Suppress;
     IsStmt = true;
@@ -26,11 +26,20 @@ struct InnerAttribute : public ParsedAttrInfo {
                             const clang::ParsedAttr& attr,
                             const clang::Stmt* stmt) const override {
     if (!isa<ForStmt>(stmt)) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
         << attr << attr.isDeclspecAttribute() << "for statement";
       return false;
     }
     return true;
+  }
+
+  bool diagAppertainsToDecl(clang::Sema& sema,
+                            const clang::ParsedAttr& attr,
+                            const clang::Decl* decl) const override {
+    // INFO: fail for all decls
+    sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+      << attr << attr.isDeclspecAttribute() << "for statement";
+    return false;
   }
 };
 

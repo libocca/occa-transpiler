@@ -10,4 +10,7 @@ constexpr const char DIM_ATTR_NAME[] = "okl::dim";
 constexpr const char DIMORDER_ATTR_NAME[] = "okl::dimOrder";
 constexpr const char RESTRICT_ATTR_NAME[] = "okl::restrict";
 constexpr const char BARRIER_ATTR_NAME[] = "okl::barrier";
+constexpr const char NOBARRIER_ATTR_NAME[] = "okl::nobarrier";
+constexpr const char EXCLUSIVE_ATTR_NAME[] = "okl::exclusive";
+constexpr const char ATOMIC_ATTR_NAME[] = "okl::atomic";
 }  // namespace oklt

@@ -28,7 +28,11 @@ GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
 }
 
 TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
-  output.session->output.normalized.sourceCode = std::move(output.stdCppSrc);
+  // copy to output as final result of normalization stage
+  output.session->output.normalized.sourceCode = output.stdCppSrc;
+
+  // pass output as the input for this next stage
+  output.session->input.sourceCode = std::move(output.stdCppSrc);
   return output.session;
 }
 

@@ -1,4 +1,4 @@
-[[okl::kernel("(void)")]] void addVectors(const int entries,
+[[okl::kernel("")]] void addVectors(const int entries,
                                           const float* a,
                                           const float* b,
                                           float* ab) {

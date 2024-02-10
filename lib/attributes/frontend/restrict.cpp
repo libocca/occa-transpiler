@@ -26,13 +26,13 @@ struct RestrictAttribute : public ParsedAttrInfo {
                             const clang::Decl* decl) const override {
     // INFO: this can be as the function argument
     if (!isa<ParmVarDecl>(decl)) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
         << attr << ": can be applied only for parameters of pointer type in function";
       return false;
     }
     const auto* param = cast<ParmVarDecl>(decl);
     if (!param->getType()->isPointerType()) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
         << attr << ": supports only pointer type";
       return false;
     }

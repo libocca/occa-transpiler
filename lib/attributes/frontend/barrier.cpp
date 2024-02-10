@@ -16,7 +16,7 @@ constexpr ParsedAttrInfo::Spelling BARRIER_ATTRIBUTE_SPELLINGS[] = {
 struct BarrierAttribute : public ParsedAttrInfo {
   BarrierAttribute() {
     NumArgs = 1;
-    OptArgs = 2;
+    OptArgs = 0;
     Spellings = BARRIER_ATTRIBUTE_SPELLINGS;
     AttrKind = clang::AttributeCommonInfo::AT_Suppress;
     IsStmt = true;
@@ -26,11 +26,20 @@ struct BarrierAttribute : public ParsedAttrInfo {
                             const clang::ParsedAttr& attr,
                             const clang::Stmt* stmt) const override {
     if (!isa<NullStmt>(stmt)) {
-      sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
-        << attr << attr.isDeclspecAttribute() << "empry statement";
+      sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+        << attr << attr.isDeclspecAttribute() << "empty statement";
       return false;
     }
     return true;
+  }
+
+  bool diagAppertainsToDecl(clang::Sema& sema,
+                            const clang::ParsedAttr& attr,
+                            const clang::Decl* decl) const override {
+    // INFO: fail for all decls
+    sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+      << attr << attr.isDeclspecAttribute() << "empty statements";
+    return false;
   }
 };
 
