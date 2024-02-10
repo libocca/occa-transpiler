@@ -32,7 +32,7 @@ struct NoBarrierAttribute : public ParsedAttrInfo {
     }
     return true;
   }
-  
+
   bool diagAppertainsToDecl(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
                             const clang::Decl* decl) const override {

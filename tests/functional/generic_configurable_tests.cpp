@@ -44,9 +44,7 @@ oklt::UserInput NormalizeActionConfig::build(const fs::path& dataDir) const {
   auto sourceFullPath = dataDir / source;
   std::ifstream sourceFile{sourceFullPath};
   std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
-  return oklt::UserInput {
-    .backend = oklt::TargetBackend::CUDA, .sourceCode = std::move(sourceCode)
-  };
+  return oklt::UserInput{.backend = oklt::TargetBackend::CUDA, .sourceCode = std::move(sourceCode)};
 }
 
 struct TranspileActionConfig {
@@ -112,8 +110,7 @@ TEST_P(GenericTest, OCCATests) {
         std::ifstream referenceFile(referencePath);
         std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
         std::string formatedReference = oklt::format(referenceSource);
-        std::string normalizedSource =
-          oklt::format(normalizeResult.value().normalized.sourceCode);
+        std::string normalizedSource = oklt::format(normalizeResult.value().normalized.sourceCode);
         EXPECT_EQ(formatedReference, normalizedSource);
       } break;
       case Action::TRANSPILER: {

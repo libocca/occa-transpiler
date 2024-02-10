@@ -18,8 +18,7 @@ TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCo
   input.sourceCode = std::move(sourceCode);
 }
 
-TranspilerSession::TranspilerSession(UserInput input_)
-    : input(std::move(input_)) {}
+TranspilerSession::TranspilerSession(UserInput input_) : input(std::move(input_)) {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
   // TODO: Fixup sourceLocation
