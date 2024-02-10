@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.26)
 project (occa-transpiler VERSION 0.0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_types.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
@@ -60,9 +67,14 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/global_constant.cpp
     attributes/backend/common/dim.cpp
 
-    core/ast_traversal/ast_visitor.cpp
+    core/ast_processor_manager/ast_processor_manager.cpp
+
+    core/ast_processors/okl_dummy_processor/processor.cpp
+    core/ast_processors/okl_sema_processor/processor.cpp
+
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
+    core/ast_traversal/preorder_traversal_nlr.cpp
 
     core/diag/diag_consumer.cpp
 

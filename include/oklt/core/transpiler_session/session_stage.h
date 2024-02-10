@@ -1,8 +1,10 @@
 #pragma once
 
+#include <oklt/core/target_backends.h>
+#include <oklt/core/ast_processor_manager/ast_processor_types.h>
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
-#include "oklt/core/target_backends.h"
 
 #include <any>
 
@@ -26,6 +28,7 @@ class SessionStage {
   std::string getRewriterResult();
 
   [[nodiscard]] TargetBackend getBackend() const;
+  [[nodiscard]] AstProcessorType getAstProccesorType() const;
   static AttributeManager& getAttrManager();
 
   void pushDiagnosticMessage(clang::StoredDiagnostic& message);

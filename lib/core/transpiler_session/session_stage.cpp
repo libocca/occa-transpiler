@@ -40,6 +40,10 @@ TargetBackend SessionStage::getBackend() const {
   return _session.input.backend;
 }
 
+AstProcessorType SessionStage::getAstProccesorType() const {
+  return _session.input.astProcType;
+}
+
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
   _session.pushDiagnosticMessage(message);
 }
