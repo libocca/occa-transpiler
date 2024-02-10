@@ -7,13 +7,11 @@
 
 namespace oklt {
 
-using SemanticMockProcessor = CompositeSema<
-  DefaultTraverseSema<clang::Decl>,
-  DefaultTraverseSema<clang::Stmt>,
-  DefaultTraverseSema<clang::RecoveryExpr>,
-  DefaultTraverseSema<clang::FunctionDecl>,
-  DefaultTraverseSema<clang::ParmVarDecl>,
-  DefaultTraverseSema<clang::AttributedStmt>
-  >;
+using SemanticMockProcessor = CompositeSema<DefaultTraverseSema<clang::Decl>,
+                                            DefaultTraverseSema<clang::Stmt>,
+                                            DefaultTraverseSema<clang::RecoveryExpr>,
+                                            DefaultTraverseSema<clang::FunctionDecl>,
+                                            DefaultTraverseSema<clang::ParmVarDecl>,
+                                            DefaultTraverseSema<clang::AttributedStmt> >;
 
 }

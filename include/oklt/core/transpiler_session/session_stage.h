@@ -38,16 +38,14 @@ class SessionStage {
 
   inline bool setUserCtx(const std::string& key, const std::any& ctx) {
     auto [it, ret] = _userCtxMap.try_emplace(key, ctx);
-    //INFO: this must have ability to update the ctx with the same key
-    if(!ret) {
+    // INFO: this must have ability to update the ctx with the same key
+    if (!ret) {
       it->second = ctx;
     }
     return true;
   }
 
-  inline void removeUserCtx(const std::string &key) {
-    _userCtxMap.erase(key);
-  }
+  inline void removeUserCtx(const std::string& key) { _userCtxMap.erase(key); }
 
   inline std::any* getUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);

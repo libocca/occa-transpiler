@@ -1,14 +1,12 @@
 #include <oklt/core/ast_traversal/sema/recovery_expr_sema.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/core/attribute_manager/attributed_type_map.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
-
+#include <oklt/core/attribute_manager/attributed_type_map.h>
+#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace oklt {
 using namespace clang;
 
-bool RecoveryExprSema::beforeTraverse(clang::RecoveryExpr *expr, SessionStage &stage)
-{
+bool RecoveryExprSema::beforeTraverse(clang::RecoveryExpr* expr, SessionStage& stage) {
   auto subExpr = expr->subExpressions();
   if (subExpr.empty()) {
     return true;
@@ -25,20 +23,19 @@ bool RecoveryExprSema::beforeTraverse(clang::RecoveryExpr *expr, SessionStage &s
 
   auto validationResult = validateAttributes(attrs, stage);
 
-  if(!validationResult) {
+  if (!validationResult) {
     return false;
   }
   auto maybeAttr = validationResult.value();
-  if(!maybeAttr) {
+  if (!maybeAttr) {
     return true;
   }
   _validateResult = std::make_unique<ValidatorResult>(validationResult);
   return true;
 }
 
-bool RecoveryExprSema::afterTraverse(clang::RecoveryExpr *expr, SessionStage &stage)
-{
-  if(!_validateResult) {
+bool RecoveryExprSema::afterTraverse(clang::RecoveryExpr* expr, SessionStage& stage) {
+  if (!_validateResult) {
     return true;
   }
   auto& attrManager = stage.getAttrManager();
@@ -48,4 +45,4 @@ bool RecoveryExprSema::afterTraverse(clang::RecoveryExpr *expr, SessionStage &st
   }
   return true;
 }
-}
+}  // namespace oklt

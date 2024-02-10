@@ -4,15 +4,10 @@
 
 namespace oklt {
 
-template<class TraverseType>
+template <class TraverseType>
 struct DefaultTraverseSema {
+  bool beforeTraverse(TraverseType* node, SessionStage& stage) { return true; }
 
-  bool beforeTraverse(TraverseType *node, SessionStage &stage) {
-    return true;
-  }
-
-  bool afterTraverse(TraverseType *node, SessionStage &stage) {
-    return true;
-  }
+  bool afterTraverse(TraverseType* node, SessionStage& stage) { return true; }
 };
-}
+}  // namespace oklt
