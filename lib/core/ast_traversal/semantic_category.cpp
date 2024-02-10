@@ -11,4 +11,4 @@ SemanticCategory fromBackendType(TargetBackend backend) {
   }
   return SemanticCategory::HOST_KERNEL_CATEGORY;
 }
-}
+}  // namespace oklt

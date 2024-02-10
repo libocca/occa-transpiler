@@ -11,4 +11,4 @@ enum struct SemanticCategory {
 
 SemanticCategory fromBackendType(TargetBackend backend);
 
-}
+}  // namespace oklt

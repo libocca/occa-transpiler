@@ -1,19 +1,18 @@
 #include <oklt/core/ast_traversal/validate_attributes.h>
-#include <oklt/core/transpiler_session/session_stage.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
+#include <oklt/core/transpiler_session/session_stage.h>
 #include <oklt/pipeline/stages/transpiler/error_codes.h>
 
 namespace oklt {
 using namespace clang;
 
-ValidatorResult validateAttributes(const clang::ArrayRef<const clang::Attr *> &attrs,
-                                   SessionStage& stage)
-{
+ValidatorResult validateAttributes(const clang::ArrayRef<const clang::Attr*>& attrs,
+                                   SessionStage& stage) {
   std::list<const Attr*> collectedAttrs;
-  auto &attrManager = stage.getAttrManager();
+  auto& attrManager = stage.getAttrManager();
   for (const auto& attr : attrs) {
     auto name = attr->getNormalizedFullName();
-    if(attrManager.hasAttrHandler(attr, stage)) {
+    if (attrManager.hasAttrHandler(attr, stage)) {
       collectedAttrs.push_back(attr);
     }
   }
@@ -22,7 +21,7 @@ ValidatorResult validateAttributes(const clang::ArrayRef<const clang::Attr *> &a
   }
 
   if (collectedAttrs.size() > 1) {
-    //TODO: directly push the error to _stage.pushError()
+    // TODO: directly push the error to _stage.pushError()
 
     const Attr* first = collectedAttrs.front();
 #if 0
@@ -37,9 +36,9 @@ ValidatorResult validateAttributes(const clang::ArrayRef<const clang::Attr *> &a
     std::string description = "Location: " + locationStr + ", Multiple OKL attributes are used";
     auto errCode = make_error_code(OkltTranspilerErrorCode::MULTIPLE_ATTRIBUTES_USED);
     stage.pushError(errCode, std::string(description));
-    return tl::unexpected<Error>( Error {errCode, description});
+    return tl::unexpected<Error>(Error{errCode, description});
   }
   const Attr* attr = collectedAttrs.front();
   return attr;
 }
-}
+}  // namespace oklt
