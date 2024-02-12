@@ -33,6 +33,10 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     return tl::make_unexpected(std::move(session->getErrors()));
   }
 
+#ifdef TRANSPILER_DEBUG_LOG
+  llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
+#endif
+
   return session;
 }
 }  // namespace oklt

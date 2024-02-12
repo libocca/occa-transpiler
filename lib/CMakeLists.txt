@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
+option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
@@ -62,6 +63,11 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    # HIP
+    attributes/backend/hip/global_constant.cpp
+    attributes/backend/hip/translation_unit.cpp
+
+    # CUDA
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/shared.cpp
     attributes/backend/cuda/global_constant.cpp
@@ -130,6 +136,10 @@ add_llvm_library(occa-transpiler SHARED
 
 if (NORMALIZER_DEBUG_LOG)
   target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
+endif()
+
+if (TRANSPILER_DEBUG_LOG)
+  target_compile_definitions(occa-transpiler PRIVATE -DTRANSPILER_DEBUG_LOG=1)
 endif()
 
 target_include_directories(occa-transpiler

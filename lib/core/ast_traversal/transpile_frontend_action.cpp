@@ -13,6 +13,15 @@ using namespace clang;
 TranspileFrontendAction::TranspileFrontendAction(TranspilerSession& session)
     : _session(session), _stage(nullptr) {}
 
+void TranspileFrontendAction::EndSourceFileAction() {
+  // Should never happen
+  if (!_stage) {
+    return;
+  }
+
+  _session.output.kernel.sourceCode = _stage->getRewriterResult();
+}
+
 std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(CompilerInstance& compiler,
                                                                         llvm::StringRef in_file) {
   _stage = std::make_unique<SessionStage>(_session, compiler);
