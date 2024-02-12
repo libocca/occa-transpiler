@@ -89,9 +89,9 @@ int main(int argc, char* argv[]) {
       oklt::AstProcessorType procType = [&]() {
         auto semaType = transpile_command.get("-s");
         if (semaType == "with-sema") {
-          return oklt::AstProcessorType::OKL_PROGRAM_PROCESSOR_WITH_SEMA;
+          return oklt::AstProcessorType::OKL_WITH_SEMA;
         }
-        return oklt::AstProcessorType::OKL_PROGRAM_PROCESSOR_WITHOUT_SEMA;
+        return oklt::AstProcessorType::OKL_NO_SEMA;
       }();
 
       std::ifstream ifs(source_path.string());

@@ -84,12 +84,12 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
   return true;
 }
 
-bool runPreActionRecoveryExpr(const clang::Stmt* expr, SessionStage& stage) {
+bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
   llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
   return true;
 }
 
-bool runPostActionRecoveryExpr(const clang::Stmt* expr_, SessionStage& stage) {
+bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& stage) {
   auto* expr = dyn_cast_or_null<RecoveryExpr>(expr_);
 
   llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
@@ -124,18 +124,18 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
   using StmtHandle = AstProcessorManager::StmtNodeHandle;
 
   auto ok = mng.registerGenericHandle(
-    AstProcessorType::OKL_PROGRAM_PROCESSOR_WITHOUT_SEMA,
+    AstProcessorType::OKL_NO_SEMA,
     DeclHandle{.preAction = runPreActionDecl, .postAction = runPostActionDecl});
   assert(ok);
 
   ok = mng.registerGenericHandle(
-    AstProcessorType::OKL_PROGRAM_PROCESSOR_WITHOUT_SEMA,
+    AstProcessorType::OKL_NO_SEMA,
     StmtHandle{.preAction = runPreActionStmt, .postAction = runPostActionStmt});
   assert(ok);
 
   ok = mng.registerSpecificNodeHandle(
-    {AstProcessorType::OKL_PROGRAM_PROCESSOR_WITHOUT_SEMA, Stmt::RecoveryExprClass},
-    StmtHandle{.preAction = runPreActionRecoveryExpr, .postAction = runPostActionRecoveryExpr});
+    {AstProcessorType::OKL_NO_SEMA, Stmt::RecoveryExprClass},
+    makeSpecificStmtHandle(runPreActionRecoveryExpr, runPostActionRecoveryExpr));
   assert(ok);
 }
 }  // namespace

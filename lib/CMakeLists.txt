@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.26)
 project (occa-transpiler VERSION 0.0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processors/no_sema_okl_processor.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processors/dummy_ast_processor.h
-
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_types.h
 
