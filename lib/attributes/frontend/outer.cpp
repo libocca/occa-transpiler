@@ -22,7 +22,6 @@ struct OuterAttribute : public ParsedAttrInfo {
     IsStmt = true;
   }
 
-
   bool diagAppertainsToStmt(clang::Sema& sema,
                             const clang::ParsedAttr& attr,
                             const clang::Stmt* stmt) const override {
