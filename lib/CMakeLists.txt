@@ -27,7 +27,6 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_consumer.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/transpile_changes.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_decl_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_stmt_handler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_manager.h
