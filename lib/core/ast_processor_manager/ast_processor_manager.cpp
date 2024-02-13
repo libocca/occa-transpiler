@@ -1,5 +1,27 @@
 #include <oklt/core/ast_processor_manager/ast_processor_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
+namespace {
+template <typename KeyType,
+          typename MapType,
+          typename GenKeyType,
+          typename GenMapType,
+          typename ActionFunc>
+bool runNodeHandler(KeyType key,
+                    MapType& map_,
+                    GenKeyType gen_key,
+                    GenMapType& gen_map,
+                    ActionFunc action) {
+  auto it = map_.find(key);
+  if (it == map_.end()) {
+    auto gen_it = gen_map.find(gen_key);
+    if (gen_it == gen_map.end()) {
+      return true;
+    }
+    return action(gen_it->second);
+  }
+  return action(it->second);
+}
+}  // namespace
 
 namespace oklt {
 using namespace clang;
@@ -32,56 +54,32 @@ bool AstProcessorManager::registerSpecificNodeHandle(KeyType key, StmtNodeHandle
 bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
                                                  const Decl* decl,
                                                  SessionStage& stage) {
-  auto it = _declHandlers.find({procType, decl->getKind()});
-  if (it == _declHandlers.end()) {
-    auto gen_it = _genericDeclHandle.find(procType);
-    if (gen_it == _genericDeclHandle.end()) {
-      return true;
-    }
-    return gen_it->second.preAction(decl, stage);
-  }
-  return it->second.preAction(decl, stage);
+  return runNodeHandler(std::make_tuple(procType, decl->getKind()), _declHandlers, procType,
+                        _genericDeclHandle,
+                        [&decl, &stage](auto h) { return h.preAction(decl, stage); });
 }
 
 bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
                                                   const Decl* decl,
                                                   SessionStage& stage) {
-  auto it = _declHandlers.find({procType, decl->getKind()});
-  if (it == _declHandlers.end()) {
-    auto gen_it = _genericDeclHandle.find(procType);
-    if (gen_it == _genericDeclHandle.end()) {
-      return true;
-    }
-    return gen_it->second.postAction(decl, stage);
-  }
-  return it->second.postAction(decl, stage);
+  return runNodeHandler(std::make_tuple(procType, decl->getKind()), _declHandlers, procType,
+                        _genericDeclHandle,
+                        [&decl, &stage](auto h) { return h.postAction(decl, stage); });
 }
 
 bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
                                                  const Stmt* stmt,
                                                  SessionStage& stage) {
-  auto it = _stmtHandlers.find({procType, stmt->getStmtClass()});
-  if (it == _stmtHandlers.end()) {
-    auto gen_it = _genericStmtHandle.find(procType);
-    if (gen_it == _genericStmtHandle.end()) {
-      return true;
-    }
-    return gen_it->second.preAction(stmt, stage);
-  }
-  return it->second.preAction(stmt, stage);
+  return runNodeHandler(std::make_tuple(procType, stmt->getStmtClass()), _stmtHandlers, procType,
+                        _genericStmtHandle,
+                        [&stmt, &stage](auto h) { return h.preAction(stmt, stage); });
 }
 
 bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
                                                   const Stmt* stmt,
                                                   SessionStage& stage) {
-  auto it = _stmtHandlers.find({procType, stmt->getStmtClass()});
-  if (it == _stmtHandlers.end()) {
-    auto gen_it = _genericStmtHandle.find(procType);
-    if (gen_it == _genericStmtHandle.end()) {
-      return true;
-    }
-    return gen_it->second.postAction(stmt, stage);
-  }
-  return it->second.postAction(stmt, stage);
+  return runNodeHandler(std::make_tuple(procType, stmt->getStmtClass()), _stmtHandlers, procType,
+                        _genericStmtHandle,
+                        [&stmt, &stage](auto h) { return h.postAction(stmt, stage); });
 }
 }  // namespace oklt

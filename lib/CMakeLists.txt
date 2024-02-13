@@ -66,6 +66,7 @@ set (OCCA_TRANSPILER_SOURCES
     # HIP
     attributes/backend/hip/global_constant.cpp
     attributes/backend/hip/translation_unit.cpp
+    attributes/backend/hip/global_function.cpp
 
     # CUDA
     attributes/backend/cuda/kernel.cpp

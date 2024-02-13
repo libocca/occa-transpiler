@@ -9,7 +9,7 @@ namespace {
       return true;                                                                          \
     }                                                                                       \
     auto procType = (STAGE).getAstProccesorType();                                          \
-    auto cont = (PROC_MNG).runPreActionNodeHandle(procType, EXPR_VAR, STAGE);              \
+    auto cont = (PROC_MNG).runPreActionNodeHandle(procType, EXPR_VAR, STAGE);               \
     if (!cont) {                                                                            \
       return cont;                                                                          \
     }                                                                                       \
@@ -17,7 +17,7 @@ namespace {
     if (!cont) {                                                                            \
       return cont;                                                                          \
     }                                                                                       \
-    cont = (PROC_MNG).runPostActionNodeHandle(procType, EXPR_VAR, STAGE);                  \
+    cont = (PROC_MNG).runPostActionNodeHandle(procType, EXPR_VAR, STAGE);                   \
     return true;                                                                            \
   } while (false)
 
@@ -36,6 +36,10 @@ bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
 
 bool PreorderNlrTraversal::TraverseRecoveryExpr(clang::RecoveryExpr* recoveryExpr) {
   TRAVERSE_EXPR(RecoveryExpr, recoveryExpr, _procMng, _stage);
+}
+
+bool PreorderNlrTraversal::TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl) {
+  TRAVERSE_EXPR(TranslationUnitDecl, translationUnitDecl, _procMng, _stage);
 }
 
 }  // namespace oklt
