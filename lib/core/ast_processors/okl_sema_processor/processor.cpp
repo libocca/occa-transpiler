@@ -10,12 +10,12 @@ using namespace clang;
 using namespace oklt;
 
 bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
   return true;
 }
 
 bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
 
   auto& am = stage.getAttrManager();
   if (!decl->hasAttrs()) {
@@ -44,12 +44,12 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
 }
 
 bool runPreActionFunctionDecl(const FunctionDecl* decl, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << decl->getName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << decl->getName() << '\n';
   return true;
 }
 
 bool runPostActionFunctionDecl(const clang::FunctionDecl* decl, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << decl->getName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << decl->getName() << '\n';
 
   auto& am = stage.getAttrManager();
   if (!decl->hasAttrs()) {
@@ -78,12 +78,12 @@ bool runPostActionFunctionDecl(const clang::FunctionDecl* decl, SessionStage& st
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
   return true;
 }
 
 bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
 
   auto& am = stage.getAttrManager();
   if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
@@ -119,12 +119,12 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
   return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
-  // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+  llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
   auto subExpr = expr->subExpressions();
   if (subExpr.empty()) {
     return true;
