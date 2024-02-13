@@ -65,12 +65,17 @@ std::string getNewDeclStrConstantArray(const VarDecl* var) {
   auto type = arrDecl->getElementType();
   type.removeLocalConst();
   auto qualifiers = type.getQualifiers();
-  auto noConstQualifiersStr = qualifiers.getAsString();
 
   auto varName = var->getDeclName().getAsString();  // Name of variable
 
-  std::string newDeclStr =
-    noConstQualifiersStr + " " + HIP_CONST_QUALIFIER + " " + unqualifiedTypeStr + " " + varName;
+  std::string newDeclStr;
+  if (qualifiers.hasQualifiers()) {
+    auto noConstQualifiersStr = qualifiers.getAsString();
+    newDeclStr =
+      noConstQualifiersStr + " " + HIP_CONST_QUALIFIER + " " + unqualifiedTypeStr + " " + varName;
+  } else {
+    newDeclStr = HIP_CONST_QUALIFIER + " " + unqualifiedTypeStr + " " + varName;
+  }
   return newDeclStr;
 }
 
@@ -82,10 +87,15 @@ std::string getNewDeclStrVariable(const VarDecl* var) {
   auto qualifiers = type.getQualifiers();
 
   auto VarName = var->getDeclName().getAsString();  // Name of variable
-  auto noConstQualifiersStr = qualifiers.getAsString();
 
-  std::string newDeclStr =
-    noConstQualifiersStr + " " + HIP_CONST_QUALIFIER + " " + unqualifiedTypeStr + " " + VarName;
+  std::string newDeclStr;
+  if (qualifiers.hasQualifiers()) {
+    auto noConstQualifiersStr = qualifiers.getAsString();
+    newDeclStr =
+      noConstQualifiersStr + " " + HIP_CONST_QUALIFIER + " " + unqualifiedTypeStr + " " + VarName;
+  } else {
+    newDeclStr = HIP_CONST_QUALIFIER + " " + unqualifiedTypeStr + " " + VarName;
+  }
   return newDeclStr;
 }
 
@@ -104,8 +114,7 @@ std::string getNewDeclStrPointerToConst(const VarDecl* var) {
     newDeclStr =
       HIP_CONST_QUALIFIER + " " + unqualifiedPointeeTypeStr + " * " + qualifiersStr + " " + varName;
   } else {
-    newDeclStr =
-      HIP_CONST_QUALIFIER + " " + unqualifiedPointeeTypeStr + " * " + varName;
+    newDeclStr = HIP_CONST_QUALIFIER + " " + unqualifiedPointeeTypeStr + " * " + varName;
   }
   return newDeclStr;
 }
