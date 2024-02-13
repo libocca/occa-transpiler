@@ -218,7 +218,7 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
 
   void EndSourceFileAction() override {
     if (!_stage) {
-      _stage->pushError(std::error_code(), "where is my stage???");
+      llvm::outs() << "where is my stage???\n";
       return;
     }
     _output.stdCppSrc = _stage->getRewriterResult();
@@ -249,8 +249,11 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
   auto input_file = std::move(input.gnuCppSrc);
   GnuToStdCppStageOutput output = {.session = input.session};
   auto ok = tooling::runToolOnCodeWithArgs(
-    std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output), input_file, args,
-    file_name, tool_name);
+    std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
+    input_file,
+    args,
+    file_name,
+    tool_name);
 
   if (!ok) {
     return tl::make_unexpected(std::move(output.session->getErrors()));

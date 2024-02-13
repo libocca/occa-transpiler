@@ -113,6 +113,7 @@ int main(int argc, char* argv[]) {
 
       if (result) {
         std::cout << "Transpiling success : true" << std::endl;
+        std::cout << result->kernel.sourceCode << std::endl;
       } else {
         std::cout << "Transpiling errors: " << std::endl;
         for (const auto& error : result.error()) {

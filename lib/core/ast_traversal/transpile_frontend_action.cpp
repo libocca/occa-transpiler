@@ -1,8 +1,8 @@
 #include "oklt/core/ast_traversal/transpile_frontend_action.h"
-#include <typeinfo>
 #include "oklt/core/ast_traversal/transpile_ast_consumer.h"
 #include "oklt/core/diag/diag_consumer.h"
 #include "oklt/core/transpiler_session/session_stage.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 
 #include <memory>
 
@@ -19,5 +19,13 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
   auto astConsumer = std::make_unique<TranspileASTConsumer>(*_stage);
   compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
   return std::move(astConsumer);
+}
+
+void TranspileFrontendAction::EndSourceFileAction() {
+  if (_stage) {
+    return;
+  }
+
+  _session.output.kernel.sourceCode = _stage->getRewriterResult();
 }
 }  // namespace oklt

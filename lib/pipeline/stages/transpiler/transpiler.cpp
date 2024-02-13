@@ -17,18 +17,18 @@ namespace oklt {
 TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
   auto& input = session->input;
 
-  Twine tool_name = "okl-transpiler";
   std::string rawFileName = input.sourcePath.filename().string();
   Twine file_name(rawFileName);
+  Twine code(input.sourceCode);
+  Twine tool_name = "okl-transpiler";
   std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
-  Twine code(input.sourceCode);
-  std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
-  std::unique_ptr<oklt::TranspileFrontendAction> action =
-    std::make_unique<oklt::TranspileFrontendAction>(*session);
-
-  bool ret =
-    runToolOnCodeWithArgs(std::move(action), code, args, file_name, tool_name, std::move(pchOps));
+  bool ret = runToolOnCodeWithArgs(std::make_unique<oklt::TranspileFrontendAction>(*session),
+                                   code,
+                                   args,
+                                   file_name,
+                                   tool_name,
+                                   std::make_shared<PCHContainerOperations>());
   if (!ret) {
     return tl::make_unexpected(std::move(session->getErrors()));
   }
