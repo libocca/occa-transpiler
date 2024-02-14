@@ -113,7 +113,14 @@ int main(int argc, char* argv[]) {
             }(std::move(input), need_normalize);
 
             if (result) {
+                auto &val = result.value();
                 std::cout << "Transpiling success : true" << std::endl;
+                std::cout << "Transpiled Source:" << std::endl;
+                std::cout << val.kernel.sourceCode;
+                if (!val.launcher.sourceCode.empty()) {
+                    std::cout << "Launcher Source:" << std::endl;
+                    std::cout << val.launcher.sourceCode;
+                }
             } else {
                 std::cout << "Transpiling errors: " << std::endl;
                 for (const auto& error : result.error()) {
