@@ -63,6 +63,10 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    # CUDA & HIP common
+    attributes/backend/common/cuda_like_backends/global_constant.cpp
+    attributes/backend/common/cuda_like_backends/global_function.cpp
+
     # HIP
     attributes/backend/hip/global_constant.cpp
     attributes/backend/hip/translation_unit.cpp
@@ -152,6 +156,9 @@ target_include_directories(occa-transpiler
 
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}
+
+        PRIVATE 
+        ${CMAKE_SOURCE_DIR}/lib/
 )
 
 target_link_libraries(occa-transpiler

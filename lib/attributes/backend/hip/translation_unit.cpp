@@ -6,7 +6,6 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-// TODO: doesn't work for some reason
 bool handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
   if (!isa<TranslationUnitDecl>(decl)) {
     return true;
@@ -31,7 +30,7 @@ __attribute__((constructor)) void registerKernelHandler() {
     {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit}, DeclHandler{handleTranslationUnit});
 
   if (!ok) {
-    llvm::errs() << "failed to register implicit handler for global constant\n";
+    llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";
   }
 }
 }  // namespace
