@@ -223,11 +223,6 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
     }
 
     _output.stdCppSrc = _stage->getRewriterResult();
-    // no errors and empty output could mean that the source is already normalized
-    // so use input as output and lets the next stage try to figure out
-    if (_output.stdCppSrc.empty()) {
-      _output.stdCppSrc = std::move(_input.gnuCppSrc);
-    }
   }
 
  private:
@@ -252,7 +247,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
   Twine file_name("gnu-kernel-to-cxx.cpp");
   std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
-  auto input_file = input.gnuCppSrc;
+  auto input_file = std::move(input.gnuCppSrc);
   GnuToStdCppStageOutput output = {.session = input.session};
   auto ok = tooling::runToolOnCodeWithArgs(
     std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output), input_file, args,
@@ -260,6 +255,12 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
 
   if (!ok) {
     return tl::make_unexpected(std::move(output.session->getErrors()));
+  }
+
+  // no errors and empty output could mean that the source is already normalized
+  // so use input as output and lets the next stage try to figure out
+  if (output.stdCppSrc.empty()) {
+    output.stdCppSrc = std::move(input_file);
   }
 
 #ifdef NORMALIZER_DEBUG_LOG

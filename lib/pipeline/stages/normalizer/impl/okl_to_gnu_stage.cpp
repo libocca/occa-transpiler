@@ -151,9 +151,6 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
     }
 
     _output.gnuCppSrc = stage.getRewriterResult();
-    if (_output.gnuCppSrc.empty()) {
-      _output.gnuCppSrc = std::move(_input.oklCppSrc);
-    }
 
     pp.EndSourceFile();
 
@@ -184,7 +181,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
   Twine file_name("okl-kernel-to-gnu.cpp");
   std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
-  auto input_file = input.oklCppSrc;
+  auto input_file = std::move(input.oklCppSrc);
 
   OklToGnuStageOutput output = {.session = input.session};
   auto ok = tooling::runToolOnCodeWithArgs(
@@ -193,6 +190,10 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
 
   if (!ok) {
     return tl::make_unexpected(std::move(output.session->getErrors()));
+  }
+
+  if (output.gnuCppSrc.empty()) {
+    output.gnuCppSrc = std::move(input_file);
   }
 
 #ifdef NORMALIZER_DEBUG_LOG
