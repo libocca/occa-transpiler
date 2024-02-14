@@ -292,8 +292,10 @@ class LauncherKernelGenerator {
   };
 
   void InitInstance(Stmt* S) {
-    auto func = getParent<FunctionDecl>(getParent<CompoundStmt>(S));
-    if (!func) {
+    auto attr_stmt = getParent<AttributedStmt>(S);
+    auto comp_stmt = getParent<CompoundStmt>(attr_stmt);
+    auto func_decl = getParent<FunctionDecl>(comp_stmt);
+    if (!func_decl) {
       return;
     }
 
@@ -446,7 +448,7 @@ bool LauncherASTVisitor::TraverseFunctionDecl(FunctionDecl* D) {
     return Base::TraverseFunctionDecl(D);
   }
 
-  auto kernelAttr = GetAttr<AnnotateAttr>(D, "@kernel");
+  auto kernelAttr = GetAttr<AnnotateAttr>(D, "okl::kernel");
   if (!kernelAttr) {
     return Base::TraverseFunctionDecl(D);
   }
@@ -480,11 +482,11 @@ bool LauncherASTVisitor::TraverseAttributedStmt(AttributedStmt* S, DataRecursion
     return Base::TraverseAttributedStmt(S, Queue);
   }
 
-  if (auto tileAttr = GetAttr<SuppressAttr>(S, "@tile")) {
+  if (auto tileAttr = GetAttr<SuppressAttr>(S, "okl::tile")) {
     _generator->ParseTiledForStmt(forStmt, *tileAttr);
-  } else if (auto outerAttr = GetAttr<SuppressAttr>(S, "@outer")) {
+  } else if (auto outerAttr = GetAttr<SuppressAttr>(S, "okl::outer")) {
     _generator->ParseOuterForStmt(forStmt, *outerAttr);
-  } else if (auto innerAttr = GetAttr<SuppressAttr>(S, "@inner")) {
+  } else if (auto innerAttr = GetAttr<SuppressAttr>(S, "okl::inner")) {
     _generator->ParseInnerForStmt(forStmt, *innerAttr);
   }
 
