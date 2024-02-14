@@ -252,6 +252,19 @@ class LauncherKernelGenerator {
         --n;
       }
 
+      out << s << "occa::kernel kernel(deviceKernels[" << k << "]);\n";
+      out << s << "kernel.setRunDims(outer, inner);\n";
+
+      out << s << "kernel";
+      out << "( ";
+      for (auto it = _metadata.params.begin(), end_it = _metadata.params.end(); it != end_it; ++it) {
+        if (it != _metadata.params.begin())
+          out << ", ";
+
+        out << it->name;
+      }
+      out << " );\n";
+
       out << getIdent(--i) << "}" << std::endl;
     }
 
