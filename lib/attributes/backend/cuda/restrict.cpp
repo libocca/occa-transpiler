@@ -7,14 +7,16 @@ using namespace oklt;
 using namespace clang;
 
 bool parseRestrictAttribute(const clang::Attr* a, SessionStage&) {
+#ifdef TRANSPILER_DEBUG_LOG
   llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+#endif
   return true;
 }
 
 bool handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
   llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
-
-  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+#endif
   auto& rewriter = s.getRewriter();
 
   if (!isa<VarDecl>(d)) {

@@ -5,12 +5,16 @@ namespace {
 using namespace oklt;
 
 bool parseKernelAttribute(const clang::Attr* a, SessionStage&) {
+#ifdef TRANSPILER_DEBUG_LOG
   llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+#endif
   return true;
 }
 
 bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
   llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+#endif
   return true;
 }
 

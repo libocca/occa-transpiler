@@ -5,8 +5,8 @@ struct ComplexType {
   T imaginary;
 };
 
+//TODO: fix me when @kernel/@outer/@inner will be implementeds
 @kernel void function1(const int *data) {
-  @shared ComplexType<double> var1;
   @shared ComplexType<int> arr1[32];
   @shared ComplexType<float> arr2[8][32];
 }

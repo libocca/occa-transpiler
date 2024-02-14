@@ -112,6 +112,8 @@ int main(int argc, char* argv[]) {
       }(std::move(input), need_normalize);
 
       if (result) {
+        std::ofstream ofs(output.string());
+        ofs << result.value().kernel.sourceCode;
         std::cout << "Transpiling success : true" << std::endl;
       } else {
         std::cout << "Transpiling errors: " << std::endl;

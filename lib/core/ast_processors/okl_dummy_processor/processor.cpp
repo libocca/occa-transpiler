@@ -10,12 +10,16 @@ using namespace clang;
 using namespace oklt;
 
 bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
   llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
   return true;
 }
 
 bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
   llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
 
   auto& am = stage.getAttrManager();
   if (!decl->hasAttrs()) {
@@ -44,12 +48,16 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
   llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
   return true;
 }
 
 bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
   llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
 
   auto& am = stage.getAttrManager();
   if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
@@ -85,14 +93,18 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
   llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
   return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& stage) {
   auto* expr = dyn_cast_or_null<RecoveryExpr>(expr_);
 
+#ifdef OKL_SEMA_DEBUG_LOG
   llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
   auto subExpr = expr->subExpressions();
   if (subExpr.empty()) {
     return true;

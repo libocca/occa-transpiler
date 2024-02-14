@@ -7,12 +7,16 @@ using namespace oklt;
 using namespace clang;
 
 bool parseSharedAttribute(const Attr* a, SessionStage&) {
+#ifdef TRANSPILER_DEBUG_LOG
   llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+#endif
   return true;
 }
 
 bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
   llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+#endif
   auto& rewriter = s.getRewriter();
 
   SourceRange range = a->getRange();
