@@ -342,8 +342,8 @@ class LauncherKernelGenerator {
     // Condition
     if (isa<BinaryOperator>(S->getCond())) {
       auto node = dyn_cast<BinaryOperator>(S->getCond());
-      if (!node->isEqualityOp()) {
-        // TODO: throw Non Equality OP
+      if (!node->isComparisonOp()) {
+        // TODO: throw Non Comparison OP
         return ret;
       }
 
@@ -374,17 +374,17 @@ class LauncherKernelGenerator {
 
     bool is_inc = false;
     // Increment
-    if (isa<UnaryOperator>(S->getCond())) {
-      auto node = dyn_cast<UnaryOperator>(S->getCond());
+    if (isa<UnaryOperator>(S->getInc())) {
+      auto node = dyn_cast<UnaryOperator>(S->getInc());
       ret.inc.op.uo = node->getOpcode();
 
       const auto inc_op = ret.inc.op.uo;
       const auto cmp_op = ret.condition.op;
-      is_inc = ((inc_op == UO_PreInc || inc_op == UO_PostInc) && (cmp_op == BO_GE || cmp_op == BO_GT));
+      is_inc = ((inc_op == UO_PreInc || inc_op == UO_PostInc) && (cmp_op == BO_LE || cmp_op == BO_LT));
     }
 
-    if (isa<CompoundAssignOperator>(S->getCond())) {
-      auto node = dyn_cast<CompoundAssignOperator>(S->getCond());
+    if (isa<CompoundAssignOperator>(S->getInc())) {
+      auto node = dyn_cast<CompoundAssignOperator>(S->getInc());
 
       auto lsh = dyn_cast_or_null<DeclRefExpr>(node->getLHS());
       if (lsh && lsh->getNameInfo().getAsString() != ret.name) {
@@ -397,7 +397,7 @@ class LauncherKernelGenerator {
 
       const auto inc_op = ret.inc.op.bo;
       const auto cmp_op = ret.condition.op;
-      is_inc = (inc_op == BO_AddAssign && (cmp_op == BO_GE || cmp_op == BO_GT));
+      is_inc = (inc_op == BO_AddAssign && (cmp_op == BO_LE || cmp_op == BO_LT));
     }
 
     ret.range.size = 0;
@@ -408,12 +408,16 @@ class LauncherKernelGenerator {
       if (is_inc) {
         end_i -= start_i;
         ret.range.size = end_i.getZExtValue();
-        ret.range.size_str = ret.range.end + " - " + ret.range.start;
       } else {
         start_i -= end_i;
         ret.range.size = start_i.getZExtValue();
-        ret.range.size_str = ret.range.start + " - " + ret.range.end;
       }
+    }
+
+    if (is_inc) {
+      ret.range.size_str = ret.range.end + " - " + ret.range.start;
+    } else {
+      ret.range.size_str = ret.range.start + " - " + ret.range.end;
     }
 
     return ret;
