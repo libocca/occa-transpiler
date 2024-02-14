@@ -16,6 +16,8 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/launcher_ast_visitor.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/preorder_traversal_nlr.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
 
@@ -100,6 +102,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
+    core/ast_traversal/launcher_ast_visitor.cpp
     core/ast_traversal/preorder_traversal_nlr.cpp
 
     core/diag/diag_consumer.cpp

@@ -1,6 +1,7 @@
 #include <oklt/core/ast_processor_manager/ast_processor_manager.h>
 #include <oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h>
 #include <oklt/core/ast_traversal/preorder_traversal_nlr.h>
+#include "oklt/core/ast_traversal/launcher_ast_visitor.h"
 #include <oklt/core/ast_traversal/transpile_ast_consumer.h>
 #include <oklt/core/transpiler_session/session_stage.h>
 
@@ -32,6 +33,11 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
         }
     }
 #endif
+
+    if (!context.getDiagnostics().hasErrorOccurred()) {
+        LauncherASTVisitor launcher(_stage);
+        launcher.TraverseTranslationUnitDecl(tu);
+    }
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {
