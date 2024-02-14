@@ -2,10 +2,10 @@
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendAction.h>
+#include <oklt/core/transpiler_session/transpiler_session.h>
 
 namespace oklt {
 
-class TranspilerSession;
 class SessionStage;
 
 class TranspileFrontendAction : public clang::ASTFrontendAction {
@@ -16,6 +16,8 @@ class TranspileFrontendAction : public clang::ASTFrontendAction {
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                         llvm::StringRef in_file) override;
+
+  void EndSourceFileAction() override;
 
  private:
   TranspilerSession& _session;

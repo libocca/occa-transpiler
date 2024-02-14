@@ -13,6 +13,7 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
   bool TraverseDecl(clang::Decl* decl);
   bool TraverseStmt(clang::Stmt* stmt);
   bool TraverseRecoveryExpr(clang::RecoveryExpr* recoveryExpr);
+  bool TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl);
 
  private:
   AstProcessorManager& _procMng;

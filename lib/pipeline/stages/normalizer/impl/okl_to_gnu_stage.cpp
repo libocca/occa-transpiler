@@ -192,6 +192,10 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     return tl::make_unexpected(std::move(output.session->getErrors()));
   }
 
+  if (output.gnuCppSrc.empty()) {
+    output.gnuCppSrc = std::move(input_file);
+  }
+
 #ifdef NORMALIZER_DEBUG_LOG
   llvm::outs() << "stage 1 GNU cpp source:\n\n" << output.gnuCppSrc << '\n';
 #endif

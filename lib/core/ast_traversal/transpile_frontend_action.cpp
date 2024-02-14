@@ -20,4 +20,9 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
   compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
   return std::move(astConsumer);
 }
+
+void TranspileFrontendAction::EndSourceFileAction() {
+  assert(_stage != nullptr);
+  _session.output.kernel.sourceCode = _stage->getRewriterResult();
+}
 }  // namespace oklt
