@@ -1,4 +1,4 @@
-#include "attributes/backend/common/cuda_like_backends/cuda_like.h"
+#include "attributes/backend/common/cuda_subset/cuda_subset.h"
 #include <oklt/core/attribute_manager/attribute_manager.h>
 
 namespace {

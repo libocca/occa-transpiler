@@ -1,7 +1,7 @@
 #include <clang/AST/Decl.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-#include "cuda_like.h"
+#include "cuda_subset.h"
 
 namespace oklt::cuda_like {
 using namespace oklt;

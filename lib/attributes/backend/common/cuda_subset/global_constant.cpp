@@ -1,5 +1,5 @@
 #include <oklt/core/transpiler_session/session_stage.h>
-#include "cuda_like.h"
+#include "cuda_subset.h"
 
 namespace {
 using namespace oklt;
