@@ -24,8 +24,8 @@ enum struct Action { NORMALIZER, TRANSPILER, NORMALIZE_AND_TRANSPILE };
 tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
   static const std::map<std::string, Action> actions = {
     {"normalizer", Action::NORMALIZER},
-    {"transpilier", Action::TRANSPILER},
-    {"transpile_and_normalize", Action::NORMALIZE_AND_TRANSPILE},
+    {"transpiler", Action::TRANSPILER},
+    {"normalize_and_transpile", Action::NORMALIZE_AND_TRANSPILE},
   };
   auto it = actions.find(oklt::util::toLower(v));
   if (it != actions.cend()) {

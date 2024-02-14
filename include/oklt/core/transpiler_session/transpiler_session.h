@@ -37,7 +37,6 @@ struct TranspilerSession {
   // TODO add methods for user input/output
   UserInput input;
   UserOutput output;
-
  private:
   std::vector<Error> _errors;
   std::vector<Warning> _warnings;

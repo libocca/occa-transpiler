@@ -1,4 +1,4 @@
-#include <oklt/core/kernel_info/kernel_info.h>
+#include <oklt/core/metadata/program.h>
 
 namespace oklt {
 using json = nlohmann::json;
@@ -37,41 +37,41 @@ void from_json(const json& j, ArgumentInfo& argInfo) {
   j.at("ptr").get_to(argInfo.is_ptr);
 }
 
-void to_json(json& j, const ParsedKernelInfo& kernelMeta) {
-  j = json{{"arguments", kernelMeta.arguments}, {"name", kernelMeta.name}};
+void to_json(json& j, const KernelInfo& kernelMeta) {
+  j = json{{"arguments", kernelMeta.args}, {"name", kernelMeta.name}};
 }
 
-void from_json(const json& j, ParsedKernelInfo& kernelMeta) {
-  j.at("arguments").get_to(kernelMeta.arguments);
+void from_json(const json& j, KernelInfo& kernelMeta) {
+  j.at("arguments").get_to(kernelMeta.args);
   j.at("name").get_to(kernelMeta.name);
 }
 
-void to_json(json& j, const KernelMetadata& kernelInfo) {
+void to_json(json& j, const ProgramMetaData& kernelInfo) {
   if (kernelInfo.props.has_value()) {
     j = json{{"dependencies", json::object()},  // INFO: always empty object, can't define the type
              {"hash", kernelInfo.hash},
-             {"metadata", kernelInfo.metadata},
+             {"metadata", kernelInfo.kernels},
              {"props", kernelInfo.props.value()}};
   } else {
     j = json{{"dependencies", json::object()},  // INFO: always empty object, can't define the type
              {"hash", kernelInfo.hash},
-             {"metadata", kernelInfo.metadata},
+             {"metadata", kernelInfo.kernels},
              {"props", json::object()}};
   }
 }
 
-void from_json(const json& j, KernelMetadata& kernelInfo) {
+void from_json(const json& j, ProgramMetaData& kernelInfo) {
   kernelInfo.dependencies = std::nullopt;
   const auto& value = j.at("props");
   if (value.is_object() && !value.empty()) {
     j.at("hash").get_to(kernelInfo.hash);
-    j.at("metadata").get_to(kernelInfo.metadata);
+    j.at("metadata").get_to(kernelInfo.kernels);
     PropertyInfo prop;
     value.get_to(prop);
     kernelInfo.props = prop;
   } else {
     j.at("hash").get_to(kernelInfo.hash);
-    j.at("metadata").get_to(kernelInfo.metadata);
+    j.at("metadata").get_to(kernelInfo.kernels);
     kernelInfo.props = std::nullopt;
   }
 }

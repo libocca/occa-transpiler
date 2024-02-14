@@ -9,6 +9,7 @@ namespace oklt {
 enum struct TargetBackend : unsigned char {
   OPENMP,
   CUDA,
+  HIP,
 };
 
 tl::expected<TargetBackend, std::string> backendFromString(const std::string& type);
