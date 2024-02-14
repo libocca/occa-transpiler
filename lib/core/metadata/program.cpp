@@ -1,4 +1,4 @@
-#include <oklt/core/kernel_info/kernel_info.h>
+#include <oklt/core/metadata/program.h>
 
 namespace oklt {
 using json = nlohmann::json;

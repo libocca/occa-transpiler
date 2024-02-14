@@ -1,6 +1,6 @@
 #pragma once
 
-#include <oklt/core/kernel_info/kernel_info.h>
+#include <oklt/core/metadata/program.h>
 
 #include <string>
 #include <tl/expected.hpp>

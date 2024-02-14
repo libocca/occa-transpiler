@@ -1,7 +1,7 @@
 #include <oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/attribute_names.h>
-#include <oklt/core/kernel_info/kernel_info.h>
+#include <oklt/core/metadata/program.h>
 #include <oklt/core/transpiler_session/session_stage.h>
 
 #include <clang/AST/AST.h>
@@ -85,7 +85,7 @@ bool transpileOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
   }
 
   auto* ki = sema.getParsingKernelInfo();
-  if (ki->kernInfo->splits.size() > 1) {
+  if (ki->kernInfo->instances.size() > 1) {
     // TODO perfrom kernel split
   }
 

@@ -1,5 +1,6 @@
 #include <oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h>
-#include <oklt/core/kernel_info/kernel_info.h>
+#include <oklt/core/metadata/program.h>
+#include <oklt/core/utils/type_converter.h>
 
 namespace {
 using namespace clang;
@@ -18,15 +19,12 @@ OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionD
   if (_parsingKernInfo.has_value()) {
     return nullptr;
   }
-  // create new slot for kenrnel info
-  _programMetaData.kernels.emplace_back(
-    std::move(KernelInfo{.name = fd->getNameAsString(),
-                         .args = std::vector<ArgumentInfo>(fd->param_size()),
-                         .argRawStrings = std::vector<std::string>(fd->param_size())}));
+
+  auto* kiPtr = &_programMetaData.addKernelInfo(fd->getNameAsString(), fd->param_size(), 1);
 
   // link created slot with current parsing kernel context
-  auto* ki = &_programMetaData.kernels.back();
-  _parsingKernInfo = ParsingKernelInfo{.kernInfo = ki, .kernFuncDecl = fd};
+  _parsingKernInfo = ParsingKernelInfo{
+    .kernInfo = kiPtr, .argStrs = std::vector<std::string>(fd->param_size()), .kernFuncDecl = fd};
 
   return &_parsingKernInfo.value();
 }
@@ -53,38 +51,30 @@ bool OklSemaCtx::isKernelParmVar(const ParmVarDecl* parm) const {
 
 void OklSemaCtx::setKernelArgInfo(const ParmVarDecl* parm) {
   assert(_parsingKernInfo.has_value());
-
-  // templated arg is abstract
-  if (parm->isTemplated()) {
+  auto result = toOklArgInfo(*parm);
+  if (!result) {
+    llvm::errs() << "failed to convert parm var decl to okl data type\n";
     return;
   }
 
-  auto paramQualType = parm->getType();
-  auto typeSize = parm->getASTContext().getTypeSize(paramQualType);
-  auto idx = parm->getFunctionScopeIndex();
-
   auto* ki = _parsingKernInfo.value().kernInfo;
-  ki->args[idx].is_const = paramQualType.isConstQualified();
-
-  ki->args[idx].dtype.name = paramQualType.getAsString();
-  ki->args[idx].dtype.type = toDatatypeCategory(paramQualType);
-  ki->args[idx].dtype.bytes = static_cast<int>(typeSize);
-
-  ki->args[idx].name = parm->getNameAsString();
-  ki->args[idx].is_ptr = paramQualType->isPointerType();
+  ki->args[parm->getFunctionScopeIndex()] = std::move(result.value());
 }
 
 void OklSemaCtx::setKernelArgRawString(const ParmVarDecl* parm, std::string_view transpiledType) {
   assert(_parsingKernInfo.has_value());
 
-  auto idx = parm->getFunctionScopeIndex();
-  auto* ki = _parsingKernInfo.value().kernInfo;
-
   auto varType = [](const auto* p, auto transpiledType) {
     return !transpiledType.empty() ? std::string(transpiledType) : p->getType().getAsString();
   }(parm, transpiledType);
 
-  ki->argRawStrings[idx] = varType + " " + parm->getNameAsString();
+  auto& pki = _parsingKernInfo.value();
+  pki.argStrs[parm->getFunctionScopeIndex()] = varType + " " + parm->getNameAsString();
+}
+
+void OklSemaCtx::setKernelTranspiledAttrStr(std::string attrStr) {
+  assert(_parsingKernInfo.has_value());
+  _parsingKernInfo.value().transpiledFuncAttrStr = std::move(attrStr);
 }
 
 ProgramMetaData& OklSemaCtx::getProgramMetaData() {

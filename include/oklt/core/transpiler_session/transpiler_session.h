@@ -3,7 +3,6 @@
 #include <oklt/core/target_backends.h>
 #include <oklt/core/transpiler_session/user_input.h>
 #include <oklt/core/transpiler_session/user_output.h>
-#include <oklt/core/kernel_info/kernel_info.h>
 
 #include <vector>
 

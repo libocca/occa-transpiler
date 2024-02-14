@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace clang {
-  struct FunctionDecl;
+struct FunctionDecl;
 }
 namespace oklt {
 
@@ -35,7 +35,7 @@ struct ArgumentInfo {
   bool is_ptr;
 };
 
-struct KernelSplitInfo {
+struct KernelInstance {
   // INFO: for launcher template generation only
   int dimOuter = 0;
   int dimInner = 0;
@@ -44,10 +44,8 @@ struct KernelSplitInfo {
 
 struct KernelInfo {
   std::string name;
-  std::string backendAttr;
   std::vector<ArgumentInfo> args;
-  std::vector<std::string> argRawStrings;
-  std::vector<KernelSplitInfo> splits;
+  std::vector<KernelInstance> instances;
 };
 
 struct DependeciesInfo {};
@@ -66,6 +64,19 @@ struct ProgramMetaData {
   std::string hash;
   std::vector<KernelInfo> kernels;
   std::optional<PropertyInfo> props = std::nullopt;
+  KernelInfo& addKernelInfo(std::string name, size_t numArg, size_t numKern) {
+    // create new slot
+    // there is no way to pass args nicely for POD
+    kernels.emplace_back();
+
+    // get just created slot and fill it
+    auto& kiPtr = kernels.back();
+    kiPtr.name = std::move(name);
+    kiPtr.args.resize(numArg);
+    kiPtr.instances.resize(numKern);
+
+    return kiPtr;
+  }
 };
 
 // INFO: because of different behaviour of presense field bytes when category is builtin

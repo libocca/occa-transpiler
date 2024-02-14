@@ -1,6 +1,6 @@
 #pragma once
 
-#include <oklt/core/kernel_info/kernel_info.h>
+#include <oklt/core/metadata/program.h>
 
 #include <clang/AST/AST.h>
 #include <optional>
@@ -13,6 +13,10 @@ struct KernelInfo;
 struct OklSemaCtx {
   struct ParsingKernelInfo {
     KernelInfo* kernInfo{nullptr};
+
+    std::string transpiledFuncAttrStr;
+    std::vector<std::string> argStrs;
+
     const clang::FunctionDecl* kernFuncDecl;
     std::stack<const clang::CompoundStmt*> compoundStack;
     std::stack<const clang::ForStmt*> forStack;
@@ -30,6 +34,8 @@ struct OklSemaCtx {
 
   void setKernelArgInfo(const clang::ParmVarDecl* parm);
   void setKernelArgRawString(const clang::ParmVarDecl* parm, std::string_view transpiledType = {});
+
+  void setKernelTranspiledAttrStr(std::string attrStr);
 
   [[nodiscard]] ProgramMetaData& getProgramMetaData();
   [[nodiscard]] const ProgramMetaData& getProgramMetaData() const;
