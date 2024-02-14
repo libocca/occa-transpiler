@@ -45,17 +45,21 @@ std::string prettyPrint(Stmt* S, const PrintingPolicy& policy) {
   return ret;
 };
 
+std::string_view noParen(const std::string& s) {
+  if (s.size() >= 2 && s.front() == '(' && s.back() == ')')
+    return { s.data() + 1, s.size() - 2 };
+  return s;
+}
+
 struct LoopMetadata {
   std::string type;
   std::string name;
   struct {
     std::string start;
     std::string end;
-    std::string size_str;
     size_t size = 0;
   } range;
   struct {
-    std::string orig;
     std::string cmp;
     BinaryOperator::Opcode op = BO_EQ;
   } condition;
@@ -66,6 +70,25 @@ struct LoopMetadata {
       BinaryOperator::Opcode bo;
     } op;
   } inc;
+
+  bool IsInc() const {
+    bool ret = false;
+    if (inc.val.empty()) {
+      ret = (inc.op.uo == UO_PreInc || inc.op.uo == UO_PostInc);
+    } else {
+      ret = (inc.op.bo == BO_AddAssign);
+    }
+    ret = (ret && (condition.op == BO_LE || condition.op == BO_LT));
+
+    return ret;
+  };
+  std::string getRangeSizeStr() const {
+    if (IsInc()) {
+      return range.end + " - " + range.start;
+    } else {
+      return range.start + " - " + range.end;
+    };
+  };
 };
 
 struct ParamMetadata {
@@ -121,12 +144,22 @@ class LauncherKernelGenerator {
 
     const std::string p = "_occa_tiled_";
 
-    // Assume: @tile(16, @outer, @inner)
-    const size_t tile_size = 16;
-    const bool tile_outer = true;
-    const bool tile_inner = true;
+    // TODO: Add Attr parser somewhere else?
+    auto parseTileAttr = [](SuppressAttr& Attr) -> std::tuple<size_t, bool, bool> {
+      auto str = StringRef(*Attr.diagnosticIdentifiers_begin());
+      if (str.starts_with("(") && str.ends_with(")"))
+        str = str.substr(1, str.size() - 2);
+      auto [sz_str, rsh] = str.split(',');
+      return { std::atoi(sz_str.data()), rsh.contains("@outer"), rsh.contains("@inner") };
+    };
+    const auto [tile_size, tile_outer, tile_inner] = parseTileAttr(Attr);
 
     InitInstance(S);
+
+    if (_metadata.instances.empty())
+      return;
+    auto &instance = _metadata.instances.back();
+
     auto loop_meta = ParseForStmt(S);
 
     // Prepare outer loop
@@ -146,10 +179,11 @@ class LauncherKernelGenerator {
             break;
         }
       } else {
-        outer.inc.val = "( " + std::to_string(tile_size) + " * " + outer.inc.val + " )";
+        outer.inc.val = "(" + std::to_string(tile_size) + " * " + outer.inc.val + ")";
       }
     }
-    _metadata.instances.back().outer.push_back(outer);
+    if (tile_outer)
+      instance.outer.push_back(outer);
 
     // Prepare inner loop
     LoopMetadata inner = loop_meta;
@@ -163,11 +197,12 @@ class LauncherKernelGenerator {
         break;
     }
     if (tile_size > 1) {
-      inner.condition.cmp = "( " + outer.name + " + " + std::to_string(tile_size) + " )";
+      inner.range.end = "(" + outer.name + " + " + std::to_string(tile_size) + ")";
     } else {
-      inner.condition.cmp = outer.name;
+      inner.range.end = outer.name;
     }
-    _metadata.instances.back().inner.push_back(inner);
+    if (tile_inner)
+      instance.inner.push_back(inner);
   }
 
   void ParseOuterForStmt(ForStmt* S, SuppressAttr& Attr) {
@@ -175,14 +210,23 @@ class LauncherKernelGenerator {
       return;
 
     InitInstance(S);
-    _metadata.instances.back().outer.emplace_back(ParseForStmt(S));
+
+    if (_metadata.instances.empty())
+      return;
+    auto &instance = _metadata.instances.back();
+
+    instance.outer.emplace_back(ParseForStmt(S));
   }
 
   void ParseInnerForStmt(ForStmt* S, SuppressAttr& Attr) {
     if (!S)
       return;
 
-    _metadata.instances.back().inner.emplace_back(ParseForStmt(S));
+    if (_metadata.instances.empty())
+      return;
+
+    auto &instance = _metadata.instances.back();
+    instance.inner.emplace_back(ParseForStmt(S));
   }
 
   std::string GenerateSource() {
@@ -193,19 +237,21 @@ class LauncherKernelGenerator {
       return std::string(v * 2, ' ');
     };
 
-    // Function name
-    out << "\nextern \"C\" void " << _metadata.name;
+    // Function
+    out << "extern \"C\" void " << _metadata.name;
+    out << "(";
+    {
+      const auto param_ident = std::string(15 + _metadata.name.size() + 2, ' ');
+      for (auto it = _metadata.params.begin(), end_it = _metadata.params.end(); it != end_it;
+           ++it) {
+        if (it != _metadata.params.begin())
+          out << ",\n" << param_ident;
 
-    // Parameters
-    out << "( ";
-    for (auto it = _metadata.params.begin(), end_it = _metadata.params.end(); it != end_it; ++it) {
-      if (it != _metadata.params.begin())
-        out << ", ";
-
-      auto &p = *it;
-      out << p.type << " " << p.name;
+        auto& p = *it;
+        out << p.type << " " << p.name;
+      }
     }
-    out << " ) {\n";
+    out << ") {\n";
 
     ++i;
     auto k = size_t(0);
@@ -218,11 +264,11 @@ class LauncherKernelGenerator {
       out << s << "inner.dims = " << instance.outer.size() << ";\n";
 
       auto format_loop = [&out, &s](const LoopMetadata& loop, size_t n, bool isOuter) -> void {
-        out << s << loop.type << " " << loop.name << " = " << loop.range.start << ";\n";
+        out << s << loop.type << " " << loop.name << " = " << noParen(loop.range.start) << ";\n";
         out << s << (isOuter ? "outer" : "inner") << "[" << n << "] = ";
 
         if (!loop.inc.val.empty())
-          out << "( ";
+          out << "(";
 
         switch (loop.condition.op) {
           case BO_LE:
@@ -231,7 +277,7 @@ class LauncherKernelGenerator {
             break;
         }
 
-        out << loop.range.size_str;
+        out << loop.getRangeSizeStr();
 
         if (!loop.inc.val.empty()) {
           out << " + " << loop.inc.val << " - 1) / " << loop.inc.val;
@@ -256,16 +302,21 @@ class LauncherKernelGenerator {
       out << s << "kernel.setRunDims(outer, inner);\n";
 
       out << s << "kernel";
-      out << "( ";
-      for (auto it = _metadata.params.begin(), end_it = _metadata.params.end(); it != end_it; ++it) {
-        if (it != _metadata.params.begin())
-          out << ", ";
+      out << "(";
+      {
+        bool is_first = true;
+        for (auto it = std::next(_metadata.params.begin()), end_it = _metadata.params.end();
+             it != end_it; ++it) {
+          if (!is_first)
+            out << ", ";
+          is_first = false;
 
-        out << it->name;
+          out << it->name;
+        }
       }
-      out << " );\n";
+      out << ");\n";
 
-      out << getIdent(--i) << "}" << std::endl;
+      out << getIdent(--i) << "}\n";
     }
 
     out << "}\n";
@@ -336,7 +387,15 @@ class LauncherKernelGenerator {
       ret.type = node->getType().getAsString();
 
       start = node->getInit();
+      while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
+        start = rsh->getSubExpr();
+      }
       ret.range.start = prettyPrint(start, _policy);
+
+      auto child_count = std::distance(start->children().begin(), start->children().end());
+      if (child_count > 0 && !node->getInit()->isEvaluatable(_ctx)) {
+        ret.range.start = "(" + ret.range.start + ")";
+      }
     }
 
     // Condition
@@ -348,42 +407,46 @@ class LauncherKernelGenerator {
       }
 
       ret.condition.op = node->getOpcode();
-      ret.condition.orig = prettyPrint(node, _policy);
+      ret.condition.cmp = prettyPrint(node, _policy);
 
-      auto lsh = dyn_cast_or_null<ImplicitCastExpr>(node->getLHS());
-      auto decl = dyn_cast_or_null<DeclRefExpr>(lsh ? lsh->getSubExpr() : nullptr);
-      if (decl && decl->getNameInfo().getAsString() == ret.name) {
-        end = node->getRHS();
-        ret.range.end = prettyPrint(end, _policy);
-      }
+      // LSH
+      auto lsh = dyn_cast_or_null<CastExpr>(node->getLHS());
+      while (lsh && lsh->getSubExpr() && isa<CastExpr>(lsh->getSubExpr())) {
+        lsh = dyn_cast_or_null<CastExpr>(lsh->getSubExpr());
+      };
+      if (lsh && lsh->getSubExpr()) {
+        auto decl = dyn_cast_or_null<DeclRefExpr>(lsh->getSubExpr());
+        if (decl && decl->getNameInfo().getAsString() == ret.name) {
+          end = node->getRHS();
+          ret.range.end = prettyPrint(end, _policy);
+        }
+      };
 
-      auto rsh = dyn_cast_or_null<ImplicitCastExpr>(node->getRHS());
-      decl = dyn_cast_or_null<DeclRefExpr>(rsh ? rsh->getSubExpr() : nullptr);
-      if (decl && decl->getNameInfo().getAsString() == ret.name) {
-        end = node->getLHS();
-        ret.range.end = prettyPrint(end, _policy);
-        ret.condition.op = BinaryOperator::reverseComparisonOp(node->getOpcode());
+      // RSH
+      auto rsh = dyn_cast_or_null<CastExpr>(node->getRHS());
+      while (rsh && rsh->getSubExpr() && isa<CastExpr>(rsh->getSubExpr())) {
+        rsh = dyn_cast_or_null<CastExpr>(rsh->getSubExpr());
+      };
+      if (rsh && rsh->getSubExpr()) {
+        auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
+        if (decl && decl->getNameInfo().getAsString() == ret.name) {
+          end = node->getLHS();
+          ret.range.end = prettyPrint(end, _policy);
+          ret.condition.op = BinaryOperator::reverseComparisonOp(node->getOpcode());
+        }
       }
 
       if (!end) {
         // TODO: throw Condition not using init variable
         return ret;
       }
-      ret.condition.cmp = prettyPrint(end, _policy);
     }
 
-    bool is_inc = false;
     // Increment
     if (isa<UnaryOperator>(S->getInc())) {
       auto node = dyn_cast<UnaryOperator>(S->getInc());
       ret.inc.op.uo = node->getOpcode();
-
-      const auto inc_op = ret.inc.op.uo;
-      const auto cmp_op = ret.condition.op;
-      is_inc = ((inc_op == UO_PreInc || inc_op == UO_PostInc) && (cmp_op == BO_LE || cmp_op == BO_LT));
-    }
-
-    if (isa<CompoundAssignOperator>(S->getInc())) {
+    } else if (isa<CompoundAssignOperator>(S->getInc())) {
       auto node = dyn_cast<CompoundAssignOperator>(S->getInc());
 
       auto lsh = dyn_cast_or_null<DeclRefExpr>(node->getLHS());
@@ -394,10 +457,6 @@ class LauncherKernelGenerator {
 
       ret.inc.op.bo = node->getOpcode();
       ret.inc.val = prettyPrint(node->getRHS(), _policy);
-
-      const auto inc_op = ret.inc.op.bo;
-      const auto cmp_op = ret.condition.op;
-      is_inc = (inc_op == BO_AddAssign && (cmp_op == BO_LE || cmp_op == BO_LT));
     }
 
     ret.range.size = 0;
@@ -405,19 +464,13 @@ class LauncherKernelGenerator {
     // Determinate range size
     llvm::APSInt start_i, end_i;
     if (EvaluateAsSizeT(start, start_i) && EvaluateAsSizeT(end, end_i)) {
-      if (is_inc) {
+      if (ret.IsInc()) {
         end_i -= start_i;
         ret.range.size = end_i.getZExtValue();
       } else {
         start_i -= end_i;
         ret.range.size = start_i.getZExtValue();
       }
-    }
-
-    if (is_inc) {
-      ret.range.size_str = ret.range.end + " - " + ret.range.start;
-    } else {
-      ret.range.size_str = ret.range.start + " - " + ret.range.end;
     }
 
     return ret;
@@ -442,7 +495,6 @@ bool LauncherASTVisitor::TraverseTranslationUnitDecl(TranslationUnitDecl* D) {
   }
 
   _stage.setUserCtx("launcher", _source.str());
-  llvm::outs() << _source.str();
 
   return true;
 }
@@ -464,7 +516,7 @@ bool LauncherASTVisitor::TraverseFunctionDecl(FunctionDecl* D) {
 
   auto ret = Base::TraverseFunctionDecl(D);
 
-  _source << _generator->GenerateSource();
+  _source << "\n" << _generator->GenerateSource();
 
   _generator = nullptr;
   generator.reset();

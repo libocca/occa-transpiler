@@ -29,7 +29,7 @@ void TranspileFrontendAction::EndSourceFileAction() {
 }
 
 void TranspileFrontendAction::EndSourceFileAction() {
-  if (_stage) {
+  if (!_stage) {
     return;
   }
 
