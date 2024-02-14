@@ -435,6 +435,7 @@ bool LauncherASTVisitor::TraverseTranslationUnitDecl(TranslationUnitDecl* D) {
     return false;
   }
 
+  _stage.setUserCtx("launcher", _source.str());
   llvm::outs() << _source.str();
 
   return true;
