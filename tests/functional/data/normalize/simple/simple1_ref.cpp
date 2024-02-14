@@ -2,5 +2,5 @@
                                          float* outputArray,
                                          float value,
                                          int size) {
-  [[okl::outer("")]] for (int i = 0; i < size; ++i) { outputArray[i] = inputArray[i] + value; }
+    [[okl::outer("")]] for (int i = 0; i < size; ++i) { outputArray[i] = inputArray[i] + value; }
 }

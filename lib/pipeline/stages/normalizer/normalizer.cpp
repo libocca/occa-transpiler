@@ -14,30 +14,30 @@ namespace {
 using namespace oklt;
 
 OklToGnuStageInput toOkltoGnuInput(SharedTranspilerSession session) {
-  return {
-    .oklCppSrc = std::move(session->input.sourceCode),
-    .session = session,
-  };
+    return {
+        .oklCppSrc = std::move(session->input.sourceCode),
+        .session = session,
+    };
 }
 
 GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
-  return {.gnuCppSrc = std::move(output.gnuCppSrc),
-          .gnuMarkers = std::move(output.gnuMarkers),
-          .recoveryMarkers = std::move(output.recoveryMarkers),
-          .session = output.session};
+    return {.gnuCppSrc = std::move(output.gnuCppSrc),
+            .gnuMarkers = std::move(output.gnuMarkers),
+            .recoveryMarkers = std::move(output.recoveryMarkers),
+            .session = output.session};
 }
 
 TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
-  // copy to output as final result of normalization stage
-  output.session->output.normalized.sourceCode = output.stdCppSrc;
+    // copy to output as final result of normalization stage
+    output.session->output.normalized.sourceCode = output.stdCppSrc;
 
-  // pass output as the input for this next stage
-  output.session->input.sourceCode = std::move(output.stdCppSrc);
-  return output.session;
+    // pass output as the input for this next stage
+    output.session->input.sourceCode = std::move(output.stdCppSrc);
+    return output.session;
 }
 
 GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
-  return convertGnuToStdCppAttribute(toStdCppStageInput(output));
+    return convertGnuToStdCppAttribute(toStdCppStageInput(output));
 }
 // Normalization is done in two steps:
 // 1. Replace all OKL specific attributes by GNU C++ attributes comments
@@ -62,15 +62,15 @@ GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
 //  'for' stmt is tested against stored corner case to restore OKL attribute as C++ one.
 //
 TranspilerSessionResult applyGnuAttrBasedNormalization(SharedTranspilerSession session) {
-  return convertOklToGnuAttribute(toOkltoGnuInput(session))
-    .and_then(runGnuToStdConverter)
-    .and_then(toSessionResult);
+    return convertOklToGnuAttribute(toOkltoGnuInput(session))
+        .and_then(runGnuToStdConverter)
+        .and_then(toSessionResult);
 }
 
 }  // namespace
 namespace oklt {
 
 TranspilerSessionResult runNormalizerStage(SharedTranspilerSession session) {
-  return applyGnuAttrBasedNormalization(session);
+    return applyGnuAttrBasedNormalization(session);
 }
 }  // namespace oklt

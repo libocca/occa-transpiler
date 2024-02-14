@@ -8,15 +8,15 @@ using namespace clang::tooling;
 
 namespace oklt {
 std::string format(llvm::StringRef code) {
-  const std::vector<Range> ranges(1, Range(0, code.size()));
-  auto Style = format::getLLVMStyle();
+    const std::vector<Range> ranges(1, Range(0, code.size()));
+    auto Style = format::getLLVMStyle();
 
-  Replacements replaces = format::reformat(Style, code, ranges);
-  auto changedCode = applyAllReplacements(code, replaces);
-  if (!changedCode) {
-    llvm::errs() << toString(changedCode.takeError());
-    return {};
-  }
-  return changedCode.get();
+    Replacements replaces = format::reformat(Style, code, ranges);
+    auto changedCode = applyAllReplacements(code, replaces);
+    if (!changedCode) {
+        llvm::errs() << toString(changedCode.takeError());
+        return {};
+    }
+    return changedCode.get();
 }
 }  // namespace oklt

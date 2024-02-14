@@ -8,16 +8,16 @@ namespace oklt {
 class SessionStage;
 
 class ASTVisitor : public clang::RecursiveASTVisitor<ASTVisitor> {
- public:
-  explicit ASTVisitor(SessionStage& session);
-  virtual ~ASTVisitor() = default;
+   public:
+    explicit ASTVisitor(SessionStage& session);
+    virtual ~ASTVisitor() = default;
 
-  bool TraverseDecl(clang::Decl* decl);
-  bool TraverseStmt(clang::Stmt* stmt, DataRecursionQueue* queue = nullptr);
-  bool TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRecursionQueue* queue = nullptr);
+    bool TraverseDecl(clang::Decl* decl);
+    bool TraverseStmt(clang::Stmt* stmt, DataRecursionQueue* queue = nullptr);
+    bool TraverseRecoveryExpr(clang::RecoveryExpr* expr, DataRecursionQueue* queue = nullptr);
 
- protected:
-  SessionStage& _stage;
+   protected:
+    SessionStage& _stage;
 };
 
 }  // namespace oklt

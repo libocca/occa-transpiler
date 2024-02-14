@@ -11,25 +11,25 @@ namespace fs = std::filesystem;
 namespace oklt::tests {
 
 std::vector<std::string> loadTestsSuite() {
-  fs::path suitePath = DataRootHolder::instance().suitePath / "suite.json";
+    fs::path suitePath = DataRootHolder::instance().suitePath / "suite.json";
 
-  if (!fs::exists(suitePath)) {
-    // Test suites map file was not found
-    return {};
-  }
-  json suite;
-  try {
-    std::ifstream suiteFile(suitePath);
-    suite = json::parse(suiteFile);
-  } catch (const std::exception& ex) {
-    return {};
-  }
+    if (!fs::exists(suitePath)) {
+        // Test suites map file was not found
+        return {};
+    }
+    json suite;
+    try {
+        std::ifstream suiteFile(suitePath);
+        suite = json::parse(suiteFile);
+    } catch (const std::exception& ex) {
+        return {};
+    }
 
-  std::vector<std::string> resultCases;
-  for (const auto& jsonPath : suite) {
-    resultCases.push_back(
-      (DataRootHolder::instance().suitePath / jsonPath.get<std::string>()).string());
-  }
-  return resultCases;
+    std::vector<std::string> resultCases;
+    for (const auto& jsonPath : suite) {
+        resultCases.push_back(
+            (DataRootHolder::instance().suitePath / jsonPath.get<std::string>()).string());
+    }
+    return resultCases;
 }
 }  // namespace oklt::tests

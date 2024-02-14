@@ -4,12 +4,12 @@
 namespace {
 using namespace oklt;
 __attribute__((constructor)) void registerKernelHandler() {
-  auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-    {TargetBackend::HIP, clang::Decl::Kind::Function},
-    DeclHandler{cuda_like::handleGlobalFunction});
+    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
+        {TargetBackend::HIP, clang::Decl::Kind::Function},
+        DeclHandler{cuda_like::handleGlobalFunction});
 
-  if (!ok) {
-    llvm::errs() << "Failed to register implicit handler for global function (HIP)\n";
-  }
+    if (!ok) {
+        llvm::errs() << "Failed to register implicit handler for global function (HIP)\n";
+    }
 }
 }  // namespace

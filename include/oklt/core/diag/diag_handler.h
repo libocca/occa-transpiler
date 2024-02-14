@@ -11,17 +11,18 @@ class DiagConsumer;
 using DiagLevel = clang::DiagnosticsEngine::Level;
 
 class DiagHandler {
-  friend class DiagConsumer;
+    friend class DiagConsumer;
 
- public:
-  explicit DiagHandler(unsigned id) : _id(id){};
-  virtual ~DiagHandler() = default;
-  virtual bool HandleDiagnostic(SessionStage& session,
-                                DiagLevel level,
-                                const clang::Diagnostic& info) = 0;
+   public:
+    explicit DiagHandler(unsigned id)
+        : _id(id){};
+    virtual ~DiagHandler() = default;
+    virtual bool HandleDiagnostic(SessionStage& session,
+                                  DiagLevel level,
+                                  const clang::Diagnostic& info) = 0;
 
- protected:
-  unsigned _id = 0;
+   protected:
+    unsigned _id = 0;
 };
 
 typedef llvm::Registry<DiagHandler> DiagHandlerRegistry;

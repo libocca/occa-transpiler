@@ -6,15 +6,15 @@ namespace {
 using namespace oklt;
 
 bool handleGlobalConstant(const clang::Decl* d, SessionStage& s) {
-  return true;
+    return true;
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-  auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-    {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
+    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
+        {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
 
-  if (!ok) {
-    llvm::errs() << "failed to register implicit handler for global constant\n";
-  }
+    if (!ok) {
+        llvm::errs() << "failed to register implicit handler for global constant\n";
+    }
 }
 }  // namespace

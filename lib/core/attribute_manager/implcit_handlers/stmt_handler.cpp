@@ -4,10 +4,11 @@
 namespace oklt {
 using namespace clang;
 
-StmtHandler::StmtHandler(HandleType h) : _handler(std::move(h)) {}
+StmtHandler::StmtHandler(HandleType h)
+    : _handler(std::move(h)) {}
 
 bool StmtHandler::operator()(const clang::Stmt* stmt, SessionStage& stage) {
-  return _handler(stmt, stage);
+    return _handler(stmt, stage);
 }
 
 }  // namespace oklt
