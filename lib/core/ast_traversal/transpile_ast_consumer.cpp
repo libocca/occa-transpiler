@@ -35,8 +35,8 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
 #endif
 
     if (!context.getDiagnostics().hasErrorOccurred()) {
-        LauncherASTVisitor launcher(_stage);
-        launcher.TraverseTranslationUnitDecl(tu);
+        auto launcher = LauncherASTVisitor::Create(_stage);
+        launcher->TraverseTranslationUnitDecl(tu);
     }
 }
 

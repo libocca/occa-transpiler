@@ -437,13 +437,17 @@ bool LauncherASTVisitor::TraverseFunctionDecl(FunctionDecl* D) {
     return Base::TraverseFunctionDecl(D);
   }
 
-  _generator = std::make_unique<LauncherKernelGenerator>(_stage);
-  _generator->ParseFunctionDecl(D, *kernelAttr);
+  auto generator = std::make_unique<LauncherKernelGenerator>(_stage);
+  _generator = generator.get();
+
+  generator->ParseFunctionDecl(D, *kernelAttr);
 
   auto ret = Base::TraverseFunctionDecl(D);
 
   _source << _generator->GenerateSource();
-  _generator.reset();
+
+  _generator = nullptr;
+  generator.reset();
 
   return ret;
 }
@@ -471,6 +475,10 @@ bool LauncherASTVisitor::TraverseAttributedStmt(AttributedStmt* S, DataRecursion
   }
 
   return Base::TraverseAttributedStmt(S, Queue);
+}
+
+std::unique_ptr<LauncherASTVisitor> LauncherASTVisitor::Create(SessionStage& stage) {
+  return std::make_unique<LauncherASTVisitor>(stage);
 }
 
 }  // namespace oklt
