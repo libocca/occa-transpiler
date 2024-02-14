@@ -2,6 +2,7 @@
 #include <typeinfo>
 #include "oklt/core/ast_traversal/transpile_ast_consumer.h"
 #include "oklt/core/diag/diag_consumer.h"
+#include "oklt/core/transpiler_session/transpiler_session.h"
 #include "oklt/core/transpiler_session/session_stage.h"
 
 #include <memory>
@@ -26,4 +27,19 @@ void TranspileFrontendAction::EndSourceFileAction() {
     assert(_stage != nullptr);
     _session.output.kernel.sourceCode = _stage->getRewriterResult();
 }
+
+void TranspileFrontendAction::EndSourceFileAction() {
+  if (_stage) {
+    return;
+  }
+
+  _session.output.kernel.sourceCode = _stage->getRewriterResult();
+
+  if (_stage->hasUserCtx("launcher")) {
+    const auto str = std::any_cast<std::string>(_stage->getUserCtx("launcher"));
+    if (str)
+      _session.output.launcher.sourceCode = *str;
+  }
+}
+
 }  // namespace oklt
