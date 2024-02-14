@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
+option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
@@ -67,6 +68,16 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    # CUDA & HIP common
+    attributes/backend/common/cuda_subset/global_constant.cpp
+    attributes/backend/common/cuda_subset/global_function.cpp
+
+    # HIP
+    attributes/backend/hip/global_constant.cpp
+    attributes/backend/hip/translation_unit.cpp
+    attributes/backend/hip/global_function.cpp
+
+    # CUDA
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/shared.cpp
     attributes/backend/cuda/global_constant.cpp
@@ -146,6 +157,10 @@ if (OKL_SEMA_DEBUG_LOG)
   target_compile_definitions(occa-transpiler PRIVATE -DOKL_SEMA_DEBUG_LOG=1)
 endif()
 
+if (TRANSPILER_DEBUG_LOG)
+  target_compile_definitions(occa-transpiler PRIVATE -DTRANSPILER_DEBUG_LOG=1)
+endif()
+
 target_include_directories(occa-transpiler
         PUBLIC
 
@@ -155,6 +170,9 @@ target_include_directories(occa-transpiler
 
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}
+
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/
 )
 
 target_link_libraries(occa-transpiler

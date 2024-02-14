@@ -221,6 +221,7 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
       _stage->pushError(std::error_code(), "where is my stage???");
       return;
     }
+
     _output.stdCppSrc = _stage->getRewriterResult();
   }
 
