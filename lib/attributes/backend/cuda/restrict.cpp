@@ -6,14 +6,22 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool parseSharedAttribute(const Attr* a, SessionStage&) {
+bool parseRestrictAttribute(const clang::Attr* a, SessionStage&) {
   llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
   return true;
 }
 
-bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
+bool handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
+  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+
   llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
   auto& rewriter = s.getRewriter();
+
+  if (!isa<VarDecl>(d)) {
+    return false;
+  }
+  auto varDecl = cast<VarDecl>(d);
+  SourceLocation identifierLoc = varDecl->getLocation();
 
   SourceRange range = a->getRange();
   SourceLocation begin = range.getBegin();
@@ -31,16 +39,17 @@ bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
     length += 17;
   }
   rewriter.RemoveText(begin, length);
-  std::string sharedText = "__shared__ ";
-  return rewriter.InsertText(d->getBeginLoc(), sharedText, false, false);
+
+  std::string restrictText = " __restrict__ ";
+  return rewriter.InsertText(identifierLoc, restrictText, false, false);
 }
 
-__attribute__((constructor)) void registerSharedHandler() {
+__attribute__((constructor)) void registerRestrictHandler() {
   auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-    {TargetBackend::CUDA, SHARED_ATTR_NAME}, {parseSharedAttribute, handleSharedAttribute});
+    {TargetBackend::CUDA, RESTRICT_ATTR_NAME}, {parseRestrictAttribute, handleRestrictAttribute});
 
   if (!ok) {
-    llvm::errs() << "failed to register " << SHARED_ATTR_NAME << " attribute handler\n";
+    llvm::errs() << "failed to register " << RESTRICT_ATTR_NAME << " attribute handler\n";
   }
 }
 }  // namespace

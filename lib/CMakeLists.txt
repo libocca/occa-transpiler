@@ -63,6 +63,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/tile.cpp
 
     attributes/backend/cuda/kernel.cpp
+    attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
     attributes/backend/cuda/global_constant.cpp
     attributes/backend/common/dim.cpp
