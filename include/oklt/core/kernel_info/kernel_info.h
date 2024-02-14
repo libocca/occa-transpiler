@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+namespace clang {
+  struct FunctionDecl;
+}
 namespace oklt {
 
 enum struct DatatypeCategory {
@@ -32,13 +35,19 @@ struct ArgumentInfo {
   bool is_ptr;
 };
 
-struct ParsedKernelInfo {
-  std::vector<ArgumentInfo> arguments;
-  std::string name;
+struct KernelSplitInfo {
   // INFO: for launcher template generation only
   int dimOuter = 0;
   int dimInner = 0;
   int tileSize = 0;
+};
+
+struct KernelInfo {
+  std::string name;
+  std::string backendAttr;
+  std::vector<ArgumentInfo> args;
+  std::vector<std::string> argRawStrings;
+  std::vector<KernelSplitInfo> splits;
 };
 
 struct DependeciesInfo {};
@@ -52,10 +61,10 @@ struct PropertyInfo {
   NLOHMANN_DEFINE_TYPE_INTRUSIVE(PropertyInfo, compiler, compiler_flags, hash, mode, verbose);
 };
 
-struct KernelMetadata {
+struct ProgramMetaData {
   std::optional<DependeciesInfo> dependencies = std::nullopt;
   std::string hash;
-  std::vector<ParsedKernelInfo> metadata;
+  std::vector<KernelInfo> kernels;
   std::optional<PropertyInfo> props = std::nullopt;
 };
 
@@ -68,11 +77,11 @@ void to_json(nlohmann::json& json, const ArgumentInfo& argInfo);
 void from_json(const nlohmann::json& json, ArgumentInfo& argInfo);
 
 // INFO: skip some fields in serialization/deserialization process
-void to_json(nlohmann::json& json, const ParsedKernelInfo& kernelMeta);
-void from_json(const nlohmann::json& json, ParsedKernelInfo& kernelMeta);
+void to_json(nlohmann::json& json, const KernelInfo& kernelMeta);
+void from_json(const nlohmann::json& json, KernelInfo& kernelMeta);
 
 // INFO: using optional to be able to have empty json object
-void to_json(nlohmann::json& json, const KernelMetadata& kernelInfo);
-void from_json(const nlohmann::json& json, KernelMetadata& kernelInfo);
+void to_json(nlohmann::json& json, const ProgramMetaData& kernelInfo);
+void from_json(const nlohmann::json& json, ProgramMetaData& kernelInfo);
 
 }  // namespace oklt

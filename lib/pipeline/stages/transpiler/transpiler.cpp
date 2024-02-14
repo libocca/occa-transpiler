@@ -33,6 +33,6 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     return tl::make_unexpected(std::move(session->getErrors()));
   }
 
-  return session;
+    return session;
 }
 }  // namespace oklt

@@ -3,6 +3,7 @@
 #include <oklt/core/target_backends.h>
 #include <oklt/core/transpiler_session/user_input.h>
 #include <oklt/core/transpiler_session/user_output.h>
+#include <oklt/core/kernel_info/kernel_info.h>
 
 #include <vector>
 
@@ -37,7 +38,6 @@ struct TranspilerSession {
   // TODO add methods for user input/output
   UserInput input;
   UserOutput output;
-
  private:
   std::vector<Error> _errors;
   std::vector<Warning> _warnings;

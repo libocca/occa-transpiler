@@ -90,10 +90,10 @@ TEST(TestKernelInfo, KernelMetaJsonTest) {
   std::ifstream kernelMetaJsonFile(kernelMetaJsonPath);
   json test = json::parse(kernelMetaJsonFile);
 
-  ParsedKernelInfo kernelMeta;
+  KernelInfo kernelMeta;
   EXPECT_NO_THROW(test.get_to(kernelMeta));
 
-  EXPECT_EQ(4, kernelMeta.arguments.size());
+  EXPECT_EQ(4, kernelMeta.args.size());
   EXPECT_EQ(std::string("_occa_addVectors_0"), kernelMeta.name);
 }
 
@@ -104,13 +104,13 @@ TEST(TestKernelInfo, KernelInfoJsonTest) {
   std::ifstream kernelInfoJsonFile(kernelInfoJsonPath);
   json test = json::parse(kernelInfoJsonFile);
 
-  KernelMetadata info;
+  ProgramMetaData info;
   EXPECT_NO_THROW(test.get_to(info));
   EXPECT_FALSE(info.dependencies.has_value());
   EXPECT_EQ(std::string("28e58002e281fe6b18589982a2871141d4b0bea8d0691c6564edf0d25c583d93"),
             info.hash);
-  EXPECT_EQ(1, info.metadata.size());
-  EXPECT_EQ(std::string("_occa_addVectors_0"), info.metadata[0].name);
+  EXPECT_EQ(1, info.kernels.size());
+  EXPECT_EQ(std::string("_occa_addVectors_0"), info.kernels[0].name);
   EXPECT_TRUE(info.props.has_value());
   EXPECT_EQ(std::string("nvcc"), info.props.value().compiler);
 }

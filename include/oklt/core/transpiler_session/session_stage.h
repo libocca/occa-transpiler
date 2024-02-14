@@ -1,7 +1,7 @@
 #pragma once
 
-#include <oklt/core/target_backends.h>
 #include <oklt/core/ast_processor_manager/ast_processor_types.h>
+#include <oklt/core/target_backends.h>
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
@@ -29,6 +29,7 @@ class SessionStage {
 
   [[nodiscard]] TargetBackend getBackend() const;
   [[nodiscard]] AstProcessorType getAstProccesorType() const;
+
   static AttributeManager& getAttrManager();
 
   void pushDiagnosticMessage(clang::StoredDiagnostic& message);
@@ -38,10 +39,12 @@ class SessionStage {
     auto it = _userCtxMap.find(key);
     return (it != _userCtxMap.end());
   };
+
   inline bool setUserCtx(const std::string& key, const std::any& ctx) {
     auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
     return ret;
   }
+
   inline std::any* getUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);
     if (it == _userCtxMap.end())

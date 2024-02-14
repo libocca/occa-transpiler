@@ -6,10 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
+option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_types.h
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
@@ -70,7 +73,11 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_processor_manager/ast_processor_manager.cpp
 
     core/ast_processors/okl_dummy_processor/processor.cpp
+
     core/ast_processors/okl_sema_processor/processor.cpp
+    core/ast_processors/okl_sema_processor/okl_sema_ctx.cpp
+    core/ast_processors/okl_sema_processor/handlers/function.cpp
+    core/ast_processors/okl_sema_processor/handlers/function.h
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
@@ -130,6 +137,10 @@ add_llvm_library(occa-transpiler SHARED
 
 if (NORMALIZER_DEBUG_LOG)
   target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
+endif()
+
+if (OKL_SEMA_DEBUG_LOG)
+  target_compile_definitions(occa-transpiler PRIVATE -DOKL_SEMA_DEBUG_LOG=1)
 endif()
 
 target_include_directories(occa-transpiler
