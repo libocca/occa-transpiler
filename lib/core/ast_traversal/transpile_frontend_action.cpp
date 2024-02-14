@@ -26,20 +26,12 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
 void TranspileFrontendAction::EndSourceFileAction() {
     assert(_stage != nullptr);
     _session.output.kernel.sourceCode = _stage->getRewriterResult();
-}
 
-void TranspileFrontendAction::EndSourceFileAction() {
-  if (!_stage) {
-    return;
-  }
-
-  _session.output.kernel.sourceCode = _stage->getRewriterResult();
-
-  if (_stage->hasUserCtx("launcher")) {
-    const auto str = std::any_cast<std::string>(_stage->getUserCtx("launcher"));
-    if (str)
-      _session.output.launcher.sourceCode = *str;
-  }
+    if (_stage->hasUserCtx("launcher")) {
+        const auto str = std::any_cast<std::string>(_stage->getUserCtx("launcher"));
+        if (str)
+            _session.output.launcher.sourceCode = *str;
+    }
 }
 
 }  // namespace oklt
