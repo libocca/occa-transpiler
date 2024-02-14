@@ -10,7 +10,7 @@ int const* const ptr_const3 = 0;
 int* const ptr_const4 = 0;
 
 // Stupid formatting
-const 
+const
 int
-* 
+*
 ptr_const5 = 0;

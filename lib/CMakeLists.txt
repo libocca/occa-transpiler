@@ -6,11 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
+option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_types.h
+
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
@@ -36,10 +39,12 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/type_converter.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_info/kernel_info.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/metadata/program.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
@@ -81,7 +86,11 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_processor_manager/ast_processor_manager.cpp
 
     core/ast_processors/okl_dummy_processor/processor.cpp
+
     core/ast_processors/okl_sema_processor/processor.cpp
+    core/ast_processors/okl_sema_processor/okl_sema_ctx.cpp
+    core/ast_processors/okl_sema_processor/handlers/function.cpp
+    core/ast_processors/okl_sema_processor/handlers/function.h
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
@@ -89,7 +98,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/diag/diag_consumer.cpp
 
-    core/kernel_info/kernel_info.cpp
+    core/metadata/program.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
@@ -106,6 +115,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/target_backends.cpp
 
     core/utils/format.cpp
+    core/utils/type_converter.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp
@@ -143,6 +153,10 @@ if (NORMALIZER_DEBUG_LOG)
   target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
 endif()
 
+if (OKL_SEMA_DEBUG_LOG)
+  target_compile_definitions(occa-transpiler PRIVATE -DOKL_SEMA_DEBUG_LOG=1)
+endif()
+
 if (TRANSPILER_DEBUG_LOG)
   target_compile_definitions(occa-transpiler PRIVATE -DTRANSPILER_DEBUG_LOG=1)
 endif()
@@ -157,7 +171,7 @@ target_include_directories(occa-transpiler
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}
 
-        PRIVATE 
+        PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/
 )
 

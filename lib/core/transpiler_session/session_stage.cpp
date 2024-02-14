@@ -1,7 +1,6 @@
 #include "oklt/core/transpiler_session/session_stage.h"
 #include "oklt/core/attribute_manager/attribute_manager.h"
 #include "oklt/core/diag/diag_consumer.h"
-#include "oklt/core/error.h"
 #include "oklt/core/transpiler_session/transpiler_session.h"
 
 #include <clang/AST/ParentMapContext.h>
@@ -47,6 +46,7 @@ AstProcessorType SessionStage::getAstProccesorType() const {
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
   _session.pushDiagnosticMessage(message);
 }
+
 void SessionStage::pushError(std::error_code ec, std::string desc) {
   _session.pushError(ec, std::move(desc));
 }

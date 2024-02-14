@@ -7,9 +7,9 @@ volatile const int var_const2 = 0;
 volatile int const var_const3 = 0;
 
 // Stupid formatting
-const int 
+const int
 var_const4 = 0;
 
-int 
-const 
+int
+const
 var_const5 = 0;
