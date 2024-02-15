@@ -126,6 +126,14 @@ tl::expected<ForLoop, Error> parseForLoop(const clang::ForStmt* forStmt, ASTCont
         .and_then([&](const auto& _) { return parseForLoopInc(ret, forStmt->getInc(), astCtx); });
 }
 
+// std::string moveTo
+
+std::string buildTiledCode(const ForStmt* forStmt,
+                           const ForLoop& forLoop,
+                           const TileParams* tileParams) {
+    return "{\nprintf(\"hello, world\\n\");\n }";
+}
+
 bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
     auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
     auto tileParams = std::any_cast<TileParams>(s.getUserCtx(usrCtxKey));
@@ -143,13 +151,20 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
         return false;
     }
 
+    auto newCode = buildTiledCode(forStmt, forLoop.value(), tileParams);
+
+    auto& rewriter = s.getRewriter();
+    SourceRange range(a->getLocation(), forStmt->getEndLoc());
+    range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));    // TODO: remove magic number 
+    rewriter.ReplaceText(range, newCode);
+
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle Tile. Parsed for loop: Init("
-                 << "type: " << forLoop->init.type << ", name: " << forLoop->init.name
-                 << ", initValue: " << forLoop->init.initialValue
-                 << "), Cond(rhsExpr: " << forLoop->cond.rhsExpr
-                 << "), Inc(rhsInc: " << forLoop->inc.rhsInc
-                 << ", isUnary: " << forLoop->inc.isUnary << ")\n";
+        llvm::outs()
+        << "[DEBUG] Handle Tile. Parsed for loop: Init("
+        << "type: " << forLoop->init.type << ", name: " << forLoop->init.name
+        << ", initValue: " << forLoop->init.initialValue
+        << "), Cond(rhsExpr: " << forLoop->cond.rhsExpr << "), Inc(rhsInc: " << forLoop->inc.rhsInc
+        << ", isUnary: " << forLoop->inc.isUnary << ")\n";
 #endif
     return true;
 }
