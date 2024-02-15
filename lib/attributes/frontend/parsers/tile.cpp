@@ -1,8 +1,8 @@
 #include <clang/AST/Decl.h>
-#include <oklt/attributes/common/attribute_utils.h>
+#include <oklt/attributes/frontend/utils/attribute_utils.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/attributes/common/parsers/tile.hpp>
+#include <oklt/attributes/frontend/parsers/tile.hpp>
 
 namespace oklt {
 using namespace oklt;

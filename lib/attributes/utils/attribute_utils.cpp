@@ -1,4 +1,4 @@
-#include <oklt/attributes/common/attribute_utils.h>
+#include <oklt/attributes/frontend/utils/attribute_utils.h>
 
 namespace oklt {
 using namespace clang;
