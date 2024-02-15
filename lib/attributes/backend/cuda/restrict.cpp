@@ -1,6 +1,7 @@
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/attribute_names.h>
 #include <oklt/core/transpiler_session/session_stage.h>
+#include <oklt/core/utils/attributes.h>
 
 namespace {
 using namespace oklt;
@@ -22,26 +23,10 @@ bool handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, Session
   if (!isa<VarDecl>(d)) {
     return false;
   }
+
   auto varDecl = cast<VarDecl>(d);
   SourceLocation identifierLoc = varDecl->getLocation();
-
-  SourceRange range = a->getRange();
-  SourceLocation begin = range.getBegin();
-  int length = rewriter.getRangeSize(range);
-  if (length == -1) {
-    // TODO: internal error
-    return false;
-  }
-  if (a->isCXX11Attribute() || a->isC2xAttribute()) {
-    begin = begin.getLocWithOffset(-2);
-    length += 4;
-  }
-  if (a->isGNUAttribute()) {
-    begin = begin.getLocWithOffset(-15);
-    length += 17;
-  }
-  rewriter.RemoveText(begin, length);
-
+  removeAttribute(a, s);
   std::string restrictText = " __restrict__ ";
   return rewriter.InsertText(identifierLoc, restrictText, false, false);
 }

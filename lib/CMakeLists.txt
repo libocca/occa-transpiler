@@ -40,6 +40,8 @@ set (OCCA_TRANSPILER_SOURCES
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/type_converter.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/attributes.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/var_decl.h
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
@@ -68,9 +70,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
-    # CUDA & HIP common
-    attributes/backend/common/cuda_subset/global_constant.cpp
-    attributes/backend/common/cuda_subset/global_function.cpp
+    attributes/utils/replace_attribute.h
+    attributes/utils/replace_attribute.cpp
 
     # HIP
     attributes/backend/hip/global_constant.cpp
@@ -117,6 +118,8 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/utils/format.cpp
     core/utils/type_converter.cpp
+    core/utils/attributes.cpp
+    core/utils/var_decl.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp
