@@ -4,7 +4,7 @@
 #include <oklt/core/transpiler_session/session_stage.h>
 #include <oklt/util/string_utils.h>
 #include <functional>
-#include <oklt/attributes/frontend/parsers/tile.hpp>
+#include <oklt/attributes/frontend/parsers/tile.h>
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -79,12 +79,13 @@ tl::expected<ForLoop, Error> parseForLoopCond(ForLoop& forLoop,
         return tl::make_unexpected(err);
     }
 
-    auto rhs = dyn_cast_or_null<CastExpr>(binOp->getRHS());
-    while (rhs && rhs->getSubExpr() && isa<CastExpr>(rhs->getSubExpr())) {
-        rhs = dyn_cast_or_null<CastExpr>(rhs->getSubExpr());
-    };
+    auto rhs = dyn_cast_or_null<Expr>(binOp->getRHS());
+    // while (rhs & rhs->getSubExpr() && isa<CastExpr>(rhs->getSubExpr())) {
+    //     rhs = dyn_cast_or_null<CastExpr>(rhs->getSubExpr());
+    // };
 
     if (!rhs) {
+        llvm::outs() << "hello\n";
         return tl::make_unexpected(err);
     }
 
@@ -211,6 +212,7 @@ std::string regularLoopIdxLine(const ForLoop& forLoop,
 }
 
 std::string getLoopIdxLine(const ForLoop& forLoop, const Loop& loop, const TileParams* params) {
+    // TODO: this logic should be based on first or second loop, not inner/outer/regular
     std::map<LoopType, std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
         mapping{
             {LoopType::Inner, innerLoopIdxLine},
@@ -241,9 +243,9 @@ std::string buildPreffixTiledCode(const ForLoop& forLoop, const TileParams* tile
 
 std::string buildSuffixTiledCode(const ForLoop& forLoop, const TileParams* tileParams) {
     std::string res;
-    res += "}";  // Close scope created by inner loop
+    res += "}\n";  // Close scope created by inner loop
     if (tileParams->check) {
-        res += "\n}";  // Close scope created by check
+        res += "}\n";  // Close scope created by check
     }
     return res;
 }
@@ -272,7 +274,7 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
 
     auto& rewriter = s.getRewriter();
 
-    // Remove attribute + for loop 
+    // Remove attribute + for loop
     SourceRange range;
     range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
     range.setEnd(forStmt->getRParenLoc());
@@ -283,11 +285,6 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
 
     // Insert suffix
     rewriter.InsertText(forStmt->getEndLoc(), suffixCode);
-
-
-    // TEMP
-    // auto content = prettyPrint(forStmt->getBody(), astCtx.getPrintingPolicy());
-    // llvm::outs() << prefixCode << content << suffixCode << "\n";
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle Tile. Parsed for loop: Init("

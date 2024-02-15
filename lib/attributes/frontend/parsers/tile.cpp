@@ -3,7 +3,7 @@
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
 #include <oklt/util/string_utils.h>
-#include <oklt/attributes/frontend/parsers/tile.hpp>
+#include <oklt/attributes/frontend/parsers/tile.h>
 
 namespace oklt {
 using namespace oklt;

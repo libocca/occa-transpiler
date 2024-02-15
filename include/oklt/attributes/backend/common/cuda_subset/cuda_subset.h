@@ -7,4 +7,5 @@ bool handleGlobalFunction(const clang::Decl* decl, SessionStage& s);
 
 bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s);
 
+bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s);
 }  // namespace oklt::cuda_subset

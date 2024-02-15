@@ -33,6 +33,11 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }
 
+    // If no rewrites were made, source will be empty
+    if (session->output.kernel.sourceCode.empty()) {
+        session->output.kernel.sourceCode = input.sourceCode;
+    }
+
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
 #endif

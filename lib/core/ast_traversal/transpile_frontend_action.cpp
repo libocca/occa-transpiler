@@ -5,6 +5,7 @@
 #include "oklt/core/transpiler_session/session_stage.h"
 
 #include <memory>
+#include <clang/Format/Format.h>
 
 namespace oklt {
 

@@ -1,7 +1,7 @@
 #include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/attribute_names.h>
-#include <oklt/attributes/frontend/parsers/tile.hpp>
+#include <oklt/attributes/frontend/parsers/tile.h>
 
 namespace {
 using namespace oklt;

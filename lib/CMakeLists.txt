@@ -71,11 +71,13 @@ set (OCCA_TRANSPILER_SOURCES
     # Backends common
     attributes/utils/attribute_utils.cpp
     attributes/frontend/parsers/tile.cpp
+    attributes/frontend/parsers/kernel.cpp
 
     # CUDA & HIP common
     attributes/backend/common/cuda_subset/global_constant.cpp
     attributes/backend/common/cuda_subset/global_function.cpp
     attributes/backend/common/cuda_subset/tile.cpp
+    attributes/backend/common/cuda_subset/kernel.cpp
 
     # HIP
     attributes/backend/hip/global_constant.cpp
@@ -126,6 +128,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     util/io_helper.cpp
     util/string_utils.cpp
+    util/format.cpp
 
     pipeline/normalizer.cpp
     pipeline/transpiler.cpp
