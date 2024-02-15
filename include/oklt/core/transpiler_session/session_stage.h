@@ -2,6 +2,7 @@
 
 #include <oklt/core/target_backends.h>
 #include <oklt/core/ast_processor_manager/ast_processor_types.h>
+#include <oklt/core/error.h>
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
@@ -33,6 +34,8 @@ class SessionStage {
 
   void pushDiagnosticMessage(clang::StoredDiagnostic& message);
   void pushError(std::error_code ec, std::string desc);
+  void pushError(const Error& err);
+  void pushWarning(std::string desc);
 
   inline bool hasUserCtx(const std::string& key) {
     auto it = _userCtxMap.find(key);

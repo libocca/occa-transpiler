@@ -24,5 +24,8 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
 void TranspileFrontendAction::EndSourceFileAction() {
   assert(_stage != nullptr);
   _session.output.kernel.sourceCode = _stage->getRewriterResult();
+  if (_session.output.kernel.sourceCode.empty()) {
+    _session.output.kernel.sourceCode = _session.input.sourceCode;
+  }
 }
 }  // namespace oklt

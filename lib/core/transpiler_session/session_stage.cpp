@@ -48,7 +48,17 @@ void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
   _session.pushDiagnosticMessage(message);
 }
 void SessionStage::pushError(std::error_code ec, std::string desc) {
+  llvm::errs() << "Error: " << desc << "\n"; // TODO: add proper error handling
   _session.pushError(ec, std::move(desc));
+}
+
+void SessionStage::pushError(const Error& err) {\
+  llvm::errs() << "Error: " << err.desc << "\n"; // TODO: add proper error handling
+  _session.pushError(err.ec, std::move(err.desc));
+}
+
+void SessionStage::pushWarning(std::string desc) {
+  _session.pushWarning(std::move(desc));
 }
 
 SessionStage* getStageFromASTContext(clang::ASTContext& ast) {
