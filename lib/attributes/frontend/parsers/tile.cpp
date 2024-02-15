@@ -81,14 +81,14 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
             continue;
         }
 
+        // Parse loop
         if (auto loopType = parseLoopType(currentParamStr)) {
             loopsStack.push_back(loopType.value());
+            continue;
         }
 
-        else {
-            s.pushError(std::error_code(), "Can't parse tile parameter: " + currentParamStr);
-            return false;
-        }
+        s.pushError(std::error_code(), "Can't parse tile parameter: " + currentParamStr);
+        return false;
     }
 
     // Verify number of parameters
