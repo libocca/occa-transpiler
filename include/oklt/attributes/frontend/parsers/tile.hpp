@@ -13,7 +13,7 @@ struct TileParams {
     int tileSize;
     LoopType firstLoopType = LoopType::Regular;
     LoopType secondLoopType = LoopType::Regular;
-    bool check = false;
+    bool check = true;
 };
 
 bool parseTileAttribute(const clang::Attr* a, SessionStage& s);

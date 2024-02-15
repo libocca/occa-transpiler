@@ -1,7 +1,8 @@
 #include <clang/AST/Decl.h>
-#include <oklt/attributes/frontend/utils/attribute_utils.h>
+#include <oklt/attributes/frontend/utils/parse.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
+#include <oklt/util/string_utils.h>
 #include <oklt/attributes/frontend/parsers/tile.hpp>
 
 namespace oklt {
@@ -65,62 +66,62 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     auto tileSize = parseTileSize(tileParamsStr.value()[0]);  // tileParamsStr is not empty for sure
     if (!tileSize.has_value()) {
         s.pushError(tileSize.error());
-    }
-
-    // Default values
-    tl::expected<LoopType, Error> firstLoopType = LoopType::Regular;
-    tl::expected<LoopType, Error> secondLoopType = LoopType::Regular;
-    tl::expected<bool, Error> check = false;
-    bool firstLoopIsSet = false;
-    bool secondLoopIsSet = false;
-    bool checkIsSet = false;
-
-    Error err;
-    // TODO: rewrite this ugly parsing if possible
-    for (int i = 1; i < nParams; ++i) {
-        // Parse check
-        auto currentCheck = parseCheck(tileParamsStr.value()[i]);
-        if (currentCheck) {
-            if (checkIsSet) {
-                err = Error{std::error_code(), "check is set two times"};
-                break;
-            } else {
-                check = std::move(currentCheck);
-                checkIsSet = true;
-                continue;
-            }
-        } else {
-            if (firstLoopIsSet && secondLoopIsSet) {
-                err = check.error();
-                break;
-            }
-        }
-
-        auto loopType = parseLoopType(tileParamsStr.value()[i]);
-        if (loopType) {
-            if (!firstLoopIsSet) {
-                firstLoopType = std::move(loopType);
-                firstLoopIsSet = true;
-            } else if (!secondLoopIsSet) {
-                secondLoopType = std::move(loopType);
-                secondLoopIsSet = true;
-            } else {
-                err = Error{std::error_code(), "maximum two @inner and/or @outer allowed"};
-            }
-        } else {
-            err = loopType.error();
-            break;
-        }
-    }
-
-    if (!err.desc.empty()) {
-        s.pushError(err);
         return false;
     }
+
+    std::vector<bool> checksStack;
+    std::vector<LoopType> loopsStack;
+
+    // TODO: rewrite this ugly parsing if possible
+    for (int i = 1; i < nParams; ++i) {
+        auto currentParamStr = tileParamsStr.value()[i];
+        // Parse check
+        if (auto check = parseCheck(currentParamStr)) {
+            checksStack.push_back(check.value());
+            continue;
+        }
+
+        if (auto loopType = parseLoopType(currentParamStr)) {
+            loopsStack.push_back(loopType.value());
+        }
+
+        else {
+            s.pushError(std::error_code(), "Can't parse tile parameter: " + currentParamStr);
+            return false;
+        }
+    }
+
+    // Verify number of parameters
+    if (checksStack.size() > 1) {
+        s.pushError(std::error_code(), "More than one tile check parameters");
+        return false;
+    }
+
+    if (loopsStack.size() > 2) {
+        s.pushError(std::error_code(), "More than two tile loop identifiers");
+        return false;
+    }
+
     TileParams tileParams{
-        tileSize.value(), firstLoopType.value(), secondLoopType.value(), check.value()};
+        .tileSize = tileSize.value(),
+        .firstLoopType = loopsStack.size() > 0 ? loopsStack[0] : LoopType::Regular,
+        .secondLoopType = loopsStack.size() > 1 ? loopsStack[1] : LoopType::Regular,
+        .check = checksStack.size() > 0 ? checksStack.front() : true,
+    };
+
+    // Outer can't be after inner:
+    if (tileParams.firstLoopType == LoopType::Inner &&
+        tileParams.secondLoopType == LoopType::Outer) {
+        s.pushError(std::error_code(), "Cannot have [@inner] loop outside of an [@outer] loop");
+        return false;
+    }
+
+    auto ctxKey = util::pointerToStr(static_cast<const void*>(a));
+    s.tryEmplaceUserCtx<TileParams>(ctxKey, tileParams);
+
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] parsed tile parameters: {tile size: " << tileParams.tileSize
+    llvm::outs() << "[DEBUG] parsed tile parameters: " << ctxKey
+                 << ": {tile size: " << tileParams.tileSize
                  << ", first loop: " << static_cast<int>(tileParams.firstLoopType)
                  << ", second loop: " << static_cast<int>(tileParams.secondLoopType)
                  << ", check: " << tileParams.check << "}\n";

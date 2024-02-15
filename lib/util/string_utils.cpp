@@ -1,5 +1,6 @@
 #include <oklt/util/string_utils.h>
 #include <algorithm>
+#include <sstream>
 
 namespace oklt::util {
 std::string toLower(const std::string& str) {
@@ -25,6 +26,13 @@ std::string toCamelCase(std::string str) {
     }
     // return string to main
     return str.substr(0, res_ind);
+}
+
+std::string pointerToStr(const void* ptr) {
+    std::stringstream ss;
+    ss << ptr;
+    std::string strPointer = ss.str();
+    return strPointer;
 }
 
 }  // namespace oklt::util

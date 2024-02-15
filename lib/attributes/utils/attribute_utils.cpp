@@ -1,8 +1,10 @@
-#include <oklt/attributes/frontend/utils/attribute_utils.h>
+#include <oklt/attributes/frontend/utils/parse.h>
 
 namespace oklt {
 using namespace clang;
 
+// Given C++ suppress attribute returns it's parameter as string. Expected attribute to have only
+// one attribute
 tl::expected<std::string, Error> parseCppAttributeParameterStr(const clang::SuppressAttr* attr) {
     size_t nParams = 0;
     for (const auto& param : attr->diagnosticIdentifiers()) {
