@@ -46,15 +46,15 @@ std::vector<std::string> splitCSV(const std::string& str) {
 tl::expected<std::vector<std::string>, Error> parseOKLAttributeParamsStr(const clang::Attr* a) {
     // TODO: add support for annotate attribute
     auto supressAttr = dyn_cast_or_null<SuppressAttr>(a);
-    if (!supressAttr) {
-        return tl::make_unexpected(
-            Error{std::error_code(), "OKL attribute must be a supress cpp attribute"});
+    if (supressAttr) {
+        auto paramStr = parseCppAttributeParameterStr(supressAttr);
+        if (!paramStr.has_value()) {
+            return tl::make_unexpected(paramStr.error());
+        }
+        auto paramStrs = splitCSV(paramStr.value());
+        return paramStrs;
     }
-    auto paramStr = parseCppAttributeParameterStr(supressAttr);
-    if (!paramStr.has_value()) {
-        return tl::make_unexpected(paramStr.error());
-    }
-    auto tileParamsStr = splitCSV(paramStr.value());
-    return tileParamsStr;
+    return tl::make_unexpected(
+        Error{std::error_code(), "OKL attribute must be a supress cpp attribute"});
 }
 }  // namespace oklt

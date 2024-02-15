@@ -27,7 +27,7 @@ DiagConsumer::DiagConsumer(SessionStage& session)
 
 void DiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Diagnostic& Info) {
     // Accept only Warning, Error and Fatal
-    if (DiagLevel <= DiagnosticsEngine::Level::Warning)
+    if (DiagLevel < DiagnosticsEngine::Level::Warning)
         return;
 
     for (auto& Ptr : getDiagDiagHandleInstances()) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <oklt/core/metadata/program.h>
+
 #include <string>
 #include <tl/expected.hpp>
 
@@ -13,6 +15,7 @@ struct UserOutput {
     struct {
         std::string sourceCode;
         std::string metadataJson;
+        ProgramMetaData programMetaData;
     } kernel;
 
     struct {

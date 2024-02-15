@@ -3,6 +3,8 @@
 #include <oklt/core/attribute_manager/attributed_type_map.h>
 #include <oklt/core/transpiler_session/session_stage.h>
 
+#include "handlers/function.h"
+
 #include <clang/AST/AST.h>
 
 namespace {
@@ -10,46 +12,16 @@ using namespace clang;
 using namespace oklt;
 
 bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
-
-    auto& am = stage.getAttrManager();
-    if (!decl->hasAttrs()) {
-        auto cont = am.handleDecl(decl, stage);
-        if (!cont) {
-            return cont;
-        }
-        return true;
-    }
-
-    auto expectedAttr = am.checkAttrs(decl->getAttrs(), decl, stage);
-    if (!expectedAttr) {
-        // TODO report diagnostic error using clang tooling
-        //  auto &errorReporter = _session.getErrorReporter();
-        //  auto errorDescription = expectedAttr.error().message();
-        //  errorReporter.emitError(funcDecl->getSourceRange(),errorDescription);
-        return true;
-    }
-
-    const Attr* attr = expectedAttr.value();
-    if (!attr) {
-        return true;
-    }
-
-    return am.handleAttr(attr, decl, stage);
-}
-
-bool runPreActionFunctionDecl(const FunctionDecl* decl, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << decl->getName() << '\n';
-    return true;
-}
-
-bool runPostActionFunctionDecl(const clang::FunctionDecl* decl, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << decl->getName() << '\n';
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
 
     auto& am = stage.getAttrManager();
     if (!decl->hasAttrs()) {
@@ -78,12 +50,16 @@ bool runPostActionFunctionDecl(const clang::FunctionDecl* decl, SessionStage& st
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
 
     auto& am = stage.getAttrManager();
     if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
@@ -119,12 +95,16 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
-    // llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
     auto subExpr = expr->subExpressions();
     if (subExpr.empty()) {
         return true;
@@ -167,7 +147,12 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
 
     ok = mng.registerSpecificNodeHandle(
         {AstProcessorType::OKL_WITH_SEMA, Decl::Function},
-        makeSpecificDeclHandle(runPreActionFunctionDecl, runPostActionFunctionDecl));
+        makeSpecificDeclHandle(prepareOklKernelFunction, transpileOklKernelFunction));
+    assert(ok);
+
+    ok = mng.registerSpecificNodeHandle(
+        {AstProcessorType::OKL_WITH_SEMA, Decl::ParmVar},
+        makeSpecificDeclHandle(prepareOklKernelParam, transpileOklKernelParam));
     assert(ok);
 
     ok = mng.registerSpecificNodeHandle(

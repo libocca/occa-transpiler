@@ -8,5 +8,3 @@ volatile int const var_const3 = 0;
 
 // Stupid formatting
 const int var_const4 = 0;
-
-int const var_const5 = 0;
