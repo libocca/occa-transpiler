@@ -28,6 +28,7 @@ struct TranspilerSession {
     void pushDiagnosticMessage(clang::StoredDiagnostic& message);
 
     void pushError(std::error_code ec, std::string desc);
+    void pushWarning(std::string desc);
     [[nodiscard]] const std::vector<Error>& getErrors() const;
     std::vector<Error>& getErrors();
 

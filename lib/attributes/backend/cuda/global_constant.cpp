@@ -1,20 +1,15 @@
-#include <clang/AST/Decl.h>
+#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace {
 using namespace oklt;
-
-bool handleGlobalConstant(const clang::Decl* d, SessionStage& s) {
-    return true;
-}
-
-__attribute__((constructor)) void registerKernelHandler() {
+__attribute__((constructor)) void registeGlobalConstantHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
+        {TargetBackend::CUDA, clang::Decl::Kind::Var},
+        DeclHandler{cuda_subset::handleGlobalConstant});
 
     if (!ok) {
-        llvm::errs() << "failed to register implicit handler for global constant\n";
+        llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";
     }
 }
 }  // namespace
