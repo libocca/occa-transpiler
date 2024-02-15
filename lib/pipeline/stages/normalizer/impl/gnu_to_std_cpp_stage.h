@@ -10,15 +10,15 @@
 namespace oklt {
 
 struct GnuToStdCppStageOutput {
-  std::string stdCppSrc;
-  SharedTranspilerSession session;
+    std::string stdCppSrc;
+    SharedTranspilerSession session;
 };
 
 struct GnuToStdCppStageInput {
-  std::string gnuCppSrc;
-  std::list<OklAttrMarker> gnuMarkers;
-  std::list<OklAttrMarker> recoveryMarkers;
-  SharedTranspilerSession session;
+    std::string gnuCppSrc;
+    std::list<OklAttrMarker> gnuMarkers;
+    std::list<OklAttrMarker> recoveryMarkers;
+    SharedTranspilerSession session;
 };
 
 struct Error;

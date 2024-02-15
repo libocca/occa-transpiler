@@ -4,8 +4,8 @@
 
 namespace oklt {
 UserResult normalizeAndTranspile(UserInput input) {
-  return runNormalizerStage(TranspilerSession::make(std::move(input)))
-    .and_then(runTranspilerStage)
-    .and_then(toUserResult);
+    return runNormalizerStage(TranspilerSession::make(std::move(input)))
+        .and_then(runTranspilerStage)
+        .and_then(toUserResult);
 }
 }  // namespace oklt

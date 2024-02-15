@@ -6,17 +6,18 @@
 namespace oklt {
 using namespace clang;
 
-TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage) : _stage(stage) {}
+TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage)
+    : _stage(stage) {}
 
 void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
-  TranslationUnitDecl* tu = context.getTranslationUnitDecl();
+    TranslationUnitDecl* tu = context.getTranslationUnitDecl();
 
-  PreorderNlrTraversal traversal(AstProcessorManager::instance(), _stage);
-  traversal.TraverseTranslationUnitDecl(tu);
+    PreorderNlrTraversal traversal(AstProcessorManager::instance(), _stage);
+    traversal.TraverseTranslationUnitDecl(tu);
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {
-  return _stage;
+    return _stage;
 }
 
 }  // namespace oklt

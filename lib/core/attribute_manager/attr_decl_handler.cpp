@@ -5,16 +5,17 @@ namespace oklt {
 using namespace clang;
 
 AttrDeclHandler::AttrDeclHandler(ParamsParserType pp, HandleType h)
-    : _paramsParser(std::move(pp)), _handler(std::move(h)) {}
+    : _paramsParser(std::move(pp)),
+      _handler(std::move(h)) {}
 
 bool AttrDeclHandler::handle(const Attr* attr, const Decl* decl, SessionStage& stage) {
-  if (parseParams(attr, stage)) {
-    return _handler(attr, decl, stage);
-  }
-  return false;
+    if (parseParams(attr, stage)) {
+        return _handler(attr, decl, stage);
+    }
+    return false;
 }
 
 bool AttrDeclHandler::parseParams(const Attr* attr, SessionStage& stage) {
-  return _paramsParser(attr, stage);
+    return _paramsParser(attr, stage);
 }
 }  // namespace oklt

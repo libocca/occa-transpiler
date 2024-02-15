@@ -19,28 +19,28 @@ struct TranspilerSession;
 using SharedTranspilerSession = std::shared_ptr<TranspilerSession>;
 
 struct TranspilerSession {
-  static SharedTranspilerSession make(UserInput);
-  static SharedTranspilerSession make(TargetBackend backend, std::string sourceCode);
+    static SharedTranspilerSession make(UserInput);
+    static SharedTranspilerSession make(TargetBackend backend, std::string sourceCode);
 
-  explicit TranspilerSession(TargetBackend backend, std::string sourceCode);
-  explicit TranspilerSession(UserInput input);
+    explicit TranspilerSession(TargetBackend backend, std::string sourceCode);
+    explicit TranspilerSession(UserInput input);
 
-  void pushDiagnosticMessage(clang::StoredDiagnostic& message);
+    void pushDiagnosticMessage(clang::StoredDiagnostic& message);
 
-  void pushError(std::error_code ec, std::string desc);
-  void pushWarning(std::string desc);
-  [[nodiscard]] const std::vector<Error>& getErrors() const;
-  std::vector<Error>& getErrors();
+    void pushError(std::error_code ec, std::string desc);
+    void pushWarning(std::string desc);
+    [[nodiscard]] const std::vector<Error>& getErrors() const;
+    std::vector<Error>& getErrors();
 
-  [[nodiscard]] const std::vector<Warning>& getWarnings() const;
-  std::vector<Warning>& getWarnings();
+    [[nodiscard]] const std::vector<Warning>& getWarnings() const;
+    std::vector<Warning>& getWarnings();
 
-  // TODO add methods for user input/output
-  UserInput input;
-  UserOutput output;
+    // TODO add methods for user input/output
+    UserInput input;
+    UserOutput output;
 
- private:
-  std::vector<Error> _errors;
-  std::vector<Warning> _warnings;
+   private:
+    std::vector<Error> _errors;
+    std::vector<Warning> _warnings;
 };
 }  // namespace oklt

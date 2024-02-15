@@ -11,15 +11,15 @@ using namespace clang;
 namespace oklt {
 
 struct OklToGnuStageOutput {
-  std::string gnuCppSrc;
-  std::list<OklAttrMarker> gnuMarkers;
-  std::list<OklAttrMarker> recoveryMarkers;
-  SharedTranspilerSession session;
+    std::string gnuCppSrc;
+    std::list<OklAttrMarker> gnuMarkers;
+    std::list<OklAttrMarker> recoveryMarkers;
+    SharedTranspilerSession session;
 };
 
 struct OklToGnuStageInput {
-  std::string oklCppSrc;
-  SharedTranspilerSession session;
+    std::string oklCppSrc;
+    SharedTranspilerSession session;
 };
 
 struct Error;

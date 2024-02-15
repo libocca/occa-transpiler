@@ -3,17 +3,17 @@
 
 namespace oklt {
 enum class LoopType {
-  Regular,
-  Inner,
-  Outer,
+    Regular,
+    Inner,
+    Outer,
 };
 
 // TODO: inner and outer can have arguments
 struct TileParams {
-  int tileSize;
-  LoopType firstLoopType = LoopType::Regular;
-  LoopType secondLoopType = LoopType::Regular;
-  bool check = false;
+    int tileSize;
+    LoopType firstLoopType = LoopType::Regular;
+    LoopType secondLoopType = LoopType::Regular;
+    bool check = false;
 };
 
 bool parseTileAttribute(const clang::Attr* a, SessionStage& s);

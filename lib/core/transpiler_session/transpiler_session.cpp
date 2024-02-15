@@ -6,58 +6,59 @@
 namespace oklt {
 
 SharedTranspilerSession TranspilerSession::make(UserInput input) {
-  return std::make_shared<TranspilerSession>(std::move(input));
+    return std::make_shared<TranspilerSession>(std::move(input));
 }
 
 SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::string sourceCode) {
-  return std::make_shared<TranspilerSession>(backend, sourceCode);
+    return std::make_shared<TranspilerSession>(backend, sourceCode);
 }
 
 TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
-  input.backend = backend;
-  input.sourceCode = std::move(sourceCode);
+    input.backend = backend;
+    input.sourceCode = std::move(sourceCode);
 }
 
-TranspilerSession::TranspilerSession(UserInput input_) : input(std::move(input_)) {}
+TranspilerSession::TranspilerSession(UserInput input_)
+    : input(std::move(input_)) {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
-  // TODO: Fixup sourceLocation
-  auto msg = message.getMessage();
-  auto lineNo = message.getLocation().getLineNumber();
+    // TODO: Fixup sourceLocation
+    auto msg = message.getMessage();
+    auto lineNo = message.getLocation().getLineNumber();
 
-  std::stringstream ss;
-  ss << "line " << lineNo << ": ";
-  ss << msg.str();
-  // TODO
-  //  create error category for syntax/semantic error/warning
-  if (message.getLevel() > clang::DiagnosticsEngine::Level::Warning) {
-    _errors.push_back(Error{std::error_code(), ss.str()});
-  } else {
-    _warnings.push_back(Warning{ss.str()});
-  }
+    std::stringstream ss;
+    ss << "line " << lineNo << ": ";
+    ss << msg.str();
+    // TODO
+    //  create error category for syntax/semantic error/warning
+    if (message.getLevel() > clang::DiagnosticsEngine::Level::Warning) {
+        _errors.push_back(Error{std::error_code(), ss.str()});
+    } else {
+        _warnings.push_back(Warning{ss.str()});
+    }
 }
 
 void TranspilerSession::pushError(std::error_code ec, std::string desc) {
-  _errors.push_back(Error{ec, std::move(desc)});
+    _errors.push_back(Error{ec, std::move(desc)});
 }
 
 void TranspilerSession::pushWarning(std::string desc) {
-  _warnings.push_back(Warning{std::move(desc)});
+    _warnings.push_back(Warning{std::move(desc)});
 }
 
 const std::vector<Error>& TranspilerSession::getErrors() const {
-  return _errors;
+    return _errors;
 }
 
 std::vector<Error>& TranspilerSession::getErrors() {
-  return _errors;
+    return _errors;
 }
 
 const std::vector<Warning>& TranspilerSession::getWarnings() const {
-  return _warnings;
+    return _warnings;
 }
 
 std::vector<Warning>& TranspilerSession::getWarnings() {
-  return _warnings;
+    return _warnings;
 }
 }  // namespace oklt
