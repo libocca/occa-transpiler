@@ -60,6 +60,10 @@ std::string_view unParen(std::string_view& str) {
     return str;
 }
 
+std::string_view slice(const std::string_view &str, size_t start, size_t end) {
+    return StringRef(str).slice(start, end);
+}
+
 std::vector<std::string_view> split(const std::string_view& str, const std::string_view& sep, int maxN, bool keepEmpty) {
     std::vector<std::string_view> ret;
 
