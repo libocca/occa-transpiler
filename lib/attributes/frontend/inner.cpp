@@ -1,3 +1,5 @@
+#include <oklt/core/attribute_manager/attribute_manager.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -43,5 +45,13 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<InnerAttribute> register_okl_inner(INNER_ATTR_NAME, "");
+bool parseInnerAttrParams(const clang::Attr* a, SessionStage&) {
+    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+    return true;
+}
+
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME,
+                                                                      parseInnerAttrParams);
+}
 }  // namespace

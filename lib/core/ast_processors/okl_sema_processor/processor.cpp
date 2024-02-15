@@ -15,6 +15,17 @@ bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
 #endif
+    auto& am = stage.getAttrManager();
+    if (!decl->hasAttrs()) {
+        return true;
+    }
+
+    for (const auto* attr : decl->getAttrs()) {
+        if (!am.parseAttr(attr, stage)) {
+            return false;
+        }
+    }
+
     return true;
 }
 

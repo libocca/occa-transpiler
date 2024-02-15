@@ -9,7 +9,7 @@ bool handleGlobalConstant(const clang::Decl* d, SessionStage& s) {
     return true;
 }
 
-__attribute__((constructor)) void registerKernelHandler() {
+__attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
 

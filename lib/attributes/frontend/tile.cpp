@@ -1,3 +1,5 @@
+#include <oklt/core/attribute_manager/attribute_manager.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -42,5 +44,12 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<TileAttribute> register_okl_tile(TILE_ATTR_NAME, "");
+bool parseTileAttrParams(const clang::Attr* a, SessionStage&) {
+    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+    return true;
+}
+__attribute__((constructor)) void registerKernelHandler() {
+    AttributeManager::instance().registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME,
+                                                                     parseTileAttrParams);
+}
 }  // namespace
