@@ -21,11 +21,12 @@ tl::expected<int, Error> parseTileSize(const std::string& str) {
     return tileSize;
 }
 
-tl::expected<LoopType, Error> parseLoopType(const std::string& str) {
+// TODO: parse dimension
+tl::expected<Loop, Error> parseLoopType(const std::string& str) {
     if (str == "@outer") {
-        return LoopType::Outer;
+        return Loop{LoopType::Outer};
     } else if (str == "@inner") {
-        return LoopType::Inner;
+        return Loop{LoopType::Inner};
     }
     return tl::make_unexpected(Error{std::error_code(), "Tile loop type parse error"});
 }
@@ -70,7 +71,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     }
 
     std::vector<bool> checksStack;
-    std::vector<LoopType> loopsStack;
+    std::vector<Loop> loopsStack;
 
     // TODO: rewrite this ugly parsing if possible
     for (int i = 1; i < nParams; ++i) {
@@ -104,14 +105,14 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
 
     TileParams tileParams{
         .tileSize = tileSize.value(),
-        .firstLoopType = loopsStack.size() > 0 ? loopsStack[0] : LoopType::Regular,
-        .secondLoopType = loopsStack.size() > 1 ? loopsStack[1] : LoopType::Regular,
+        .firstLoop = loopsStack.size() > 0 ? loopsStack[0] : Loop{},
+        .secondLoop = loopsStack.size() > 1 ? loopsStack[1] : Loop{},
         .check = checksStack.size() > 0 ? checksStack.front() : true,
     };
 
     // Outer can't be after inner:
-    if (tileParams.firstLoopType == LoopType::Inner &&
-        tileParams.secondLoopType == LoopType::Outer) {
+    if (tileParams.firstLoop.type == LoopType::Inner &&
+        tileParams.secondLoop.type == LoopType::Outer) {
         s.pushError(std::error_code(), "Cannot have [@inner] loop outside of an [@outer] loop");
         return false;
     }
@@ -122,8 +123,8 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] parsed tile parameters: " << ctxKey
                  << ": {tile size: " << tileParams.tileSize
-                 << ", first loop: " << static_cast<int>(tileParams.firstLoopType)
-                 << ", second loop: " << static_cast<int>(tileParams.secondLoopType)
+                 << ", first loop: " << static_cast<int>(tileParams.firstLoop.type) << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
+                 << ", second loop: " << static_cast<int>(tileParams.secondLoop.type) << " with dim: " << static_cast<int>(tileParams.secondLoop.dim)
                  << ", check: " << tileParams.check << "}\n";
 #endif
     return true;

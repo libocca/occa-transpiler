@@ -8,11 +8,22 @@ enum class LoopType {
     Outer,
 };
 
+enum class Dim {
+    X = 0,
+    Y = 1,
+    Z = 2,
+};
+
+struct Loop {
+    LoopType type = LoopType::Regular;
+    Dim dim = Dim::X;
+};
+
 // TODO: inner and outer can have arguments
 struct TileParams {
     int tileSize;
-    LoopType firstLoopType = LoopType::Regular;
-    LoopType secondLoopType = LoopType::Regular;
+    Loop firstLoop = Loop{};
+    Loop secondLoop = Loop{};
     bool check = true;
 };
 

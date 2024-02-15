@@ -149,7 +149,7 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
                  << ", initValue: " << forLoop->init.initialValue
                  << "), Cond(rhsExpr: " << forLoop->cond.rhsExpr
                  << "), Inc(rhsInc: " << forLoop->inc.rhsInc
-                 << ", isUnary: " << forLoop->inc.isUnary << "\n";
+                 << ", isUnary: " << forLoop->inc.isUnary << ")\n";
 #endif
     return true;
 }
