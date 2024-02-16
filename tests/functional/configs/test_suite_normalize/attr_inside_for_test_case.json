@@ -1,0 +1,9 @@
+[
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/simple/attr_inside_for_loop.cpp"
+        },
+        "reference": "normalize/simple/attr_inside_for_loop_ref.cpp"
+    }
+]

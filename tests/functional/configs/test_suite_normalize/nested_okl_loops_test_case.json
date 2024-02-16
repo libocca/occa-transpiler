@@ -1,0 +1,9 @@
+[
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/simple/nested_okl_loops.cpp"
+        },
+        "reference": "normalize/simple/nested_okl_loops_ref.cpp"
+    }
+]

@@ -8,7 +8,10 @@ namespace oklt {
 
 struct OklAttrMarker {
     OklAttribute attr;
-    SourceLocation loc;
+    struct {
+        uint32_t line;
+        uint32_t col;
+    } loc;
 };
 
 }  // namespace oklt

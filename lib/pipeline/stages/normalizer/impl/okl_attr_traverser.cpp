@@ -88,15 +88,29 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
             }
             break;
         case OklAttributeParserState::ParseAttrParamList:
+            // close current parentness
             if (token.is(tok::r_paren)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += fsm.pp.getSpelling(token);
                 fsm.parenDepth -= 1u;
 
+                // all parentness are closed norify that OKL attribute is parsed
                 if (!fsm.parenDepth) {
                     return FsmStepStatus::OklAttrParsed;
                 }
+
+                // still opened parentness so continue parsing
+                break;
             }
+
+            // open nested parentness
+            if (token.is(tok::l_paren)) {
+                fsm.attr.tok_indecies.push_back(fsm.token_cursor);
+                fsm.attr.params += fsm.pp.getSpelling(token);
+                fsm.parenDepth += 1u;
+                break;
+            }
+
             if (token.isOneOf(tok::at,
                               tok::equal,
                               tok::identifier,
