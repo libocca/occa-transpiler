@@ -128,7 +128,6 @@ set (OCCA_TRANSPILER_SOURCES
 
     util/io_helper.cpp
     util/string_utils.cpp
-    util/format.cpp
 
     pipeline/normalizer.cpp
     pipeline/transpiler.cpp

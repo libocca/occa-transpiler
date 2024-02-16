@@ -1,9 +1,9 @@
 #include <clang/AST/Decl.h>
+#include <oklt/attributes/frontend/parsers/tile.h>
 #include <oklt/attributes/frontend/utils/parse.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
 #include <oklt/util/string_utils.h>
-#include <oklt/attributes/frontend/parsers/tile.h>
 
 namespace oklt {
 using namespace oklt;
@@ -12,7 +12,7 @@ using namespace clang;
 namespace {
 constexpr int MAX_N_PARAMS = 4;
 
-tl::expected<int, Error> parseTileSize(const std::string& str) {
+tl::expected<int, Error> parseInt(const std::string& str) {
     char* p;
     auto tileSize = strtol(str.c_str(), &p, 10);
     if (!p) {
@@ -22,13 +22,42 @@ tl::expected<int, Error> parseTileSize(const std::string& str) {
 }
 
 // TODO: parse dimension
-tl::expected<Loop, Error> parseLoopType(const std::string& str) {
+tl::expected<LoopType, Error> parseLoopType(const std::string& str) {
+    Error err{std::error_code(), "Tile loop type parse error"};
     if (str == "@outer") {
-        return Loop{LoopType::Outer};
+        return LoopType::Outer;
     } else if (str == "@inner") {
-        return Loop{LoopType::Inner};
+        return LoopType::Inner;
     }
-    return tl::make_unexpected(Error{std::error_code(), "Tile loop type parse error"});
+    return tl::make_unexpected(err);
+}
+
+tl::expected<Loop, Error> parseLoop(const std::string& str) {
+    Error err{std::error_code(), "Tile loop parse error"};
+
+    auto nonDimLoopType = parseLoopType(str);
+    // @inner or @outer (without dimensions)
+    if (nonDimLoopType) {
+        return Loop{nonDimLoopType.value(), Dim::X};  // x - default dimension
+    }
+
+    auto lpar_pos = str.find('(');
+    auto rpar_pos = str.find(')');
+    if (lpar_pos == std::string::npos || rpar_pos == std::string::npos || (lpar_pos > rpar_pos)) {
+        return tl::make_unexpected(err);
+    }
+    auto idxNStr = str.substr(lpar_pos + 1, rpar_pos - lpar_pos);
+    auto loopTypeStr = str.substr(lpar_pos);
+    llvm::outs() << "[DEBUG] idxNStr: " << idxNStr << ", loopTypeStr: " << loopTypeStr << "\n";
+    auto dimIdx = parseInt(idxNStr);
+    auto loopType = parseLoopType(loopTypeStr);
+    if (!dimIdx || !loopType) {
+        return tl::make_unexpected(err);
+    }
+    if (dimIdx.value() < 0 || dimIdx.value() > 2) {
+        return tl::make_unexpected(Error{std::error_code(), "Loop argument must be 0, 1, 2"});
+    }
+    return Loop{loopType.value(), static_cast<Dim>(dimIdx.value())};
 }
 
 tl::expected<bool, Error> parseCheck(const std::string& str) {
@@ -64,7 +93,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     }
 
     // Parse all parameters:
-    auto tileSize = parseTileSize(tileParamsStr.value()[0]);  // tileParamsStr is not empty for sure
+    auto tileSize = parseInt(tileParamsStr.value()[0]);  // tileParamsStr is not empty for sure
     if (!tileSize.has_value()) {
         s.pushError(tileSize.error());
         return false;
@@ -83,7 +112,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
         }
 
         // Parse loop
-        if (auto loopType = parseLoopType(currentParamStr)) {
+        if (auto loopType = parseLoop(currentParamStr)) {
             loopsStack.push_back(loopType.value());
             continue;
         }
@@ -123,8 +152,10 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] parsed tile parameters: " << ctxKey
                  << ": {tile size: " << tileParams.tileSize
-                 << ", first loop: " << static_cast<int>(tileParams.firstLoop.type) << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
-                 << ", second loop: " << static_cast<int>(tileParams.secondLoop.type) << " with dim: " << static_cast<int>(tileParams.secondLoop.dim)
+                 << ", first loop: " << static_cast<int>(tileParams.firstLoop.type)
+                 << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
+                 << ", second loop: " << static_cast<int>(tileParams.secondLoop.type)
+                 << " with dim: " << static_cast<int>(tileParams.secondLoop.dim)
                  << ", check: " << tileParams.check << "}\n";
 #endif
     return true;

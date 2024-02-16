@@ -7,6 +7,7 @@
 #include <clang/Tooling/Tooling.h>
 
 #include <llvm/Support/raw_os_ostream.h>
+#include <oklt/core/utils/format.h>
 
 using namespace llvm;
 using namespace clang;
@@ -37,6 +38,8 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     if (session->output.kernel.sourceCode.empty()) {
         session->output.kernel.sourceCode = input.sourceCode;
     }
+    session->output.kernel.sourceCode = oklt::format(session->output.kernel.sourceCode);
+
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
