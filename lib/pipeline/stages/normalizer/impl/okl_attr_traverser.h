@@ -10,8 +10,8 @@
 
 namespace oklt {
 
-using OklAttrVisitor =
-  std::function<bool(const OklAttribute&, const std::vector<clang::Token>&, clang::Preprocessor&)>;
+using OklAttrVisitor = std::function<
+    bool(const OklAttribute&, const std::vector<clang::Token>&, clang::Preprocessor&)>;
 
 tl::expected<void, Error> visitOklAttributes(const std::vector<clang::Token>& tokens,
                                              clang::Preprocessor& pp,

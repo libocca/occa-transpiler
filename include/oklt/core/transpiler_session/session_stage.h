@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oklt/core/ast_processor_manager/ast_processor_types.h>
+#include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
 #include <clang/Frontend/CompilerInstance.h>
@@ -18,57 +19,56 @@ struct TranspilerSession;
 //       but hold the pointer to the AttributeManagerView
 //       that is built for current session with set of interested attribute handlers
 class SessionStage {
- public:
-  explicit SessionStage(TranspilerSession& session, clang::CompilerInstance& compiler);
-  ~SessionStage() = default;
+   public:
+    explicit SessionStage(TranspilerSession& session, clang::CompilerInstance& compiler);
+    ~SessionStage() = default;
 
-  clang::CompilerInstance& getCompiler();
+    clang::CompilerInstance& getCompiler();
 
-  clang::Rewriter& getRewriter();
-  std::string getRewriterResult();
+    clang::Rewriter& getRewriter();
+    std::string getRewriterResult();
 
-  [[nodiscard]] TargetBackend getBackend() const;
-  [[nodiscard]] AstProcessorType getAstProccesorType() const;
+    [[nodiscard]] TargetBackend getBackend() const;
+    [[nodiscard]] AstProcessorType getAstProccesorType() const;
+    static AttributeManager& getAttrManager();
 
-  static AttributeManager& getAttrManager();
+    void pushDiagnosticMessage(clang::StoredDiagnostic& message);
+    void pushError(std::error_code ec, std::string desc);
+    void pushError(const Error& err);
+    void pushWarning(std::string desc);
 
-  void pushDiagnosticMessage(clang::StoredDiagnostic& message);
-  void pushError(std::error_code ec, std::string desc);
+    inline bool hasUserCtx(const std::string& key) {
+        auto it = _userCtxMap.find(key);
+        return (it != _userCtxMap.end());
+    };
+    inline bool setUserCtx(const std::string& key, const std::any& ctx) {
+        auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
+        return ret;
+    }
+    inline std::any* getUserCtx(const std::string& key) {
+        auto it = _userCtxMap.find(key);
+        if (it == _userCtxMap.end())
+            return nullptr;
 
-  inline bool hasUserCtx(const std::string& key) {
-    auto it = _userCtxMap.find(key);
-    return (it != _userCtxMap.end());
-  };
+        return &it->second;
+    }
 
-  inline bool setUserCtx(const std::string& key, const std::any& ctx) {
-    auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
-    return ret;
-  }
+    template <typename T, typename... Args>
+    inline T& tryEmplaceUserCtx(const std::string& key = typeid(T).name(), Args&&... args) {
+        if (!hasUserCtx(key))
+            setUserCtx(key, std::make_any<T>(std::forward<Args>(args)...));
 
-  inline std::any* getUserCtx(const std::string& key) {
-    auto it = _userCtxMap.find(key);
-    if (it == _userCtxMap.end())
-      return nullptr;
+        return std::any_cast<T&>(_userCtxMap[key]);
+    }
 
-    return &it->second;
-  }
+   protected:
+    TranspilerSession& _session;
 
-  template <typename T, typename... Args>
-  inline T& tryEmplaceUserCtx(const std::string& key = typeid(T).name(), Args&&... args) {
-    if (!hasUserCtx(key))
-      setUserCtx(key, std::make_any<T>(std::forward<Args>(args)...));
+    clang::CompilerInstance& _compiler;
+    clang::Rewriter _rewriter;
 
-    return std::any_cast<T&>(_userCtxMap[key]);
-  }
-
- protected:
-  TranspilerSession& _session;
-
-  clang::CompilerInstance& _compiler;
-  clang::Rewriter _rewriter;
-
-  // XXX discuss key
-  std::map<std::string, std::any> _userCtxMap;
+    // XXX discuss key
+    std::map<std::string, std::any> _userCtxMap;
 };
 
 SessionStage* getStageFromASTContext(clang::ASTContext&);

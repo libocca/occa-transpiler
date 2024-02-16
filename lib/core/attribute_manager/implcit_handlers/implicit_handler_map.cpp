@@ -5,39 +5,39 @@ namespace oklt {
 using namespace clang;
 
 bool ImplicitHandlerMap::registerHandler(KeyType key, DeclHandler handler) {
-  auto ret = _declHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
-  return ret.second;
+    auto ret = _declHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+    return ret.second;
 }
 
 bool ImplicitHandlerMap::registerHandler(KeyType key, StmtHandler handler) {
-  auto ret = _stmtHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
-  return ret.second;
+    auto ret = _stmtHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+    return ret.second;
 }
 
 bool ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stage) {
-  auto backend = stage.getBackend();
-  auto it = _declHandlers.find(std::make_tuple(backend, decl->getKind()));
+    auto backend = stage.getBackend();
+    auto it = _declHandlers.find(std::make_tuple(backend, decl->getKind()));
 
-  //INFO: implcit handler means that only some specific stmt/decl has specific handler
-  //      missing of handler is ok
-  if (it == _declHandlers.end()) {
-    return true;
-  }
+    // INFO: implcit handler means that only some specific stmt/decl has specific handler
+    //       missing of handler is ok
+    if (it == _declHandlers.end()) {
+        return true;
+    }
 
-  return it->second(decl, stage);
+    return it->second(decl, stage);
 }
 
 bool ImplicitHandlerMap::operator()(const Stmt* stmt, SessionStage& stage) {
-  auto backend = stage.getBackend();
-  auto it = _stmtHandlers.find(std::make_tuple(backend, stmt->getStmtClass()));
+    auto backend = stage.getBackend();
+    auto it = _stmtHandlers.find(std::make_tuple(backend, stmt->getStmtClass()));
 
-  //INFO: implcit handler means that only some specific stmt/decl has specific handler
-  //      missing of handler is ok
-  if (it == _stmtHandlers.end()) {
-    return true;
-  }
+    // INFO: implcit handler means that only some specific stmt/decl has specific handler
+    //       missing of handler is ok
+    if (it == _stmtHandlers.end()) {
+        return true;
+    }
 
-  return it->second(stmt, stage);
+    return it->second(stmt, stage);
 }
 
 }  // namespace oklt

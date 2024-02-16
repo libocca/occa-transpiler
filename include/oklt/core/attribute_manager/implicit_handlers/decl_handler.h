@@ -8,15 +8,15 @@ namespace oklt {
 class SessionStage;
 
 class DeclHandler {
- public:
-  using HandleType = std::function<bool(const clang::Decl*, SessionStage&)>;
+   public:
+    using HandleType = std::function<bool(const clang::Decl*, SessionStage&)>;
 
-  explicit DeclHandler(HandleType h);
-  ~DeclHandler() = default;
+    explicit DeclHandler(HandleType h);
+    ~DeclHandler() = default;
 
-  bool operator()(const clang::Decl*, SessionStage& stage);
+    bool operator()(const clang::Decl*, SessionStage& stage);
 
- private:
-  HandleType _handler;
+   private:
+    HandleType _handler;
 };
 }  // namespace oklt

@@ -13,8 +13,8 @@ __attribute__((constructor)) void registerKernelHandler() {
   auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
     {TargetBackend::HIP, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
 
-  if (!ok) {
-    llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";
-  }
+    if (!ok) {
+        llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";
+    }
 }
 }  // namespace

@@ -1,27 +1,30 @@
 #include <oklt/core/utils/var_decl.h>
 #include <clang/AST/AST.h>
+// #include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
+#include <oklt/core/transpiler_session/session_stage.h>
+
 
 namespace oklt {
 using namespace clang;
 
 bool isConstantSizeArray(const VarDecl* var) {
-  return var->getType().getTypePtr()->isConstantArrayType();
+    return var->getType().getTypePtr()->isConstantArrayType();
 }
 
 bool isPointer(const VarDecl* var) {
-  return var->getType()->isPointerType();
+    return var->getType()->isPointerType();
 }
 
 bool isPointerToConst(const VarDecl* var) {
-  return isPointer(var) && var->getType()->getPointeeType().isLocalConstQualified();
+    return isPointer(var) && var->getType()->getPointeeType().isLocalConstQualified();
 }
 
 bool isConstPointer(const VarDecl* var) {
-  return isPointer(var) && var->getType().isLocalConstQualified();
+    return isPointer(var) && var->getType().isLocalConstQualified();
 }
 
 bool isConstPointerToConst(const VarDecl* var) {
-  return isPointerToConst(var) && isConstPointer(var);
+    return isPointerToConst(var) && isConstPointer(var);
 }
 
 bool isGlobalConstVariable(const VarDecl* var) {
@@ -30,24 +33,23 @@ bool isGlobalConstVariable(const VarDecl* var) {
     return false;
   }
 
-  // pointer to const
-  if (isPointer(var)) {
-    return isPointerToConst(var);
-  }
+    // pointer to const
+    if (isPointer(var)) {
+        return isPointerToConst(var);
+    }
 
-  auto type = var->getType();
-  // Should be constant qualified
-  if (!(type.isLocalConstQualified() || type.isConstant(var->getASTContext()))) {
-    llvm::outs() << var->getDeclName().getAsString() << " is not constant\n";
-    return false;
-  }
+    auto type = var->getType();
+    // Should be constant qualified
+    if (!(type.isLocalConstQualified() || type.isConstant(var->getASTContext()))) {
+        llvm::outs() << var->getDeclName().getAsString() << " is not constant\n";
+        return false;
+    }
 
-  return true;
+    return true;
 }
 
 std::string getNewDeclStrConstantArray(const VarDecl* var, const std::string &qualifier) {
   auto* arrDecl = dyn_cast<ConstantArrayType>(var->getType().getTypePtr());
-
   auto unqualifiedTypeStr = arrDecl->getElementType().getLocalUnqualifiedType().getAsString();
 
   auto type = arrDecl->getElementType();
@@ -70,11 +72,11 @@ std::string getNewDeclStrConstantArray(const VarDecl* var, const std::string &qu
 std::string getNewDeclStrVariable(const VarDecl* var, const std::string &qualifier) {
   auto unqualifiedTypeStr = var->getType().getLocalUnqualifiedType().getAsString();
 
-  auto type = var->getType();
-  type.removeLocalConst();
-  auto qualifiers = type.getQualifiers();
+    auto type = var->getType();
+    type.removeLocalConst();
+    auto qualifiers = type.getQualifiers();
 
-  auto VarName = var->getDeclName().getAsString();  // Name of variable
+    auto VarName = var->getDeclName().getAsString();  // Name of variable
 
   std::string newDeclStr;
   if (qualifiers.hasQualifiers()) {
@@ -90,11 +92,11 @@ std::string getNewDeclStrVariable(const VarDecl* var, const std::string &qualifi
 std::string getNewDeclStrPointerToConst(const VarDecl* var, const std::string &qualifier) {
   auto type = var->getType();
 
-  auto unqualifiedPointeeType = type->getPointeeType();
-  unqualifiedPointeeType.removeLocalConst();
-  auto unqualifiedPointeeTypeStr = unqualifiedPointeeType.getAsString();
+    auto unqualifiedPointeeType = type->getPointeeType();
+    unqualifiedPointeeType.removeLocalConst();
+    auto unqualifiedPointeeTypeStr = unqualifiedPointeeType.getAsString();
 
-  auto varName = var->getDeclName().getAsString();
+    auto varName = var->getDeclName().getAsString();
 
   std::string newDeclStr;
   if (type.hasQualifiers()) {

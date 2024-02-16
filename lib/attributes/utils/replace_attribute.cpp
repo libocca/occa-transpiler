@@ -67,4 +67,9 @@ bool handleGlobalFunction(const clang::Decl* decl, SessionStage& s, const std::s
   return true;
 }
 
+bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s)
+{
+  return true;
+}
+
 }

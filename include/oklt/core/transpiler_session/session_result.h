@@ -8,6 +8,6 @@ struct Error;
 using TranspilerSessionResult = tl::expected<SharedTranspilerSession, std::vector<Error>>;
 
 inline UserResult toUserResult(SharedTranspilerSession session) {
-  return std::move(session->output);
+    return std::move(session->output);
 }
 }  // namespace oklt
