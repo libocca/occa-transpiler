@@ -55,7 +55,7 @@ std::string_view trim(std::string_view &str) {
 
 std::string_view unParen(std::string_view& str) {
     if (!str.empty() && str.front() == '(' && str.back() == ')') {
-        return str.substr(1, str.size() - 1);
+        return str.substr(1, str.size() - 2);
     }
     return str;
 }
