@@ -7,22 +7,15 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-//bool parseSharedAttribute(const Attr* a, SessionStage&) {
-//#ifdef TRANSPILER_DEBUG_LOG
-//  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
-//#endif
-//  return true;
-//}
-
 bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif
-  auto& rewriter = s.getRewriter();
-  removeAttribute(a, s);
+    auto& rewriter = s.getRewriter();
+    removeAttribute(a, s);
 
-  std::string sharedText = "__shared__ ";
-  return rewriter.InsertText(d->getBeginLoc(), sharedText, false, false);
+    std::string sharedText = "__shared__ ";
+    return rewriter.InsertText(d->getBeginLoc(), sharedText, false, false);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

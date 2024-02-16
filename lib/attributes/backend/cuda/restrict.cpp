@@ -7,36 +7,36 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-//bool parseRestrictAttribute(const clang::Attr* a, SessionStage&) {
-//#ifdef TRANSPILER_DEBUG_LOG
-//  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
-//#endif
-//  return true;
-//}
+// bool parseRestrictAttribute(const clang::Attr* a, SessionStage&) {
+// #ifdef TRANSPILER_DEBUG_LOG
+//   llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+// #endif
+//   return true;
+// }
 
 bool handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif
-  auto& rewriter = s.getRewriter();
+    auto& rewriter = s.getRewriter();
 
-  if (!isa<VarDecl>(d)) {
-    return false;
-  }
+    if (!isa<VarDecl>(d)) {
+        return false;
+    }
 
-  auto varDecl = cast<VarDecl>(d);
-  SourceLocation identifierLoc = varDecl->getLocation();
-  removeAttribute(a, s);
-  std::string restrictText = " __restrict__ ";
-  return rewriter.InsertText(identifierLoc, restrictText, false, false);
+    auto varDecl = cast<VarDecl>(d);
+    SourceLocation identifierLoc = varDecl->getLocation();
+    removeAttribute(a, s);
+    std::string restrictText = " __restrict__ ";
+    return rewriter.InsertText(identifierLoc, restrictText, false, false);
 }
 
 __attribute__((constructor)) void registerRestrictHandler() {
-  auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-    {TargetBackend::CUDA, RESTRICT_ATTR_NAME}, AttrDeclHandler {handleRestrictAttribute});
+    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::CUDA, RESTRICT_ATTR_NAME}, AttrDeclHandler{handleRestrictAttribute});
 
-  if (!ok) {
-    llvm::errs() << "failed to register " << RESTRICT_ATTR_NAME << " attribute handler\n";
-  }
+    if (!ok) {
+        llvm::errs() << "failed to register " << RESTRICT_ATTR_NAME << " attribute handler\n";
+    }
 }
 }  // namespace

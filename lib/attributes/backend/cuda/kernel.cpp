@@ -6,9 +6,9 @@ using namespace oklt;
 
 bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif
-  return true;
+    return true;
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

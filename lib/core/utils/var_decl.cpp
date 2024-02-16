@@ -1,8 +1,7 @@
-#include <oklt/core/utils/var_decl.h>
 #include <clang/AST/AST.h>
+#include <oklt/core/utils/var_decl.h>
 // #include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-
 
 namespace oklt {
 using namespace clang;
@@ -28,10 +27,10 @@ bool isConstPointerToConst(const VarDecl* var) {
 }
 
 bool isGlobalConstVariable(const VarDecl* var) {
-  // Should be global variable
-  if (var->isLocalVarDecl() && !var->hasGlobalStorage()) {
-    return false;
-  }
+    // Should be global variable
+    if (var->isLocalVarDecl() && !var->hasGlobalStorage()) {
+        return false;
+    }
 
     // pointer to const
     if (isPointer(var)) {
@@ -48,29 +47,29 @@ bool isGlobalConstVariable(const VarDecl* var) {
     return true;
 }
 
-std::string getNewDeclStrConstantArray(const VarDecl* var, const std::string &qualifier) {
-  auto* arrDecl = dyn_cast<ConstantArrayType>(var->getType().getTypePtr());
-  auto unqualifiedTypeStr = arrDecl->getElementType().getLocalUnqualifiedType().getAsString();
+std::string getNewDeclStrConstantArray(const VarDecl* var, const std::string& qualifier) {
+    auto* arrDecl = dyn_cast<ConstantArrayType>(var->getType().getTypePtr());
+    auto unqualifiedTypeStr = arrDecl->getElementType().getLocalUnqualifiedType().getAsString();
 
-  auto type = arrDecl->getElementType();
-  type.removeLocalConst();
-  auto qualifiers = type.getQualifiers();
+    auto type = arrDecl->getElementType();
+    type.removeLocalConst();
+    auto qualifiers = type.getQualifiers();
 
-  auto varName = var->getDeclName().getAsString();  // Name of variable
+    auto varName = var->getDeclName().getAsString();  // Name of variable
 
-  std::string newDeclStr;
-  if (qualifiers.hasQualifiers()) {
-    auto noConstQualifiersStr = qualifiers.getAsString();
-    newDeclStr =
-      noConstQualifiersStr + " " + qualifier + " " + unqualifiedTypeStr + " " + varName;
-  } else {
-    newDeclStr = qualifier + " " + unqualifiedTypeStr + " " + varName;
-  }
-  return newDeclStr;
+    std::string newDeclStr;
+    if (qualifiers.hasQualifiers()) {
+        auto noConstQualifiersStr = qualifiers.getAsString();
+        newDeclStr =
+            noConstQualifiersStr + " " + qualifier + " " + unqualifiedTypeStr + " " + varName;
+    } else {
+        newDeclStr = qualifier + " " + unqualifiedTypeStr + " " + varName;
+    }
+    return newDeclStr;
 }
 
-std::string getNewDeclStrVariable(const VarDecl* var, const std::string &qualifier) {
-  auto unqualifiedTypeStr = var->getType().getLocalUnqualifiedType().getAsString();
+std::string getNewDeclStrVariable(const VarDecl* var, const std::string& qualifier) {
+    auto unqualifiedTypeStr = var->getType().getLocalUnqualifiedType().getAsString();
 
     auto type = var->getType();
     type.removeLocalConst();
@@ -78,19 +77,19 @@ std::string getNewDeclStrVariable(const VarDecl* var, const std::string &qualifi
 
     auto VarName = var->getDeclName().getAsString();  // Name of variable
 
-  std::string newDeclStr;
-  if (qualifiers.hasQualifiers()) {
-    auto noConstQualifiersStr = qualifiers.getAsString();
-    newDeclStr =
-      noConstQualifiersStr + " " + qualifier + " " + unqualifiedTypeStr + " " + VarName;
-  } else {
-    newDeclStr = qualifier + " " + unqualifiedTypeStr + " " + VarName;
-  }
-  return newDeclStr;
+    std::string newDeclStr;
+    if (qualifiers.hasQualifiers()) {
+        auto noConstQualifiersStr = qualifiers.getAsString();
+        newDeclStr =
+            noConstQualifiersStr + " " + qualifier + " " + unqualifiedTypeStr + " " + VarName;
+    } else {
+        newDeclStr = qualifier + " " + unqualifiedTypeStr + " " + VarName;
+    }
+    return newDeclStr;
 }
 
-std::string getNewDeclStrPointerToConst(const VarDecl* var, const std::string &qualifier) {
-  auto type = var->getType();
+std::string getNewDeclStrPointerToConst(const VarDecl* var, const std::string& qualifier) {
+    auto type = var->getType();
 
     auto unqualifiedPointeeType = type->getPointeeType();
     unqualifiedPointeeType.removeLocalConst();
@@ -98,14 +97,14 @@ std::string getNewDeclStrPointerToConst(const VarDecl* var, const std::string &q
 
     auto varName = var->getDeclName().getAsString();
 
-  std::string newDeclStr;
-  if (type.hasQualifiers()) {
-    auto qualifiersStr = type.getQualifiers().getAsString();
-    newDeclStr =
-      qualifier + " " + unqualifiedPointeeTypeStr + " * " + qualifiersStr + " " + varName;
-  } else {
-    newDeclStr = qualifier + " " + unqualifiedPointeeTypeStr + " * " + varName;
-  }
-  return newDeclStr;
+    std::string newDeclStr;
+    if (type.hasQualifiers()) {
+        auto qualifiersStr = type.getQualifiers().getAsString();
+        newDeclStr =
+            qualifier + " " + unqualifiedPointeeTypeStr + " * " + qualifiersStr + " " + varName;
+    } else {
+        newDeclStr = qualifier + " " + unqualifiedPointeeTypeStr + " * " + varName;
+    }
+    return newDeclStr;
 }
-}
+}  // namespace oklt

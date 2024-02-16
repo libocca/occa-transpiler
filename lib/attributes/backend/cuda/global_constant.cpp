@@ -1,5 +1,5 @@
-#include "attributes/utils/replace_attribute.h"
 #include <oklt/core/attribute_manager/attribute_manager.h>
+#include "attributes/utils/replace_attribute.h"
 
 namespace {
 using namespace oklt;
@@ -11,8 +11,7 @@ bool handleGlobalConstant(const clang::Decl* decl, oklt::SessionStage& s) {
 
 __attribute__((constructor)) void registeGlobalConstantHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::Var},
-        DeclHandler{handleGlobalConstant});
+        {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";
