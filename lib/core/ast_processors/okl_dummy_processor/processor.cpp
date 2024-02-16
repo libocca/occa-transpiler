@@ -98,14 +98,12 @@ bool runPostActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& 
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
     return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& stage) {
     auto* expr = dyn_cast_or_null<RecoveryExpr>(expr_);
 
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
     auto subExpr = expr->subExpressions();
     if (subExpr.empty()) {
         return true;

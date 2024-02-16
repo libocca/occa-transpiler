@@ -5,5 +5,5 @@
             "source": "normalize/simple/atomic_diff_loc.cpp"
         },
         "reference": "normalize/simple/atomic_diff_loc_ref.cpp"
-     }
+    }
 ]

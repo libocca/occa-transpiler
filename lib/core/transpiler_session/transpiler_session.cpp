@@ -44,6 +44,10 @@ void TranspilerSession::pushError(std::error_code ec, std::string desc) {
     _errors.push_back(Error{ec, std::move(desc)});
 }
 
+void TranspilerSession::pushWarning(std::string desc) {
+    _warnings.push_back(Warning{std::move(desc)});
+}
+
 const std::vector<Error>& TranspilerSession::getErrors() const {
     return _errors;
 }

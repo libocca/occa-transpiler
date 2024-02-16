@@ -25,7 +25,7 @@ bool handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
     return true;
 }
 
-__attribute__((constructor)) void registerKernelHandler() {
+__attribute__((constructor)) void registerTranslationUnitHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
         DeclHandler{handleTranslationUnit});

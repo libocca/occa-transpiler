@@ -68,14 +68,20 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    # Backends common
+    attributes/utils/attribute_utils.cpp
+
     # CUDA & HIP common
     attributes/backend/common/cuda_subset/global_constant.cpp
     attributes/backend/common/cuda_subset/global_function.cpp
+    attributes/backend/common/cuda_subset/tile.cpp
 
     # HIP
     attributes/backend/hip/global_constant.cpp
     attributes/backend/hip/translation_unit.cpp
     attributes/backend/hip/global_function.cpp
+    attributes/backend/hip/tile.cpp
+    attributes/backend/hip/kernel.cpp
 
     # CUDA
     attributes/backend/cuda/kernel.cpp
