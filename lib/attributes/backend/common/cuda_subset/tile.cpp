@@ -161,7 +161,7 @@ std::string innerLoopIdxLineSecond(const ForLoop& forLoop,
     if (forLoop.inc.isUnary) {
         parts.push_back(threadIdx);
     } else {
-        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ")");
+        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ");");
     }
     auto res = util::join(parts.begin(), parts.end(), SPACE);
     return "{\n" + res + "\n";  // Open new scope
@@ -181,7 +181,7 @@ std::string innerLoopIdxLineFirst(const ForLoop& forLoop,
         "=",
         forLoop.init.initialValue,
         "+",
-        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ")",
+        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ");",
     };
     auto res = util::join(parts.begin(), parts.end(), SPACE);
     return "{\n" + res + "\n";  // Open new scope
@@ -201,7 +201,7 @@ std::string outerLoopIdxLineFirst(const ForLoop& forLoop,
         "=",
         forLoop.init.initialValue,
         "+",
-        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ")",
+        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ");",
     };
     auto res = util::join(parts.begin(), parts.end(), SPACE);
     return "{\n" + res + "\n";  // Open new scope
@@ -224,7 +224,7 @@ std::string outerLoopIdxLineSecond(const ForLoop& forLoop,
     if (forLoop.inc.isUnary) {
         parts.push_back(threadIdx);
     } else {
-        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ")");
+        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ");");
     }
     auto res = util::join(parts.begin(), parts.end(), SPACE);
     return "{\n" + res + "\n";  // Open new scope
