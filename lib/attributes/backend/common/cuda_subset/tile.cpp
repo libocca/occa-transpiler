@@ -1,10 +1,10 @@
 #include <clang/AST/Decl.h>
 #include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
+#include <oklt/attributes/frontend/parsers/tile.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
 #include <oklt/util/string_utils.h>
 #include <functional>
-#include <oklt/attributes/frontend/parsers/tile.h>
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -143,10 +143,11 @@ std::string scopeWrap(const std::string& content) {
     return "{\n" + content + "\n}";
 }
 
+// TODO: fix code dublication
 // Produces something like: int i = _occa_tiled_i + (inc * threadIdx.x);
-std::string innerLoopIdxLine(const ForLoop& forLoop,
-                             const Loop& innerLoop,
-                             const TileParams* params) {
+std::string innerLoopIdxLineSecond(const ForLoop& forLoop,
+                                   const Loop& innerLoop,
+                                   const TileParams* params) {
     static_cast<void>(params);
     std::vector<std::string> parts{
         forLoop.init.type,
@@ -166,10 +167,30 @@ std::string innerLoopIdxLine(const ForLoop& forLoop,
     return "{\n" + res + "\n";  // Open new scope
 }
 
+// Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * threadIdx.x);
+std::string innerLoopIdxLineFirst(const ForLoop& forLoop,
+                                  const Loop& outerLoop,
+                                  const TileParams* params) {
+    auto blockSize = std::to_string(params->tileSize);
+    auto innerLoopSize = forLoop.inc.rhsInc;
+    auto blockIdx = "threadIdx." + dimToStr(outerLoop.dim);
+
+    std::vector<std::string> parts{
+        forLoop.init.type,
+        getTiledVariableName(forLoop),
+        "=",
+        forLoop.init.initialValue,
+        "+",
+        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ")",
+    };
+    auto res = util::join(parts.begin(), parts.end(), SPACE);
+    return "{\n" + res + "\n";  // Open new scope
+}
+
 // Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * blockIdx.x);
-std::string outerLoopIdxLine(const ForLoop& forLoop,
-                             const Loop& outerLoop,
-                             const TileParams* params) {
+std::string outerLoopIdxLineFirst(const ForLoop& forLoop,
+                                  const Loop& outerLoop,
+                                  const TileParams* params) {
     auto blockSize = std::to_string(params->tileSize);
     auto innerLoopSize = forLoop.inc.rhsInc;
     auto blockIdx = "blockIdx." + dimToStr(outerLoop.dim);
@@ -186,10 +207,58 @@ std::string outerLoopIdxLine(const ForLoop& forLoop,
     return "{\n" + res + "\n";  // Open new scope
 }
 
+// Produces something like: int i = _occa_tiled_i + (inc * blockIdx.x);
+std::string outerLoopIdxLineSecond(const ForLoop& forLoop,
+                                   const Loop& innerLoop,
+                                   const TileParams* params) {
+    static_cast<void>(params);
+    std::vector<std::string> parts{
+        forLoop.init.type,
+        forLoop.init.name,
+        "=",
+        getTiledVariableName(forLoop),
+        "+",
+    };
+
+    std::string threadIdx = "blockIdx." + dimToStr(innerLoop.dim);
+    if (forLoop.inc.isUnary) {
+        parts.push_back(threadIdx);
+    } else {
+        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ")");
+    }
+    auto res = util::join(parts.begin(), parts.end(), SPACE);
+    return "{\n" + res + "\n";  // Open new scope
+}
+
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
-std::string regularLoopIdxLine(const ForLoop& forLoop,
-                               const Loop& regularLoop,
-                               const TileParams* params) {
+std::string regularLoopIdxLineFirst(const ForLoop& forLoop,
+                                    const Loop& regularLoop,
+                                    const TileParams* params) {
+    auto tiledVar = getTiledVariableName(forLoop);
+    auto blockSize = std::to_string(params->tileSize);
+
+    std::vector<std::string> parts{
+        "for",
+        "(" + tiledVar,
+        forLoop.init.name,
+        "=",
+        forLoop.init.initialValue + ";",
+        tiledVar,
+        "<",  // TODO: parse cmp operator
+        forLoop.cond.rhsExpr + ";",
+        tiledVar,
+        "+=",  // TODO: Are other operators possible?
+        std::to_string(params->tileSize),
+    };
+
+    auto res = util::join(parts.begin(), parts.end(), SPACE);
+    return res + " {\n";  // Open new scope (Note: after line unlike @outer and @inner)
+}
+
+// Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
+std::string regularLoopIdxLineSecond(const ForLoop& forLoop,
+                                     const Loop& regularLoop,
+                                     const TileParams* params) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
 
@@ -211,15 +280,19 @@ std::string regularLoopIdxLine(const ForLoop& forLoop,
     return res + " {\n";  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
-std::string getLoopIdxLine(const ForLoop& forLoop, const Loop& loop, const TileParams* params) {
+std::string getLoopIdxLine(const ForLoop& forLoop, const TileParams* params, const LoopOrder& ord) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    std::map<LoopType, std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
+    std::map<std::tuple<LoopType, LoopOrder>, std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
         mapping{
-            {LoopType::Inner, innerLoopIdxLine},
-            {LoopType::Outer, outerLoopIdxLine},
-            {LoopType::Regular, regularLoopIdxLine},
+            {{LoopType::Inner, LoopOrder::First}, innerLoopIdxLineFirst},
+            {{LoopType::Outer, LoopOrder::First}, outerLoopIdxLineFirst},
+            {{LoopType::Regular, LoopOrder::First}, regularLoopIdxLineFirst},
+            {{LoopType::Inner, LoopOrder::Second}, innerLoopIdxLineSecond},
+            {{LoopType::Outer, LoopOrder::Second}, outerLoopIdxLineSecond},
+            {{LoopType::Regular, LoopOrder::Second}, regularLoopIdxLineSecond},
         };
-    return mapping[loop.type](forLoop, loop, params);
+    auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
+    return mapping[{loop.type, ord}](forLoop, loop, params);
 }
 
 std::string getCheckLine(const ForLoop& forLoop, const TileParams* tileParams) {
@@ -235,8 +308,8 @@ std::string getCheckLine(const ForLoop& forLoop, const TileParams* tileParams) {
 // TODO: add check handling
 std::string buildPreffixTiledCode(const ForLoop& forLoop, const TileParams* tileParams) {
     std::string res;
-    res += getLoopIdxLine(forLoop, tileParams->firstLoop, tileParams);
-    res += getLoopIdxLine(forLoop, tileParams->secondLoop, tileParams);
+    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::First);
+    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::Second);
     res += getCheckLine(forLoop, tileParams);
     return res;
 }

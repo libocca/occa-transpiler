@@ -2,6 +2,12 @@
 #include <oklt/core/transpiler_session/session_stage.h>
 
 namespace oklt {
+
+enum class LoopOrder {
+    First,
+    Second,
+};
+
 enum class LoopType {
     Regular,
     Inner,
