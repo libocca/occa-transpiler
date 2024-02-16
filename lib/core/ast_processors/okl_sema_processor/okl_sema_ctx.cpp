@@ -61,7 +61,7 @@ bool OklSemaCtx::isKernelParmVar(const ParmVarDecl* parm) const {
     return parm->getParentFunctionOrMethod() == _parsingKernInfo->kernFuncDecl;
 }
 
-tl::expected<bool, Error> OklSemaCtx::validateForSeries(const clang::ForStmt* forStmt,
+tl::expected<bool, Error> OklSemaCtx::validateForLoops(const clang::ForStmt* forStmt,
                                                         const clang::Attr* attr) {
     if (!_parsingKernInfo->loopStack.empty()) {
         const auto& parentLoop = _parsingKernInfo->loopAttrStack.top();

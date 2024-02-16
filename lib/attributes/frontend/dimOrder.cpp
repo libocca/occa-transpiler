@@ -108,7 +108,6 @@ struct DimOrderAttribute : public ParsedAttrInfo {
 };
 
 bool parseDimOrderAttrParams(const clang::Attr* a, SessionStage&) {
-    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 

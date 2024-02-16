@@ -45,7 +45,6 @@ struct BarrierAttribute : public ParsedAttrInfo {
 };
 
 bool parseBarrierAttrParams(const clang::Attr* a, SessionStage&) {
-    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 

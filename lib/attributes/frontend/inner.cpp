@@ -46,7 +46,6 @@ struct InnerAttribute : public ParsedAttrInfo {
 };
 
 bool parseInnerAttrParams(const clang::Attr* a, SessionStage&) {
-    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 

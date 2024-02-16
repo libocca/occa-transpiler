@@ -4,7 +4,7 @@
 
 namespace {
 using namespace oklt;
-__attribute__((constructor)) void registerBackendHandler() {
+__attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, TILE_ATTR_NAME}, AttrStmtHandler(cuda_subset::handleTileAttribute));
 

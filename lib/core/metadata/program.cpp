@@ -1,5 +1,7 @@
 #include <oklt/core/metadata/program.h>
 
+#include <clang/AST/ParentMapContext.h>
+
 namespace oklt {
 using json = nlohmann::json;
 

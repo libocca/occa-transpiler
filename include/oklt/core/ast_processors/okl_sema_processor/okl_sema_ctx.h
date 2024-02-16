@@ -37,7 +37,7 @@ struct OklSemaCtx {
     [[nodiscard]] bool isParsingOklKernel() const;
     [[nodiscard]] bool isKernelParmVar(const clang::ParmVarDecl*) const;
 
-    [[nodiscard]] tl::expected<bool, Error> validateForSeries(const clang::ForStmt*,
+    [[nodiscard]] tl::expected<bool, Error> validateForLoops(const clang::ForStmt*,
                                                               const clang::Attr*);
 
     void setKernelArgInfo(const clang::ParmVarDecl* parm);

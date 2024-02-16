@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <list>
 
 namespace clang {
 struct FunctionDecl;
@@ -38,44 +39,45 @@ struct ArgumentInfo {
 };
 
 struct LoopMetadata {
-    std::string type;
-    std::string name;
-    struct {
-        std::string start;
-        std::string end;
-        size_t size = 0;
-    } range;
-    struct {
-        std::string cmp;
-        clang::BinaryOperator::Opcode op = clang::BO_EQ;
-    } condition;
-    struct {
-        std::string val;
-        union {
-            clang::UnaryOperator::Opcode uo;
-            clang::BinaryOperator::Opcode bo;
-        } op;
-    } inc;
-
-    [[nodiscard]] bool IsInc() const {
-        bool ret = false;
-        if (inc.val.empty()) {
-            ret = (inc.op.uo == clang::UO_PreInc || inc.op.uo == clang::UO_PostInc);
-        } else {
-            ret = (inc.op.bo == clang::BO_AddAssign);
-        }
-        ret = (ret && (condition.op == clang::BO_LE || condition.op == clang::BO_LT));
-
-        return ret;
-    };
-    [[nodiscard]] std::string getRangeSizeStr() const {
-        if (IsInc()) {
-            return range.end + " - " + range.start;
-        } else {
-            return range.start + " - " + range.end;
-        };
-    };
+//    std::string type;
+//    std::string name;
+//    struct {
+//        std::string start;
+//        std::string end;
+//        size_t size = 0;
+//    } range;
+//    struct {
+//        std::string cmp;
+//        clang::BinaryOperator::Opcode op = clang::BO_EQ;
+//    } condition;
+//    struct {
+//        std::string val;
+//        union {
+//            clang::UnaryOperator::Opcode uo;
+//            clang::BinaryOperator::Opcode bo;
+//        } op;
+//    } inc;
+//
+//    [[nodiscard]] bool IsInc() const {
+//        bool ret = false;
+//        if (inc.val.empty()) {
+//            ret = (inc.op.uo == clang::UO_PreInc || inc.op.uo == clang::UO_PostInc);
+//        } else {
+//            ret = (inc.op.bo == clang::BO_AddAssign);
+//        }
+//        ret = (ret && (condition.op == clang::BO_LE || condition.op == clang::BO_LT));
+//
+//        return ret;
+//    };
+//    [[nodiscard]] std::string getRangeSizeStr() const {
+//        if (IsInc()) {
+//            return range.end + " - " + range.start;
+//        } else {
+//            return range.start + " - " + range.end;
+//        };
+//    };
 };
+
 struct KernelInstance {
     // INFO: for launcher template generation only
     int dimOuter = 0;

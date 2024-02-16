@@ -1,4 +1,6 @@
 [
     "simple_normalize.json",
-    "atomic_test_case.json"
+    "atomic_test_case.json",
+    "tile_paren_test_case.json",
+    "attr_inside_for_test_case.json"
 ]

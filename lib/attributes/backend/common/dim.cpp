@@ -14,7 +14,7 @@ bool handleDimStmtAttrbute(const clang::Attr* a, const clang::Stmt* stmt, Sessio
     return true;
 }
 
-__attribute__((constructor)) void registerKernelHandler() {
+__attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
         DIM_ATTR_NAME, AttrDeclHandler{handleDimDeclAttrbute});
     if (!ok) {
