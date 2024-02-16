@@ -9,4 +9,3 @@ struct ComplexValueFloat {
   @shared ComplexValueFloat arr1[32];
   @shared ComplexValueFloat arr2[8][32];
 }
-

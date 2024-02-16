@@ -7,12 +7,12 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool parseRestrictAttribute(const clang::Attr* a, SessionStage&) {
-#ifdef TRANSPILER_DEBUG_LOG
-  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
-#endif
-  return true;
-}
+//bool parseRestrictAttribute(const clang::Attr* a, SessionStage&) {
+//#ifdef TRANSPILER_DEBUG_LOG
+//  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+//#endif
+//  return true;
+//}
 
 bool handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
@@ -33,7 +33,7 @@ bool handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, Session
 
 __attribute__((constructor)) void registerRestrictHandler() {
   auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-    {TargetBackend::CUDA, RESTRICT_ATTR_NAME}, {parseRestrictAttribute, handleRestrictAttribute});
+    {TargetBackend::CUDA, RESTRICT_ATTR_NAME}, AttrDeclHandler {handleRestrictAttribute});
 
   if (!ok) {
     llvm::errs() << "failed to register " << RESTRICT_ATTR_NAME << " attribute handler\n";

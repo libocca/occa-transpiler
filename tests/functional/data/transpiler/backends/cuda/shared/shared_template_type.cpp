@@ -10,4 +10,3 @@ struct ComplexType {
   @shared ComplexType<int> arr1[32];
   @shared ComplexType<float> arr2[8][32];
 }
-

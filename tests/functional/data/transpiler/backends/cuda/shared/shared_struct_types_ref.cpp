@@ -9,4 +9,3 @@ struct ComplexValueFloat {
   __shared__ ComplexValueFloat arr1[32];
   __shared__ ComplexValueFloat arr2[8][32];
 }
-

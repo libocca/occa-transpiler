@@ -5,4 +5,3 @@
   @shared float arr2[8][32];
   @shared double arr3[4+4];
 }
-

@@ -4,4 +4,3 @@
                        float* __restrict__ fp32Data,
                        const double* __restrict__ fp64Data)
 {}
-

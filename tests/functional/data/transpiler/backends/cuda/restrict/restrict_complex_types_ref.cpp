@@ -16,4 +16,3 @@ struct Configs {
                        const Complex<float> ** __restrict__ matricesData,
                        const Configs * __restrict__ matricesSizes)
 {}
-

@@ -44,10 +44,6 @@ bool applyBackendHandlers(const Decl* decl, SessionStage& stage) {
 
 namespace oklt {
 bool prepareOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << fd->getName() << '\n';
-#endif
-
     // we intersting only in okl kernel function
     if (!isOklKernel(fd, stage)) {
         return true;
@@ -68,10 +64,6 @@ bool prepareOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
 }
 
 bool transpileOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << fd->getName() << '\n';
-#endif
-
     // validation is done on preAction so braverely get the first attribute and run traclpile handle
     auto cont = applyBackendHandlers(fd, stage);
     if (!cont) {

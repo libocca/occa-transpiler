@@ -4,4 +4,3 @@
                        float *fp32Data @restrict,
                        const double *fp64Data @restrict)
 {}
-

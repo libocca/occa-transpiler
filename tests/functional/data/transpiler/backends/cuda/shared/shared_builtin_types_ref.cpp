@@ -5,4 +5,3 @@
   __shared__ float arr2[8][32];
   __shared__ double arr3[4+4];
 }
-

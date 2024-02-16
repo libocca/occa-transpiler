@@ -7,12 +7,12 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool parseSharedAttribute(const Attr* a, SessionStage&) {
-#ifdef TRANSPILER_DEBUG_LOG
-  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
-#endif
-  return true;
-}
+//bool parseSharedAttribute(const Attr* a, SessionStage&) {
+//#ifdef TRANSPILER_DEBUG_LOG
+//  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
+//#endif
+//  return true;
+//}
 
 bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
@@ -25,9 +25,9 @@ bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
   return rewriter.InsertText(d->getBeginLoc(), sharedText, false, false);
 }
 
-__attribute__((constructor)) void registerSharedHandler() {
+__attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, SHARED_ATTR_NAME}, {parseSharedAttribute, handleSharedAttribute});
+        {TargetBackend::CUDA, SHARED_ATTR_NAME}, AttrDeclHandler{handleSharedAttribute});
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME << " attribute handler\n";
