@@ -261,7 +261,7 @@ class LauncherKernelGenerator {
       auto s = getIdent(i);
       out << s << "occa::dim outer, inner;\n";
       out << s << "outer.dims = " << instance.outer.size() << ";\n";
-      out << s << "inner.dims = " << instance.outer.size() << ";\n";
+      out << s << "inner.dims = " << instance.inner.size() << ";\n";
 
       auto format_loop = [&out, &s](const LoopMetadata& loop, size_t n, bool isOuter) -> void {
         out << s << loop.type << " " << loop.name << " = " << noParen(loop.range.start) << ";\n";
