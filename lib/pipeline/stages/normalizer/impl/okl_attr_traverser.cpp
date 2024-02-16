@@ -21,6 +21,7 @@ struct OklAttributePrarserFsm {
     OklAttribute attr;
     const std::vector<Token>* tokens{nullptr};
     Preprocessor& pp;
+    uint32_t parenDepth{0};
 };
 
 OklAttributePrarserFsm makeOklAttrParserFsm(Preprocessor& pp, const std::vector<Token>& tokens) {
@@ -79,6 +80,7 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
             if (token.is(tok::l_paren)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += fsm.pp.getSpelling(token);
+                fsm.parenDepth += 1u;
 
                 fsm.state = OklAttributeParserState::ParseAttrParamList;
             } else {
@@ -89,8 +91,11 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
             if (token.is(tok::r_paren)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += fsm.pp.getSpelling(token);
+                fsm.parenDepth -= 1u;
 
-                return FsmStepStatus::OklAttrParsed;
+                if (!fsm.parenDepth) {
+                    return FsmStepStatus::OklAttrParsed;
+                }
             }
             if (token.isOneOf(tok::at,
                               tok::equal,
