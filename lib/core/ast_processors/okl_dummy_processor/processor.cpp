@@ -10,13 +10,22 @@ using namespace clang;
 using namespace oklt;
 
 bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+    auto& am = stage.getAttrManager();
+    if (!decl->hasAttrs()) {
+        return true;
+    }
+
+    for (const auto& attr : decl->getAttrs()) {
+        auto cont = am.parseAttr(attr, stage);
+        if (!cont) {
+            return cont;
+        }
+    }
+
     return true;
 }
 
 bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
-
     auto& am = stage.getAttrManager();
     if (!decl->hasAttrs()) {
         auto cont = am.handleDecl(decl, stage);
@@ -44,24 +53,28 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
     return true;
 }
 
 bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+    return true;
+}
 
+bool runPreActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& stage) {
     auto& am = stage.getAttrManager();
-    if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
-        auto cont = am.handleStmt(stmt, stage);
+    for (const auto& attr : attrStmt->getAttrs()) {
+        auto cont = am.parseAttr(attr, stage);
         if (!cont) {
             return cont;
         }
-        return true;
     }
 
-    auto* attrStmt = cast<AttributedStmt>(stmt);
-    auto expectedAttr = am.checkAttrs(attrStmt->getAttrs(), stmt, stage);
+    return true;
+}
+
+bool runPostActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& stage) {
+    auto& am = stage.getAttrManager();
+    auto expectedAttr = am.checkAttrs(attrStmt->getAttrs(), attrStmt, stage);
     if (!expectedAttr) {
         // TODO report diagnostic error using clang tooling
         //  auto &errorReporter = _session.getErrorReporter();
@@ -85,14 +98,12 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
     return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& stage) {
     auto* expr = dyn_cast_or_null<RecoveryExpr>(expr_);
 
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
     auto subExpr = expr->subExpressions();
     if (subExpr.empty()) {
         return true;
@@ -131,6 +142,11 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
     ok = mng.registerGenericHandle(
         AstProcessorType::OKL_NO_SEMA,
         StmtHandle{.preAction = runPreActionStmt, .postAction = runPostActionStmt});
+    assert(ok);
+
+    ok = mng.registerSpecificNodeHandle(
+        {AstProcessorType::OKL_NO_SEMA, Stmt::AttributedStmtClass},
+        makeSpecificStmtHandle(runPreActionAttrStmt, runPostActionAttrStmt));
     assert(ok);
 
     ok = mng.registerSpecificNodeHandle(

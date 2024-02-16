@@ -9,19 +9,17 @@ class SessionStage;
 
 class AttrDeclHandler {
    public:
-    using ParamsParserType = std::function<bool(const clang::Attr*, SessionStage&)>;
     using HandleType = std::function<bool(const clang::Attr*, const clang::Decl*, SessionStage&)>;
 
-    AttrDeclHandler(ParamsParserType pp, HandleType h);
+    explicit AttrDeclHandler(HandleType h)
+        : _handler(std::move(h)) {}
+
+    AttrDeclHandler(AttrDeclHandler&&) = default;
     ~AttrDeclHandler() = default;
 
     bool handle(const clang::Attr* attr, const clang::Decl*, SessionStage& stage);
 
-   protected:
-    bool parseParams(const clang::Attr*, SessionStage& stage);
-
    private:
-    ParamsParserType _paramsParser;
     HandleType _handler;
 };
 }  // namespace oklt

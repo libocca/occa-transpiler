@@ -1,3 +1,5 @@
+#include <oklt/core/attribute_manager/attribute_manager.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -40,5 +42,12 @@ struct RestrictAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<RestrictAttribute> register_okl_resitrct(RESTRICT_ATTR_NAME, "");
+bool parseRestrictAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
+
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<RestrictAttribute>(RESTRICT_ATTR_NAME,
+                                                                         parseRestrictAttrParams);
+}
 }  // namespace

@@ -1,3 +1,5 @@
+#include <oklt/core/attribute_manager/attribute_manager.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -51,5 +53,12 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<SharedAttribute> register_okl_shared(SHARED_ATTR_NAME, "");
+bool parseSharedAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
+
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME,
+                                                                       parseSharedAttrParams);
+}
 }  // namespace
