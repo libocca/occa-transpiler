@@ -70,7 +70,6 @@ set (OCCA_TRANSPILER_SOURCES
 
     # Backends common
     attributes/utils/attribute_utils.cpp
-    attributes/frontend/parsers/tile.cpp
 
     # CUDA & HIP common
     attributes/backend/common/cuda_subset/global_constant.cpp

@@ -1,3 +1,5 @@
+#include <oklt/core/attribute_manager/attribute_manager.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -34,5 +36,12 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<ExclusiveAttribute> register_okl_exclusive(EXCLUSIVE_ATTR_NAME, "");
+bool parseExclusiveAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
+
+__attribute__((constructor)) void registerKernelHandler() {
+    AttributeManager::instance().registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME,
+                                                                          parseExclusiveAttrParams);
+}
 }  // namespace
