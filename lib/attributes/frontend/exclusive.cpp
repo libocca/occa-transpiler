@@ -37,7 +37,6 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
 };
 
 bool parseExclusiveAttrParams(const clang::Attr* a, SessionStage&) {
-    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oklt/core/ast_processor_manager/ast_processor_types.h>
+#include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
 #include <clang/Frontend/CompilerInstance.h>
@@ -29,22 +30,21 @@ class SessionStage {
 
     [[nodiscard]] TargetBackend getBackend() const;
     [[nodiscard]] AstProcessorType getAstProccesorType() const;
-
     static AttributeManager& getAttrManager();
 
     void pushDiagnosticMessage(clang::StoredDiagnostic& message);
     void pushError(std::error_code ec, std::string desc);
+    void pushError(const Error& err);
+    void pushWarning(std::string desc);
 
     inline bool hasUserCtx(const std::string& key) {
         auto it = _userCtxMap.find(key);
         return (it != _userCtxMap.end());
     };
-
     inline bool setUserCtx(const std::string& key, const std::any& ctx) {
         auto [_, ret] = _userCtxMap.try_emplace(key, ctx);
         return ret;
     }
-
     inline std::any* getUserCtx(const std::string& key) {
         auto it = _userCtxMap.find(key);
         if (it == _userCtxMap.end())

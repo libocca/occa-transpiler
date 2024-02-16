@@ -1,5 +1,5 @@
+#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-#include "cuda_subset.h"
 
 namespace {
 using namespace oklt;
@@ -119,7 +119,7 @@ std::string getNewDeclStrPointerToConst(const VarDecl* var) {
 }
 }  // namespace
 
-namespace oklt::cuda_like {
+namespace oklt::cuda_subset {
 bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s) {
     if (!isGlobalConstVariable(decl)) {
         return true;
@@ -131,8 +131,8 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s) {
     auto type_str = var->getType().getAsString();
     auto declname = var->getDeclName().getAsString();
 
-    llvm::outs() << "[DEBUG] Found constant global variable declaration:" << " type: " << type_str
-                 << ", name: " << declname << "\n";
+    llvm::outs() << "[DEBUG] Found constant global variable declaration:"
+                 << " type: " << type_str << ", name: " << declname << "\n";
 #endif
 
     std::string newDeclStr;
@@ -140,6 +140,7 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s) {
         newDeclStr = getNewDeclStrConstantArray(var);
     } else if (isPointerToConst(var)) {
         newDeclStr = getNewDeclStrPointerToConst(var);
+        s.pushWarning("__constant__ applied to pointer type");
     } else {
         newDeclStr = getNewDeclStrVariable(var);
     }
@@ -156,4 +157,4 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s) {
 
     return true;
 }
-}  // namespace oklt::cuda_like
+}  // namespace oklt::cuda_subset

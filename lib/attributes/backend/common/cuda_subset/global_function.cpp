@@ -1,9 +1,9 @@
 #include <clang/AST/Decl.h>
+#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
 #include <oklt/core/attribute_manager/attribute_manager.h>
 #include <oklt/core/transpiler_session/session_stage.h>
-#include "cuda_subset.h"
 
-namespace oklt::cuda_like {
+namespace oklt::cuda_subset {
 using namespace oklt;
 using namespace clang;
 
@@ -25,12 +25,4 @@ bool handleGlobalFunction(const clang::Decl* decl, SessionStage& s) {
     return true;
 }
 
-__attribute__((constructor)) void registerKernelHandler() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::Function}, DeclHandler{handleGlobalFunction});
-
-    if (!ok) {
-        llvm::errs() << "failed to register implicit handler for global constant\n";
-    }
-}
-}  // namespace oklt::cuda_like
+}  // namespace oklt::cuda_subset

@@ -46,7 +46,6 @@ struct OuterAttribute : public ParsedAttrInfo {
 };
 
 bool parseOuterAttrParams(const clang::Attr* a, SessionStage&) {
-    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 __attribute__((constructor)) void registerAttrFrontend() {

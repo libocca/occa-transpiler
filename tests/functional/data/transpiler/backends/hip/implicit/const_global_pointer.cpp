@@ -8,6 +8,3 @@ int const* const ptr_const3 = 0;
 
 // const pointer to non const
 int* const ptr_const4 = 0;
-
-// Stupid formatting
-const int* ptr_const5 = 0;

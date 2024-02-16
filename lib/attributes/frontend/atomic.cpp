@@ -44,7 +44,6 @@ struct AtomicAttribute : public ParsedAttrInfo {
 };
 
 bool parseAtomicAttrParams(const Attr* a, SessionStage& ) {
-    llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 
