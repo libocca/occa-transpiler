@@ -3,12 +3,16 @@
 #include <oklt/core/metadata/program.h>
 
 #include <clang/AST/AST.h>
+
 #include <optional>
 #include <stack>
+
+#include <tl/expected.hpp>
 
 namespace oklt {
 
 struct KernelInfo;
+struct Error;
 
 struct OklSemaCtx {
     struct ParsingKernelInfo {
@@ -19,7 +23,8 @@ struct OklSemaCtx {
 
         const clang::FunctionDecl* kernFuncDecl;
         std::stack<const clang::CompoundStmt*> compoundStack;
-        std::stack<const clang::ForStmt*> forStack;
+        std::stack<const clang::ForStmt*> loopStack;
+        std::stack<std::string_view> loopAttrStack;
     };
 
     OklSemaCtx() = default;
@@ -31,6 +36,9 @@ struct OklSemaCtx {
 
     [[nodiscard]] bool isParsingOklKernel() const;
     [[nodiscard]] bool isKernelParmVar(const clang::ParmVarDecl*) const;
+
+    [[nodiscard]] tl::expected<bool, Error> validateForSeries(const clang::ForStmt*,
+                                                              const clang::Attr*);
 
     void setKernelArgInfo(const clang::ParmVarDecl* parm);
     void setKernelArgRawString(const clang::ParmVarDecl* parm,

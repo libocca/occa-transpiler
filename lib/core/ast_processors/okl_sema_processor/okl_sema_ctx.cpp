@@ -1,6 +1,9 @@
 #include <oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h>
+#include <oklt/core/error.h>
 #include <oklt/core/metadata/program.h>
 #include <oklt/core/utils/type_converter.h>
+
+#include <clang/AST/Attr.h>
 
 namespace {
 using namespace clang;
@@ -13,6 +16,14 @@ DatatypeCategory toDatatypeCategory(const QualType& qt) {
     return DatatypeCategory::CUSTOM;
 }
 
+bool hasParentLoopConflictWithChild(std::string_view parentAttr, std::string_view childAttr) {
+    static std::map<std::string_view, uint32_t> loopScore = {{"okl::outer", 1}, {"okl::inner", 0}};
+    if (loopScore[parentAttr] < loopScore[childAttr]) {
+        return true;
+    }
+
+    return false;
+}
 }  // namespace
 namespace oklt {
 OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionDecl* fd) {
@@ -48,6 +59,21 @@ bool OklSemaCtx::isKernelParmVar(const ParmVarDecl* parm) const {
     }
 
     return parm->getParentFunctionOrMethod() == _parsingKernInfo->kernFuncDecl;
+}
+
+tl::expected<bool, Error> OklSemaCtx::validateForSeries(const clang::ForStmt* forStmt,
+                                                        const clang::Attr* attr) {
+    if (!_parsingKernInfo->loopStack.empty()) {
+        const auto& parentLoop = _parsingKernInfo->loopAttrStack.top();
+        if (hasParentLoopConflictWithChild(parentLoop, attr->getNormalizedFullName())) {
+            return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "outer after inner"});
+        }
+    }
+
+    _parsingKernInfo->loopStack.push(forStmt);
+    _parsingKernInfo->loopAttrStack.push(attr->getNormalizedFullName());
+
+    return true;
 }
 
 void OklSemaCtx::setKernelArgInfo(const ParmVarDecl* parm) {
