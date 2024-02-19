@@ -1,13 +1,15 @@
+#include <oklt/util/format.h>
+
 #include "clang/Format/Format.h"
-#include <vector>
 #include "clang/Tooling/Core/Replacement.h"
-#include "oklt/core/utils/format.h"
+
+#include <vector>
 
 using namespace clang;
 using namespace clang::tooling;
 
 namespace oklt {
-std::string format(llvm::StringRef code) {
+std::string format(std::string_view code) {
     const std::vector<Range> ranges(1, Range(0, code.size()));
     auto Style = format::getLLVMStyle();
 

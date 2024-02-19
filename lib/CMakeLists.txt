@@ -10,52 +10,18 @@ option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_manager.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_manager/ast_processor_types.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/ast_visitor.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_ast_consumer.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_traversal/transpile_frontend_action.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_handler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/diag/diag_consumer.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_decl_handler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attr_stmt_handler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attribute_manager.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/attributed_type_map.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/backend_attribute_map.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/common_attribute_map.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/implicit_handlers/implicit_handler_map.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/implicit_handlers/decl_handler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_manager/implicit_handlers/stmt_handler.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/transpiler_session.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_stage.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/session_result.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/format.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/type_converter.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/attributes.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/utils/var_decl.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/attribute_names.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_types.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/metadata/program.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/metadata_types.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/transpiler/transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/stages/normalizer/normalizer.h
+
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
-
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/io_helper.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/string_utils.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/util/format.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/nobarrier.cpp
@@ -108,7 +74,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/diag/diag_consumer.cpp
 
-    core/metadata/program.cpp
+    core/metadata_types.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
@@ -116,9 +82,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/attributed_type_map.cpp
     core/attribute_manager/backend_attribute_map.cpp
     core/attribute_manager/common_attribute_map.cpp
-    core/attribute_manager/implcit_handlers/implicit_handler_map.cpp
-    core/attribute_manager/implcit_handlers/decl_handler.cpp
-    core/attribute_manager/implcit_handlers/stmt_handler.cpp
+    core/attribute_manager/implicit_handlers/implicit_handler_map.cpp
+    core/attribute_manager/implicit_handlers/decl_handler.cpp
+    core/attribute_manager/implicit_handlers/stmt_handler.cpp
 
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
@@ -136,6 +102,7 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/transpiler.cpp
     pipeline/normalizer_and_transpiler.cpp
     pipeline/stages/transpiler/transpiler.cpp
+    pipeline/stages/transpiler/error_codes.cpp
 
     pipeline/stages/normalizer/normalizer.cpp
     pipeline/stages/normalizer/error_codes.cpp
@@ -174,16 +141,12 @@ if (TRANSPILER_DEBUG_LOG)
 endif()
 
 target_include_directories(occa-transpiler
-        PUBLIC
-
+      PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+      PRIVATE
         ${LLVM_INCLUDE_DIRS}
         ${LIBCLANG_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}
-
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}
-
-        PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/
 )
 

@@ -1,5 +1,5 @@
 #include <oklt/core/error.h>
-#include <oklt/pipeline/stages/normalizer/normalizer.h>
+#include "pipeline/stages/normalizer/normalizer.h"
 
 namespace oklt {
 UserResult normalize(UserInput input) {

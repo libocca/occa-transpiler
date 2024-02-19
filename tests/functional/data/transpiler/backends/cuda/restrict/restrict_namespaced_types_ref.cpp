@@ -9,7 +9,7 @@ struct Complex {
 namespace B {
 struct Configs {
   unsigned int size1;
-  unsigned long size2; 
+  unsigned long size2;
 };
 namespace C {
 typedef int SIZE_TYPE;

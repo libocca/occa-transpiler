@@ -1,8 +1,9 @@
 #include "attributes/utils/replace_attribute.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/var_decl.h"
+
 #include <clang/AST/AST.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/core/utils/var_decl.h>
 
 namespace oklt {
 using namespace clang;

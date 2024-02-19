@@ -1,10 +1,10 @@
-#include "gnu_to_std_cpp_stage.h"
-
-#include <oklt/core/diag/diag_consumer.h>
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/core/utils/attributes.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
+
+#include "core/diag/diag_consumer.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
+#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>

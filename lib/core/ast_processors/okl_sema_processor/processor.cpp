@@ -1,9 +1,8 @@
-#include <oklt/core/ast_processor_manager/ast_processor_manager.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_manager/attributed_type_map.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-
-#include "handlers/function.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/ast_processor_manager/ast_processor_manager.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
+#include "core/ast_processors/okl_sema_processor/handlers/function.h"
 
 #include <clang/AST/AST.h>
 

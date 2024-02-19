@@ -1,7 +1,7 @@
+#include "core/transpiler_session/session_stage.h"
+#include "attributes/utils/replace_attribute.h"
+
 #include <clang/AST/AST.h>
-#include <oklt/core/utils/var_decl.h>
-// #include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
-#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace oklt {
 using namespace clang;

@@ -1,7 +1,7 @@
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_names.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/core/utils/attributes.h>
+#include "attributes/attribute_names.h"
+#include "core/utils/attributes.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 
 namespace {
 using namespace oklt;

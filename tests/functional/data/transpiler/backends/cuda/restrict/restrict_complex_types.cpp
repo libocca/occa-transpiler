@@ -7,7 +7,7 @@ struct Complex {
 
 struct Configs {
   unsigned int size1;
-  unsigned long size2; 
+  unsigned long size2;
 };
 
 //TODO: fix me when @kernel/@outer/@inner are implemented
