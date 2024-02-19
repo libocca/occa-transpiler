@@ -1,11 +1,9 @@
 #include "impl/gnu_to_std_cpp_stage.h"
 #include "impl/okl_to_gnu_stage.h"
 
+#include "pipeline/stages/normalizer/normalizer.h"
+
 #include <oklt/core/error.h>
-
-#include <oklt/pipeline/stages/normalizer/normalizer.h>
-#include <oklt/util/io_helper.h>
-
 #include <llvm/Support/raw_os_ostream.h>
 
 using namespace clang;

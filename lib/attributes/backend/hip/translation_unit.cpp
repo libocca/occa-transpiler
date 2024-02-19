@@ -1,6 +1,7 @@
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
+
 #include <clang/AST/Decl.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace {
 using namespace oklt;
@@ -25,7 +26,7 @@ bool handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
     return true;
 }
 
-__attribute__((constructor)) void registerAttrBackend() {
+__attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
         DeclHandler{handleTranslationUnit});

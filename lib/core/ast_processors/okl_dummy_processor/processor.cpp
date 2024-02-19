@@ -1,7 +1,7 @@
-#include <oklt/core/ast_processor_manager/ast_processor_manager.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_manager/attributed_type_map.h>
-#include <oklt/core/transpiler_session/session_stage.h>
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/ast_processor_manager/ast_processor_manager.h"
 
 #include <clang/AST/AST.h>
 
@@ -10,6 +10,9 @@ using namespace clang;
 using namespace oklt;
 
 bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
     auto& am = stage.getAttrManager();
     if (!decl->hasAttrs()) {
         return true;
@@ -21,11 +24,14 @@ bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
             return cont;
         }
     }
-
     return true;
 }
 
 bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
+
     auto& am = stage.getAttrManager();
     if (!decl->hasAttrs()) {
         auto cont = am.handleDecl(decl, stage);
@@ -53,10 +59,16 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
@@ -98,12 +110,17 @@ bool runPostActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& 
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& stage) {
     auto* expr = dyn_cast_or_null<RecoveryExpr>(expr_);
-
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
     auto subExpr = expr->subExpressions();
     if (subExpr.empty()) {
         return true;

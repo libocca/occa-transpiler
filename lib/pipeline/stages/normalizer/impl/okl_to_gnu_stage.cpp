@@ -1,15 +1,16 @@
-#include "okl_to_gnu_stage.h"
-#include "okl_attr_traverser.h"
-
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
+
+#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/stages/normalizer/impl/okl_to_gnu_stage.h"
+#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+
 #include <set>
 
 namespace {

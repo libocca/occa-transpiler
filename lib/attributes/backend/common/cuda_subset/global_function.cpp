@@ -1,7 +1,9 @@
+#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/backend/common/cuda_subset/cuda_subset.h"
+#include "core/transpiler_session/session_stage.h"
+
 #include <clang/AST/Decl.h>
-#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/transpiler_session/session_stage.h>
+
 
 namespace oklt::cuda_subset {
 using namespace oklt;

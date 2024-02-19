@@ -1,5 +1,7 @@
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/transpiler_session.h>
+
+#include <oklt/core/metadata_types.h>
+#include "core/transpiler_session/transpiler_session.h"
 
 #include <clang/Basic/Diagnostic.h>
 

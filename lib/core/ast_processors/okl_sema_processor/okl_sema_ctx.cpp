@@ -1,7 +1,8 @@
-#include <oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h>
+#include <oklt/core/metadata_types.h>
 #include <oklt/core/error.h>
-#include <oklt/core/metadata/program.h>
-#include <oklt/core/utils/type_converter.h>
+
+#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/utils/type_converter.h"
 
 #include <clang/AST/Attr.h>
 
