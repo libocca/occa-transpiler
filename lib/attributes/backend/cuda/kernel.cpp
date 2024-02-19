@@ -11,7 +11,7 @@ bool handleCUDAKernelAttribute(const clang::Attr* a, const clang::Decl* d, Sessi
     return true;
 }
 
-__attribute__((constructor)) void registerAttrBackend() {
+__attribute__((constructor)) void registerCUDAKernelAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::CUDA, KERNEL_ATTR_NAME}, AttrDeclHandler{handleCUDAKernelAttribute});
 

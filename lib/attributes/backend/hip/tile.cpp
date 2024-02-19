@@ -4,7 +4,7 @@
 
 namespace {
 using namespace oklt;
-__attribute__((constructor)) void registerAttrBackend() {
+__attribute__((constructor)) void registerHIPTileAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, TILE_ATTR_NAME}, AttrStmtHandler{handleTileAttribute});
 

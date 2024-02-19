@@ -9,7 +9,7 @@ bool handleGlobalConstant(const clang::Decl* decl, oklt::SessionStage& s) {
     return oklt::handleGlobalConstant(decl, s, CUDA_CONST_QUALIFIER);
 }
 
-__attribute__((constructor)) void registeGlobalConstantHandler() {
+__attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
 

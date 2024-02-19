@@ -9,7 +9,7 @@ bool handleHIPGlobalFunction(const clang::Decl* decl, oklt::SessionStage& s) {
     return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
 }
 
-__attribute__((constructor)) void registerKernelHandler() {
+__attribute__((constructor)) void registerHIPKernelHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::Function}, DeclHandler{handleHIPGlobalFunction});
 

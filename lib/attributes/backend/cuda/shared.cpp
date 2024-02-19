@@ -18,7 +18,7 @@ bool handleCUDASharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
     return rewriter.InsertText(d->getBeginLoc(), sharedText, false, false);
 }
 
-__attribute__((constructor)) void registerAttrBackend() {
+__attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::CUDA, SHARED_ATTR_NAME}, AttrDeclHandler{handleCUDASharedAttribute});
 

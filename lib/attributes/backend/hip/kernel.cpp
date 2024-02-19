@@ -9,7 +9,7 @@ bool handleHIPKernelAttribute(const clang::Attr* a, const clang::Decl* d, Sessio
     return true;
 }
 
-__attribute__((constructor)) void registerAttrBackend() {
+__attribute__((constructor)) void registerHIPKernelAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, KERNEL_ATTR_NAME}, AttrDeclHandler{handleHIPKernelAttribute});
 

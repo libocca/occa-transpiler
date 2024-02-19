@@ -40,7 +40,7 @@ bool handleCUDARestrictAttribute(const clang::Attr* a, const clang::Decl* d, Ses
     return true;
 }
 
-__attribute__((constructor)) void registerRestrictHandler() {
+__attribute__((constructor)) void registerCUDARestrictHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::CUDA, RESTRICT_ATTR_NAME}, AttrDeclHandler{handleCUDARestrictAttribute});
 
