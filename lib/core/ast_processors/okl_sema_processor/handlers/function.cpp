@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/metadata/program.h"
+#include <oklt/core/metadata_types.h>
 
 #include "core/transpiler_session/session_stage.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"

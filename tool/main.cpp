@@ -114,6 +114,9 @@ int main(int argc, char* argv[]) {
             }(std::move(input), need_normalize);
 
             if (result) {
+                oklt::UserOutput userOutput = result.value();
+                std::ofstream ofs(output.string());
+                ofs << userOutput.kernel.sourceCode;
                 std::cout << "Transpiling success : true" << std::endl;
             } else {
                 std::cout << "Transpiling errors: " << std::endl;

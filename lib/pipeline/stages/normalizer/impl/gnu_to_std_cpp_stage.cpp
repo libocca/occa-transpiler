@@ -2,6 +2,7 @@
 
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
 
@@ -20,29 +21,6 @@ struct AttrNormalizerCtx {
     Rewriter* rewriter;
     std::list<OklAttrMarker> markers;
 };
-
-// TODO move to helper functions header
-constexpr int32_t CXX11_ATTR_PREFIX_LEN = 2;
-constexpr int32_t CXX11_ATTR_SUFFIX_LEN = 2;
-
-constexpr int32_t GNU_ATTR_PREFIX_LEN = 15;
-constexpr int32_t GNU_ATTR_SUFFIX_LEN = 2;
-
-SourceRange getAttrFullSourceRange(const Attr& attr) {
-    auto arange = attr.getRange();
-
-    if (attr.isCXX11Attribute() || attr.isC2xAttribute()) {
-        arange.setBegin(arange.getBegin().getLocWithOffset(-CXX11_ATTR_PREFIX_LEN));
-        arange.setEnd(arange.getEnd().getLocWithOffset(CXX11_ATTR_SUFFIX_LEN));
-    }
-
-    if (attr.isGNUAttribute()) {
-        arange.setBegin(arange.getBegin().getLocWithOffset(-GNU_ATTR_PREFIX_LEN));
-        arange.setEnd(arange.getEnd().getLocWithOffset(GNU_ATTR_SUFFIX_LEN));
-    }
-
-    return arange;
-}
 
 void removeAttr(Rewriter& rewriter, const Attr& attr) {
     auto arange = getAttrFullSourceRange(attr);

@@ -1,5 +1,5 @@
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
-#include "core/metadata/program.h"
+#include <oklt/core/metadata_types.h>
 #include "core/utils/type_converter.h"
 
 namespace {
