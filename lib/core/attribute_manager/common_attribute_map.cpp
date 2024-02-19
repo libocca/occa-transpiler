@@ -1,4 +1,4 @@
-#include "oklt/core/attribute_manager/common_attribute_map.h"
+#include "core/attribute_manager/common_attribute_map.h"
 
 namespace oklt {
 using namespace clang;
