@@ -7,7 +7,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
+bool handleCUDASharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif
@@ -20,7 +20,7 @@ bool handleSharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, SHARED_ATTR_NAME}, AttrDeclHandler{handleSharedAttribute});
+        {TargetBackend::CUDA, SHARED_ATTR_NAME}, AttrDeclHandler{handleCUDASharedAttribute});
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME << " attribute handler\n";

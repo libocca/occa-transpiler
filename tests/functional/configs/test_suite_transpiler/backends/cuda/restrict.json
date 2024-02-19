@@ -20,5 +20,17 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/cuda/restrict/restrict_complex_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/restrict/restrict_namespaced_types.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/restrict/restrict_namespaced_types_ref.cpp"
      }
+
 ]
