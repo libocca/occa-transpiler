@@ -1,7 +1,7 @@
-#include "oklt/core/transpiler_session/session_stage.h"
-#include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/diag/diag_consumer.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/diag/diag_consumer.h"
+#include "core/transpiler_session/transpiler_session.h"
 
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>

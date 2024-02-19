@@ -1,8 +1,9 @@
 #pragma once
 
-#include <oklt/core/attribute_manager/implicit_handlers/decl_handler.h>
-#include <oklt/core/attribute_manager/implicit_handlers/stmt_handler.h>
 #include <oklt/core/target_backends.h>
+
+#include "core/attribute_manager/implicit_handlers/decl_handler.h"
+#include "core/attribute_manager/implicit_handlers/stmt_handler.h"
 
 #include <map>
 #include <tuple>

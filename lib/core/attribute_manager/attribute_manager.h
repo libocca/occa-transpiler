@@ -1,8 +1,8 @@
 #pragma once
 
-#include <oklt/core/attribute_manager/backend_attribute_map.h>
-#include <oklt/core/attribute_manager/common_attribute_map.h>
-#include <oklt/core/attribute_manager/implicit_handlers/implicit_handler_map.h>
+#include "core/attribute_manager/backend_attribute_map.h"
+#include "core/attribute_manager/common_attribute_map.h"
+#include "core/attribute_manager/implicit_handlers/implicit_handler_map.h"
 #include <oklt/core/error.h>
 
 #include <clang/Sema/ParsedAttr.h>

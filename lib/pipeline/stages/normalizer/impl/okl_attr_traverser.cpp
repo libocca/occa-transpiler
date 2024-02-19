@@ -1,6 +1,6 @@
 #include "okl_attr_traverser.h"
 #include <llvm/Support/FormatVariadic.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
+#include "pipeline/stages/normalizer/error_codes.h"
 
 namespace {
 using namespace clang;

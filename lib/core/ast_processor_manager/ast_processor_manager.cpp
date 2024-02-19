@@ -1,5 +1,7 @@
-#include <oklt/core/ast_processor_manager/ast_processor_manager.h>
-#include <oklt/core/transpiler_session/session_stage.h>
+#include "core/ast_processor_manager/ast_processor_manager.h"
+
+#include "core/transpiler_session/session_stage.h"
+
 namespace {
 template <typename KeyType,
           typename MapType,

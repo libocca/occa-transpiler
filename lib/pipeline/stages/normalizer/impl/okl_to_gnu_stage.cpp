@@ -2,8 +2,8 @@
 #include "okl_attr_traverser.h"
 
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
+#include "core/transpiler_session/session_stage.h"
+#include "pipeline/stages/normalizer/error_codes.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
