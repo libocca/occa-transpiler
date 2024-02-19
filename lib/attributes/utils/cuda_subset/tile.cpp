@@ -140,192 +140,184 @@ std::string dimToStr(const Dim& dim) {
     return mapping[dim];
 }
 
+std::string getIdxVariable(const Loop& loop) {
+    auto strDim = dimToStr(loop.dim);
+    switch (loop.type) {
+        case (LoopType::Inner):
+            return util::fmt("threadIdx.{}", dimToStr(loop.dim)).value();
+        case (LoopType::Outer):
+            return util::fmt("blockIdx.{}", dimToStr(loop.dim)).value();
+        default:  // Incorrect case
+            return "";
+    }
+}
+
 std::string getTiledVariableName(const ForLoop& forLoop) {
     return "_occa_tiled_" + forLoop.init.name;
 }
 
-// TODO: fix code dublication
-// Produces something like: int i = _occa_tiled_i + (inc * threadIdx.x);
-std::string innerLoopIdxLineSecond(const ForLoop& forLoop,
-                                   const Loop& innerLoop,
-                                   const TileParams* params) {
-    static_cast<void>(params);
-    std::vector<std::string> parts{
-        forLoop.init.type,
-        forLoop.init.name,
-        "=",
-        getTiledVariableName(forLoop),
-        "+",
-    };
-
-    std::string threadIdx = "threadIdx." + dimToStr(innerLoop.dim);
-    if (forLoop.inc.isUnary) {
-        parts.push_back(threadIdx + ";");
-    } else {
-        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ");");
-    }
-    auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return "{" + res;  // Open new scope
-}
-
 // Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * threadIdx.x);
-std::string innerLoopIdxLineFirst(const ForLoop& forLoop,
-                                  const Loop& outerLoop,
-                                  const TileParams* params) {
-    auto blockSize = std::to_string(params->tileSize);
-    auto innerLoopSize = forLoop.inc.rhsInc;
-    auto blockIdx = "threadIdx." + dimToStr(outerLoop.dim);
+//                      or: int _occa_tiled_i = init + ((tileSize * inc) * blockIdx.x);
+std::string innerOuterLoopIdxLineFirst(const ForLoop& forLoop,
+                                       const Loop& loop,
+                                       const TileParams* params,
+                                       int& openedScopeCounter) {
+    auto tiledVar = getTiledVariableName(forLoop);
+    auto idx = getIdxVariable(loop);
 
-    std::vector<std::string> parts{
-        forLoop.init.type,
-        getTiledVariableName(forLoop),
-        "=",
-        forLoop.init.initialValue,
-        "+",
-        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ");",
-    };
-    auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return res;  // Open new scope
-}
-
-// Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * blockIdx.x);
-std::string outerLoopIdxLineFirst(const ForLoop& forLoop,
-                                  const Loop& outerLoop,
-                                  const TileParams* params) {
-    auto blockSize = std::to_string(params->tileSize);
-    auto innerLoopSize = forLoop.inc.rhsInc;
-    auto blockIdx = "blockIdx." + dimToStr(outerLoop.dim);
-
-    std::vector<std::string> parts{
-        forLoop.init.type,
-        getTiledVariableName(forLoop),
-        "=",
-        forLoop.init.initialValue,
-        "+",
-        "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ");",
-    };
-    auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return res;  // Open new scope
-}
-
-// Produces something like: int i = _occa_tiled_i + (inc * blockIdx.x);
-std::string outerLoopIdxLineSecond(const ForLoop& forLoop,
-                                   const Loop& innerLoop,
-                                   const TileParams* params) {
-    static_cast<void>(params);
-    std::vector<std::string> parts{
-        forLoop.init.type,
-        forLoop.init.name,
-        "=",
-        getTiledVariableName(forLoop),
-        "+",
-    };
-
-    std::string threadIdx = "blockIdx." + dimToStr(innerLoop.dim);
+    std::string res;
     if (forLoop.inc.isUnary) {
-        parts.push_back(threadIdx + ";");
+        res = std::move(util::fmt("{} {} = {} + ({} * {});",
+                                  forLoop.init.type,
+                                  tiledVar,
+                                  forLoop.init.initialValue,
+                                  params->tileSize,
+                                  idx)
+                            .value());
     } else {
-        parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ");");
+        res = std::move(util::fmt("{} {} = {} + (({} * {}) * {});",
+                                  forLoop.init.type,
+                                  tiledVar,
+                                  forLoop.init.initialValue,
+                                  params->tileSize,
+                                  forLoop.inc.rhsInc,
+                                  idx)
+                            .value());
     }
-    auto res = util::join(parts.begin(), parts.end(), SPACE);
+    return res;
+}
+
+// Produces something like: int i = _occa_tiled_i + (inc * threadIdx.x);
+std::string innerOuterLoopIdxLineSecond(const ForLoop& forLoop,
+                                        const Loop& loop,
+                                        const TileParams* params,
+                                        int& openedScopeCounter) {
+    static_cast<void>(params);
+    auto tiledVar = getTiledVariableName(forLoop);
+    std::string idx = getIdxVariable(loop);
+
+    std::string res;
+    if (forLoop.inc.isUnary) {
+        res = std::move(
+            util::fmt("{} {} = {} + {};", forLoop.init.type, forLoop.init.name, tiledVar, idx)
+                .value());
+    } else {
+        res = std::move(util::fmt("{} {} = {} + (({}) * {});",
+                                  forLoop.init.type,
+                                  forLoop.init.name,
+                                  tiledVar,
+                                  forLoop.inc.rhsInc,
+                                  idx)
+                            .value());
+    }
+    ++openedScopeCounter;
     return "{" + res;  // Open new scope
 }
 
-// Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
+// Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i) {
 std::string regularLoopIdxLineFirst(const ForLoop& forLoop,
                                     const Loop& regularLoop,
-                                    const TileParams* params) {
+                                    const TileParams* params,
+                                    int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
 
-    std::vector<std::string> parts{
-        "for",
-        "(" + tiledVar,
-        forLoop.init.name,
-        "=",
-        forLoop.init.initialValue + ";",
-        tiledVar,
-        "<",  // TODO: parse cmp operator
-        forLoop.cond.rhsExpr + ";",
-        tiledVar,
-        "+=",  // TODO: Are other operators possible?
-        std::to_string(params->tileSize),
-        ")",
-    };
+    auto res = util::fmt("for({} {} = {}; {} < {}; {} += {})",
+                         forLoop.init.type,
+                         tiledVar,
+                         forLoop.init.initialValue,
+                         tiledVar,
+                         forLoop.cond.rhsExpr,
+                         tiledVar,
+                         params->tileSize)
+                   .value();  // shouldn't fail
 
-    auto res = util::join(parts.begin(), parts.end(), SPACE);
+    ++openedScopeCounter;
     return res + " {";  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
 std::string regularLoopIdxLineSecond(const ForLoop& forLoop,
                                      const Loop& regularLoop,
-                                     const TileParams* params) {
+                                     const TileParams* params,
+                                     int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
 
-    std::vector<std::string> parts{
-        "for",
-        "(" + forLoop.init.type,
-        forLoop.init.name,
-        "=",
-        tiledVar + ";",
-        forLoop.init.name,
-        "<",  // TODO: parse cmp operator
-        "(" + tiledVar,
-        "+",
-        blockSize + ");",
-    };
+    std::string res;
     if (forLoop.inc.isUnary) {
-        parts.push_back("++" + forLoop.init.name + ")");
+        res = util::fmt("for({} {} = {}; {} < ({} + {}); ++{})",
+                        forLoop.init.type,
+                        forLoop.init.name,
+                        tiledVar,
+                        forLoop.init.name,
+                        tiledVar,
+                        blockSize,
+                        forLoop.init.name)
+                  .value();
     } else {
-        parts.push_back(forLoop.init.name  + "+=" + forLoop.inc.rhsInc + ")");
+        res = util::fmt("for({} {} = {}; {} < ({} + {}); {} += {})",
+                        forLoop.init.type,
+                        forLoop.init.name,
+                        tiledVar,
+                        forLoop.init.name,
+                        tiledVar,
+                        blockSize,
+                        forLoop.init.name,
+                        forLoop.inc.rhsInc)
+                  .value();
     }
-
-    auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return res;  // Open new scope (Note: after line unlike @outer and @inner)
+    return res;
 }
 
-std::string getLoopIdxLine(const ForLoop& forLoop, const TileParams* params, const LoopOrder& ord) {
+std::string getLoopIdxLine(const ForLoop& forLoop,
+                           const TileParams* params,
+                           const LoopOrder& ord,
+                           int& openedScopeCounter) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    static std::map<std::tuple<LoopType, LoopOrder>,
-                    std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
+    static std::map<
+        std::tuple<LoopType, LoopOrder>,
+        std::function<std::string(const ForLoop&, const Loop&, const TileParams*, int&)>>
         mapping{
-            {{LoopType::Inner, LoopOrder::First}, innerLoopIdxLineFirst},
-            {{LoopType::Outer, LoopOrder::First}, outerLoopIdxLineFirst},
+            {{LoopType::Inner, LoopOrder::First}, innerOuterLoopIdxLineFirst},
+            {{LoopType::Outer, LoopOrder::First}, innerOuterLoopIdxLineFirst},
             {{LoopType::Regular, LoopOrder::First}, regularLoopIdxLineFirst},
-            {{LoopType::Inner, LoopOrder::Second}, innerLoopIdxLineSecond},
-            {{LoopType::Outer, LoopOrder::Second}, outerLoopIdxLineSecond},
+            {{LoopType::Inner, LoopOrder::Second}, innerOuterLoopIdxLineSecond},
+            {{LoopType::Outer, LoopOrder::Second}, innerOuterLoopIdxLineSecond},
             {{LoopType::Regular, LoopOrder::Second}, regularLoopIdxLineSecond},
         };
     auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
-    return mapping[{loop.type, ord}](forLoop, loop, params);
+    return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);
 }
 
-std::string getCheckLine(const ForLoop& forLoop, const TileParams* tileParams) {
+std::string getCheckLine(const ForLoop& forLoop, const TileParams* tileParams, int& openedScopeCounter) {
     if (!tileParams->check) {
         return "";
     }
 
     // TODO: parse cmp operator
-    auto res = "if (" + forLoop.init.name + " < " + forLoop.cond.rhsExpr + ")";
-    return res + " {";  // Open new scope
-}
-
-// TODO: add check handling
-std::string buildPreffixTiledCode(const ForLoop& forLoop, const TileParams* tileParams) {
-    std::string res;
-    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::First);
-    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::Second);
-    res += getCheckLine(forLoop, tileParams);
+    auto res = util::fmt("if ({} < {})", forLoop.init.name, forLoop.cond.rhsExpr).value();
     return res;
 }
 
-std::string buildSuffixTiledCode(const ForLoop& forLoop, const TileParams* tileParams) {
+// TODO: add check handling
+std::string buildPreffixTiledCode(const ForLoop& forLoop,
+                                  const TileParams* tileParams,
+                                  int& openedScopeCounter) {
     std::string res;
-    res += "}";  // Close scope created by inner/outer second or regular first
-    if (tileParams->check) {
-        res += "}";  // Close scope created by check
+    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::First, openedScopeCounter);
+    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::Second, openedScopeCounter);
+    res += getCheckLine(forLoop, tileParams, openedScopeCounter);
+    return res;
+}
+
+std::string buildSuffixTiledCode(const ForLoop& forLoop,
+                                 const TileParams* tileParams,
+                                 int& openedScopeCounter) {
+    std::string res;
+    // Close all opened scopes
+    while (openedScopeCounter--) {
+        res += "}";
     }
     return res;
 }
@@ -336,7 +328,7 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
     auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
     auto tileParams = std::any_cast<TileParams>(s.getUserCtx(usrCtxKey));
     if (tileParams == nullptr) {
-        s.pushError(std::error_code(), "no tile params in user context");
+        s.pushError(std::error_code(), "No tile params in user context");
         return false;
     }
 
@@ -353,8 +345,9 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
         return false;
     }
 
-    auto prefixCode = buildPreffixTiledCode(forLoop.value(), tileParams);
-    auto suffixCode = buildSuffixTiledCode(forLoop.value(), tileParams);
+    int openedScopeCounter = 0;
+    auto prefixCode = buildPreffixTiledCode(forLoop.value(), tileParams, openedScopeCounter);
+    auto suffixCode = buildSuffixTiledCode(forLoop.value(), tileParams, openedScopeCounter);
 
     auto& rewriter = s.getRewriter();
 
