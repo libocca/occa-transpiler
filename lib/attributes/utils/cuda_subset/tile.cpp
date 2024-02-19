@@ -3,12 +3,12 @@
 // #include <oklt/attributes/frontend/parsers/tile.h>
 // #include <oklt/core/attribute_manager/attribute_manager.h>
 // #include <oklt/core/transpiler_session/session_stage.h>
+#include "attributes/frontend/params/tile.h"
 #include <oklt/util/string_utils.h>
 #include <functional>
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "handle.h"
-#include "attributes/frontend/params/tile.h"
 
 #include <clang/AST/Decl.h>
 namespace oklt::cuda_subset {
@@ -144,10 +144,6 @@ std::string getTiledVariableName(const ForLoop& forLoop) {
     return "_occa_tiled_" + forLoop.init.name;
 }
 
-std::string scopeWrap(const std::string& content) {
-    return "{\n" + content + "\n}";
-}
-
 // TODO: fix code dublication
 // Produces something like: int i = _occa_tiled_i + (inc * threadIdx.x);
 std::string innerLoopIdxLineSecond(const ForLoop& forLoop,
@@ -164,12 +160,12 @@ std::string innerLoopIdxLineSecond(const ForLoop& forLoop,
 
     std::string threadIdx = "threadIdx." + dimToStr(innerLoop.dim);
     if (forLoop.inc.isUnary) {
-        parts.push_back(threadIdx);
+        parts.push_back(threadIdx + ";");
     } else {
         parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ");");
     }
     auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return "{\n" + res + "\n";  // Open new scope
+    return "{" + res;  // Open new scope
 }
 
 // Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * threadIdx.x);
@@ -189,7 +185,7 @@ std::string innerLoopIdxLineFirst(const ForLoop& forLoop,
         "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ");",
     };
     auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return "{\n" + res + "\n";  // Open new scope
+    return res;  // Open new scope
 }
 
 // Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * blockIdx.x);
@@ -209,7 +205,7 @@ std::string outerLoopIdxLineFirst(const ForLoop& forLoop,
         "((" + blockSize + " * " + innerLoopSize + ") * " + blockIdx + ");",
     };
     auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return "{\n" + res + "\n";  // Open new scope
+    return res;  // Open new scope
 }
 
 // Produces something like: int i = _occa_tiled_i + (inc * blockIdx.x);
@@ -227,12 +223,12 @@ std::string outerLoopIdxLineSecond(const ForLoop& forLoop,
 
     std::string threadIdx = "blockIdx." + dimToStr(innerLoop.dim);
     if (forLoop.inc.isUnary) {
-        parts.push_back(threadIdx);
+        parts.push_back(threadIdx + ";");
     } else {
         parts.push_back("((" + forLoop.inc.rhsInc + ") * " + threadIdx + ");");
     }
     auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return "{\n" + res + "\n";  // Open new scope
+    return "{" + res;  // Open new scope
 }
 
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
@@ -258,7 +254,7 @@ std::string regularLoopIdxLineFirst(const ForLoop& forLoop,
     };
 
     auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return res + " {\n";  // Open new scope (Note: after line unlike @outer and @inner)
+    return res + " {";  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
@@ -279,16 +275,21 @@ std::string regularLoopIdxLineSecond(const ForLoop& forLoop,
         "(" + tiledVar,
         "+",
         blockSize + ");",
-        "++" + forLoop.init.name + ")",
     };
+    if (forLoop.inc.isUnary) {
+        parts.push_back("++" + forLoop.init.name + ")");
+    } else {
+        parts.push_back(forLoop.init.name  + "+=" + forLoop.inc.rhsInc + ")");
+    }
 
     auto res = util::join(parts.begin(), parts.end(), SPACE);
-    return res + " {\n";  // Open new scope (Note: after line unlike @outer and @inner)
+    return res;  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
 std::string getLoopIdxLine(const ForLoop& forLoop, const TileParams* params, const LoopOrder& ord) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    static std::map<std::tuple<LoopType, LoopOrder>, std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
+    static std::map<std::tuple<LoopType, LoopOrder>,
+                    std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, innerLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, outerLoopIdxLineFirst},
@@ -308,7 +309,7 @@ std::string getCheckLine(const ForLoop& forLoop, const TileParams* tileParams) {
 
     // TODO: parse cmp operator
     auto res = "if (" + forLoop.init.name + " < " + forLoop.cond.rhsExpr + ")";
-    return res + " {\n";  // Open new scope
+    return res + " {";  // Open new scope
 }
 
 // TODO: add check handling
@@ -322,9 +323,9 @@ std::string buildPreffixTiledCode(const ForLoop& forLoop, const TileParams* tile
 
 std::string buildSuffixTiledCode(const ForLoop& forLoop, const TileParams* tileParams) {
     std::string res;
-    res += "}\n";  // Close scope created by inner loop
+    res += "}";  // Close scope created by inner/outer second or regular first
     if (tileParams->check) {
-        res += "}\n";  // Close scope created by check
+        res += "}";  // Close scope created by check
     }
     return res;
 }
@@ -367,7 +368,8 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
     rewriter.InsertText(forStmt->getRParenLoc(), prefixCode);
 
     // Insert suffix
-    rewriter.InsertText(forStmt->getEndLoc(), suffixCode);
+    rewriter.InsertText(forStmt->getEndLoc(),
+                        suffixCode);  // TODO: seems to not work correclty for for loop without {}
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle Tile. Parsed for loop: Init("

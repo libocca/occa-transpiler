@@ -84,8 +84,8 @@ tl::expected<Loop, Error> parseLoop(const std::string& str) {
     if (lpar_pos == std::string::npos || rpar_pos == std::string::npos || (lpar_pos > rpar_pos)) {
         return tl::make_unexpected(err);
     }
-    auto idxNStr = str.substr(lpar_pos + 1, rpar_pos - lpar_pos);
-    auto loopTypeStr = str.substr(lpar_pos);
+    auto idxNStr = str.substr(lpar_pos + 1, rpar_pos - lpar_pos - 1);
+    auto loopTypeStr = str.substr(0, lpar_pos);
     llvm::outs() << "[DEBUG] idxNStr: " << idxNStr << ", loopTypeStr: " << loopTypeStr << "\n";
     auto dimIdx = parseInt(idxNStr);
     auto loopType = parseLoopType(loopTypeStr);
