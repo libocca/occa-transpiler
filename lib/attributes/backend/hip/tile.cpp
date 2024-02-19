@@ -1,7 +1,6 @@
-#include "core/attribute_manager/attribute_manager.h"
-#include "attributes/attribute_names.h"
-
-#include "attributes/backend/common/cuda_subset/cuda_subset.h"
+#include <oklt/core/attribute_manager/attribute_manager.h>
+#include <oklt/core/attribute_names.h>
+#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
 
 namespace {
 using namespace oklt;

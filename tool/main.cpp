@@ -1,6 +1,5 @@
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/user_input.h>
-#include <oklt/core/transpiler_session/user_output.h>
+#include <oklt/core/transpiler_session/transpiler_session.h>
 
 #include <oklt/pipeline/normalizer.h>
 #include <oklt/pipeline/normalizer_and_transpiler.h>

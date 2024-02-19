@@ -1,7 +1,7 @@
 #pragma once
 
 #include <oklt/core/ast_processor_manager/ast_processor_types.h>
-#include "util/type_traits.h"
+#include <oklt/util/type_traits.h>
 
 #include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>

@@ -1,12 +1,10 @@
 #pragma once
 
-#include <oklt/core/target_backends.h>
-
-#include "core/attribute_manager/attr_decl_handler.h"
-#include "core/attribute_manager/attr_stmt_handler.h"
-
 #include <map>
 #include <tuple>
+#include "oklt/core/attribute_manager/attr_decl_handler.h"
+#include "oklt/core/attribute_manager/attr_stmt_handler.h"
+#include "oklt/core/target_backends.h"
 
 namespace oklt {
 class BackendAttributeMap {

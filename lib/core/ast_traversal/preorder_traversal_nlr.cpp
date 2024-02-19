@@ -1,6 +1,6 @@
-#include "core/ast_processor_manager/ast_processor_manager.h"
-#include "core/ast_traversal/preorder_traversal_nlr.h"
-#include "core/transpiler_session/session_stage.h"
+#include <oklt/core/ast_processor_manager/ast_processor_manager.h>
+#include <oklt/core/ast_traversal/preorder_traversal_nlr.h>
+#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace {
 #define TRAVERSE_EXPR(EXPR_TYPE, EXPR_VAR, PROC_MNG, STAGE)                                     \

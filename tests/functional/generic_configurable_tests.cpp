@@ -3,8 +3,8 @@
 
 #include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
-#include "core/transpiler_session/transpiler_session.h"
-#include "core/utils/format.h"
+#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <oklt/core/utils/format.h>
 #include <oklt/pipeline/normalizer.h>
 #include <oklt/pipeline/normalizer_and_transpiler.h>
 #include <oklt/pipeline/transpiler.h>

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "core/ast_traversal/ast_visitor.h"
-
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include "oklt/core/ast_traversal/ast_visitor.h"
 
 namespace oklt {
 

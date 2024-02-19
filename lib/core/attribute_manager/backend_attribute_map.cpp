@@ -1,5 +1,5 @@
-#include "core/attribute_manager/backend_attribute_map.h"
-#include "core/transpiler_session/session_stage.h"
+#include "oklt/core/attribute_manager/backend_attribute_map.h"
+#include "oklt/core/transpiler_session/session_stage.h"
 
 namespace oklt {
 using namespace clang;

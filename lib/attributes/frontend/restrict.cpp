@@ -1,9 +1,9 @@
-#include "core/attribute_manager/attribute_manager.h"
-#include "attributes/attribute_names.h"
+#include <oklt/core/attribute_manager/attribute_manager.h>
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
+#include "oklt/core/attribute_names.h"
 
 namespace {
 

@@ -1,5 +1,5 @@
-#include "core/transpiler_session/session_stage.h"
-#include "attributes/backend/common/cuda_subset/cuda_subset.h"
+#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
+#include <oklt/core/transpiler_session/session_stage.h>
 
 namespace {
 using namespace oklt;
