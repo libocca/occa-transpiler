@@ -42,8 +42,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
     attributes/utils/parse.h
-    attributes/utils/cuda_subset/handle_kernel.cpp
-    attributes/utils/cuda_subset/handle_tile.cpp
+    attributes/utils/cuda_subset/kernel.cpp
+    attributes/utils/cuda_subset/tile.cpp
     attributes/utils/cuda_subset/handle.h
 
     # HIP

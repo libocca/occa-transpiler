@@ -1,8 +1,8 @@
-#include "core/transpiler_session/session_stage.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
+#include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
-#include "core/ast_processors/okl_sema_processor/handlers/function.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/AST.h>
 
@@ -52,22 +52,21 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
     return am.handleAttr(attr, decl, stage);
 }
 
-bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+bool runPreActionStmt(const clang::AttributedStmt* stmt, SessionStage& stage) {
+    auto& am = stage.getAttrManager();
+
+    for (const auto* attr : stmt->getAttrs()) {
+        if (!am.parseAttr(attr, stage)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
-bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+bool runPostActionStmt(const clang::AttributedStmt* attrStmt, SessionStage& stage) {
     auto& am = stage.getAttrManager();
-    if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
-        auto cont = am.handleStmt(stmt, stage);
-        if (!cont) {
-            return cont;
-        }
-        return true;
-    }
-
-    auto* attrStmt = cast<AttributedStmt>(stmt);
-    auto expectedAttr = am.checkAttrs(attrStmt->getAttrs(), stmt, stage);
+    auto expectedAttr = am.checkAttrs(attrStmt->getAttrs(), attrStmt, stage);
     if (!expectedAttr) {
         // TODO report diagnostic error using clang tooling
         //  auto &errorReporter = _session.getErrorReporter();
@@ -130,9 +129,9 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
         DeclHandle{.preAction = runPreActionDecl, .postAction = runPostActionDecl});
     assert(ok);
 
-    ok = mng.registerGenericHandle(
-        AstProcessorType::OKL_WITH_SEMA,
-        StmtHandle{.preAction = runPreActionStmt, .postAction = runPostActionStmt});
+    ok = mng.registerSpecificNodeHandle(
+        {AstProcessorType::OKL_WITH_SEMA, Stmt::AttributedStmtClass},
+        makeSpecificStmtHandle(runPreActionStmt, runPostActionStmt));
     assert(ok);
 
     ok = mng.registerSpecificNodeHandle(

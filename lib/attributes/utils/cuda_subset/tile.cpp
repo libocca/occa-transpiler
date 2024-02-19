@@ -8,7 +8,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "handle.h"
-#include "attributes/params/tile.h"
+#include "attributes/frontend/params/tile.h"
 
 #include <clang/AST/Decl.h>
 namespace oklt::cuda_subset {
@@ -254,6 +254,7 @@ std::string regularLoopIdxLineFirst(const ForLoop& forLoop,
         tiledVar,
         "+=",  // TODO: Are other operators possible?
         std::to_string(params->tileSize),
+        ")",
     };
 
     auto res = util::join(parts.begin(), parts.end(), SPACE);
@@ -287,7 +288,7 @@ std::string regularLoopIdxLineSecond(const ForLoop& forLoop,
 
 std::string getLoopIdxLine(const ForLoop& forLoop, const TileParams* params, const LoopOrder& ord) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    std::map<std::tuple<LoopType, LoopOrder>, std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
+    static std::map<std::tuple<LoopType, LoopOrder>, std::function<std::string(const ForLoop&, const Loop&, const TileParams*)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, innerLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, outerLoopIdxLineFirst},
@@ -333,6 +334,10 @@ std::string buildSuffixTiledCode(const ForLoop& forLoop, const TileParams* tileP
 bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
     auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
     auto tileParams = std::any_cast<TileParams>(s.getUserCtx(usrCtxKey));
+    if (tileParams == nullptr) {
+        s.pushError(std::error_code(), "no tile params in user context");
+        return false;
+    }
 
     auto& astCtx = s.getCompiler().getASTContext();
 

@@ -1,7 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
-#include "attributes/params/tile.h"
+#include "params/tile.h"
 #include "attributes/utils/parse.h"
 
 #include <oklt/util/string_utils.h>

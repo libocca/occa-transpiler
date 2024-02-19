@@ -35,7 +35,7 @@ bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionSt
     rewriter.ReplaceText(frange, newFunctionName);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle @kernel attribute: return type: " << func->getReturnType().getAsString()
+    llvm::outs() << "[DEBUG] Handle @kernel attribute: return type: " << func->getReturnType().getAsString()
                  << ", old kernel name: " << oldFunctionName << '\n';
 #endif
 

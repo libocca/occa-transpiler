@@ -1,7 +1,3 @@
-// #include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
-// #include <oklt/attributes/frontend/parsers/kernel.h>
-// #include <oklt/core/attribute_manager/attribute_manager.h>
-// #include <oklt/core/attribute_names.h>
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
