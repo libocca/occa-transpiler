@@ -1,6 +1,7 @@
-#include "oklt/core/attribute_manager/attributed_type_map.h"
-#include "oklt/core/attribute_names.h"
-#include "oklt/core/transpiler_session/session_stage.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
+#include "core/transpiler_session/session_stage.h"
+#include "attributes/attribute_names.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -106,6 +107,12 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<DimOrderAttribute> register_okl_dimOrder(DIMORDER_ATTR_NAME, "");
+bool parseDimOrderAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
 
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<DimOrderAttribute>(DIMORDER_ATTR_NAME,
+                                                                         parseDimOrderAttrParams);
+}
 }  // namespace

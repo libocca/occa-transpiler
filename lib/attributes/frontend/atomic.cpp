@@ -1,7 +1,8 @@
+#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/attribute_names.h"
+
 #include "clang/Basic/DiagnosticSema.h"
-#include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
-#include "oklt/core/attribute_names.h"
 
 namespace {
 
@@ -42,5 +43,12 @@ struct AtomicAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<AtomicAttribute> register_okl_atomic(ATOMIC_ATTR_NAME, "");
+bool parseAtomicAttrParams(const Attr* a, SessionStage& ) {
+    return true;
+}
+
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME,
+                                                                       parseAtomicAttrParams);
+}
 }  // namespace

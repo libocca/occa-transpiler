@@ -1,7 +1,8 @@
-#include "oklt/core/attribute_manager/attributed_type_map.h"
-#include "oklt/core/attribute_names.h"
-#include "oklt/core/diag/diag_handler.h"
-#include "oklt/core/transpiler_session/session_stage.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/diag/diag_handler.h"
+#include "attributes/attribute_names.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -134,7 +135,14 @@ class DimDiagHandler : public DiagHandler {
     }
 };
 
-ParsedAttrInfoRegistry::Add<DimAttribute> register_okl_dim(DIM_ATTR_NAME, "");
-oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
+bool parseDimAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
 
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME,
+                                                                    parseDimAttrParams);
+    // for suppression of func call error that potentially is dim calls
+    static oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
+}
 }  // namespace

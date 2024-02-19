@@ -1,15 +1,16 @@
-#include "okl_to_gnu_stage.h"
-#include "okl_attr_traverser.h"
-
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
+
+#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/stages/normalizer/impl/okl_to_gnu_stage.h"
+#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+
 #include <set>
 
 namespace {
@@ -43,6 +44,15 @@ void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, R
     SourceRange attrSrcRange(attrLocStart, attrLocEnd);
     rewriter.RemoveText(attrSrcRange);
 }
+
+OklAttrMarker makeOklAttrMarker(const Preprocessor& pp,
+                                const OklAttribute& oklAtr,
+                                const SourceLocation loc) {
+    return {.attr = oklAtr,
+            .loc = {.line = pp.getSourceManager().getPresumedLineNumber(loc),
+                    .col = pp.getSourceManager().getPresumedColumnNumber(loc)}};
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
@@ -52,6 +62,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
                               Rewriter& rewriter) {
+    // TODO log each mofidification to adjust marker line col coordinate accordinagly
     removeOklAttr(tokens, oklAttr, rewriter);
 
     auto leftNeigbour = getLeftNeigbour(oklAttr, tokens);
@@ -63,7 +74,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     if (isProbablyOklSpecificForStmt(leftNeigbour, rightNeighbour)) {
         rewriter.ReplaceText(leftNeigbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
-        recovery_markers.push_back({oklAttr, insertLoc});
+        recovery_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, leftNeigbour.getLocation()));
     }
     // INFO: just replace directly with standard attribute if it's originally at the beginnig
     else if (isProbablyAtBeginnigOfExpr(leftNeigbour, rightNeighbour)) {
@@ -81,12 +92,12 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     else {
         auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
         rewriter.InsertTextBefore(insertLoc, gnuAttr);
-        gnu_markers.push_back({oklAttr, insertLoc});
+        gnu_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, insertLoc));
     }
 
 #ifdef NORMALIZER_DEBUG_LOG
     llvm::outs() << "removed attr: " << oklAttr.name
-                 << " at loc: " << oklAttr.begin_loc.printToString(pp.getSourceManager()) << '\n';
+                 << " at loc: " << insertLoc.printToString(pp.getSourceManager()) << '\n';
 #endif
 
     return true;

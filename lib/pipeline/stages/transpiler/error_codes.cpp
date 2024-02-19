@@ -1,4 +1,4 @@
-#include <oklt/pipeline/stages/transpiler/error_codes.h>
+#include "pipeline/stages/transpiler/error_codes.h"
 
 namespace {
 struct TranspilerErrorsCategory : std::error_category {
@@ -16,6 +16,8 @@ std::string TranspilerErrorsCategory::message(int ev) const {
             return "input sourece string is empty";
         case OkltTranspilerErrorCode::NO_TOKENS_FROM_SOURCE:
             return "no tokens fetched from input source";
+        case OkltTranspilerErrorCode::OKL_ATTR_PARSING_ERR:
+            return "other error";
         case OkltTranspilerErrorCode::OTHER_ERROR:
             return "other error";
     }

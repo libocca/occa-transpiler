@@ -1,5 +1,6 @@
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/transpiler_session.h>
+#include <oklt/core/transpiler_session/user_input.h>
+#include <oklt/core/transpiler_session/user_output.h>
 
 #include <oklt/pipeline/normalizer.h>
 #include <oklt/pipeline/normalizer_and_transpiler.h>
@@ -113,6 +114,9 @@ int main(int argc, char* argv[]) {
             }(std::move(input), need_normalize);
 
             if (result) {
+                oklt::UserOutput userOutput = result.value();
+                std::ofstream ofs(output.string());
+                ofs << userOutput.kernel.sourceCode;
                 std::cout << "Transpiling success : true" << std::endl;
             } else {
                 std::cout << "Transpiling errors: " << std::endl;

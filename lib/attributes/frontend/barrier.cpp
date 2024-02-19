@@ -1,7 +1,8 @@
+#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/attribute_names.h"
+
 #include "clang/Basic/DiagnosticSema.h"
-#include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
-#include "oklt/core/attribute_names.h"
 
 namespace {
 
@@ -43,5 +44,12 @@ struct BarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<BarrierAttribute> register_okl_barrier(BARRIER_ATTR_NAME, "");
+bool parseBarrierAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
+
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
+                                                                        parseBarrierAttrParams);
+}
 }  // namespace

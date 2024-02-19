@@ -1,7 +1,7 @@
 #pragma once
 
 #include <oklt/core/error.h>
-#include "okl_attribute.h"
+#include "pipeline/stages/normalizer/impl/okl_attribute.h"
 
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/Token.h>

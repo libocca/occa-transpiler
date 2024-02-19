@@ -1,5 +1,5 @@
-#include "oklt/core/attribute_manager/attribute_manager.h"
-#include "oklt/core/transpiler_session/session_stage.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
 using namespace clang;
@@ -37,6 +37,14 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
+bool AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
+    return _implicitHandlers(stmt, stage);
+}
+
+bool AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
+    return _implicitHandlers(decl, stage);
+}
+
 bool AttributeManager::handleAttr(const Attr* attr, const Decl* decl, SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
@@ -50,14 +58,6 @@ bool AttributeManager::handleAttr(const Attr* attr, const Decl* decl, SessionSta
     return false;
 }
 
-bool AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
-    return _implicitHandlers(stmt, stage);
-}
-
-bool AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
-    return _implicitHandlers(decl, stage);
-}
-
 bool AttributeManager::handleAttr(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
@@ -67,6 +67,15 @@ bool AttributeManager::handleAttr(const Attr* attr, const Stmt* stmt, SessionSta
         return _backendAttrs.handleAttr(attr, stmt, stage);
     }
     return false;
+}
+
+bool AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
+    std::string name = attr->getNormalizedFullName();
+    auto it = _attrParsers.find(name);
+    if (it != _attrParsers.end()) {
+        return it->second(attr, stage);
+    }
+    return true;
 }
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,

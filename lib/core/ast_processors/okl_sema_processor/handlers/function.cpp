@@ -1,8 +1,9 @@
-#include <oklt/core/ast_processors/okl_sema_processor/okl_sema_ctx.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_names.h>
-#include <oklt/core/metadata/program.h>
-#include <oklt/core/transpiler_session/session_stage.h>
+#include "attributes/attribute_names.h"
+#include <oklt/core/metadata_types.h>
+
+#include "core/transpiler_session/session_stage.h"
+#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 #include <clang/AST/AST.h>
 
@@ -44,10 +45,6 @@ bool applyBackendHandlers(const Decl* decl, SessionStage& stage) {
 
 namespace oklt {
 bool prepareOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << fd->getName() << '\n';
-#endif
-
     // we intersting only in okl kernel function
     if (!isOklKernel(fd, stage)) {
         return true;
@@ -68,10 +65,6 @@ bool prepareOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
 }
 
 bool transpileOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " func name: " << fd->getName() << '\n';
-#endif
-
     // validation is done on preAction so braverely get the first attribute and run traclpile handle
     auto cont = applyBackendHandlers(fd, stage);
     if (!cont) {

@@ -1,11 +1,10 @@
-#include "oklt/core/ast_traversal/transpile_frontend_action.h"
-#include <typeinfo>
-#include "oklt/core/ast_traversal/transpile_ast_consumer.h"
-#include "oklt/core/diag/diag_consumer.h"
-#include "oklt/core/transpiler_session/session_stage.h"
+#include "core/ast_traversal/transpile_frontend_action.h"
+#include "core/ast_traversal/transpile_ast_consumer.h"
+#include "core/diag/diag_consumer.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <memory>
-#include <clang/Format/Format.h>
+#include <typeinfo>
 
 namespace oklt {
 

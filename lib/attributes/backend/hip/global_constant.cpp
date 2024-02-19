@@ -1,13 +1,17 @@
-#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/attributes/backend/common/cuda_subset/cuda_subset.h>
+#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/utils/replace_attribute.h"
 
 namespace {
 using namespace oklt;
-__attribute__((constructor)) void registeGlovalConstantHandler() {
+
+bool handleHIPGlobalConstant(const clang::Decl* decl, oklt::SessionStage& s) {
+    const std::string HIP_CONST_QUALIFIER = "__constant__";
+    return oklt::handleGlobalConstant(decl, s, HIP_CONST_QUALIFIER);
+}
+
+__attribute__((constructor)) void registeHIPGlobalConstantHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::Var},
-        DeclHandler{cuda_subset::handleGlobalConstant});
+        {TargetBackend::HIP, clang::Decl::Kind::Var}, DeclHandler{handleHIPGlobalConstant});
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";

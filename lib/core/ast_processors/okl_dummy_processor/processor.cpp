@@ -1,7 +1,7 @@
-#include <oklt/core/ast_processor_manager/ast_processor_manager.h>
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_manager/attributed_type_map.h>
-#include <oklt/core/transpiler_session/session_stage.h>
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/ast_processor_manager/ast_processor_manager.h"
 
 #include <clang/AST/AST.h>
 
@@ -10,12 +10,27 @@ using namespace clang;
 using namespace oklt;
 
 bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
+    auto& am = stage.getAttrManager();
+    if (!decl->hasAttrs()) {
+        return true;
+    }
+
+    for (const auto& attr : decl->getAttrs()) {
+        auto cont = am.parseAttr(attr, stage);
+        if (!cont) {
+            return cont;
+        }
+    }
     return true;
 }
 
 bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl->getDeclKindName() << '\n';
+#endif
 
     auto& am = stage.getAttrManager();
     if (!decl->hasAttrs()) {
@@ -44,24 +59,34 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt->getStmtClassName() << '\n';
+#endif
+    return true;
+}
 
+bool runPreActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& stage) {
     auto& am = stage.getAttrManager();
-    if (stmt->getStmtClass() != Stmt::AttributedStmtClass) {
-        auto cont = am.handleStmt(stmt, stage);
+    for (const auto& attr : attrStmt->getAttrs()) {
+        auto cont = am.parseAttr(attr, stage);
         if (!cont) {
             return cont;
         }
-        return true;
     }
 
-    auto* attrStmt = cast<AttributedStmt>(stmt);
-    auto expectedAttr = am.checkAttrs(attrStmt->getAttrs(), stmt, stage);
+    return true;
+}
+
+bool runPostActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& stage) {
+    auto& am = stage.getAttrManager();
+    auto expectedAttr = am.checkAttrs(attrStmt->getAttrs(), attrStmt, stage);
     if (!expectedAttr) {
         // TODO report diagnostic error using clang tooling
         //  auto &errorReporter = _session.getErrorReporter();
@@ -85,14 +110,17 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
     return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& stage) {
     auto* expr = dyn_cast_or_null<RecoveryExpr>(expr_);
-
+#ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';
+#endif
     auto subExpr = expr->subExpressions();
     if (subExpr.empty()) {
         return true;
@@ -131,6 +159,11 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
     ok = mng.registerGenericHandle(
         AstProcessorType::OKL_NO_SEMA,
         StmtHandle{.preAction = runPreActionStmt, .postAction = runPostActionStmt});
+    assert(ok);
+
+    ok = mng.registerSpecificNodeHandle(
+        {AstProcessorType::OKL_NO_SEMA, Stmt::AttributedStmtClass},
+        makeSpecificStmtHandle(runPreActionAttrStmt, runPostActionAttrStmt));
     assert(ok);
 
     ok = mng.registerSpecificNodeHandle(

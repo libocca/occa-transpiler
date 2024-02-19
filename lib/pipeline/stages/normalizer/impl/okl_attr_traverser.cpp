@@ -1,6 +1,7 @@
-#include "okl_attr_traverser.h"
+#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
+#include "pipeline/stages/normalizer/error_codes.h"
+
 #include <llvm/Support/FormatVariadic.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
 
 namespace {
 using namespace clang;
@@ -21,6 +22,7 @@ struct OklAttributePrarserFsm {
     OklAttribute attr;
     const std::vector<Token>* tokens{nullptr};
     Preprocessor& pp;
+    uint32_t parenDepth{0};
 };
 
 OklAttributePrarserFsm makeOklAttrParserFsm(Preprocessor& pp, const std::vector<Token>& tokens) {
@@ -79,6 +81,7 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
             if (token.is(tok::l_paren)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += fsm.pp.getSpelling(token);
+                fsm.parenDepth += 1u;
 
                 fsm.state = OklAttributeParserState::ParseAttrParamList;
             } else {
@@ -86,12 +89,29 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
             }
             break;
         case OklAttributeParserState::ParseAttrParamList:
+            // close current parentness
             if (token.is(tok::r_paren)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += fsm.pp.getSpelling(token);
+                fsm.parenDepth -= 1u;
 
-                return FsmStepStatus::OklAttrParsed;
+                // all parentness are closed norify that OKL attribute is parsed
+                if (!fsm.parenDepth) {
+                    return FsmStepStatus::OklAttrParsed;
+                }
+
+                // still opened parentness so continue parsing
+                break;
             }
+
+            // open nested parentness
+            if (token.is(tok::l_paren)) {
+                fsm.attr.tok_indecies.push_back(fsm.token_cursor);
+                fsm.attr.params += fsm.pp.getSpelling(token);
+                fsm.parenDepth += 1u;
+                break;
+            }
+
             if (token.isOneOf(tok::at,
                               tok::equal,
                               tok::identifier,

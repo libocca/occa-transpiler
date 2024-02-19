@@ -1,9 +1,10 @@
-#include "gnu_to_std_cpp_stage.h"
-
-#include <oklt/core/diag/diag_consumer.h>
 #include <oklt/core/error.h>
-#include <oklt/core/transpiler_session/session_stage.h>
-#include <oklt/pipeline/stages/normalizer/error_codes.h>
+
+#include "core/diag/diag_consumer.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
+#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -20,29 +21,6 @@ struct AttrNormalizerCtx {
     Rewriter* rewriter;
     std::list<OklAttrMarker> markers;
 };
-
-// TODO move to helper functions header
-constexpr int32_t CXX11_ATTR_PREFIX_LEN = 2;
-constexpr int32_t CXX11_ATTR_SUFFIX_LEN = 2;
-
-constexpr int32_t GNU_ATTR_PREFIX_LEN = 15;
-constexpr int32_t GNU_ATTR_SUFFIX_LEN = 2;
-
-SourceRange getAttrFullSourceRange(const Attr& attr) {
-    auto arange = attr.getRange();
-
-    if (attr.isCXX11Attribute() || attr.isC2xAttribute()) {
-        arange.setBegin(arange.getBegin().getLocWithOffset(-CXX11_ATTR_PREFIX_LEN));
-        arange.setEnd(arange.getEnd().getLocWithOffset(CXX11_ATTR_SUFFIX_LEN));
-    }
-
-    if (attr.isGNUAttribute()) {
-        arange.setBegin(arange.getBegin().getLocWithOffset(-GNU_ATTR_PREFIX_LEN));
-        arange.setEnd(arange.getEnd().getLocWithOffset(GNU_ATTR_SUFFIX_LEN));
-    }
-
-    return arange;
-}
 
 void removeAttr(Rewriter& rewriter, const Attr& attr) {
     auto arange = getAttrFullSourceRange(attr);
@@ -67,17 +45,13 @@ OklAttribute toOklAttr(const AnnotateAttr& attr, ASTContext& ast) {
     return OklAttribute{.raw = "",
                         .name = getOklName(attr),
                         .params = attr.getAnnotation().str(),
-                        .begin_loc = SourceLocation(),
                         .tok_indecies = {}};
 }
 
 OklAttribute toOklAttr(const SuppressAttr& attr, ASTContext& ast) {
     assert(attr.diagnosticIdentifiers_size() != 0 && "suppress attr has 0 args");
-    return OklAttribute{.raw = "",
-                        .name = getOklName(attr),
-                        .params = getArgAsStr(attr),
-                        .begin_loc = SourceLocation(),
-                        .tok_indecies = {}};
+    return OklAttribute{
+        .raw = "", .name = getOklName(attr), .params = getArgAsStr(attr), .tok_indecies = {}};
 }
 
 template <typename Expr, typename AttrType>
@@ -114,6 +88,10 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProcc
     }
 
     return true;
+}
+
+SourceLocation getMarkerSourceLoc(const OklAttrMarker& marker, const SourceManager& srcMng) {
+    return srcMng.translateLineCol(srcMng.getMainFileID(), marker.loc.line, marker.loc.col);
 }
 
 // Traverse AST and normalize GMU attributes and fix markers to standard C++ attribute
@@ -160,11 +138,20 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
         }
 
         const auto& marker = _input->recoveryMarkers.front();
-        auto s_range = s->getSourceRange();
-        // if marker is inside of loop source location range it means loop should be decorated
+        auto markerLoc = getMarkerSourceLoc(marker, _stage.getCompiler().getSourceManager());
+        auto forParenRange = SourceRange(s->getBeginLoc(), s->getRParenLoc());
+
+#ifdef NORMALIZER_DEBUG_LOG
+        llvm::outs() << "for loc: "
+                     << forParenRange.printToString(_stage.getCompiler().getSourceManager())
+                     << "\nmarker loc: "
+                     << markerLoc.printToString(_stage.getCompiler().getSourceManager()) << '\n';
+#endif
+
+        // if marker is inside of loop source location range it indicates OKL loop that should be decorated
         // by attribute in marker
-        if (s_range.getBegin() <= marker.loc || marker.loc <= s_range.getEnd()) {
-            _stage.getRewriter().InsertTextBefore(s_range.getBegin(),
+        if (forParenRange.getBegin() <= markerLoc && markerLoc <= forParenRange.getEnd()) {
+            _stage.getRewriter().InsertTextBefore(forParenRange.getBegin(),
                                                   wrapAsSpecificCxxAttr(marker.attr));
             _input->recoveryMarkers.pop_front();
         }

@@ -1,7 +1,9 @@
+#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/attribute_names.h"
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
-#include "oklt/core/attribute_names.h"
 
 namespace {
 
@@ -43,5 +45,11 @@ struct OuterAttribute : public ParsedAttrInfo {
     }
 };
 
-ParsedAttrInfoRegistry::Add<OuterAttribute> register_okl_outer(OUTER_ATTR_NAME, "");
+bool parseOuterAttrParams(const clang::Attr* a, SessionStage&) {
+    return true;
+}
+__attribute__((constructor)) void registerAttrFrontend() {
+    AttributeManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
+                                                                      parseOuterAttrParams);
+}
 }  // namespace
