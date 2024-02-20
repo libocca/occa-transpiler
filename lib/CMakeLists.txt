@@ -42,9 +42,15 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
     attributes/utils/parse.h
+    attributes/utils/loop_meta_data.h
+    attributes/utils/loop_meta_data.cpp
+
+    # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
     attributes/utils/cuda_subset/tile.cpp
     attributes/utils/cuda_subset/handle.h
+    attributes/utils/cuda_subset/loop_code_gen.h
+    attributes/utils/cuda_subset/loop_code_gen.cpp
 
     # HIP
     attributes/backend/hip/global_constant.cpp

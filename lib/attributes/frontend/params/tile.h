@@ -1,3 +1,5 @@
+#pragma once
+
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Attr.h>
