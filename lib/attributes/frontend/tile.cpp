@@ -50,16 +50,6 @@ struct TileAttribute : public ParsedAttrInfo {
 
 constexpr int MAX_N_PARAMS = 4;
 
-tl::expected<int, Error> parseInt(const std::string& str) {
-    char* p;
-    auto tileSize = strtol(str.c_str(), &p, 10);
-    if (!p) {
-        return tl::make_unexpected(Error{std::error_code(), "Tile size is not an integer"});
-    }
-    return tileSize;
-}
-
-// TODO: parse dimension
 tl::expected<LoopType, Error> parseLoopType(const std::string& str) {
     Error err{std::error_code(), "Tile loop type parse error"};
     if (str == "@outer") {
@@ -87,7 +77,7 @@ tl::expected<AttributedLoop, Error> parseLoop(const std::string& str) {
     auto idxNStr = str.substr(lpar_pos + 1, rpar_pos - lpar_pos - 1);
     auto loopTypeStr = str.substr(0, lpar_pos);
     llvm::outs() << "[DEBUG] idxNStr: " << idxNStr << ", loopTypeStr: " << loopTypeStr << "\n";
-    auto dimIdx = parseInt(idxNStr);
+    auto dimIdx = util::parseStrTo<int>(idxNStr);
     auto loopType = parseLoopType(loopTypeStr);
     if (!dimIdx || !loopType) {
         return tl::make_unexpected(err);
@@ -124,14 +114,14 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
 
     auto nParams = tileParamsStr->size();
     if (nParams > MAX_N_PARAMS || nParams < 1) {
-        s.pushError(std::error_code(), "Tile has 1 to 4 parameters");
+        s.pushError(std::error_code(), "@tile has 1 to 4 parameters");
         return false;
     }
 
     // Parse all parameters:
-    auto tileSize = parseInt(tileParamsStr.value()[0]);  // tileParamsStr is not empty for sure
+    auto tileSize = util::parseStrTo<int>(tileParamsStr.value()[0]);  // tileParamsStr is not empty for sure
     if (!tileSize.has_value()) {
-        s.pushError(tileSize.error());
+        s.pushError(std::error_code(), "Failed to parse @tile size");
         return false;
     }
 
@@ -147,6 +137,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
             continue;
         }
 
+        // TODO: dimensions should be calculated by sema if not specified
         // Parse loop
         if (auto loopType = parseLoop(currentParamStr)) {
             loopsStack.push_back(loopType.value());
@@ -186,7 +177,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     s.tryEmplaceUserCtx<TileParams>(ctxKey, tileParams);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] parsed tile parameters: " << ctxKey
+    llvm::outs() << "[DEBUG] Parsed tile parameters: " << ctxKey
                  << ": {tile size: " << tileParams.tileSize
                  << ", first loop: " << static_cast<int>(tileParams.firstLoop.type)
                  << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)

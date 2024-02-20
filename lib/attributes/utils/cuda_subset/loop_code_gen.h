@@ -27,7 +27,7 @@ std::string innerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
                                         const TileParams* params,
                                         int& openedScopeCounter);
 
-// Produces something like: 
+// Produces something like:
 //      for (int _occa_tiled_i = start; _occa_tiled_i < end; _occa_tiled_i += tileSize) {
 // or:  for (int _occa_tiled_i = start; _occa_tiled_i > end; _occa_tiled_i -= tileSize) {
 std::string regularLoopIdxLineFirst(const LoopMetadata& forLoop,
@@ -44,4 +44,12 @@ std::string regularLoopIdxLineSecond(const LoopMetadata& forLoop,
                                      const TileParams* params,
                                      int& openedScopeCounter);
 }  // namespace tile
+
+namespace inner_outer {
+// Produces something like: int i = start +- (threadIdx.x);
+//                      or: int i = start +- (blockIdx.x);
+std::string innerOuterLoopIdxLine(const LoopMetadata& forLoop,
+                                  const AttributedLoop& loop,
+                                  int& openedScopeCounter);
+}  // namespace inner_outer
 }  // namespace oklt::cuda_subset
