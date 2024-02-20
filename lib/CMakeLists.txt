@@ -107,6 +107,16 @@ set (OCCA_TRANSPILER_SOURCES
     # sugar attribute
     attributes/backend/common/dim.cpp
 
+        # OPENMP
+        attributes/backend/openmp/kernel.cpp
+        attributes/backend/openmp/outer.cpp
+        attributes/backend/openmp/inner.cpp
+        attributes/backend/openmp/restrict.cpp
+        attributes/backend/openmp/shared.cpp
+        attributes/backend/openmp/exclusive.cpp
+        attributes/backend/openmp/atomic.cpp
+        attributes/backend/openmp/barrier.cpp
+
     core/ast_processor_manager/ast_processor_manager.cpp
 
     core/ast_processors/default_actions.cpp
