@@ -70,13 +70,13 @@ tl::expected<LoopType, Error> parseLoopType(const std::string& str) {
     return tl::make_unexpected(err);
 }
 
-tl::expected<Loop, Error> parseLoop(const std::string& str) {
+tl::expected<AttributedLoop, Error> parseLoop(const std::string& str) {
     Error err{std::error_code(), "Tile loop parse error"};
 
     auto nonDimLoopType = parseLoopType(str);
     // @inner or @outer (without dimensions)
     if (nonDimLoopType) {
-        return Loop{nonDimLoopType.value(), Dim::X};  // x - default dimension
+        return AttributedLoop{nonDimLoopType.value(), Dim::X};  // x - default dimension
     }
 
     auto lpar_pos = str.find('(');
@@ -93,9 +93,9 @@ tl::expected<Loop, Error> parseLoop(const std::string& str) {
         return tl::make_unexpected(err);
     }
     if (dimIdx.value() < 0 || dimIdx.value() > 2) {
-        return tl::make_unexpected(Error{std::error_code(), "Loop argument must be 0, 1, 2"});
+        return tl::make_unexpected(Error{std::error_code(), "AttributedLoop argument must be 0, 1, 2"});
     }
-    return Loop{loopType.value(), static_cast<Dim>(dimIdx.value())};
+    return AttributedLoop{loopType.value(), static_cast<Dim>(dimIdx.value())};
 }
 
 tl::expected<bool, Error> parseCheck(const std::string& str) {
@@ -136,7 +136,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     }
 
     std::vector<bool> checksStack;
-    std::vector<Loop> loopsStack;
+    std::vector<AttributedLoop> loopsStack;
 
     // TODO: rewrite this ugly parsing if possible
     for (int i = 1; i < nParams; ++i) {
@@ -170,8 +170,8 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
 
     TileParams tileParams{
         .tileSize = tileSize.value(),
-        .firstLoop = loopsStack.size() > 0 ? loopsStack[0] : Loop{},
-        .secondLoop = loopsStack.size() > 1 ? loopsStack[1] : Loop{},
+        .firstLoop = loopsStack.size() > 0 ? loopsStack[0] : AttributedLoop{},
+        .secondLoop = loopsStack.size() > 1 ? loopsStack[1] : AttributedLoop{},
         .check = checksStack.size() > 0 ? checksStack.front() : true,
     };
 

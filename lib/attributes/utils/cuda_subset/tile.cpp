@@ -14,24 +14,54 @@
 namespace oklt::cuda_subset {
 using namespace clang;
 namespace {
-const std::string SPACE = " ";
-struct ForLoop {
-    struct Init {
-        const VarDecl* initDecl;
-        std::string type;
-        std::string name;
-        std::string initialValue;
-    } init;
-    // TODO: add comp operator
-    struct Cond {
-        const BinaryOperator* condOp;
-        std::string rhsExpr;
-    } cond;
-    struct Inc {
-        const Expr* incExpr;
-        std::string rhsInc;
-        bool isUnary;
+
+struct LoopMetadata {
+    std::string type;
+    std::string name;
+    struct {
+        std::string start;
+        std::string end;
+        size_t size = 0;
+    } range;
+    struct {
+        std::string cmp;
+        BinaryOperator::Opcode op = BO_EQ;
+    } condition;
+    struct {
+        std::string val;
+        union {
+            UnaryOperator::Opcode uo;
+            BinaryOperator::Opcode bo;
+        } op;
     } inc;
+
+    bool IsInc() const {
+        bool ret = false;
+        if (inc.val.empty()) {
+            ret = (inc.op.uo == UO_PreInc || inc.op.uo == UO_PostInc);
+        } else {
+            ret = (inc.op.bo == BO_AddAssign);
+        }
+        ret = (ret && (condition.op == BO_LE || condition.op == BO_LT));
+
+        return ret;
+    };
+    std::string getRangeSizeStr() const {
+        if (IsInc()) {
+            return range.end + " - " + range.start;
+        } else {
+            return range.start + " - " + range.end;
+        };
+    };
+
+    bool isUnary() const {
+        if (!inc.val.empty()) {
+            return false;
+        }
+        // should by unnecessary check, but just in case
+        return (inc.op.uo == UO_PreInc) || (inc.op.uo == UO_PostInc) || (inc.op.uo == UO_PreDec) ||
+               (inc.op.uo == UO_PostDec);
+    }
 };
 
 std::string prettyPrint(const Stmt* S, const PrintingPolicy& policy) {
@@ -46,93 +76,129 @@ std::string prettyPrint(const Stmt* S, const PrintingPolicy& policy) {
     return ret;
 };
 
-tl::expected<ForLoop, Error> parseForLoopInit(ForLoop& forLoop,
-                                              const clang::Stmt* init,
-                                              ASTContext& astCtx) {
-    Error err{std::error_code(), "Init part of for statement must be variable declaration"};
-    const DeclStmt* initDecl;
-    if (!(initDecl = dyn_cast_or_null<DeclStmt>(init)) || !(initDecl->isSingleDecl())) {
-        return tl::make_unexpected(err);
-    }
+bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, ASTContext& ctx) {
+    unsigned BitsInSizeT = ctx.getTypeSize(ctx.getSizeType());
 
-    const VarDecl* varDecl;
-    if (!(varDecl = dyn_cast<VarDecl>(initDecl->getSingleDecl()))) {
-        return tl::make_unexpected(err);
-    }
+    Expr::EvalResult ExprResult;
+    if (!E->EvaluateAsInt(ExprResult, ctx, Expr::SE_AllowSideEffects))
+        return false;
+    Into = ExprResult.Val.getInt();
+    if (Into.isNegative() || !Into.isIntN(BitsInSizeT))
+        return false;
+    Into = Into.zext(BitsInSizeT);
+    return true;
+};
 
-    const Expr* start = varDecl->getInit();
-    while (auto rhs = dyn_cast_or_null<CastExpr>(start)) {
-        start = rhs->getSubExpr();
-    }
+LoopMetadata ParseForStmt(ForStmt* S, ASTContext& ctx) {
+    auto& policy = ctx.getPrintingPolicy();
 
-    forLoop.init = ForLoop::Init{
-        .initDecl = varDecl,
-        .type = varDecl->getType().getAsString(),
-        .name = varDecl->getDeclName().getAsString(),
-        .initialValue = prettyPrint(start, astCtx.getPrintingPolicy()),
-    };
-    return forLoop;
-}
+    LoopMetadata ret;
+    Expr *start, *end;
 
-tl::expected<ForLoop, Error> parseForLoopCond(ForLoop& forLoop,
-                                              const clang::Expr* cond,
-                                              ASTContext& astCtx) {
-    Error err{std::error_code(), "Condition must be a comparisson"};
-
-    const BinaryOperator* binOp;
-    if (!(binOp = dyn_cast_or_null<BinaryOperator>(cond)) || !binOp->isComparisonOp()) {
-        return tl::make_unexpected(err);
-    }
-
-    auto rhs = dyn_cast_or_null<Expr>(binOp->getRHS());
-    // while (rhs & rhs->getSubExpr() && isa<CastExpr>(rhs->getSubExpr())) {
-    //     rhs = dyn_cast_or_null<CastExpr>(rhs->getSubExpr());
-    // };
-
-    if (!rhs) {
-        llvm::outs() << "hello\n";
-        return tl::make_unexpected(err);
-    }
-
-    forLoop.cond = ForLoop::Cond{
-        .condOp = binOp,
-        .rhsExpr = prettyPrint(rhs, astCtx.getPrintingPolicy()),
-    };
-
-    return forLoop;
-}
-
-tl::expected<ForLoop, Error> parseForLoopInc(ForLoop& forLoop,
-                                             const clang::Expr* inc,
-                                             ASTContext& astCtx) {
-    Error err{std::error_code(),
-              "Increment should be unary or compound, using initialized variable"};
-    if (isa<UnaryOperator>(inc)) {
-        forLoop.inc = ForLoop::Inc{.incExpr = inc, .rhsInc = "1", .isUnary = true};
-    } else if (isa<CompoundAssignOperator>(inc)) {
-        auto incCompound = dyn_cast<CompoundAssignOperator>(inc);
-        auto lhs = dyn_cast_or_null<DeclRefExpr>(incCompound->getLHS());
-        if (lhs && lhs->getNameInfo().getAsString() != forLoop.init.name) {
-            return tl::make_unexpected(err);
+    if (isa<DeclStmt>(S->getInit())) {
+        auto d = dyn_cast<DeclStmt>(S->getInit());
+        if (!d->isSingleDecl()) {
+            // TODO: throw Multi-Declaration
+            return ret;
         }
-        forLoop.inc =
-            ForLoop::Inc{.incExpr = inc,
-                         .rhsInc = prettyPrint(incCompound->getRHS(), astCtx.getPrintingPolicy()),
-                         .isUnary = false};
 
-    } else {
-        return tl::make_unexpected(err);
+        auto node = dyn_cast<VarDecl>(d->getSingleDecl());
+        if (!node) {
+            // TODO: throw No Init-statement
+            return ret;
+        }
+
+        ret.name = node->getDeclName().getAsString();
+        ret.type = node->getType().getAsString();
+
+        start = node->getInit();
+        while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
+            start = rsh->getSubExpr();
+        }
+        ret.range.start = prettyPrint(start, policy);
+
+        auto child_count = std::distance(start->children().begin(), start->children().end());
+        if (child_count > 0 && !node->getInit()->isEvaluatable(ctx)) {
+            ret.range.start = "(" + ret.range.start + ")";
+        }
     }
 
-    return forLoop;
-}
+    // Condition
+    if (isa<BinaryOperator>(S->getCond())) {
+        auto node = dyn_cast<BinaryOperator>(S->getCond());
+        if (!node->isComparisonOp()) {
+            // TODO: throw Non Comparison OP
+            return ret;
+        }
 
-// TODO: Use same parsing with other parts of code in the future
-tl::expected<ForLoop, Error> parseForLoop(const clang::ForStmt* forStmt, ASTContext& astCtx) {
-    ForLoop ret;
-    return parseForLoopInit(ret, forStmt->getInit(), astCtx)
-        .and_then([&](const auto& _) { return parseForLoopCond(ret, forStmt->getCond(), astCtx); })
-        .and_then([&](const auto& _) { return parseForLoopInc(ret, forStmt->getInc(), astCtx); });
+        ret.condition.op = node->getOpcode();
+        ret.condition.cmp = prettyPrint(node, policy);
+
+        // LSH
+        auto lsh = dyn_cast_or_null<CastExpr>(node->getLHS());
+        while (lsh && lsh->getSubExpr() && isa<CastExpr>(lsh->getSubExpr())) {
+            lsh = dyn_cast_or_null<CastExpr>(lsh->getSubExpr());
+        };
+        if (lsh && lsh->getSubExpr()) {
+            auto decl = dyn_cast_or_null<DeclRefExpr>(lsh->getSubExpr());
+            if (decl && decl->getNameInfo().getAsString() == ret.name) {
+                end = node->getRHS();
+                ret.range.end = prettyPrint(end, policy);
+            }
+        };
+
+        // RSH
+        auto rsh = dyn_cast_or_null<CastExpr>(node->getRHS());
+        while (rsh && rsh->getSubExpr() && isa<CastExpr>(rsh->getSubExpr())) {
+            rsh = dyn_cast_or_null<CastExpr>(rsh->getSubExpr());
+        };
+        if (rsh && rsh->getSubExpr()) {
+            auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
+            if (decl && decl->getNameInfo().getAsString() == ret.name) {
+                end = node->getLHS();
+                ret.range.end = prettyPrint(end, policy);
+                ret.condition.op = BinaryOperator::reverseComparisonOp(node->getOpcode());
+            }
+        }
+
+        if (!end) {
+            // TODO: throw Condition not using init variable
+            return ret;
+        }
+    }
+
+    // Increment
+    if (isa<UnaryOperator>(S->getInc())) {
+        auto node = dyn_cast<UnaryOperator>(S->getInc());
+        ret.inc.op.uo = node->getOpcode();
+    } else if (isa<CompoundAssignOperator>(S->getInc())) {
+        auto node = dyn_cast<CompoundAssignOperator>(S->getInc());
+
+        auto lsh = dyn_cast_or_null<DeclRefExpr>(node->getLHS());
+        if (lsh && lsh->getNameInfo().getAsString() != ret.name) {
+            // TODO: throw Declaration is not incremented?
+            return ret;
+        }
+
+        ret.inc.op.bo = node->getOpcode();
+        ret.inc.val = prettyPrint(node->getRHS(), policy);
+    }
+
+    ret.range.size = 0;
+
+    // Determinate range size
+    llvm::APSInt start_i, end_i;
+    if (EvaluateAsSizeT(start, start_i, ctx) && EvaluateAsSizeT(end, end_i, ctx)) {
+        if (ret.IsInc()) {
+            end_i -= start_i;
+            ret.range.size = end_i.getZExtValue();
+        } else {
+            start_i -= end_i;
+            ret.range.size = start_i.getZExtValue();
+        }
+    }
+
+    return ret;
 }
 
 std::string dimToStr(const Dim& dim) {
@@ -140,7 +206,7 @@ std::string dimToStr(const Dim& dim) {
     return mapping[dim];
 }
 
-std::string getIdxVariable(const Loop& loop) {
+std::string getIdxVariable(const AttributedLoop& loop) {
     auto strDim = dimToStr(loop.dim);
     switch (loop.type) {
         case (LoopType::Inner):
@@ -152,35 +218,35 @@ std::string getIdxVariable(const Loop& loop) {
     }
 }
 
-std::string getTiledVariableName(const ForLoop& forLoop) {
-    return "_occa_tiled_" + forLoop.init.name;
+std::string getTiledVariableName(const LoopMetadata& forLoop) {
+    return "_occa_tiled_" + forLoop.name;
 }
 
 // Produces something like: int _occa_tiled_i = init + ((tileSize * inc) * threadIdx.x);
 //                      or: int _occa_tiled_i = init + ((tileSize * inc) * blockIdx.x);
-std::string innerOuterLoopIdxLineFirst(const ForLoop& forLoop,
-                                       const Loop& loop,
+std::string innerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
+                                       const AttributedLoop& loop,
                                        const TileParams* params,
                                        int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
 
     std::string res;
-    if (forLoop.inc.isUnary) {
+    if (forLoop.isUnary()) {
         res = std::move(util::fmt("{} {} = {} + ({} * {});",
-                                  forLoop.init.type,
+                                  forLoop.type,
                                   tiledVar,
-                                  forLoop.init.initialValue,
+                                  forLoop.range.start,
                                   params->tileSize,
                                   idx)
                             .value());
     } else {
         res = std::move(util::fmt("{} {} = {} + (({} * {}) * {});",
-                                  forLoop.init.type,
+                                  forLoop.type,
                                   tiledVar,
-                                  forLoop.init.initialValue,
+                                  forLoop.range.start,
                                   params->tileSize,
-                                  forLoop.inc.rhsInc,
+                                  forLoop.inc.val,
                                   idx)
                             .value());
     }
@@ -188,25 +254,25 @@ std::string innerOuterLoopIdxLineFirst(const ForLoop& forLoop,
 }
 
 // Produces something like: int i = _occa_tiled_i + (inc * threadIdx.x);
-std::string innerOuterLoopIdxLineSecond(const ForLoop& forLoop,
-                                        const Loop& loop,
+std::string innerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
+                                        const AttributedLoop& loop,
                                         const TileParams* params,
                                         int& openedScopeCounter) {
     static_cast<void>(params);
     auto tiledVar = getTiledVariableName(forLoop);
+
     std::string idx = getIdxVariable(loop);
 
     std::string res;
-    if (forLoop.inc.isUnary) {
+    if (forLoop.isUnary()) {
         res = std::move(
-            util::fmt("{} {} = {} + {};", forLoop.init.type, forLoop.init.name, tiledVar, idx)
-                .value());
+            util::fmt("{} {} = {} + {};", forLoop.type, forLoop.name, tiledVar, idx).value());
     } else {
         res = std::move(util::fmt("{} {} = {} + (({}) * {});",
-                                  forLoop.init.type,
-                                  forLoop.init.name,
+                                  forLoop.type,
+                                  forLoop.name,
                                   tiledVar,
-                                  forLoop.inc.rhsInc,
+                                  forLoop.inc.val,
                                   idx)
                             .value());
     }
@@ -215,19 +281,19 @@ std::string innerOuterLoopIdxLineSecond(const ForLoop& forLoop,
 }
 
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i) {
-std::string regularLoopIdxLineFirst(const ForLoop& forLoop,
-                                    const Loop& regularLoop,
+std::string regularLoopIdxLineFirst(const LoopMetadata& forLoop,
+                                    const AttributedLoop& regularLoop,
                                     const TileParams* params,
                                     int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
 
     auto res = util::fmt("for({} {} = {}; {} < {}; {} += {})",
-                         forLoop.init.type,
+                         forLoop.type,
                          tiledVar,
-                         forLoop.init.initialValue,
+                         forLoop.range.start,
                          tiledVar,
-                         forLoop.cond.rhsExpr,
+                         forLoop.range.end,
                          tiledVar,
                          params->tileSize)
                    .value();  // shouldn't fail
@@ -237,47 +303,47 @@ std::string regularLoopIdxLineFirst(const ForLoop& forLoop,
 }
 
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
-std::string regularLoopIdxLineSecond(const ForLoop& forLoop,
-                                     const Loop& regularLoop,
+std::string regularLoopIdxLineSecond(const LoopMetadata& forLoop,
+                                     const AttributedLoop& regularLoop,
                                      const TileParams* params,
                                      int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
 
     std::string res;
-    if (forLoop.inc.isUnary) {
+    if (forLoop.isUnary()) {
         res = util::fmt("for({} {} = {}; {} < ({} + {}); ++{})",
-                        forLoop.init.type,
-                        forLoop.init.name,
+                        forLoop.type,
+                        forLoop.name,
                         tiledVar,
-                        forLoop.init.name,
+                        forLoop.name,
                         tiledVar,
                         blockSize,
-                        forLoop.init.name)
+                        forLoop.name)
                   .value();
     } else {
         res = util::fmt("for({} {} = {}; {} < ({} + {}); {} += {})",
-                        forLoop.init.type,
-                        forLoop.init.name,
+                        forLoop.type,
+                        forLoop.name,
                         tiledVar,
-                        forLoop.init.name,
+                        forLoop.name,
                         tiledVar,
                         blockSize,
-                        forLoop.init.name,
-                        forLoop.inc.rhsInc)
+                        forLoop.name,
+                        forLoop.inc.val)
                   .value();
     }
     return res;
 }
 
-std::string getLoopIdxLine(const ForLoop& forLoop,
+std::string getLoopIdxLine(const LoopMetadata& forLoop,
                            const TileParams* params,
                            const LoopOrder& ord,
                            int& openedScopeCounter) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    static std::map<
-        std::tuple<LoopType, LoopOrder>,
-        std::function<std::string(const ForLoop&, const Loop&, const TileParams*, int&)>>
+    static std::map<std::tuple<LoopType, LoopOrder>,
+                    std::function<std::string(
+                        const LoopMetadata&, const AttributedLoop&, const TileParams*, int&)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, innerOuterLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, innerOuterLoopIdxLineFirst},
@@ -290,30 +356,30 @@ std::string getLoopIdxLine(const ForLoop& forLoop,
     return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);
 }
 
-std::string getCheckLine(const ForLoop& forLoop, const TileParams* tileParams, int& openedScopeCounter) {
+std::string getCheckLine(const LoopMetadata& forLoopMetaData,
+                         const TileParams* tileParams,
+                         int& openedScopeCounter) {
     if (!tileParams->check) {
         return "";
     }
 
     // TODO: parse cmp operator
-    auto res = util::fmt("if ({} < {})", forLoop.init.name, forLoop.cond.rhsExpr).value();
+    auto res = util::fmt("if ({} < {})", forLoopMetaData.name, forLoopMetaData.range.end).value();
     return res;
 }
 
 // TODO: add check handling
-std::string buildPreffixTiledCode(const ForLoop& forLoop,
+std::string buildPreffixTiledCode(const LoopMetadata& forLoopMetaData,
                                   const TileParams* tileParams,
                                   int& openedScopeCounter) {
     std::string res;
-    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::First, openedScopeCounter);
-    res += getLoopIdxLine(forLoop, tileParams, LoopOrder::Second, openedScopeCounter);
-    res += getCheckLine(forLoop, tileParams, openedScopeCounter);
+    res += getLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::First, openedScopeCounter);
+    res += getLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::Second, openedScopeCounter);
+    res += getCheckLine(forLoopMetaData, tileParams, openedScopeCounter);
     return res;
 }
 
-std::string buildSuffixTiledCode(const ForLoop& forLoop,
-                                 const TileParams* tileParams,
-                                 int& openedScopeCounter) {
+std::string buildSuffixTiledCode(int& openedScopeCounter) {
     std::string res;
     // Close all opened scopes
     while (openedScopeCounter--) {
@@ -339,15 +405,11 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
         return false;
     }
     const auto* forStmt = dyn_cast<ForStmt>(d);
-    auto forLoop = parseForLoop(forStmt, astCtx);
-    if (!forLoop) {
-        s.pushError(forLoop.error());
-        return false;
-    }
+    auto forLoopMetaData = ParseForStmt(const_cast<ForStmt*>(forStmt), astCtx);
 
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(forLoop.value(), tileParams, openedScopeCounter);
-    auto suffixCode = buildSuffixTiledCode(forLoop.value(), tileParams, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(forLoopMetaData, tileParams, openedScopeCounter);
+    auto suffixCode = buildSuffixTiledCode(openedScopeCounter);
 
     auto& rewriter = s.getRewriter();
 
@@ -366,11 +428,11 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle Tile. Parsed for loop: Init("
-                 << "type: " << forLoop->init.type << ", name: " << forLoop->init.name
-                 << ", initValue: " << forLoop->init.initialValue
-                 << "), Cond(rhsExpr: " << forLoop->cond.rhsExpr
-                 << "), Inc(rhsInc: " << forLoop->inc.rhsInc
-                 << ", isUnary: " << forLoop->inc.isUnary << ")\n";
+                 << "type: " << forLoopMetaData.type << ", name: " << forLoopMetaData.name
+                 << ", initValue: " << forLoopMetaData.range.start
+                 << "), Cond(rhsExpr: " << forLoopMetaData.range.end
+                 << "), Inc(rhsInc: " << forLoopMetaData.inc.val
+                 << ", isUnary: " << forLoopMetaData.isUnary() << ")\n";
 #endif
     return true;
 }

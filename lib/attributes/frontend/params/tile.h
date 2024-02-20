@@ -20,7 +20,7 @@ enum class Dim {
     Z = 2,
 };
 
-struct Loop {
+struct AttributedLoop {
     LoopType type = LoopType::Regular;
     Dim dim = Dim::X;
 };
@@ -28,8 +28,8 @@ struct Loop {
 // TODO: inner and outer can have arguments
 struct TileParams {
     int tileSize;
-    Loop firstLoop = Loop{};
-    Loop secondLoop = Loop{};
+    AttributedLoop firstLoop = AttributedLoop{};
+    AttributedLoop secondLoop = AttributedLoop{};
     bool check = true;
 };
 }  // namespace oklt
