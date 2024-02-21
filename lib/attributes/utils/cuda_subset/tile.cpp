@@ -21,12 +21,12 @@ std::string getLoopIdxLine(const LoopMetadata& forLoop,
                     std::function<std::string(
                         const LoopMetadata&, const AttributedLoop&, const TileParams*, int&)>>
         mapping{
-            {{LoopType::Inner, LoopOrder::First}, tile::innerOuterLoopIdxLineFirst},
-            {{LoopType::Outer, LoopOrder::First}, tile::innerOuterLoopIdxLineFirst},
-            {{LoopType::Regular, LoopOrder::First}, tile::regularLoopIdxLineFirst},
-            {{LoopType::Inner, LoopOrder::Second}, tile::innerOuterLoopIdxLineSecond},
-            {{LoopType::Outer, LoopOrder::Second}, tile::innerOuterLoopIdxLineSecond},
-            {{LoopType::Regular, LoopOrder::Second}, tile::regularLoopIdxLineSecond},
+            {{LoopType::Inner, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
+            {{LoopType::Outer, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
+            {{LoopType::Regular, LoopOrder::First}, tile::buildRegularLoopIdxLineFirst},
+            {{LoopType::Inner, LoopOrder::Second}, tile::buildInnerOuterLoopIdxLineSecond},
+            {{LoopType::Outer, LoopOrder::Second}, tile::buildInnerOuterLoopIdxLineSecond},
+            {{LoopType::Regular, LoopOrder::Second}, tile::buildRegularLoopIdxLineSecond},
         };
     auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
     return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);
@@ -56,29 +56,20 @@ std::string buildPreffixTiledCode(const LoopMetadata& forLoopMetaData,
     return res;
 }
 
-std::string buildSuffixTiledCode(int& openedScopeCounter) {
-    std::string res;
-    // Close all opened scopes
-    while (openedScopeCounter--) {
-        res += "}";
-    }
-    return res;
-}
-
 }  // namespace
 
 bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
     auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
     auto tileParams = std::any_cast<TileParams>(s.getUserCtx(usrCtxKey));
     if (tileParams == nullptr) {
-        s.pushError(std::error_code(), "No tile params in user context");
+        s.pushError(std::error_code(), "No @tile params in user context");
         return false;
     }
 
     auto& astCtx = s.getCompiler().getASTContext();
 
     if (!isa<ForStmt>(d)) {
-        s.pushError(std::error_code(), "Tile can be applied to only for loop");
+        s.pushError(std::error_code(), "@tile can be applied to only for loop");
         return false;
     }
     const auto* forStmt = dyn_cast<ForStmt>(d);
@@ -86,25 +77,12 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
 
     int openedScopeCounter = 0;
     auto prefixCode = buildPreffixTiledCode(forLoopMetaData, tileParams, openedScopeCounter);
-    auto suffixCode = buildSuffixTiledCode(openedScopeCounter);
+    auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-    auto& rewriter = s.getRewriter();
-
-    // Remove attribute + for loop
-    SourceRange range;
-    range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
-    range.setEnd(forStmt->getRParenLoc());
-    rewriter.RemoveText(range);
-
-    // Insert preffix
-    rewriter.InsertText(forStmt->getRParenLoc(), prefixCode);
-
-    // Insert suffix
-    rewriter.InsertText(forStmt->getEndLoc(),
-                        suffixCode);  // TODO: seems to not work correclty for for loop without {}
+    replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle Tile. Parsed for loop: Init("
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
                  << "type: " << forLoopMetaData.type << ", name: " << forLoopMetaData.name
                  << ", initValue: " << forLoopMetaData.range.start
                  << "), Cond(rhsExpr: " << forLoopMetaData.range.end

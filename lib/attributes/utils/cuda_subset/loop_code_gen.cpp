@@ -50,15 +50,46 @@ std::string getUnaryStr(const LoopMetadata& forLoop, const std::string& var) {
     }
 }
 
+std::string buildCloseScopes(int& openedScopeCounter) {
+    std::string res;
+    // Close all opened scopes
+    while (openedScopeCounter--) {
+        res += "}";
+    }
+    return res;
+}
+
+void replaceAttributedLoop(const clang::Attr* a,
+                           const clang::ForStmt* f,
+                           const std::string& prefixCode,
+                           const std::string& suffixCode,
+                           SessionStage& s) {
+    auto& rewriter = s.getRewriter();
+
+    // Remove attribute + for loop:
+    //      @attribute for (int i = start; i < end; i += inc)
+    clang::SourceRange range;
+    range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
+    range.setEnd(f->getRParenLoc());
+    rewriter.RemoveText(range);
+
+    // Insert preffix
+    rewriter.InsertText(f->getRParenLoc(), prefixCode);
+
+    // Insert suffix
+    rewriter.InsertText(f->getEndLoc(),
+                        suffixCode);  // TODO: seems to not work correclty for for loop without {}
+}
+
 namespace tile {
 std::string getTiledVariableName(const LoopMetadata& forLoop) {
     return "_occa_tiled_" + forLoop.name;
 }
 
-std::string innerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
-                                       const AttributedLoop& loop,
-                                       const TileParams* params,
-                                       int& openedScopeCounter) {
+std::string buildIinnerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
+                                             const AttributedLoop& loop,
+                                             const TileParams* params,
+                                             int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -87,10 +118,10 @@ std::string innerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
     return res;
 }
 
-std::string innerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
-                                        const AttributedLoop& loop,
-                                        const TileParams* params,
-                                        int& openedScopeCounter) {
+std::string buildInnerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
+                                             const AttributedLoop& loop,
+                                             const TileParams* params,
+                                             int& openedScopeCounter) {
     static_cast<void>(params);
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
@@ -114,10 +145,10 @@ std::string innerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
     return "{" + res;  // Open new scope
 }
 
-std::string regularLoopIdxLineFirst(const LoopMetadata& forLoop,
-                                    const AttributedLoop& regularLoop,
-                                    const TileParams* params,
-                                    int& openedScopeCounter) {
+std::string buildRegularLoopIdxLineFirst(const LoopMetadata& forLoop,
+                                         const AttributedLoop& regularLoop,
+                                         const TileParams* params,
+                                         int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
@@ -139,10 +170,10 @@ std::string regularLoopIdxLineFirst(const LoopMetadata& forLoop,
     return res + " {";  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
-std::string regularLoopIdxLineSecond(const LoopMetadata& forLoop,
-                                     const AttributedLoop& regularLoop,
-                                     const TileParams* params,
-                                     int& openedScopeCounter) {
+std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
+                                          const AttributedLoop& regularLoop,
+                                          const TileParams* params,
+                                          int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto blockSize = std::to_string(params->tileSize);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -181,5 +212,33 @@ std::string regularLoopIdxLineSecond(const LoopMetadata& forLoop,
     return res;
 }
 }  // namespace tile
+
+namespace inner_outer {
+std::string buildInnerOuterLoopIdxLine(const LoopMetadata& forLoop,
+                                       const AttributedLoop& loop,
+                                       int& openedScopeCounter) {
+    static_cast<void>(openedScopeCounter);
+    auto idx = getIdxVariable(loop);
+    auto op = forLoop.IsInc() ? "+" : "-";
+
+    std::string res;
+    if (forLoop.isUnary()) {
+        res = std::move(
+            util::fmt("{} {} = {} {} {};", forLoop.type, forLoop.name, forLoop.range.start, op, idx)
+                .value());
+    } else {
+        res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
+                                  forLoop.type,
+                                  forLoop.name,
+                                  forLoop.range.start,
+                                  op,
+                                  forLoop.inc.val,
+                                  idx)
+                            .value());
+    }
+    return res;  // Open new scope
+}
+
+}  // namespace inner_outer
 
 }  // namespace oklt::cuda_subset

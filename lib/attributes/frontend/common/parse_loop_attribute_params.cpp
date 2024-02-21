@@ -36,7 +36,7 @@ bool parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopTyp
         dimIdx = dimIdxOpt.value();
     }
 
-    AttributedLoop loop{LoopType::Inner, static_cast<Dim>(dimIdx)};
+    AttributedLoop loop{loopType, static_cast<Dim>(dimIdx)};
     auto ctxKey = util::pointerToStr(static_cast<const void*>(a));
     s.tryEmplaceUserCtx<AttributedLoop>(ctxKey, loop);
 
