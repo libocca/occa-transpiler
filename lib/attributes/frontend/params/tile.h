@@ -1,6 +1,7 @@
 #pragma once
 
 #include "loop.h"
+#include <string>
 
 namespace oklt {
 enum class LoopOrder {
@@ -9,7 +10,7 @@ enum class LoopOrder {
 };
 
 struct TileParams {
-    int tileSize;
+    std::string tileSize;
     AttributedLoop firstLoop = AttributedLoop{};
     AttributedLoop secondLoop = AttributedLoop{};
     bool check = true;

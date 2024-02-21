@@ -1,8 +1,8 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
-#include "params/tile.h"
 #include "attributes/utils/parse.h"
+#include "params/tile.h"
 
 #include <oklt/util/string_utils.h>
 #include "clang/Basic/DiagnosticSema.h"
@@ -83,7 +83,8 @@ tl::expected<AttributedLoop, Error> parseLoop(const std::string& str) {
         return tl::make_unexpected(err);
     }
     if (dimIdx.value() < 0 || dimIdx.value() > 2) {
-        return tl::make_unexpected(Error{std::error_code(), "AttributedLoop argument must be 0, 1, 2"});
+        return tl::make_unexpected(
+            Error{std::error_code(), "AttributedLoop argument must be 0, 1, 2"});
     }
     return AttributedLoop{loopType.value(), static_cast<Dim>(dimIdx.value())};
 }
@@ -119,11 +120,8 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     }
 
     // Parse all parameters:
-    auto tileSize = util::parseStrTo<int>(tileParamsStr.value()[0]);  // tileParamsStr is not empty for sure
-    if (!tileSize.has_value()) {
-        s.pushError(std::error_code(), "Failed to parse @tile size");
-        return false;
-    }
+    // TODO: add some verification if statement evaluates to integer type
+    auto tileSize = tileParamsStr.value()[0];
 
     std::vector<bool> checksStack;
     std::vector<AttributedLoop> loopsStack;
@@ -160,7 +158,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     }
 
     TileParams tileParams{
-        .tileSize = tileSize.value(),
+        .tileSize = tileSize,
         .firstLoop = loopsStack.size() > 0 ? loopsStack[0] : AttributedLoop{},
         .secondLoop = loopsStack.size() > 1 ? loopsStack[1] : AttributedLoop{},
         .check = checksStack.size() > 0 ? checksStack.front() : true,

@@ -97,7 +97,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        res = std::move(util::fmt("{} {} = ({}) {} ({} * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
                                   forLoop.type,
                                   tiledVar,
                                   forLoop.range.start,
@@ -106,7 +106,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
                                   idx)
                             .value());
     } else {
-        res = std::move(util::fmt("{} {} = ({}) {} (({} * {}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});",
                                   forLoop.type,
                                   tiledVar,
                                   forLoop.range.start,
@@ -151,11 +151,10 @@ std::string buildRegularLoopIdxLineFirst(const LoopMetadata& forLoop,
                                          const TileParams* params,
                                          int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
-    auto blockSize = std::to_string(params->tileSize);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop);
 
-    auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} {})",
+    auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
                          forLoop.type,
                          tiledVar,
                          forLoop.range.start,
@@ -176,14 +175,13 @@ std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
                                           const TileParams* params,
                                           int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
-    auto blockSize = std::to_string(params->tileSize);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
 
     std::string res;
     if (forLoop.isUnary()) {
         auto unaryStr = getUnaryStr(forLoop, forLoop.name);  // ++i/i++/--i/i--
-        res = util::fmt("for({} {} = {}; {} {} ({} {} {}); {})",
+        res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {})",
                         forLoop.type,
                         forLoop.name,
                         tiledVar,
@@ -191,12 +189,12 @@ std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
                         cmp,
                         tiledVar,
                         op,
-                        blockSize,
+                        params->tileSize,
                         unaryStr)
                   .value();
     } else {
         auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
-        res = util::fmt("for({} {} = {}; {} {} ({} {} {}); {} {} {})",
+        res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {} {} {})",
                         forLoop.type,
                         forLoop.name,
                         tiledVar,
@@ -204,7 +202,7 @@ std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
                         cmp,
                         tiledVar,
                         op,
-                        blockSize,
+                        params->tileSize,
                         forLoop.name,
                         assignUpdate,
                         forLoop.inc.val)
