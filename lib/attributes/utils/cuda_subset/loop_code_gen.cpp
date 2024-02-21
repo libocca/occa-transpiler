@@ -67,7 +67,8 @@ void replaceAttributedLoop(const clang::Attr* a,
     auto& rewriter = s.getRewriter();
 
     // Remove attribute + for loop:
-    //      @attribute for (int i = start; i < end; i += inc)
+    //      @attribute(...) for (int i = start; i < end; i += inc)
+    //  or: for (int i = start; i < end; i += inc; @attribute(...))
     clang::SourceRange range;
     range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
     range.setEnd(f->getRParenLoc());

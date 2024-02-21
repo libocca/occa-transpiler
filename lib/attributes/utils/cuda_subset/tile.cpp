@@ -12,10 +12,10 @@ namespace oklt::cuda_subset {
 using namespace clang;
 namespace {
 
-std::string getLoopIdxLine(const LoopMetadata& forLoop,
-                           const TileParams* params,
-                           const LoopOrder& ord,
-                           int& openedScopeCounter) {
+std::string buildLoopIdxLine(const LoopMetadata& forLoop,
+                             const TileParams* params,
+                             const LoopOrder& ord,
+                             int& openedScopeCounter) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
     static std::map<std::tuple<LoopType, LoopOrder>,
                     std::function<std::string(
@@ -32,9 +32,9 @@ std::string getLoopIdxLine(const LoopMetadata& forLoop,
     return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);
 }
 
-std::string getCheckLine(const LoopMetadata& forLoop,
-                         const TileParams* tileParams,
-                         int& openedScopeCounter) {
+std::string buildCheckLine(const LoopMetadata& forLoop,
+                           const TileParams* tileParams,
+                           int& openedScopeCounter) {
     if (!tileParams->check) {
         return "";
     }
@@ -50,9 +50,9 @@ std::string buildPreffixTiledCode(const LoopMetadata& forLoopMetaData,
                                   const TileParams* tileParams,
                                   int& openedScopeCounter) {
     std::string res;
-    res += getLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::First, openedScopeCounter);
-    res += getLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::Second, openedScopeCounter);
-    res += getCheckLine(forLoopMetaData, tileParams, openedScopeCounter);
+    res += buildLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::First, openedScopeCounter);
+    res += buildLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::Second, openedScopeCounter);
+    res += buildCheckLine(forLoopMetaData, tileParams, openedScopeCounter);
     return res;
 }
 

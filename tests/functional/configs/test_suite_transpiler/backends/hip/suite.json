@@ -1,4 +1,5 @@
 [
     "const_global.json",
-    "non_kernel_function.json"
+    "non_kernel_function.json",
+    "tile.json"
 ]

@@ -177,7 +177,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     s.tryEmplaceUserCtx<TileParams>(ctxKey, tileParams);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Parsed tile parameters: " << ctxKey
+    llvm::outs() << "[DEBUG] Parsed @tile parameters: " << ctxKey
                  << ": {tile size: " << tileParams.tileSize
                  << ", first loop: " << static_cast<int>(tileParams.firstLoop.type)
                  << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
