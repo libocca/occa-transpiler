@@ -9,6 +9,8 @@ enum class OkltTranspilerErrorCode {
     NO_TOKENS_FROM_SOURCE = 10,
     OKL_ATTR_PARSING_ERR = 20,
     OTHER_ERROR = 200,
+    ATOMIC_NOT_SUPPORTED_OP = 201,
+    ATOMIC_NON_LVALUE_EXPR = 202,
 };
 
 namespace std {
@@ -19,5 +21,5 @@ struct is_error_code_enum<OkltTranspilerErrorCode> : true_type {};
 std::error_code make_error_code(OkltTranspilerErrorCode);
 
 namespace oklt {
-Error makeNormalizerError(OkltTranspilerErrorCode ec, std::string desc);
+Error makeError(OkltTranspilerErrorCode ec, std::string desc);
 }  // namespace oklt

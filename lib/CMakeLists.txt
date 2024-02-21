@@ -38,6 +38,10 @@ set (OCCA_TRANSPILER_SOURCES
 
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
+    attributes/utils/handle_restrict.h
+    attributes/utils/handle_restrict.cpp
+    attributes/utils/handle_atomic.h
+    attributes/utils/handle_atomic.cpp
     attributes/utils/parse.h
 
     # Backends common
@@ -53,6 +57,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/hip/kernel.cpp
 
     # CUDA
+    attributes/backend/cuda/atomic.cpp
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
@@ -92,8 +97,13 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/utils/format.cpp
     core/utils/type_converter.cpp
+    core/utils/type_converter.h
     core/utils/attributes.cpp
+    core/utils/attributes.h
     core/utils/var_decl.cpp
+    core/utils/var_decl.h
+    core/utils/range_to_string.h
+    core/utils/range_to_string.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp
@@ -102,10 +112,14 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/transpiler.cpp
     pipeline/normalizer_and_transpiler.cpp
     pipeline/stages/transpiler/transpiler.cpp
+    pipeline/stages/transpiler/transpiler.h
     pipeline/stages/transpiler/error_codes.cpp
+    pipeline/stages/transpiler/error_codes.h
 
     pipeline/stages/normalizer/normalizer.cpp
+    pipeline/stages/normalizer/normalizer.h
     pipeline/stages/normalizer/error_codes.cpp
+    pipeline/stages/normalizer/error_codes.h
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
     pipeline/stages/normalizer/impl/okl_attr_traverser.cpp

@@ -20,6 +20,10 @@ std::string TranspilerErrorsCategory::message(int ev) const {
             return "other error";
         case OkltTranspilerErrorCode::OTHER_ERROR:
             return "other error";
+        case OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP:
+            return "not supported atomic expression";
+        case OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR:
+            return "atomic left expression must be lvalue";
     }
     return "unrecognized error";
 }
