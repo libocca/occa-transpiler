@@ -1,6 +1,6 @@
 #pragma once
 
-#include <oklt/core/metadata_types.h>
+#include <oklt/core/kernel_metadata.h>
 
 #include <clang/AST/AST.h>
 
@@ -23,8 +23,27 @@ struct OklSemaCtx {
 
         const clang::FunctionDecl* kernFuncDecl;
         std::stack<const clang::CompoundStmt*> compoundStack;
-        std::stack<const clang::ForStmt*> loopStack;
-        std::stack<std::string_view> loopAttrStack;
+
+        enum LoopBlockParserState {
+            NotStarted,
+            PreTraverse,
+            PostTraverse
+        };
+        LoopBlockParserState state {NotStarted};
+
+        struct OklForStmt {
+            const clang::Attr* attr;
+            const clang::ForStmt* stmt;
+            LoopMetaData meta;
+        };
+        struct ParsedLoopBlock {
+            clang::SourceLocation loopLocs;
+            uint32_t numInnerThreads;
+            std::list<OklForStmt> nestedLoops;
+        };
+        std::list<ParsedLoopBlock> outerLoopBlocks;
+        std::list<ParsedLoopBlock>::iterator parsingLoopBlockIt;
+        std::list<OklForStmt>::iterator postLoopIt;
     };
 
     OklSemaCtx() = default;
@@ -35,10 +54,15 @@ struct OklSemaCtx {
     void stopParsingKernelInfo();
 
     [[nodiscard]] bool isParsingOklKernel() const;
-    [[nodiscard]] bool isKernelParmVar(const clang::ParmVarDecl*) const;
+    [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl* fd) const;
+    [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl*) const;
 
-    [[nodiscard]] tl::expected<bool, Error> validateForLoops(const clang::ForStmt*,
-                                                              const clang::Attr*);
+    [[nodiscard]] std::optional<LoopMetaData> getLoopMetaData(
+        const clang::ForStmt* forStmt = nullptr) const;
+
+    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr*,
+                                                                   const clang::ForStmt*);
+    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr*, const clang::ForStmt*);
 
     void setKernelArgInfo(const clang::ParmVarDecl* parm);
     void setKernelArgRawString(const clang::ParmVarDecl* parm,

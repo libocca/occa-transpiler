@@ -1,26 +1,52 @@
-#include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_traversal/preorder_traversal_nlr.h"
+#include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace {
-#define TRAVERSE_EXPR(EXPR_TYPE, EXPR_VAR, PROC_MNG, STAGE)                                     \
-    do {                                                                                        \
-        if ((EXPR_VAR) == nullptr) {                                                            \
-            return true;                                                                        \
-        }                                                                                       \
-        auto procType = (STAGE).getAstProccesorType();                                          \
-        auto cont = (PROC_MNG).runPreActionNodeHandle(procType, EXPR_VAR, STAGE);               \
-        if (!cont) {                                                                            \
-            return cont;                                                                        \
-        }                                                                                       \
-        cont = clang::RecursiveASTVisitor<PreorderNlrTraversal>::Traverse##EXPR_TYPE(EXPR_VAR); \
-        if (!cont) {                                                                            \
-            return cont;                                                                        \
-        }                                                                                       \
-        cont = (PROC_MNG).runPostActionNodeHandle(procType, EXPR_VAR, STAGE);                   \
-        return true;                                                                            \
-    } while (false)
+using namespace oklt;
+using namespace clang;
 
+template <typename TraversalType, typename ExprType>
+bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
+    if constexpr (std::is_same_v<ExprType, Stmt*>) {
+        auto* expr_ = [](auto* expr) {
+            if (expr->getStmtClass() == clang::Stmt::AttributedStmtClass) {
+                return cast<AttributedStmt>(expr)->getSubStmt();
+            }
+            return expr;
+        }(expr);
+        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseStmt(expr_);
+    } else if constexpr (std::is_same_v<ExprType, Decl*>) {
+        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseDecl(expr);
+    }
+    else if constexpr (std::is_same_v<ExprType, RecoveryExpr*>) {
+        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseRecoveryExpr(expr);
+    } else if constexpr (std::is_same_v<ExprType, TranslationUnitDecl*>) {
+        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseTranslationUnitDecl(
+            expr);
+    }
+    return false;
+}
+
+template <typename TraversalType, typename ExprType>
+bool traverseExpr(TraversalType& traversal,
+                  ExprType expr,
+                  AstProcessorManager& procMng,
+                  SessionStage& stage) {
+    if (expr == nullptr) {
+        return true;
+    }
+    auto procType = stage.getAstProccesorType();
+    if (!procMng.runPreActionNodeHandle(procType, expr, stage)) {
+        return false;
+    }
+
+    // dispatch the next node
+    if (!dispatchTraverseFunc(traversal, expr)) {
+        return false;
+    }
+    return procMng.runPostActionNodeHandle(procType, expr, stage);
+}
 }  // namespace
 namespace oklt {
 
@@ -28,20 +54,20 @@ PreorderNlrTraversal::PreorderNlrTraversal(AstProcessorManager& procMng, Session
     : _procMng(procMng),
       _stage(stage) {}
 bool PreorderNlrTraversal::TraverseDecl(clang::Decl* decl) {
-    TRAVERSE_EXPR(Decl, decl, _procMng, _stage);
+    return traverseExpr(*this, decl, _procMng, _stage);
 }
 
 bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
-    TRAVERSE_EXPR(Stmt, stmt, _procMng, _stage);
+    return traverseExpr(*this, stmt, _procMng, _stage);
 }
 
 bool PreorderNlrTraversal::TraverseRecoveryExpr(clang::RecoveryExpr* recoveryExpr) {
-    TRAVERSE_EXPR(RecoveryExpr, recoveryExpr, _procMng, _stage);
+    return traverseExpr(*this, recoveryExpr, _procMng, _stage);
 }
 
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translationUnitDecl) {
-    TRAVERSE_EXPR(TranslationUnitDecl, translationUnitDecl, _procMng, _stage);
+    return traverseExpr(*this, translationUnitDecl, _procMng, _stage);
 }
 
 }  // namespace oklt

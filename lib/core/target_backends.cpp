@@ -25,6 +25,8 @@ std::string backendToString(TargetBackend backend) {
             return std::string{"cuda"};
         case TargetBackend::OPENMP:
             return std::string{"openmp"};
+        case TargetBackend::HIP:
+            return std::string{"hip"};
     }
     return {};
 }
