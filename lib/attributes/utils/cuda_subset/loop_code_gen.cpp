@@ -1,5 +1,6 @@
 #include "loop_code_gen.h"
 #include <oklt/util/string_utils.h>
+#include "attributes/utils/code_gen.h"
 
 namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim) {
@@ -17,46 +18,6 @@ std::string getIdxVariable(const AttributedLoop& loop) {
         default:  // Incorrect case
             return "";
     }
-}
-
-std::string getCondCompStr(const LoopMetadata& forLoop) {
-    switch (forLoop.condition.op) {
-        case clang::BO_LE:
-            return "<=";
-        case clang::BO_LT:
-            return "<";
-        case clang::BO_GE:
-            return ">=";
-        case clang::BO_GT:
-            return ">";
-        default:  // Shouldn't happen, since for loop parse validates operator
-            return "<error>";
-    }
-}
-
-std::string getUnaryStr(const LoopMetadata& forLoop, const std::string& var) {
-    switch (forLoop.inc.op.uo) {
-        case clang::UO_PreInc:
-            return "++" + var;
-        case clang::UO_PostInc:
-            return var + "++";
-        case clang::UO_PreDec:
-            return "--" + var;
-        case clang::UO_PostDec:
-            return var + "--";
-
-        default:  // Shouldn't happen, since for loop parse validates operator
-            return "<error>";
-    }
-}
-
-std::string buildCloseScopes(int& openedScopeCounter) {
-    std::string res;
-    // Close all opened scopes
-    while (openedScopeCounter--) {
-        res += "}";
-    }
-    return res;
 }
 
 void replaceAttributedLoop(const clang::Attr* a,
@@ -152,7 +113,7 @@ std::string buildRegularLoopIdxLineFirst(const LoopMetadata& forLoop,
                                          int& openedScopeCounter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
-    auto cmpOpStr = getCondCompStr(forLoop);
+    auto cmpOpStr = getCondCompStr(forLoop.condition.op);
 
     auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
                          forLoop.type,
@@ -180,7 +141,7 @@ std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        auto unaryStr = getUnaryStr(forLoop, forLoop.name);  // ++i/i++/--i/i--
+        auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.name);  // ++i/i++/--i/i--
         res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {})",
                         forLoop.type,
                         forLoop.name,

@@ -47,7 +47,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/parse.h
     attributes/utils/loop_meta_data.h
     attributes/utils/loop_meta_data.cpp
-
+    attributes/utils/code_gen.h
+    attributes/utils/code_gen.cpp
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp

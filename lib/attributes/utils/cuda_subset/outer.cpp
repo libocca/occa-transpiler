@@ -7,6 +7,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "handle.h"
+#include "attributes/utils/code_gen.h"
 
 namespace oklt::cuda_subset {
 using namespace clang;

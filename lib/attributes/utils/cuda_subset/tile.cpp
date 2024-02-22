@@ -7,6 +7,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "handle.h"
+#include "attributes/utils/code_gen.h"
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -38,7 +39,7 @@ std::string buildCheckLine(const LoopMetadata& forLoop,
     if (!tileParams->check) {
         return "";
     }
-    auto cmpStr = getCondCompStr(forLoop);
+    auto cmpStr = getCondCompStr(forLoop.condition.op);
 
     // TODO: parse cmp operator
     auto res = util::fmt("if ({} {} {})", forLoop.name, cmpStr, forLoop.range.end).value();

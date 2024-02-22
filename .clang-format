@@ -9,3 +9,4 @@ BinPackParameters: false
 ExperimentalAutoDetectBinPacking: false
 AllowAllParametersOfDeclarationOnNextLine: false
 PackConstructorInitializers: Never
+InsertNewlineAtEOF: true
