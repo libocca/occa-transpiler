@@ -31,5 +31,16 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/hip/tile/outer_inner_regular_inc_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/tile/outer_inner_regular_dec.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/tile/outer_inner_regular_dec_ref.cpp"
     }
 ]

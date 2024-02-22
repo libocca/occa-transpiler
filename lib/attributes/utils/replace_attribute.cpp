@@ -69,7 +69,7 @@ bool handleGlobalFunction(const clang::Decl* decl,
 
 #ifdef TRANSPILER_DEBUG_LOG
     auto func = dyn_cast<FunctionDecl>(decl);
-    llvm::outs() << "[DEBUG] Handle global function '" << func->getNameAsString() << "\n";
+    llvm::outs() << "[DEBUG] Handle global function '" << func->getNameAsString() << "'\n";
 #endif
     return true;
 }

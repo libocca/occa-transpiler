@@ -28,7 +28,7 @@ bool parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopTyp
     }
 
     auto dimIdx = 0;
-    if (nParams == 1) {
+    if (nParams == 1 && tileParamsStr.value()[0] != "") {
         auto dimIdxOpt = util::parseStrTo<int>(tileParamsStr.value()[0]);
         if (!dimIdxOpt) {
             return fail(util::fmt("{} arguments must be 0, 1 or 2", loopTypeStr).value());
