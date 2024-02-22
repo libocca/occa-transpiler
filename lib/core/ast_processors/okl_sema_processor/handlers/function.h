@@ -7,11 +7,12 @@ struct ParmVarDecl;
    //
 namespace oklt {
 struct SessionStage;
+struct OklSemaCtx;
 
-bool prepareOklKernelFunction(const clang::FunctionDecl* fd, SessionStage& stage);
-bool transpileOklKernelFunction(const clang::FunctionDecl* fd, SessionStage& stage);
-bool prepareOklKernelParam(const clang::ParmVarDecl* parm, SessionStage& stage);
-bool transpileOklKernelParam(const clang::ParmVarDecl* parm, SessionStage& stage);
+bool preValidateOklKernelSema(const clang::FunctionDecl* fd, SessionStage& stage, OklSemaCtx&);
+bool postValidateOklKernelSema(const clang::FunctionDecl* fd, SessionStage& stage, OklSemaCtx&);
+bool preValidateOklKernelParamSema(const clang::ParmVarDecl* parm, SessionStage& stage, OklSemaCtx&);
+bool postValidateOklKernelParamSema(const clang::ParmVarDecl* parm, SessionStage& stage, OklSemaCtx&);
 
 }  // namespace oklt
    // namespace oklt

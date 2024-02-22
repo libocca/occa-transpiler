@@ -2,8 +2,8 @@
 
 #include "core/ast_traversal/transpile_frontend_action.h"
 #include "core/transpiler_session/session_result.h"
-#include "core/transpiler_session/transpiler_session.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/transpiler_session/transpiler_session.h"
 
 #include <clang/Tooling/Tooling.h>
 
@@ -25,13 +25,14 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     Twine code(input.sourceCode);
-    std::shared_ptr<PCHContainerOperations> pchOps = std::make_shared<PCHContainerOperations>();
-    std::unique_ptr<oklt::TranspileFrontendAction> action =
-        std::make_unique<oklt::TranspileFrontendAction>(*session);
 
-    bool ret = runToolOnCodeWithArgs(
-        std::move(action), code, args, file_name, tool_name, std::move(pchOps));
-    if (!ret) {
+    bool ret = runToolOnCodeWithArgs(std::make_unique<oklt::TranspileFrontendAction>(*session),
+                                     code,
+                                     args,
+                                     file_name,
+                                     tool_name,
+                                     std::make_shared<PCHContainerOperations>());
+    if (!ret || !session->getErrors().empty()) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }
 

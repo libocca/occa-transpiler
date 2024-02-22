@@ -15,7 +15,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/metadata_types.h
+    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_metadata.h
 
 
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
@@ -70,6 +70,9 @@ set (OCCA_TRANSPILER_SOURCES
 
     # CUDA
     attributes/backend/cuda/kernel.cpp
+    attributes/backend/cuda/inner.cpp
+    attributes/backend/cuda/outer.cpp
+    attributes/backend/cuda/tile.cpp
     attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
     attributes/backend/cuda/global_constant.cpp
@@ -81,8 +84,10 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/ast_processors/okl_sema_processor/processor.cpp
     core/ast_processors/okl_sema_processor/okl_sema_ctx.cpp
-    core/ast_processors/okl_sema_processor/handlers/function.cpp
     core/ast_processors/okl_sema_processor/handlers/function.h
+    core/ast_processors/okl_sema_processor/handlers/function.cpp
+    core/ast_processors/okl_sema_processor/handlers/loop.h
+    core/ast_processors/okl_sema_processor/handlers/loop.cpp
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
@@ -90,7 +95,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/diag/diag_consumer.cpp
 
-    core/metadata_types.cpp
+    core/kernel_metadata.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
@@ -108,6 +113,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/utils/format.cpp
     core/utils/type_converter.cpp
+    core/utils/for_stmt_parser.cpp
     core/utils/attributes.cpp
     core/utils/var_decl.cpp
 
