@@ -16,7 +16,4 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s, const std::s
 bool handleGlobalFunction(const clang::Decl* decl,
                           SessionStage& s,
                           const std::string& funcQualifier);
-
-bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s);
-
 }  // namespace oklt

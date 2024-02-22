@@ -18,6 +18,9 @@ tl::expected<std::string, Error> parseCppAttributeParameterStr(const clang::Supp
     auto param = attr->diagnosticIdentifiers().begin();
     std::string param_str(param->data(), param->size());
     //   Remove '(' and ')' and the beginning and end
+    if (param_str == "") {
+        return param_str;
+    }
     param_str = param_str.substr(1, param_str.size() - 2);
 
     return param_str;

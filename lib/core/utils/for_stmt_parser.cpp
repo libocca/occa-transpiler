@@ -16,8 +16,9 @@ BinOp toOkl(BinaryOperatorKind bok) {
         {BinaryOperatorKind::BO_LE, BinOp::Le},
         {BinaryOperatorKind::BO_LT, BinOp::Lt},
         {BinaryOperatorKind::BO_GT, BinOp::Gt},
+        {BinaryOperatorKind::BO_GE, BinOp::Ge},
         {BinaryOperatorKind::BO_AddAssign, BinOp::AddAssign},
-        {BinaryOperatorKind::BO_RemAssign, BinOp::RemoveAssign}
+        {BinaryOperatorKind::BO_RemAssign, BinOp::RemoveAssign},
     };
     auto it = clang2okl.find(bok);
     return it != clang2okl.end() ? it->second: BinOp::Other;

@@ -1,6 +1,7 @@
-#include "core/attribute_manager/attribute_manager.h"
 #include "attributes/attribute_names.h"
+#include "core/attribute_manager/attribute_manager.h"
 
+#include "attributes/frontend/common/parse_loop_attribute_params.h"
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -45,8 +46,8 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseInnerAttrParams(const clang::Attr* a, SessionStage&) {
-    return true;
+bool parseInnerAttrParams(const clang::Attr* a, SessionStage& s) {
+    return parseLoopAttrParams(a, s, LoopType::Inner);
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

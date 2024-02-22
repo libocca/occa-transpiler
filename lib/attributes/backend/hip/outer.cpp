@@ -4,14 +4,12 @@
 
 namespace {
 using namespace oklt;
-
-__attribute__((constructor)) void registerKernelHandler() {
+__attribute__((constructor)) void registerHIPInnerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, KERNEL_ATTR_NAME},
-        AttrDeclHandler{cuda_subset::handleKernelAttribute});
+        {TargetBackend::HIP, OUTER_ATTR_NAME}, AttrStmtHandler{cuda_subset::handleOuterAttribute});
 
     if (!ok) {
-        llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler (CUDA)\n";
+        llvm::errs() << "failed to register inner attribute handler\n";
     }
 }
 }  // namespace

@@ -4,6 +4,8 @@
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 
+#include <clang/AST/Attr.h>
+
 namespace oklt {
 using namespace clang;
 bool handleRestrictAttribute(const clang::Attr* a,

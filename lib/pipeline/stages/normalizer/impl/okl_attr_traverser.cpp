@@ -119,7 +119,11 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                               tok::string_literal,
                               tok::numeric_constant,
                               tok::kw_false,
-                              tok::kw_true)) {
+                              tok::kw_true,
+                              tok::slash,
+                              tok::star,
+                              tok::plus,
+                              tok::minus)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += [&](const auto& token) {
                     auto token_str = fsm.pp.getSpelling(token);

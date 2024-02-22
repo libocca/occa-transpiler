@@ -9,7 +9,7 @@ bool handleCUDAAtomicAttribute(const clang::Attr* attr,
                                const clang::Stmt* stmt,
                                SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr->getNormalizedFullName() << '\n';
 #endif
     return handleAtomicAttribute(attr, stmt, stage);
 }

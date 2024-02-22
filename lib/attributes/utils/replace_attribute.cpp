@@ -66,10 +66,11 @@ bool handleGlobalFunction(const clang::Decl* decl,
     auto loc = decl->getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
     rewriter.InsertTextBefore(loc, spacedModifier);
-    return true;
-}
 
-bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
+    auto func = dyn_cast<FunctionDecl>(decl);
+    llvm::outs() << "[DEBUG] Handle global function '" << func->getNameAsString() << "'\n";
+#endif
     return true;
 }
 

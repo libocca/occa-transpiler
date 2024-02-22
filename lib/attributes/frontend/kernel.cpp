@@ -1,5 +1,5 @@
-#include "core/attribute_manager/attribute_manager.h"
 #include "attributes/attribute_names.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/Sema.h"
@@ -33,6 +33,15 @@ struct KernelAttribute : public ParsedAttrInfo {
                 << attr << attr.isDeclspecAttribute() << "functions";
             return false;
         }
+
+        auto func = dyn_cast<FunctionDecl>(decl);
+        auto returnTypeStr = func->getReturnType().getAsString();
+        if (returnTypeStr != "void") {
+            sema.Diag(attr.getLoc(), diag::err_type_attribute_wrong_type)
+                << attr << "functions with [void] return" << returnTypeStr;
+            return false;
+        }
+
         return true;
     }
 };

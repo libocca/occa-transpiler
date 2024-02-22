@@ -7,6 +7,9 @@
 
 #include <clang/Tooling/Tooling.h>
 
+#include <llvm/Support/raw_os_ostream.h>
+#include <oklt/util/format.h>
+
 using namespace llvm;
 using namespace clang;
 using namespace clang::tooling;
@@ -32,6 +35,13 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     if (!ret || !session->getErrors().empty()) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }
+
+    // If no rewrites were made, source will be empty
+    if (session->output.kernel.sourceCode.empty()) {
+        session->output.kernel.sourceCode = input.sourceCode;
+    }
+    session->output.kernel.sourceCode = oklt::format(session->output.kernel.sourceCode);
+
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
