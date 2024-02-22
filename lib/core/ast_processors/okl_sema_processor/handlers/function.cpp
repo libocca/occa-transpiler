@@ -1,9 +1,7 @@
-#include "attributes/attribute_names.h"
-#include <oklt/core/metadata_types.h>
+#include <oklt/core/kernel_metadata.h>
 
-#include "core/transpiler_session/session_stage.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/AST.h>
 
@@ -12,45 +10,10 @@
 namespace {
 using namespace clang;
 using namespace oklt;
-
-bool isOklKernel(const FunctionDecl* fd, SessionStage& stage) {
-    // we intersting only in okl kernel function
-    if (!fd->hasAttrs()) {
-        return false;
-    }
-
-    const auto& attrs = fd->getAttrs();
-    if (attrs.size() > 1) {
-        // TODO multiple attributes are not supported by legacy OKL
-        //  make approptiate error code
-        stage.pushError(std::error_code(), "multiplte attributes for function decl");
-        return false;
-    }
-
-    return attrs[0]->getNormalizedFullName() == KERNEL_ATTR_NAME;
-}
-
-bool applyBackendHandlers(const Decl* decl, SessionStage& stage) {
-    if (!decl->hasAttrs()) {
-        return AttributeManager::instance().handleDecl(decl, stage);
-    }
-    for (auto* attr : decl->getAttrs()) {
-        if (!AttributeManager::instance().handleAttr(attr, decl, stage)) {
-            return false;
-        }
-    }
-    return true;
-}
 }  // namespace
 
 namespace oklt {
-bool prepareOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
-    // we intersting only in okl kernel function
-    if (!isOklKernel(fd, stage)) {
-        return true;
-    }
-
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+bool preValidateOklKernelSema(const FunctionDecl* fd, SessionStage& stage, OklSemaCtx& sema) {
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
         //  make approptiate error code
@@ -64,14 +27,7 @@ bool prepareOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
     return true;
 }
 
-bool transpileOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
-    // validation is done on preAction so braverely get the first attribute and run traclpile handle
-    auto cont = applyBackendHandlers(fd, stage);
-    if (!cont) {
-        return false;
-    }
-
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+bool postValidateOklKernelSema(const FunctionDecl* fd, SessionStage& stage, OklSemaCtx& sema) {
     // bypass possible nested functions/closures
     if (!sema.isParsingOklKernel()) {
         return true;
@@ -88,14 +44,13 @@ bool transpileOklKernelFunction(const FunctionDecl* fd, SessionStage& stage) {
     return true;
 }
 
-bool prepareOklKernelParam(const ParmVarDecl* parm, SessionStage& stage) {
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+bool preValidateOklKernelParamSema(const ParmVarDecl* parm, SessionStage& stage, OklSemaCtx& sema) {
     if (!sema.isParsingOklKernel()) {
         return true;
     }
 
     // skip if param belongs to nested function/closure
-    if (!sema.isKernelParmVar(parm)) {
+    if (!sema.isDeclInLexicalTraversal(parm)) {
         return true;
     }
 
@@ -106,20 +61,11 @@ bool prepareOklKernelParam(const ParmVarDecl* parm, SessionStage& stage) {
     return true;
 }
 
-bool transpileOklKernelParam(const ParmVarDecl* parm, SessionStage& stage) {
-    auto cont = applyBackendHandlers(parm, stage);
-    if (!cont) {
-        return false;
-    }
-
-    // it is just regular function continue
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    if (!sema.isParsingOklKernel()) {
-        return true;
-    }
-
+bool postValidateOklKernelParamSema(const ParmVarDecl* parm,
+                                    SessionStage& stage,
+                                    OklSemaCtx& sema) {
     // skip nested function/closure
-    if (!sema.isKernelParmVar(parm)) {
+    if (!sema.isDeclInLexicalTraversal(parm)) {
         return true;
     }
 

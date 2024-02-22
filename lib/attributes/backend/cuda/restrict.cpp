@@ -25,11 +25,7 @@ bool handleCUDARestrictAttribute(const clang::Attr* a, const clang::Decl* d, Ses
     removeAttribute(a, s);
     std::string restrictText = " __restrict__ ";
     rewriter.InsertText(identifierLoc, restrictText, false, false);
-    auto kernelInfo = s.tryEmplaceUserCtx<OklSemaCtx>().getParsingKernelInfo();
-    if (!kernelInfo) {
-        // INFO: internal error
-        return false;
-    }
+
     auto& ctx = varDecl->getASTContext();
     auto& sm = ctx.getSourceManager();
     auto& opts = ctx.getLangOpts();
@@ -37,7 +33,13 @@ bool handleCUDARestrictAttribute(const clang::Attr* a, const clang::Decl* d, Ses
     auto part1 = clang::Lexer::getSourceText(CharSourceRange::getCharRange(r1), sm, opts).str();
     auto ident = varDecl->getQualifiedNameAsString();
     std::string modifiedArgument = part1 + " " + restrictText + " " + ident;
-    kernelInfo->argStrs.push_back(modifiedArgument);
+
+    // set transpiled arg attr modifier string
+    if (s.getAstProccesorType() == AstProcessorType::OKL_WITH_SEMA) {
+        s.tryEmplaceUserCtx<OklSemaCtx>().setKernelArgRawString(dyn_cast<ParmVarDecl>(d),
+                                                                modifiedArgument);
+    }
+
     return true;
 }
 

@@ -1,4 +1,4 @@
-#include <oklt/core/metadata_types.h>
+#include <oklt/core/kernel_metadata.h>
 
 #include <gtest/gtest.h>
 
