@@ -1,4 +1,5 @@
 #include "core/utils/type_converter.h"
+#include <oklt/core/error.h>
 
 #include <clang/AST/AST.h>
 
@@ -29,9 +30,17 @@ tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const clang::VarDecl& v
 }
 
 DatatypeCategory toOklDatatypeCategory(const clang::QualType& qt) {
-    if (qt->isBuiltinType()) {
+    auto qt_ = [](const clang::QualType qt) {
+        if (qt->isPointerType()) {
+            return qt->getPointeeType();
+        }
+        return qt;
+    }(qt);
+
+    if (qt_->isBuiltinType()) {
         return DatatypeCategory::BUILTIN;
     }
     return DatatypeCategory::CUSTOM;
 }
+
 }  // namespace oklt

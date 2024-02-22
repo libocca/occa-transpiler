@@ -2,10 +2,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <list>
 #include <optional>
 #include <string>
 #include <vector>
-#include <list>
 
 namespace oklt {
 
@@ -34,15 +34,12 @@ struct ArgumentInfo {
     bool is_ptr;
 };
 
-struct KernelInstance {
-    // INFO: for launcher template generation only
-    int dimOuter = 0;
-    int dimInner = 0;
-    int tileSize = 0;
-};
+// TODO replace clang types by own
+enum class BinOp { Eq, Le, Lt, Gt, Ge, AddAssign, RemoveAssign, Other };
 
-//TODO replace clang types by own
-struct LoopMetadata {
+enum class UnOp { PreInc, PostInc, PreDec, PostDec, Other };
+
+struct LoopMetaData {
     std::string type;
     std::string name;
     struct {
@@ -52,24 +49,25 @@ struct LoopMetadata {
     } range;
     struct {
         std::string cmp;
-//        clang::BinaryOperator::Opcode op = clang::BO_EQ;
+        BinOp op = BinOp::Eq;
     } condition;
     struct {
         std::string val;
         union {
-//            clang::UnaryOperator::Opcode uo;
-//            clang::BinaryOperator::Opcode bo;
+            UnOp uo;
+            BinOp bo;
         } op;
     } inc;
 
     [[nodiscard]] bool IsInc() const {
         bool ret = false;
         if (inc.val.empty()) {
-//            ret = (inc.op.uo == clang::UO_PreInc || inc.op.uo == clang::UO_PostInc);
+            ret = (inc.op.uo == UnOp::PreInc || inc.op.uo == UnOp::PostInc);
         } else {
-//            ret = (inc.op.bo == clang::BO_AddAssign);
+            ret = (inc.op.bo == BinOp::AddAssign);
         }
-//        ret = (ret && (condition.op == clang::BO_LE || condition.op == clang::BO_LT));
+
+        ret = (ret && (condition.op == BinOp::Le || condition.op == BinOp::Lt));
 
         return ret;
     };
@@ -80,6 +78,23 @@ struct LoopMetadata {
             return range.start + " - " + range.end;
         };
     };
+    [[nodiscard]] bool isUnary() const {
+        if (!inc.val.empty()) {
+            return false;
+        }
+        // should by unnecessary check, but just in case
+        return (inc.op.uo == UnOp::PreInc) || (inc.op.uo == UnOp::PostInc) ||
+               (inc.op.uo == UnOp::PreDec) || (inc.op.uo == UnOp::PostDec);
+    }
+};
+
+struct KernelInstance {
+    // INFO: for launcher template generation only
+    int dimOuter = 0;
+    int dimInner = 0;
+    int tileSize = 0;
+    std::list<LoopMetaData> outer = {};
+    std::list<LoopMetaData> inner = {};
 };
 
 struct KernelInfo {
