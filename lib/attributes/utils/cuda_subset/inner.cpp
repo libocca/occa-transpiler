@@ -3,11 +3,11 @@
 #include <functional>
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "attributes/utils/loop_meta_data.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "handle.h"
 #include "attributes/utils/code_gen.h"
+#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -25,10 +25,16 @@ bool handleInnerAttribute(const clang::Attr* a, const clang::Stmt* d, SessionSta
         return false;
     }
     const auto* forStmt = dyn_cast<ForStmt>(d);
-    auto forLoop = ParseForStmt(const_cast<ForStmt*>(forStmt), astCtx);
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto forLoopMetaData = sema.getLoopMetaData(forStmt);
+    if (!forLoopMetaData) {
+        s.pushError(std::error_code(), "@tile: failed to fetch loop meta data from sema");
+        return false;
+    }
+
     int openedScopeCounter = 0;
     auto prefixCode =
-        inner_outer::buildInnerOuterLoopIdxLine(forLoop, *loopParams, openedScopeCounter);
+        inner_outer::buildInnerOuterLoopIdxLine(forLoopMetaData.value(), *loopParams, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

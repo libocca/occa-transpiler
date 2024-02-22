@@ -1,8 +1,9 @@
 #include <string>
-#include <clang/AST/Expr.h>
+#include <oklt/core/kernel_metadata.h>
+// #include <clang/AST/Expr.h>
 
 namespace oklt {
-std::string getCondCompStr(const clang::BinaryOperator::Opcode& bo);
-std::string getUnaryStr(const clang::UnaryOperator::Opcode& uo, const std::string& var);
+std::string getCondCompStr(const BinOp& bo);
+std::string getUnaryStr(const UnOp& uo, const std::string& var);
 std::string buildCloseScopes(int& openedScopeCounter);
 }

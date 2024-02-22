@@ -1,30 +1,30 @@
 #include "attributes/utils/code_gen.h"
 
 namespace oklt {
-std::string getCondCompStr(const clang::BinaryOperator::Opcode& bo) {
+std::string getCondCompStr(const BinOp& bo) {
     switch (bo) {
-        case clang::BO_LE:
+        case BinOp::Le:
             return "<=";
-        case clang::BO_LT:
+        case BinOp::Lt:
             return "<";
-        case clang::BO_GE:
+        case BinOp::Ge:
             return ">=";
-        case clang::BO_GT:
+        case BinOp::Gt:
             return ">";
         default:  // Shouldn't happen, since for loop parse validates operator
             return "<error>";
     }
 }
 
-std::string getUnaryStr(const clang::UnaryOperator::Opcode& uo, const std::string& var) {
+std::string getUnaryStr(const UnOp& uo, const std::string& var) {
     switch (uo) {
-        case clang::UO_PreInc:
+        case UnOp::PreInc:
             return "++" + var;
-        case clang::UO_PostInc:
+        case UnOp::PostInc:
             return var + "++";
-        case clang::UO_PreDec:
+        case UnOp::PreDec:
             return "--" + var;
-        case clang::UO_PostDec:
+        case UnOp::PostDec:
             return var + "--";
 
         default:  // Shouldn't happen, since for loop parse validates operator

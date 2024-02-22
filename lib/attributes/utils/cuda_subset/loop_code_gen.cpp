@@ -44,11 +44,11 @@ void replaceAttributedLoop(const clang::Attr* a,
 }
 
 namespace tile {
-std::string getTiledVariableName(const LoopMetadata& forLoop) {
+std::string getTiledVariableName(const LoopMetaData& forLoop) {
     return "_occa_tiled_" + forLoop.name;
 }
 
-std::string buildIinnerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
+std::string buildIinnerOuterLoopIdxLineFirst(const LoopMetaData& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter) {
@@ -80,7 +80,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const LoopMetadata& forLoop,
     return res;
 }
 
-std::string buildInnerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
+std::string buildInnerOuterLoopIdxLineSecond(const LoopMetaData& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter) {
@@ -107,7 +107,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const LoopMetadata& forLoop,
     return "{" + res;  // Open new scope
 }
 
-std::string buildRegularLoopIdxLineFirst(const LoopMetadata& forLoop,
+std::string buildRegularLoopIdxLineFirst(const LoopMetaData& forLoop,
                                          const AttributedLoop& regularLoop,
                                          const TileParams* params,
                                          int& openedScopeCounter) {
@@ -131,7 +131,7 @@ std::string buildRegularLoopIdxLineFirst(const LoopMetadata& forLoop,
     return res + " {";  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
-std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
+std::string buildRegularLoopIdxLineSecond(const LoopMetaData& forLoop,
                                           const AttributedLoop& regularLoop,
                                           const TileParams* params,
                                           int& openedScopeCounter) {
@@ -174,7 +174,7 @@ std::string buildRegularLoopIdxLineSecond(const LoopMetadata& forLoop,
 }  // namespace tile
 
 namespace inner_outer {
-std::string buildInnerOuterLoopIdxLine(const LoopMetadata& forLoop,
+std::string buildInnerOuterLoopIdxLine(const LoopMetaData& forLoop,
                                        const AttributedLoop& loop,
                                        int& openedScopeCounter) {
     static_cast<void>(openedScopeCounter);
