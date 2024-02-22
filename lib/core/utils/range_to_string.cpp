@@ -11,9 +11,6 @@ std::string getSourceText(const clang::SourceRange& range, clang::ASTContext& ct
     auto& opts = ctx.getLangOpts();
     return clang::Lexer::getSourceText(CharSourceRange::getCharRange(range), sourceManager, opts)
         .str();
-    //    return clang::Lexer::getSourceText(CharSourceRange::getCharRange(range),
-    //                                             sourceManager,
-    //                                             opts).str();
 }
 
 std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx) {

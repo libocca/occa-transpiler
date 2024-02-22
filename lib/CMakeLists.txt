@@ -42,6 +42,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/handle_restrict.cpp
     attributes/utils/handle_atomic.h
     attributes/utils/handle_atomic.cpp
+    attributes/utils/handle_shared.h
+    attributes/utils/handle_shared.cpp
     attributes/utils/parse.h
 
     # Backends common

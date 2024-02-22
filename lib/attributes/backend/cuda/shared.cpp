@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/utils/attributes.h"
+#include "attributes/utils/handle_shared.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -8,14 +8,7 @@ using namespace oklt;
 using namespace clang;
 
 bool handleCUDASharedAttribute(const Attr* a, const Decl* d, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
-#endif
-    auto& rewriter = s.getRewriter();
-    removeAttribute(a, s);
-
-    std::string sharedText = "__shared__ ";
-    return rewriter.InsertText(d->getBeginLoc(), sharedText, false, false);
+    return handleSharedAttribute(a, d, s, "__shared__");
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
