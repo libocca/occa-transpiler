@@ -76,6 +76,15 @@ bool runExprTranspilerHanders(const ExprType* expr,
                               bool continueIfNoAttrs = true) {
     auto* attr = getOklAttr(expr, stage, attrName);
     if (!attr) {
+        if (continueIfNoAttrs) {
+            if constexpr (std::is_same_v<ExprType, Stmt>) {
+                return stage.getAttrManager().handleStmt(expr, stage);
+            } else if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
+                return stage.getAttrManager().handleStmt(expr->getSubStmt(), stage);
+            } else {
+                return stage.getAttrManager().handleDecl(expr, stage);
+            }
+        }
         return continueIfNoAttrs;
     }
 
@@ -133,7 +142,7 @@ bool transpileFunctionDecl(const FunctionDecl* fd, SessionStage& stage) {
 
     // ensure it is backward path for current parsing OKL kernel
     if (!sema.isCurrentParsingOklKernel(fd)) {
-        return true;
+        return stage.getAttrManager().handleDecl(fd, stage);
     }
 
     if (!runExprTranspilerHanders(fd, stage, KERNEL_ATTR_NAME, false)) {
