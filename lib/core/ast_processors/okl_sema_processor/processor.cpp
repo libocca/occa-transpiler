@@ -85,8 +85,15 @@ bool runExprTranspilerHanders(const ExprType* expr,
     }
 
     // run specific kernel attribute handler
-    if (!stage.getAttrManager().handleAttr(attr, expr, stage)) {
-        return false;
+    if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
+        // Get statement from attributed statement
+        if (!stage.getAttrManager().handleAttr(attr, expr->getSubStmt(), stage)) {
+            return false;
+        }
+    } else {
+        if (!stage.getAttrManager().handleAttr(attr, expr, stage)) {
+            return false;
+        }
     }
 
     return true;

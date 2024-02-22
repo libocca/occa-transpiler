@@ -69,8 +69,9 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
 
     auto& astCtx = s.getCompiler().getASTContext();
 
+    llvm::outs() << "<<<<<<<<<<<<<<<<<<<<< tile applied to class name: " << d->getStmtClassName() << "\n";
     if (!isa<ForStmt>(d)) {
-        s.pushError(std::error_code(), "@tile can be applied to only for loop");
+        s.pushError(std::error_code(), "@tile can be applied only to for loop");
         return false;
     }
     const auto* forStmt = dyn_cast<ForStmt>(d);
