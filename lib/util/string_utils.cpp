@@ -1,7 +1,7 @@
 #include "oklt/util/string_utils.h"
 
-#include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/ADT/StringRef.h>
 
 #include <sstream>
 
@@ -34,21 +34,18 @@ std::string toCamelCase(std::string str) {
 }
 
 std::string pointerToStr(const void* ptr) {
-    std::stringstream ss;
-    ss << ptr;
-    std::string strPointer = ss.str();
-    return strPointer;
+    return std::to_string(reinterpret_cast<uintptr_t>(ptr));
 }
 
-std::string_view rtrim(std::string_view &str) {
+std::string_view rtrim(std::string_view& str) {
     return StringRef(str).rtrim();
 }
 
-std::string_view ltrim(std::string_view &str) {
+std::string_view ltrim(std::string_view& str) {
     return StringRef(str).ltrim();
 }
 
-std::string_view trim(std::string_view &str) {
+std::string_view trim(std::string_view& str) {
     return StringRef(str).trim();
 }
 
@@ -59,11 +56,14 @@ std::string_view unParen(std::string_view& str) {
     return str;
 }
 
-std::string_view slice(const std::string_view &str, size_t start, size_t end) {
+std::string_view slice(const std::string_view& str, size_t start, size_t end) {
     return StringRef(str).slice(start, end);
 }
 
-std::vector<std::string_view> split(const std::string_view& str, const std::string_view& sep, int maxN, bool keepEmpty) {
+std::vector<std::string_view> split(const std::string_view& str,
+                                    const std::string_view& sep,
+                                    int maxN,
+                                    bool keepEmpty) {
     std::vector<std::string_view> ret;
 
     StringRef s(str);
@@ -83,6 +83,34 @@ std::vector<std::string_view> split(const std::string_view& str, const std::stri
     }
 
     return ret;
+}
+
+namespace impl {
+tl::expected<size_t, Error> getCurlyBracketIdx(const std::string_view& str) {
+    for (size_t idx = 0; idx < str.size(); ++idx) {
+        if (str[idx] == fmtBrackets[0]) {
+            if (idx >= (str.size() - 1) || str[idx + 1] != fmtBrackets[1]) {
+                return tl::make_unexpected(Error{std::error_code(), "fmt: Bad formatting"});
+            }
+            return idx;
+        }
+    }
+    return static_cast<size_t>(-1);
+}
+
+}  // namespace impl
+tl::expected<std::string, Error> fmt(const std::string& s) {
+    auto pos = impl::getCurlyBracketIdx(s);
+    if (!pos.has_value()) {
+        return tl::make_unexpected(pos.error());
+    }
+
+    if (pos.value() != static_cast<size_t>(-1)) {
+        return tl::make_unexpected(
+            Error{std::error_code(), "fmt: Not enough values (dangling '{}')"});
+    }
+
+    return s;
 }
 
 }  // namespace oklt::util

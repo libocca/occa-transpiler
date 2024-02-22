@@ -6,8 +6,8 @@
 #include <oklt/pipeline/normalizer.h>
 #include <oklt/pipeline/normalizer_and_transpiler.h>
 #include <oklt/pipeline/transpiler.h>
-#include <oklt/util/string_utils.h>
 #include <oklt/util/format.h>
+#include <oklt/util/string_utils.h>
 
 #include <nlohmann/json.hpp>
 
@@ -67,6 +67,7 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
     return oklt::UserInput{.backend = expectedBackend.value(),
+                           .astProcType = oklt::AstProcessorType::OKL_WITH_SEMA,
                            .sourceCode = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
                            .inlcudeDirectories = includes,
