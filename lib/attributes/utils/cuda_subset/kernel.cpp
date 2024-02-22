@@ -8,16 +8,7 @@ using namespace clang;
 const std::string CUDA_KERNEL_DEFINITION = "extern \"C\" __global__";
 
 bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
-    if (!isa<FunctionDecl>(d)) {
-        s.pushError(std::error_code(), "@kernel can be applied to function declarartion only");
-        return false;
-    }
-
     auto func = dyn_cast<FunctionDecl>(d);
-    if (func->getReturnType().getAsString() != "void") {
-        s.pushError(std::error_code(), "[@kernel] functions must have a [void] return type");
-        return false;
-    }
 
     // TODO: add __launch_bounds__
     auto& rewriter = s.getRewriter();

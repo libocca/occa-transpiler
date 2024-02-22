@@ -51,13 +51,12 @@ struct TileAttribute : public ParsedAttrInfo {
 constexpr int MAX_N_PARAMS = 4;
 
 tl::expected<LoopType, Error> parseLoopType(const std::string& str) {
-    Error err{std::error_code(), "Tile loop type parse error"};
     if (str == "@outer") {
         return LoopType::Outer;
     } else if (str == "@inner") {
         return LoopType::Inner;
     }
-    return tl::make_unexpected(err);
+    return tl::make_unexpected(Error{std::error_code(), "Tile loop type parse error"});
 }
 
 tl::expected<AttributedLoop, Error> parseLoop(const std::string& str) {
@@ -171,7 +170,7 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
         return false;
     }
 
-    auto ctxKey = util::pointerToStr(static_cast<const void*>(a));
+    auto ctxKey = util::pointerToStr(a);
     s.tryEmplaceUserCtx<TileParams>(ctxKey, tileParams);
 
 #ifdef TRANSPILER_DEBUG_LOG

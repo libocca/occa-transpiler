@@ -60,7 +60,7 @@ std::string buildPreffixTiledCode(const LoopMetadata& forLoopMetaData,
 }  // namespace
 
 bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
-    auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
+    auto usrCtxKey = util::pointerToStr(a);
     auto tileParams = std::any_cast<TileParams>(s.getUserCtx(usrCtxKey));
     if (tileParams == nullptr) {
         s.pushError(std::error_code(), "No @tile params in user context");

@@ -15,11 +15,12 @@ enum class Dim {
     X = 0,
     Y = 1,
     Z = 2,
+    Auto = 3,
 };
 
 struct AttributedLoop {
     LoopType type = LoopType::Regular;
-    Dim dim = Dim::X;
+    Dim dim = Dim::Auto;
 };
 
 }  // namespace oklt

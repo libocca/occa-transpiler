@@ -34,10 +34,7 @@ std::string toCamelCase(std::string str) {
 }
 
 std::string pointerToStr(const void* ptr) {
-    std::stringstream ss;
-    ss << ptr;
-    std::string strPointer = ss.str();
-    return strPointer;
+    return std::to_string(reinterpret_cast<uintptr_t>(ptr));
 }
 
 std::string_view rtrim(std::string_view& str) {
