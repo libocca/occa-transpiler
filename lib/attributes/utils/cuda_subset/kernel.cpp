@@ -1,6 +1,6 @@
+#include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "attributes/attribute_names.h"
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -26,8 +26,9 @@ bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionSt
     rewriter.ReplaceText(frange, newFunctionName);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @kernel attribute: return type: " << func->getReturnType().getAsString()
-                 << ", old kernel name: " << oldFunctionName << '\n';
+    llvm::outs() << "[DEBUG] Handle @kernel attribute: return type: "
+                 << func->getReturnType().getAsString() << ", old kernel name: " << oldFunctionName
+                 << '\n';
 #endif
 
     return true;

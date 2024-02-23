@@ -38,12 +38,6 @@ set (OCCA_TRANSPILER_SOURCES
 
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
-    attributes/utils/handle_restrict.h
-    attributes/utils/handle_restrict.cpp
-    attributes/utils/handle_atomic.h
-    attributes/utils/handle_atomic.cpp
-    attributes/utils/handle_shared.h
-    attributes/utils/handle_shared.cpp
     attributes/utils/parse.h
     attributes/frontend/common/parse_loop_attribute_params.cpp
     attributes/frontend/common/parse_loop_attribute_params.h
@@ -61,6 +55,10 @@ set (OCCA_TRANSPILER_SOURCES
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
+    attributes/utils/cuda_subset/restrict.cpp
+    attributes/utils/cuda_subset/restrict.cpp
+    attributes/utils/cuda_subset/shared.cpp
+    attributes/utils/cuda_subset/atomic.cpp
     attributes/utils/cuda_subset/tile.cpp
     attributes/utils/cuda_subset/inner.cpp
     attributes/utils/cuda_subset/outer.cpp
@@ -76,8 +74,14 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/hip/inner.cpp
     attributes/backend/hip/outer.cpp
     attributes/backend/hip/kernel.cpp
+    attributes/backend/hip/atomic.cpp
+    attributes/backend/hip/restrict.cpp
+    attributes/backend/hip/shared.cpp
 
     # CUDA
+    attributes/backend/cuda/global_constant.cpp
+    attributes/backend/cuda/translation_unit.cpp
+    attributes/backend/cuda/global_function.cpp
     attributes/backend/cuda/atomic.cpp
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/inner.cpp
@@ -85,7 +89,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/tile.cpp
     attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
-    attributes/backend/cuda/global_constant.cpp
+
+    # sugar attribute
     attributes/backend/common/dim.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp

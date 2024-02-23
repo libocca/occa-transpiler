@@ -11,13 +11,13 @@ struct OklSemaCtx;
 
 // validator and translator for OKL attributed for loop
 bool preValidateOklForLoopSema(const clang::Attr*,
+                               const clang::ForStmt*,
+                               SessionStage&,
+                               OklSemaCtx& sema);
+bool postValidateOklForLoopSema(const clang::Attr*,
                                 const clang::ForStmt*,
                                 SessionStage&,
                                 OklSemaCtx& sema);
-bool postValidateOklForLoopSema(const clang::Attr*,
-                         const clang::ForStmt*,
-                         SessionStage&,
-                         OklSemaCtx& sema);
 
 }  // namespace oklt
    // namespace oklt

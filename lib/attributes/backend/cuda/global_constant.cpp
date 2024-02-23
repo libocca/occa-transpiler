@@ -1,5 +1,5 @@
-#include "core/attribute_manager/attribute_manager.h"
 #include "attributes/utils/replace_attribute.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 namespace {
 using namespace oklt;
@@ -14,7 +14,7 @@ __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
         {TargetBackend::CUDA, clang::Decl::Kind::Var}, DeclHandler{handleGlobalConstant});
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";
+        llvm::errs() << "Failed to register implicit handler for global constant (CUDA)\n";
     }
 }
 }  // namespace

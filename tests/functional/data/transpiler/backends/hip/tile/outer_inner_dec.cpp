@@ -42,7 +42,8 @@ float add(float a, float b) {
 
 // Outer -> inner, complex range
 @kernel void addVectors5(const int entries, const float* a, const float* b, float* ab) {
-    for (int i = (entries + 16); i >= (entries - 12 + 4); i -= (entries / 16 + 1); @tile(4, @outer, @inner)) {
+    for (int i = (entries + 16); i >= (entries - 12 + 4); i -= (entries / 16 + 1);
+         @tile(4, @outer, @inner)) {
         ab[i] = add(a[i], b[i]);
     }
 }
@@ -57,7 +58,7 @@ float add(float a, float b) {
 // Outer -> inner ==> inner -> inner (nested)
 @kernel void addVectors7(const int entries, const float* a, const float* b, float* ab) {
     for (int i = entries - 1; i >= 0; i -= 1; @tile(4, @outer(0), @inner(0))) {
-        for (int j = entries - 1; j >= 0 ; j -= 1; @tile(4, @inner(1), @inner(2))) {
+        for (int j = entries - 1; j >= 0; j -= 1; @tile(4, @inner(1), @inner(2))) {
             ab[i] = add(a[i], b[j]);
         }
     }
@@ -65,8 +66,12 @@ float add(float a, float b) {
 
 // Outer -> inner ==> inner -> inner (nested) + complex range + check true
 @kernel void addVectors8(const int entries, const float* a, const float* b, float* ab) {
-    for (int i = (entries + 16); i >= (entries - 12 + static_cast<int>(*a)); i -= (entries / 16 + 1); @tile(4, @outer(0), @inner(0), check=true)) {
-        for (unsigned long long j = (entries + 16); j >= (entries - 12 + static_cast<int>(*a)); j -= (entries / 16 + 1); @tile(4, @inner(1), @inner(2), check=true)) {
+    for (int i = (entries + 16); i >= (entries - 12 + static_cast<int>(*a));
+         i -= (entries / 16 + 1);
+         @tile(4, @outer(0), @inner(0), check = true)) {
+        for (unsigned long long j = (entries + 16); j >= (entries - 12 + static_cast<int>(*a));
+             j -= (entries / 16 + 1);
+             @tile(4, @inner(1), @inner(2), check = true)) {
             ab[i] = add(a[i], b[j]);
         }
     }

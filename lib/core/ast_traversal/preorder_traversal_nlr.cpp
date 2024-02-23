@@ -18,8 +18,7 @@ bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseStmt(expr_);
     } else if constexpr (std::is_same_v<ExprType, Decl*>) {
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseDecl(expr);
-    }
-    else if constexpr (std::is_same_v<ExprType, RecoveryExpr*>) {
+    } else if constexpr (std::is_same_v<ExprType, RecoveryExpr*>) {
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseRecoveryExpr(expr);
     } else if constexpr (std::is_same_v<ExprType, TranslationUnitDecl*>) {
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseTranslationUnitDecl(

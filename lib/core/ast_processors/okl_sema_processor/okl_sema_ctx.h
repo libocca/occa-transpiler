@@ -24,12 +24,8 @@ struct OklSemaCtx {
         const clang::FunctionDecl* kernFuncDecl;
         std::stack<const clang::CompoundStmt*> compoundStack;
 
-        enum LoopBlockParserState {
-            NotStarted,
-            PreTraverse,
-            PostTraverse
-        };
-        LoopBlockParserState state {NotStarted};
+        enum LoopBlockParserState { NotStarted, PreTraverse, PostTraverse };
+        LoopBlockParserState state{NotStarted};
 
         struct OklForStmt {
             const clang::Attr* attr;
@@ -61,8 +57,9 @@ struct OklSemaCtx {
         const clang::ForStmt* forStmt = nullptr) const;
 
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr*,
-                                                                   const clang::ForStmt*);
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr*, const clang::ForStmt*);
+                                                                            const clang::ForStmt*);
+    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr*,
+                                                                             const clang::ForStmt*);
 
     void setKernelArgInfo(const clang::ParmVarDecl* parm);
     void setKernelArgRawString(const clang::ParmVarDecl* parm,

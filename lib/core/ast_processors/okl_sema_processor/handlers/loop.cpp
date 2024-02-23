@@ -14,9 +14,9 @@ using namespace clang;
 
 namespace oklt {
 bool preValidateOklForLoopSema(const Attr* attr,
-                        const ForStmt* stmt,
-                        SessionStage& stage,
-                        OklSemaCtx& sema) {
+                               const ForStmt* stmt,
+                               SessionStage& stage,
+                               OklSemaCtx& sema) {
     auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt);
     if (!result) {
         //  make approptiate error code
@@ -28,9 +28,9 @@ bool preValidateOklForLoopSema(const Attr* attr,
 }
 
 bool postValidateOklForLoopSema(const Attr* attr,
-                         const clang::ForStmt* stmt,
-                         SessionStage& stage,
-                         OklSemaCtx& sema) {
+                                const clang::ForStmt* stmt,
+                                SessionStage& stage,
+                                OklSemaCtx& sema) {
     auto result = sema.validateOklForLoopOnPostTraverse(attr, stmt);
     if (!result) {
         //  make approptiate error code

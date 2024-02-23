@@ -1,13 +1,13 @@
-#include "attributes/utils/handle_atomic.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+
 #include <clang/AST/AST.h>
 #include <clang/AST/Attr.h>
 
-namespace oklt {
-
+namespace {
+using namespace oklt;
 using namespace clang;
 using BinOpMapT = std::map<BinaryOperatorKind, std::string>;
 using UnaryOpMapT = std::map<UnaryOperatorKind, std::string>;
@@ -98,6 +98,10 @@ bool handleCXXCopyOp(const CXXOperatorCallExpr* assignOp,
     return false;
 }
 
+}  // namespace
+
+namespace oklt::cuda_subset {
+
 bool handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
     static const BinOpMapT atomicBinaryMap = {
         {BinaryOperatorKind::BO_Assign, "atomicExch"},
@@ -146,4 +150,4 @@ bool handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionStage& sta
     stage.pushError(make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description);
     return false;
 }
-}  // namespace oklt
+}  // namespace oklt::cuda_subset

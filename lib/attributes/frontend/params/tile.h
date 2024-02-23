@@ -1,7 +1,7 @@
 #pragma once
 
-#include "loop.h"
 #include <string>
+#include "loop.h"
 
 namespace oklt {
 enum class LoopOrder {
