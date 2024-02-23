@@ -23,8 +23,8 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s, const std::s
     auto type_str = var->getType().getAsString();
     auto declname = var->getDeclName().getAsString();
 
-    llvm::outs() << "[DEBUG] Found constant global variable declaration:"
-                 << " type: " << type_str << ", name: " << declname << "\n";
+    llvm::outs() << "[DEBUG] Found constant global variable declaration:" << " type: " << type_str
+                 << ", name: " << declname << "\n";
 #endif
 
     std::string newDeclStr;

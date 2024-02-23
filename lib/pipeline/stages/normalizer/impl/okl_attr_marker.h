@@ -2,8 +2,8 @@
 
 #include "pipeline/stages/normalizer/impl/okl_attribute.h"
 
-#include <clang/Basic/SourceLocation.h>
 #include <clang/AST/ParentMapContext.h>
+#include <clang/Basic/SourceLocation.h>
 
 using namespace clang;
 namespace oklt {

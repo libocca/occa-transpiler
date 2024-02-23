@@ -1,9 +1,9 @@
 #include <oklt/core/error.h>
 
-#include "pipeline/stages/normalizer/error_codes.h"
-#include "pipeline/stages/normalizer/impl/okl_to_gnu_stage.h"
-#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
 #include "core/transpiler_session/session_stage.h"
+#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
+#include "pipeline/stages/normalizer/impl/okl_to_gnu_stage.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>

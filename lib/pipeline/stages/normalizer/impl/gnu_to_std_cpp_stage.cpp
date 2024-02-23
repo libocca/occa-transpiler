@@ -148,8 +148,8 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
                      << markerLoc.printToString(_stage.getCompiler().getSourceManager()) << '\n';
 #endif
 
-        // if marker is inside of loop source location range it indicates OKL loop that should be decorated
-        // by attribute in marker
+        // if marker is inside of loop source location range it indicates OKL loop that should be
+        // decorated by attribute in marker
         if (forParenRange.getBegin() <= markerLoc && markerLoc <= forParenRange.getEnd()) {
             _stage.getRewriter().InsertTextBefore(forParenRange.getBegin(),
                                                   wrapAsSpecificCxxAttr(marker.attr));

@@ -1,13 +1,10 @@
-#include <clang/AST/Decl.h>
 #include <oklt/util/string_utils.h>
-#include <functional>
-#include "attributes/frontend/params/tile.h"
-#include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
-#include "handle.h"
 #include "attributes/utils/code_gen.h"
+#include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/transpiler_session/session_stage.h"
+
+#include <clang/AST/Decl.h>
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -35,8 +32,8 @@ bool handleOuterAttribute(const clang::Attr* a, const clang::Stmt* d, SessionSta
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode =
-        inner_outer::buildInnerOuterLoopIdxLine(forLoopMetaData.value(), *loopParams, openedScopeCounter);
+    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
+        forLoopMetaData.value(), *loopParams, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

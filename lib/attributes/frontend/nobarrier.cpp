@@ -1,5 +1,5 @@
-#include "core/attribute_manager/attribute_manager.h"
 #include "attributes/attribute_names.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
@@ -51,6 +51,6 @@ bool parseNoBarrierAttrParams(const clang::Attr* a, SessionStage&) {
 
 __attribute__((constructor)) void registerAttrFrontend() {
     AttributeManager::instance().registerAttrFrontend<NoBarrierAttribute>(NOBARRIER_ATTR_NAME,
-                                                                        parseNoBarrierAttrParams);
+                                                                          parseNoBarrierAttrParams);
 }
 }  // namespace

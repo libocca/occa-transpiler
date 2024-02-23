@@ -1,5 +1,5 @@
-#include <oklt/core/kernel_metadata.h>
 #include <oklt/core/error.h>
+#include <oklt/core/kernel_metadata.h>
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ParentMapContext.h>
@@ -21,7 +21,7 @@ BinOp toOkl(BinaryOperatorKind bok) {
         {BinaryOperatorKind::BO_RemAssign, BinOp::RemoveAssign},
     };
     auto it = clang2okl.find(bok);
-    return it != clang2okl.end() ? it->second: BinOp::Other;
+    return it != clang2okl.end() ? it->second : BinOp::Other;
 }
 
 UnOp toOkl(UnaryOperatorKind uok) {
@@ -29,10 +29,9 @@ UnOp toOkl(UnaryOperatorKind uok) {
         {UnaryOperatorKind::UO_PreInc, UnOp::PreInc},
         {UnaryOperatorKind::UO_PostInc, UnOp::PostInc},
         {UnaryOperatorKind::UO_PreDec, UnOp::PreDec},
-        {UnaryOperatorKind::UO_PostDec, UnOp::PostDec}
-    };
+        {UnaryOperatorKind::UO_PostDec, UnOp::PostDec}};
     auto it = clang2okl.find(uok);
-    return it != clang2okl.end() ? it->second: UnOp::Other;
+    return it != clang2okl.end() ? it->second : UnOp::Other;
 }
 
 std::string prettyPrint(const Stmt* S, const PrintingPolicy& policy) {
@@ -138,7 +137,8 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt* s, ASTContext&
 
         if (!end) {
             // TODO: add error code
-            return tl::make_unexpected(Error{std::error_code(), "loop parse: cond wihout init var"});
+            return tl::make_unexpected(
+                Error{std::error_code(), "loop parse: cond wihout init var"});
         }
     }
 
@@ -181,4 +181,5 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt* s, ASTContext&
 namespace oklt {
 tl::expected<LoopMetaData, Error> parseForStmt(const ForStmt* s, ASTContext& ctx) {
     return parseForStmtImpl(s, ctx);
-}}  // namespace oklt
+}
+}  // namespace oklt

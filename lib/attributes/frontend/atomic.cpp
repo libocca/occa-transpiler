@@ -1,5 +1,5 @@
-#include "core/attribute_manager/attribute_manager.h"
 #include "attributes/attribute_names.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/Sema.h"
@@ -43,7 +43,7 @@ struct AtomicAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseAtomicAttrParams(const Attr* a, SessionStage& ) {
+bool parseAtomicAttrParams(const Attr* a, SessionStage&) {
     return true;
 }
 

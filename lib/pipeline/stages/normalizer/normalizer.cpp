@@ -3,8 +3,8 @@
 
 #include "pipeline/stages/normalizer/normalizer.h"
 
-#include <oklt/core/error.h>
 #include <llvm/Support/raw_os_ostream.h>
+#include <oklt/core/error.h>
 
 using namespace clang;
 

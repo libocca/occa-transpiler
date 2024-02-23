@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pipeline/stages/normalizer/impl/okl_attr_marker.h"
 #include "core/transpiler_session/transpiler_session.h"
+#include "pipeline/stages/normalizer/impl/okl_attr_marker.h"
 
 #include <tl/expected.hpp>
 

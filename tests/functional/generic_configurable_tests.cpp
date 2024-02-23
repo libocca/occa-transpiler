@@ -105,7 +105,8 @@ TEST_P(GenericTest, OCCATests) {
                 auto conf = actionConfig->get<NormalizeActionConfig>();
                 auto normalizeResult = oklt::normalize(conf.build(dataDir));
                 if (!normalizeResult) {
-                    EXPECT_TRUE(false) << "Normalize error occur" << std::endl;
+                    EXPECT_TRUE(false) << "File: " << conf.source << std::endl
+                                       << "Normalize error occur" << std::endl;
                 }
 
                 std::ifstream referenceFile(referencePath);
@@ -129,7 +130,8 @@ TEST_P(GenericTest, OCCATests) {
                     for (const auto& e : transpileResult.error()) {
                         error += e.desc + "\n";
                     }
-                    EXPECT_TRUE(false) << "Transpile error:" << error << std::endl;
+                    EXPECT_TRUE(false) << "File: " << conf.source << std::endl
+                                       << "Transpile error:" << error << std::endl;
                 }
 
                 std::ifstream referenceFile(referencePath);
@@ -153,7 +155,8 @@ TEST_P(GenericTest, OCCATests) {
                     for (const auto& e : transpileResult.error()) {
                         error += e.desc + "\n";
                     }
-                    EXPECT_TRUE(false) << "Normalize & Transpile error:" << error << std::endl;
+                    EXPECT_TRUE(false) << "File: " << conf.source << std::endl
+                                       << "Normalize & Transpile error:" << error << std::endl;
                 }
 
                 std::ifstream referenceFile(referencePath);

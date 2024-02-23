@@ -1,7 +1,7 @@
+#include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
-#include "attributes/attribute_names.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>

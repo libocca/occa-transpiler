@@ -36,6 +36,9 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
+    attributes/utils/replace_attribute.h
+    attributes/utils/replace_attribute.cpp
+    attributes/utils/parse.h
     attributes/frontend/common/parse_loop_attribute_params.cpp
     attributes/frontend/common/parse_loop_attribute_params.h
 
@@ -52,6 +55,10 @@ set (OCCA_TRANSPILER_SOURCES
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
+    attributes/utils/cuda_subset/restrict.cpp
+    attributes/utils/cuda_subset/restrict.cpp
+    attributes/utils/cuda_subset/shared.cpp
+    attributes/utils/cuda_subset/atomic.cpp
     attributes/utils/cuda_subset/tile.cpp
     attributes/utils/cuda_subset/inner.cpp
     attributes/utils/cuda_subset/outer.cpp
@@ -67,15 +74,23 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/hip/inner.cpp
     attributes/backend/hip/outer.cpp
     attributes/backend/hip/kernel.cpp
+    attributes/backend/hip/atomic.cpp
+    attributes/backend/hip/restrict.cpp
+    attributes/backend/hip/shared.cpp
 
     # CUDA
+    attributes/backend/cuda/global_constant.cpp
+    attributes/backend/cuda/translation_unit.cpp
+    attributes/backend/cuda/global_function.cpp
+    attributes/backend/cuda/atomic.cpp
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/inner.cpp
     attributes/backend/cuda/outer.cpp
     attributes/backend/cuda/tile.cpp
     attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
-    attributes/backend/cuda/global_constant.cpp
+
+    # sugar attribute
     attributes/backend/common/dim.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
@@ -115,7 +130,11 @@ set (OCCA_TRANSPILER_SOURCES
     core/utils/type_converter.cpp
     core/utils/for_stmt_parser.cpp
     core/utils/attributes.cpp
+    core/utils/attributes.h
     core/utils/var_decl.cpp
+    core/utils/var_decl.h
+    core/utils/range_to_string.h
+    core/utils/range_to_string.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp
@@ -124,10 +143,14 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/transpiler.cpp
     pipeline/normalizer_and_transpiler.cpp
     pipeline/stages/transpiler/transpiler.cpp
+    pipeline/stages/transpiler/transpiler.h
     pipeline/stages/transpiler/error_codes.cpp
+    pipeline/stages/transpiler/error_codes.h
 
     pipeline/stages/normalizer/normalizer.cpp
+    pipeline/stages/normalizer/normalizer.h
     pipeline/stages/normalizer/error_codes.cpp
+    pipeline/stages/normalizer/error_codes.h
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
     pipeline/stages/normalizer/impl/okl_attr_traverser.cpp

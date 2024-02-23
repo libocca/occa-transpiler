@@ -1,5 +1,5 @@
-#include "core/attribute_manager/attribute_manager.h"
 #include "attributes/utils/replace_attribute.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 namespace {
 using namespace oklt;
