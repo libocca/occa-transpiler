@@ -36,7 +36,6 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/tile.cpp
 
     # Backends common
-
     attributes/utils/parser.h
     attributes/utils/parser.cpp
     attributes/utils/parser_impl.hpp
@@ -107,15 +106,15 @@ set (OCCA_TRANSPILER_SOURCES
     # sugar attribute
     attributes/backend/common/dim.cpp
 
-        # OPENMP
-        attributes/backend/openmp/kernel.cpp
-        attributes/backend/openmp/outer.cpp
-        attributes/backend/openmp/inner.cpp
-        attributes/backend/openmp/restrict.cpp
-        attributes/backend/openmp/shared.cpp
-        attributes/backend/openmp/exclusive.cpp
-        attributes/backend/openmp/atomic.cpp
-        attributes/backend/openmp/barrier.cpp
+    # OPENMP
+    attributes/backend/openmp/kernel.cpp
+    attributes/backend/openmp/outer.cpp
+    attributes/backend/openmp/inner.cpp
+    attributes/backend/openmp/restrict.cpp
+    attributes/backend/openmp/shared.cpp
+    attributes/backend/openmp/exclusive.cpp
+    attributes/backend/openmp/atomic.cpp
+    attributes/backend/openmp/barrier.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
@@ -189,7 +188,7 @@ CPMAddPackage(expected
     GITHUB_REPOSITORY
     TartanLlama/expected
     GIT_TAG v1.1.0
-    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" 
+    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
