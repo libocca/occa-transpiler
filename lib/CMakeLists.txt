@@ -47,6 +47,9 @@ set (OCCA_TRANSPILER_SOURCES
 
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
+        attributes/utils/parser.h
+        attributes/utils/parser.cpp
+        attributes/utils/parser_impl.hpp
     attributes/utils/parse.h
     # attributes/utils/loop_meta_data.h
     # attributes/utils/loop_meta_data.cpp
