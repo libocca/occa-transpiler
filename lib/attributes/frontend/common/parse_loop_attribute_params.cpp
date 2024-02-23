@@ -2,6 +2,7 @@
 #include <oklt/util/string_utils.h>
 #include "attributes/utils/parse.h"
 #include "core/transpiler_session/session_stage.h"
+#include "attributes/frontend/params/inner_outer.h"
 
 namespace oklt {
 tl::expected<std::any, Error> parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType) {

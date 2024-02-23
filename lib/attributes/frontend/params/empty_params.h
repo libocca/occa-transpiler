@@ -1,0 +1,3 @@
+namespace oklt {
+    struct EmptyParams {};
+}

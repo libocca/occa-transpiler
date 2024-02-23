@@ -11,10 +11,8 @@ using namespace clang;
 // TODO: function is very similar to handleInnerAttribute
 tl::expected<std::any, Error> handleOuterAttribute(const clang::Attr* a,
                                                    const clang::Stmt* d,
-                                                   const std::any& params,
+                                                   const AttributedLoop& params,
                                                    SessionStage& s) {
-    auto loopParams = std::any_cast<AttributedLoop>(params);
-
     auto& astCtx = s.getCompiler().getASTContext();
     if (!isa<ForStmt>(d)) {
         s.pushError(std::error_code(), "@outer can be applied to only for loop");
@@ -31,7 +29,7 @@ tl::expected<std::any, Error> handleOuterAttribute(const clang::Attr* a,
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        forLoopMetaData.value(), loopParams, openedScopeCounter);
+        forLoopMetaData.value(), params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

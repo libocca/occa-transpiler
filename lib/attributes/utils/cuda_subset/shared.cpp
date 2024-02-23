@@ -10,7 +10,6 @@ const std::string SHARED_MODIFIER = "__shared__";
 namespace oklt::cuda_subset {
 tl::expected<std::any, Error> handleSharedAttribute(const clang::Attr* a,
                                                     const clang::Decl* d,
-                                                    const std::any& params,
                                                     SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';

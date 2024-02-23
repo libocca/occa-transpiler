@@ -8,7 +8,7 @@ using namespace oklt;
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::CUDA, ATOMIC_ATTR_NAME},
-        AttrStmtHandler{cuda_subset::handleAtomicAttribute});
+        makeSpecificAttrHandle(cuda_subset::handleAtomicAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME << " attribute handler\n";

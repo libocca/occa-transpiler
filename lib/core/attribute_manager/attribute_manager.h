@@ -80,4 +80,45 @@ class AttributeManager {
     ImplicitHandlerMap _implicitHandlers;
     std::map<std::string, AttrParamParserType> _attrParsers;
 };
+
+namespace detail {
+template <typename Handler, typename DeclStmt, typename AttrHandler>
+AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
+    using ParamsType = typename std::remove_pointer_t<typename func_param_type<Handler, 3>::type>;
+    constexpr size_t n_arguments = func_num_arguments<Handler>::value;
+
+    return AttrHandler{
+        [&handler, n_arguments](const clang::Attr* attr,
+                                const DeclStmt* declStmt,
+                                const std::any& params,
+                                SessionStage& stage) -> tl::expected<std::any, Error> {
+            tl::expected<std::any, Error> res;
+            static_assert(
+                n_arguments == N_ARGUMENTS_WITH_PARAMS || n_arguments == N_ARGUMENTS_WITHOUT_PARAMS,
+                "Handler must have 3 or 4 arguments");
+            if constexpr (n_arguments == N_ARGUMENTS_WITH_PARAMS) {
+                res = handler(attr, declStmt, std::any_cast<ParamsType>(params), stage);
+            } else {
+                res = handler(attr, declStmt, stage);
+            }
+            if (!res) {
+                return tl::make_unexpected(res.error());
+            }
+            return res.value();
+        }};
+}
+}  // namespace detail
+
+template <typename Handler>
+auto makeSpecificAttrHandle(Handler& handler) {
+    using DeclOrStmt = typename std::remove_const_t<
+        typename std::remove_pointer_t<typename func_param_type<Handler, 2>::type>>;
+    if constexpr (std::is_same_v<DeclOrStmt, clang::Decl>) {
+        return detail::makeSpecificAttrXXXHandle<Handler, clang::Decl, AttrDeclHandler>(handler);
+    } else {
+        return detail::makeSpecificAttrXXXHandle<Handler, clang::Stmt, AttrStmtHandler>(handler);
+    }
+    // return detail::makeSpecificAttrXXXHandle<Handler, clang::Stmt, AttrStmtHandler>(handler);
+}
+
 }  // namespace oklt

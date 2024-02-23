@@ -1,4 +1,3 @@
-#include "attributes/frontend/params/tile.h"
 #include <clang/AST/Decl.h>
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
@@ -60,27 +59,28 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
 
 }  // namespace
 
-tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, const std::any& params, SessionStage& s) {
-    auto tileParams = std::any_cast<TileParams>(params);
+tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a,
+                                              const clang::Stmt* d,
+                                              const TileParams& params,
+                                              SessionStage& s) {
+    // auto tileParams = std::any_cast<TileParams>(params);
 
     auto& astCtx = s.getCompiler().getASTContext();
 
     if (!isa<ForStmt>(d)) {
-        s.pushError(std::error_code(), "@tile can be applied only to for loop");
-        return false;
+        return tl::make_unexpected(Error{{}, "@tile can be applied only to for loop"});
     }
     const auto* forStmt = dyn_cast<ForStmt>(d);
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {
-        s.pushError(std::error_code(), "@tile: failed to fetch loop meta data from sema");
-        return false;
+        return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
     // auto forLoopMetaData = ParseForStmt(const_cast<ForStmt*>(forStmt), astCtx);
 
     int openedScopeCounter = 0;
     auto prefixCode =
-        buildPreffixTiledCode(forLoopMetaData.value(), &tileParams, openedScopeCounter);
+        buildPreffixTiledCode(forLoopMetaData.value(), &params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
@@ -93,6 +93,6 @@ tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a, const cl
                  << "), Inc(rhsInc: " << forLoopMetaData->inc.val
                  << ", isUnary: " << forLoopMetaData->isUnary() << ")\n";
 #endif
-    return true;
+    return {};
 }
 }  // namespace oklt::cuda_subset

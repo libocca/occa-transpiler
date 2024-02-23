@@ -12,7 +12,6 @@ namespace oklt::cuda_subset {
 using namespace clang;
 tl::expected<std::any, Error> handleRestrictAttribute(const clang::Attr* a,
                                                       const clang::Decl* d,
-                                                      const std::any& params,
                                                       SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
