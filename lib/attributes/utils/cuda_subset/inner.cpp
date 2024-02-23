@@ -14,11 +14,7 @@ tl::expected<std::any, Error> handleInnerAttribute(const clang::Attr* a,
                                                    const clang::Stmt* d,
                                                    const std::any& params,
                                                    SessionStage& s) {
-    auto loopParams = std::any_cast<AttributedLoop*>(params);
-    if (loopParams == nullptr) {
-        s.pushError(std::error_code(), "No @inner params in user context");
-        return false;
-    }
+    auto loopParams = std::any_cast<AttributedLoop>(params);
 
     auto& astCtx = s.getCompiler().getASTContext();
     if (!isa<ForStmt>(d)) {
@@ -35,7 +31,7 @@ tl::expected<std::any, Error> handleInnerAttribute(const clang::Attr* a,
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        forLoopMetaData.value(), *loopParams, openedScopeCounter);
+        forLoopMetaData.value(), loopParams, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

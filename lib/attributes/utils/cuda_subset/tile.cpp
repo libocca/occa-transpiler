@@ -61,11 +61,7 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
 }  // namespace
 
 tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, const std::any& params, SessionStage& s) {
-    auto tileParams = std::any_cast<TileParams*>(params);
-    if (tileParams == nullptr) {
-        s.pushError(std::error_code(), "No @tile params in user context");
-        return false;
-    }
+    auto tileParams = std::any_cast<TileParams>(params);
 
     auto& astCtx = s.getCompiler().getASTContext();
 
@@ -84,7 +80,7 @@ tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a, const cl
 
     int openedScopeCounter = 0;
     auto prefixCode =
-        buildPreffixTiledCode(forLoopMetaData.value(), tileParams, openedScopeCounter);
+        buildPreffixTiledCode(forLoopMetaData.value(), &tileParams, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
