@@ -45,7 +45,7 @@ struct NoBarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseNoBarrierAttrParams(const clang::Attr* a, SessionStage&) {
+tl::expected<std::any, Error> parseNoBarrierAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

@@ -7,6 +7,8 @@
 
 #include <map>
 #include <tuple>
+#include <any>
+#include <tl/expected.hpp>
 
 namespace oklt {
 class ImplicitHandlerMap {
@@ -21,8 +23,8 @@ class ImplicitHandlerMap {
     bool registerHandler(KeyType key, DeclHandler handler);
     bool registerHandler(KeyType key, StmtHandler handler);
 
-    bool operator()(const clang::Decl* decl, SessionStage& stage);
-    bool operator()(const clang::Stmt* stmt, SessionStage& stage);
+    tl::expected<std::any, Error> operator()(const clang::Decl* decl, SessionStage& stage);
+    tl::expected<std::any, Error> operator()(const clang::Stmt* stmt, SessionStage& stage);
 
    private:
     DeclHandlers _declHandlers;

@@ -78,29 +78,31 @@ bool runExprTranspilerHanders(const ExprType* expr,
     if (!attr) {
         if (continueIfNoAttrs) {
             if constexpr (std::is_same_v<ExprType, Stmt>) {
-                return stage.getAttrManager().handleStmt(expr, stage);
+                return stage.getAttrManager().handleStmt(expr, stage).has_value();
             } else if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
-                return stage.getAttrManager().handleStmt(expr->getSubStmt(), stage);
+                return stage.getAttrManager().handleStmt(expr->getSubStmt(), stage).has_value();
             } else {
-                return stage.getAttrManager().handleDecl(expr, stage);
+                return stage.getAttrManager().handleDecl(expr, stage).has_value();
             }
         }
         return continueIfNoAttrs;
     }
 
     // finally parser it
-    if (!stage.getAttrManager().parseAttr(attr, stage)) {
+    auto params = stage.getAttrManager().parseAttr(attr, stage);
+    if (!params) {
+        stage.pushError(params.error());
         return false;
     }
 
     // run specific kernel attribute handler
     if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
         // Get statement from attributed statement
-        if (!stage.getAttrManager().handleAttr(attr, expr->getSubStmt(), stage)) {
+        if (!stage.getAttrManager().handleAttr(attr, expr->getSubStmt(), params.value(), stage)) {
             return false;
         }
     } else {
-        if (!stage.getAttrManager().handleAttr(attr, expr, stage)) {
+        if (!stage.getAttrManager().handleAttr(attr, expr, params.value(), stage)) {
             return false;
         }
     }
@@ -142,7 +144,7 @@ bool transpileFunctionDecl(const FunctionDecl* fd, SessionStage& stage) {
 
     // ensure it is backward path for current parsing OKL kernel
     if (!sema.isCurrentParsingOklKernel(fd)) {
-        return stage.getAttrManager().handleDecl(fd, stage);
+        return stage.getAttrManager().handleDecl(fd, stage).has_value();
     }
 
     if (!runExprTranspilerHanders(fd, stage, KERNEL_ATTR_NAME, false)) {
@@ -178,10 +180,12 @@ bool transpileParmDecl(const ParmVarDecl* parm, SessionStage& stage) {
     auto* attr = getOklAttr(parm, stage);
     if (attr) {
         // or parse it if attributed
-        if (!stage.getAttrManager().parseAttr(attr, stage)) {
+        auto params = stage.getAttrManager().parseAttr(attr, stage);
+        if (!params) {
+            stage.pushError(params.error());
             return false;
         }
-        if (!stage.getAttrManager().handleAttr(attr, parm, stage)) {
+        if (!stage.getAttrManager().handleAttr(attr, parm, params.value(), stage)) {
             return false;
         }
     } else {
@@ -263,7 +267,7 @@ bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& st
     }
 
     const Attr* attr = expectedAttr.value();
-    return am.handleAttr(attr, expr, stage);
+    return am.handleAttr(attr, expr, {}, stage).has_value();    // TODO: where should I take parameters from
 }
 
 __attribute__((constructor)) void registerAstNodeHanlder() {

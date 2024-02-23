@@ -5,5 +5,5 @@
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
-bool parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType);
+tl::expected<std::any, Error> parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType);
 }

@@ -6,12 +6,15 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
+#include <any>
 
 namespace oklt::cuda_subset {
 using namespace clang;
-bool handleInnerAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
-    auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
-    auto loopParams = std::any_cast<AttributedLoop>(s.getUserCtx(usrCtxKey));
+tl::expected<std::any, Error> handleInnerAttribute(const clang::Attr* a,
+                                                   const clang::Stmt* d,
+                                                   const std::any& params,
+                                                   SessionStage& s) {
+    auto loopParams = std::any_cast<AttributedLoop*>(params);
     if (loopParams == nullptr) {
         s.pushError(std::error_code(), "No @inner params in user context");
         return false;

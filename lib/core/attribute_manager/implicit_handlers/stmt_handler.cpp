@@ -7,7 +7,7 @@ using namespace clang;
 StmtHandler::StmtHandler(HandleType h)
     : _handler(std::move(h)) {}
 
-bool StmtHandler::operator()(const clang::Stmt* stmt, SessionStage& stage) {
+tl::expected<std::any, Error> StmtHandler::operator()(const clang::Stmt* stmt, SessionStage& stage) {
     return _handler(stmt, stage);
 }
 

@@ -105,17 +105,15 @@ tl::expected<bool, Error> parseCheck(const std::string& str) {
     return err;
 }
 
-bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
+tl::expected<std::any, Error> parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     auto tileParamsStr = parseOKLAttributeParamsStr(a);
     if (!tileParamsStr.has_value()) {
-        s.pushError(tileParamsStr.error());
-        return false;
+        return tl::make_unexpected(tileParamsStr.error());
     }
 
     auto nParams = tileParamsStr->size();
     if (nParams > MAX_N_PARAMS || nParams < 1) {
-        s.pushError(std::error_code(), "@tile has 1 to 4 parameters");
-        return false;
+        return tl::make_unexpected(Error{{}, "@tile has 1 to 4 parameters"});
     }
 
     // Parse all parameters:
@@ -141,19 +139,16 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
             continue;
         }
 
-        s.pushError(std::error_code(), "Can't parse tile parameter: " + currentParamStr);
-        return false;
+        return tl::make_unexpected(Error{{}, "Can't parse tile parameter: " + currentParamStr});
     }
 
     // Verify number of parameters
     if (checksStack.size() > 1) {
-        s.pushError(std::error_code(), "More than one tile check parameters");
-        return false;
+        return tl::make_unexpected(Error{{}, "More than one tile check parameters"});
     }
 
     if (loopsStack.size() > 2) {
-        s.pushError(std::error_code(), "More than two tile loop identifiers");
-        return false;
+        return tl::make_unexpected(Error{{}, "More than two tile loop identifiers"});
     }
 
     TileParams tileParams{
@@ -166,15 +161,12 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     // Outer can't be after inner:
     if (tileParams.firstLoop.type == LoopType::Inner &&
         tileParams.secondLoop.type == LoopType::Outer) {
-        s.pushError(std::error_code(), "Cannot have [@inner] loop outside of an [@outer] loop");
-        return false;
+        return tl::make_unexpected(
+            Error{{}, "Cannot have [@inner] loop outside of an [@outer] loop"});
     }
 
-    auto ctxKey = util::pointerToStr(a);
-    s.tryEmplaceUserCtx<TileParams>(ctxKey, tileParams);
-
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Parsed @tile parameters: " << ctxKey
+    llvm::outs() << "[DEBUG] Parsed @tile parameters: "
                  << ": {tile size: " << tileParams.tileSize
                  << ", first loop: " << static_cast<int>(tileParams.firstLoop.type)
                  << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
@@ -182,7 +174,8 @@ bool parseTileAttribute(const clang::Attr* a, SessionStage& s) {
                  << " with dim: " << static_cast<int>(tileParams.secondLoop.dim)
                  << ", check: " << tileParams.check << "}\n";
 #endif
-    return true;
+
+    return tileParams;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

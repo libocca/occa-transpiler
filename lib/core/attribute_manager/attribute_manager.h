@@ -6,6 +6,8 @@
 
 #include <clang/Sema/ParsedAttr.h>
 
+#include <oklt/core/error.h>
+#include <any>
 #include <tl/expected.hpp>
 
 #include <string>
@@ -20,7 +22,8 @@ class AttributeManager {
     ~AttributeManager() = default;
 
    public:
-    using AttrParamParserType = std::function<bool(const clang::Attr*, SessionStage&)>;
+    using AttrParamParserType =
+        std::function<tl::expected<std::any, Error>(const clang::Attr*, SessionStage&)>;
 
     AttributeManager(const AttributeManager&) = delete;
     AttributeManager(AttributeManager&&) = delete;
@@ -45,13 +48,19 @@ class AttributeManager {
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, DeclHandler handler);
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, StmtHandler handler);
 
-    bool parseAttr(const clang::Attr* attr, SessionStage& stage);
+    tl::expected<std::any, Error> parseAttr(const clang::Attr* attr, SessionStage& stage);
 
-    bool handleAttr(const clang::Attr* attr, const clang::Decl* decl, SessionStage& stage);
-    bool handleAttr(const clang::Attr* attr, const clang::Stmt* stmt, SessionStage& stage);
+    tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
+                                             const clang::Decl* decl,
+                                             const std::any& params,
+                                             SessionStage& stage);
+    tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
+                                             const clang::Stmt* stmt,
+                                             const std::any& params,
+                                             SessionStage& stage);
 
-    bool handleDecl(const clang::Decl* decl, SessionStage& stage);
-    bool handleStmt(const clang::Stmt* stmt, SessionStage& stage);
+    tl::expected<std::any, Error> handleDecl(const clang::Decl* decl, SessionStage& stage);
+    tl::expected<std::any, Error> handleStmt(const clang::Stmt* stmt, SessionStage& stage);
 
     tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
                                                        const clang::Decl* decl,

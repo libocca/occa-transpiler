@@ -4,12 +4,18 @@
 namespace {
 using namespace oklt;
 
-bool handleDimDeclAttrbute(const clang::Attr* a, const clang::Decl* decl, SessionStage& s) {
+tl::expected<std::any, Error> handleDimDeclAttrbute(const clang::Attr* a,
+                                                    const clang::Decl* decl,
+                                                    const std::any& params,
+                                                    SessionStage& s) {
     llvm::outs() << "handle decl attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }
 
-bool handleDimStmtAttrbute(const clang::Attr* a, const clang::Stmt* stmt, SessionStage& s) {
+tl::expected<std::any, Error> handleDimStmtAttrbute(const clang::Attr* a,
+                                                    const clang::Stmt* stmt,
+                                                    const std::any& params,
+                                                    SessionStage& s) {
     llvm::outs() << "handle stmt attribute: " << a->getNormalizedFullName() << '\n';
     return true;
 }

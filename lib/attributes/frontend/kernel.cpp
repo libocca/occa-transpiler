@@ -46,7 +46,7 @@ struct KernelAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseKernelAttrParams(const clang::Attr* a, SessionStage&) {
+tl::expected<std::any, Error> parseKernelAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

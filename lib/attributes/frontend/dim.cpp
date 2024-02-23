@@ -135,7 +135,7 @@ class DimDiagHandler : public DiagHandler {
     }
 };
 
-bool parseDimAttrParams(const clang::Attr* a, SessionStage&) {
+tl::expected<std::any, Error> parseDimAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

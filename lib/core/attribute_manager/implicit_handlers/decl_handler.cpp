@@ -7,7 +7,7 @@ using namespace clang;
 DeclHandler::DeclHandler(HandleType h)
     : _handler(std::move(h)) {}
 
-bool DeclHandler::operator()(const Decl* decl, SessionStage& stage) {
+tl::expected<std::any, Error> DeclHandler::operator()(const Decl* decl, SessionStage& stage) {
     return _handler(decl, stage);
 }
 }  // namespace oklt

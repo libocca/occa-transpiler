@@ -10,7 +10,10 @@ class SessionStage;
 
 class AttrStmtHandler {
    public:
-    using HandleType = std::function<bool(const clang::Attr*, const clang::Stmt*, SessionStage&)>;
+    using HandleType = std::function<tl::expected<std::any, Error>(const clang::Attr*,
+                                                                   const clang::Stmt*,
+                                                                   const std::any& params,
+                                                                   SessionStage&)>;
 
     explicit AttrStmtHandler(HandleType h)
         : _handler(std::move(h)) {}
@@ -18,7 +21,10 @@ class AttrStmtHandler {
     AttrStmtHandler(AttrStmtHandler&&) = default;
     ~AttrStmtHandler() = default;
 
-    bool handle(const clang::Attr* attr, const clang::Stmt*, SessionStage& stage);
+    tl::expected<std::any, Error> handle(const clang::Attr* attr,
+                                         const clang::Stmt*,
+                                         const std::any& params,
+                                         SessionStage& stage);
 
    private:
     HandleType _handler;

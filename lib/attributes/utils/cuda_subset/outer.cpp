@@ -9,9 +9,11 @@
 namespace oklt::cuda_subset {
 using namespace clang;
 // TODO: function is very similar to handleInnerAttribute
-bool handleOuterAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
-    auto usrCtxKey = util::pointerToStr(static_cast<const void*>(a));
-    auto loopParams = std::any_cast<AttributedLoop>(s.getUserCtx(usrCtxKey));
+tl::expected<std::any, Error> handleOuterAttribute(const clang::Attr* a,
+                                                   const clang::Stmt* d,
+                                                   const std::any& params,
+                                                   SessionStage& s) {
+    auto loopParams = std::any_cast<AttributedLoop*>(params);
     if (loopParams == nullptr) {
         s.pushError(std::error_code(), "No @outer params in user context");
         return false;

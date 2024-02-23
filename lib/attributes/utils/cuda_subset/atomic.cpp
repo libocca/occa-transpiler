@@ -102,7 +102,8 @@ bool handleCXXCopyOp(const CXXOperatorCallExpr* assignOp,
 
 namespace oklt::cuda_subset {
 
-bool handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
+tl::expected<std::any, Error> handleAtomicAttribute(const Attr* attr, const Stmt* stmt, const std::any& params, SessionStage& stage) {
+    static_cast<void>(params);
     static const BinOpMapT atomicBinaryMap = {
         {BinaryOperatorKind::BO_Assign, "atomicExch"},
         {BinaryOperatorKind::BO_AddAssign, "atomicAdd"},

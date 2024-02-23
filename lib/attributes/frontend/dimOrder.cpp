@@ -107,7 +107,7 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseDimOrderAttrParams(const clang::Attr* a, SessionStage&) {
+tl::expected<std::any, Error> parseDimOrderAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

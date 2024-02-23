@@ -53,7 +53,7 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseSharedAttrParams(const clang::Attr* a, SessionStage&) {
+tl::expected<std::any, Error> parseSharedAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

@@ -44,7 +44,7 @@ struct BarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseBarrierAttrParams(const clang::Attr* a, SessionStage&) {
+tl::expected<std::any, Error> parseBarrierAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

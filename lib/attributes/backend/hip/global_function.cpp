@@ -4,7 +4,7 @@
 namespace {
 using namespace oklt;
 
-bool handleHIPGlobalFunction(const clang::Decl* decl, oklt::SessionStage& s) {
+tl::expected<std::any, Error> handleHIPGlobalFunction(const clang::Decl* decl, oklt::SessionStage& s) {
     const std::string HIP_FUNCTION_QUALIFIER = "__device__";
     return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
 }

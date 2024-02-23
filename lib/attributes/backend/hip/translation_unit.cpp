@@ -7,7 +7,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
+tl::expected<std::any, Error> handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
     if (!isa<TranslationUnitDecl>(decl)) {
         return true;
     }
