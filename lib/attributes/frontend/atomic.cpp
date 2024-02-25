@@ -43,7 +43,13 @@ struct AtomicAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseAtomicAttrParams(const Attr& a, SessionStage&) {
+ParseResult parseAtomicAttrParams(const Attr& attr, SessionStage& stage) {
+    auto attrData = ParseOKLAttr(attr, stage);
+    if (!attrData.args.empty() || !attrData.kwargs.empty()) {
+        stage.pushError(std::error_code(), "[@atomic] does not take arguments");
+        return false;
+    }
+
     return true;
 }
 

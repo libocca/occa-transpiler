@@ -1,7 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
-#include "attributes/frontend/common/parse_loop_attribute_params.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/loop.h"
+
+#include <oklt/util/string_utils.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -46,8 +51,35 @@ struct OuterAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseOuterAttrParams(const clang::Attr& a, SessionStage& s) {
-    return parseLoopAttrParams(a, s, LoopType::Outer);
+ParseResult parseOuterAttrParams(const clang::Attr& attr, SessionStage& stage) {
+    auto attrData = ParseOKLAttr(attr, stage);
+    if (attrData.kwargs.empty()) {
+        stage.pushError(std::error_code(), "[@outer] does not take kwargs");
+        return false;
+    }
+
+    if (attrData.args.size() > 1) {
+        stage.pushError(std::error_code(), "[@outer] takes at most one index");
+        return false;
+    }
+
+    AttributedLoop ret{
+        .type = LoopType::Outer,
+        .dim = Dim::Auto,
+    };
+
+    if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
+        if (dimSize.value() < 0 || dimSize.value() > 2) {
+            stage.pushError(std::error_code(), "[@outer] argument must be 0, 1, or 2");
+            return false;
+        }
+        ret.dim = static_cast<Dim>(dimSize.value());
+    }
+
+    auto ctxKey = util::pointerToStr(&attr);
+    stage.tryEmplaceUserCtx<AttributedLoop>(ctxKey, ret);
+
+    return true;
 }
 __attribute__((constructor)) void registerAttrFrontend() {
     AttributeManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,

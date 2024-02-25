@@ -1,6 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/barrier.h"
+
+#include <oklt/util/string_utils.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/Sema.h"
 
@@ -44,7 +50,42 @@ struct BarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseBarrierAttrParams(const clang::Attr& a, SessionStage&) {
+ParseResult parseBarrierAttrParams(const clang::Attr& attr, SessionStage& stage) {
+    auto attrData = ParseOKLAttr(attr, stage);
+    if (attrData.kwargs.empty()) {
+        stage.pushError(std::error_code(), "[@barrier] does not take kwargs");
+        return false;
+    }
+
+    AttributedBarrier ret{
+        .type = BarrierType::syncDefault,
+    };
+
+    if (attrData.args.size() > 1) {
+        stage.pushError(std::error_code(), "[@barrier] takes at most one argument");
+        return false;
+    }
+
+    if (!attrData.args.empty()) {
+        auto firstParam = attrData.get<std::string>(0);
+        if (!firstParam.has_value()) {
+            stage.pushError(std::error_code(),
+                            "[@barrier] must have no arguments or have one string argument");
+            return false;
+        }
+
+        if (firstParam.value() != "warp") {
+            stage.pushError(std::error_code(),
+                            "[@barrier] has an invalid barrier type: " + firstParam.value());
+            return false;
+        }
+
+        ret.type = BarrierType::syncWarp;
+    }
+
+    auto ctxKey = util::pointerToStr(static_cast<const void*>(&attr));
+    stage.tryEmplaceUserCtx<AttributedBarrier>(ctxKey, ret);
+
     return true;
 }
 

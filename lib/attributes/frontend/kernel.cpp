@@ -1,5 +1,9 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/Sema.h"
@@ -46,7 +50,13 @@ struct KernelAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseKernelAttrParams(const clang::Attr& a, SessionStage&) {
+ParseResult parseKernelAttrParams(const clang::Attr& attr, SessionStage& stage) {
+    auto attrData = ParseOKLAttr(&attr, stage);
+    if (!attrData.args.empty() || !attrData.kwargs.empty()) {
+        stage.pushError(std::error_code(), "[@kernel] does not take arguments");
+        return false;
+    }
+
     return true;
 }
 

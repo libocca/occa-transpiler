@@ -2,7 +2,12 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 #include "core/diag/diag_handler.h"
-#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/dim.h"
+
+#include <oklt/util/string_utils.h>
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -135,7 +140,28 @@ class DimDiagHandler : public DiagHandler {
     }
 };
 
-ParseResult parseDimAttrParams(const clang::Attr& a, SessionStage&) {
+ParseResult parseDimAttrParams(const clang::Attr& attr, SessionStage& stage) {
+    auto attrData = ParseOKLAttr(attr, stage);
+
+    if (attrData.kwargs.empty()) {
+        stage.pushError(std::error_code(), "[@dim] does not take kwargs");
+        return false;
+    }
+
+    if (attrData.args.empty()) {
+        stage.pushError(std::error_code(), "[@dim] expects at least one argument");
+        return false;
+    }
+
+    AttributedDim ret;
+    ret.dim.reserve(attrData.args.size());
+    for (auto arg : attrData.args) {
+        ret.dim.emplace_back(arg.getRaw());
+    }
+
+    auto ctxKey = util::pointerToStr(attr);
+    stage.tryEmplaceUserCtx<AttributedDim>(ctxKey, ret);
+
     return true;
 }
 

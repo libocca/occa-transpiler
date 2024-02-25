@@ -1,10 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
-#include "attributes/utils/parse.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 #include "params/tile.h"
 
 #include <oklt/util/string_utils.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -48,134 +50,121 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-constexpr int MAX_N_PARAMS = 4;
-
-tl::expected<LoopType, Error> parseLoopType(const std::string& str) {
-    if (str == "@outer") {
-        return LoopType::Outer;
-    } else if (str == "@inner") {
-        return LoopType::Inner;
-    }
-    return tl::make_unexpected(Error{std::error_code(), "Tile loop type parse error"});
-}
-
-tl::expected<AttributedLoop, Error> parseLoop(const std::string& str) {
-    Error err{std::error_code(), "Tile loop parse error"};
-
-    auto nonDimLoopType = parseLoopType(str);
-    // @inner or @outer (without dimensions)
-    if (nonDimLoopType) {
-        return AttributedLoop{nonDimLoopType.value(), Dim::X};  // x - default dimension
+tl::expected<AttributedLoop, Error> parseOuterLoop(OKLAttr& attrData) {
+    if (attrData.kwargs.empty()) {
+        return tl::make_unexpected(Error{std::error_code(), "[@outer] does not take kwargs"});
     }
 
-    auto lpar_pos = str.find('(');
-    auto rpar_pos = str.find(')');
-    if (lpar_pos == std::string::npos || rpar_pos == std::string::npos || (lpar_pos > rpar_pos)) {
-        return tl::make_unexpected(err);
-    }
-    auto idxNStr = str.substr(lpar_pos + 1, rpar_pos - lpar_pos - 1);
-    auto loopTypeStr = str.substr(0, lpar_pos);
-    llvm::outs() << "[DEBUG] idxNStr: " << idxNStr << ", loopTypeStr: " << loopTypeStr << "\n";
-    auto dimIdx = util::parseStrTo<int>(idxNStr);
-    auto loopType = parseLoopType(loopTypeStr);
-    if (!dimIdx || !loopType) {
-        return tl::make_unexpected(err);
-    }
-    if (dimIdx.value() < 0 || dimIdx.value() > 2) {
-        return tl::make_unexpected(
-            Error{std::error_code(), "AttributedLoop argument must be 0, 1, 2"});
-    }
-    return AttributedLoop{loopType.value(), static_cast<Dim>(dimIdx.value())};
-}
-
-tl::expected<bool, Error> parseCheck(const std::string& str) {
-    constexpr const char* err_msg = "Tile check parameter format: 'check=true/false'";
-    auto err = tl::make_unexpected(Error{std::error_code(), err_msg});
-    auto pos = str.find("=");
-    if (pos == std::string::npos || pos == (str.size() - 1)) {
-        return err;
+    if (attrData.args.size() > 1) {
+        return tl::make_unexpected(Error{std::error_code(), "[@outer] takes at most one index"});
     }
 
-    auto trueFalse = str.substr(pos + 1);
-    if (trueFalse == "true") {
-        return true;
-    } else if (trueFalse == "false") {
-        return false;
-    }
-    return err;
-}
-
-ParseResult parseTileAttribute(const clang::Attr& a, SessionStage& s) {
-    auto tileParamsStr = parseOKLAttributeParamsStr(a);
-    if (!tileParamsStr.has_value()) {
-        return tl::make_unexpected(tileParamsStr.error());
-    }
-
-    auto nParams = tileParamsStr->size();
-    if (nParams > MAX_N_PARAMS || nParams < 1) {
-        return tl::make_unexpected(Error{{}, "@tile has 1 to 4 parameters"});
-    }
-
-    // Parse all parameters:
-    // TODO: add some verification if statement evaluates to integer type
-    auto tileSize = tileParamsStr.value()[0];
-
-    std::vector<bool> checksStack;
-    std::vector<AttributedLoop> loopsStack;
-
-    // TODO: rewrite this ugly parsing if possible
-    for (int i = 1; i < nParams; ++i) {
-        auto currentParamStr = tileParamsStr.value()[i];
-        // Parse check
-        if (auto check = parseCheck(currentParamStr)) {
-            checksStack.push_back(check.value());
-            continue;
-        }
-
-        // TODO: dimensions should be calculated by sema if not specified
-        // Parse loop
-        if (auto loopType = parseLoop(currentParamStr)) {
-            loopsStack.push_back(loopType.value());
-            continue;
-        }
-
-        return tl::make_unexpected(Error{{}, "Can't parse tile parameter: " + currentParamStr});
-    }
-
-    // Verify number of parameters
-    if (checksStack.size() > 1) {
-        return tl::make_unexpected(Error{{}, "More than one tile check parameters"});
-    }
-
-    if (loopsStack.size() > 2) {
-        return tl::make_unexpected(Error{{}, "More than two tile loop identifiers"});
-    }
-
-    TileParams tileParams{
-        .tileSize = tileSize,
-        .firstLoop = loopsStack.size() > 0 ? loopsStack[0] : AttributedLoop{},
-        .secondLoop = loopsStack.size() > 1 ? loopsStack[1] : AttributedLoop{},
-        .check = checksStack.size() > 0 ? checksStack.front() : true,
+    AttributedLoop ret{
+        .type = LoopType::Outer,
+        .dim = Dim::Auto,
     };
 
-    // Outer can't be after inner:
-    if (tileParams.firstLoop.type == LoopType::Inner &&
-        tileParams.secondLoop.type == LoopType::Outer) {
-        return tl::make_unexpected(
-            Error{{}, "Cannot have [@inner] loop outside of an [@outer] loop"});
+    if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
+        if (dimSize.value() < 0 || dimSize.value() > 2) {
+            return tl::make_unexpected(
+                Error{std::error_code(), "[@outer] argument must be 0, 1, or 2"});
+        }
+        ret.dim = static_cast<Dim>(dimSize.value());
     }
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Parsed @tile parameters: "
-                 << ": {tile size: " << tileParams.tileSize
-                 << ", first loop: " << static_cast<int>(tileParams.firstLoop.type)
-                 << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
-                 << ", second loop: " << static_cast<int>(tileParams.secondLoop.type)
-                 << " with dim: " << static_cast<int>(tileParams.secondLoop.dim)
-                 << ", check: " << tileParams.check << "}\n";
-#endif
+    return ret;
+};
 
-    return tileParams;
+tl::expected<AttributedLoop, Error> parseInnerLoop(OKLAttr& attrData) {
+    if (attrData.kwargs.empty()) {
+        return tl::make_unexpected(Error{std::error_code(), "[@inner] does not take kwargs"});
+    }
+
+    if (attrData.args.size() > 1) {
+        return tl::make_unexpected(Error{std::error_code(), "[@inner] takes at most one index"});
+    }
+
+    AttributedLoop ret{
+        .type = LoopType::Outer,
+        .dim = Dim::Auto,
+    };
+
+    if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
+        if (dimSize.value() < 0 || dimSize.value() > 2) {
+            return tl::make_unexpected(
+                Error{std::error_code(), "[@inner] argument must be 0, 1, or 2"});
+        }
+        ret.dim = static_cast<Dim>(dimSize.value());
+    }
+
+    return ret;
+};
+
+tl::expected<AttributedLoop, Error> parseLoopType(OKLAttr& attrData) {
+    if (attrData.name == "@outer") {
+        return parseOuterLoop(attrData);
+    } else if (attrData.name == "@inner") {
+        return parseInnerLoop(attrData);
+    }
+    return tl::make_unexpected(Error{std::error_code(), "[@tile] loop type parse error"});
+};
+
+bool parseTileAttribute(const clang::Attr& attr, SessionStage& stage) {
+    TileParams ret = {};
+    auto attrData = ParseOKLAttr(&attr, stage);
+
+    if (attrData.args.empty()) {
+        return tl::make_unexpected(Error{{}, "[@tile] expects at least one argument"});
+    }
+
+    if (attrData.args.size() > 3) {
+        return tl::make_unexpected(Error{{},
+                        "[@tile] takes 1-3 arguments, the last 2 being attributes for the block "
+                        "and in-block loops respectively"});
+    }
+
+    if (attrData.args[0].empty()) {
+        return tl::make_unexpected(Error{{}, "[@tile] expects a non-empty first argument"});
+        return false;
+    }
+    ret.tileSize = attrData.args[0].getRaw();
+
+    for (auto i = size_t{1}; i < attrData.args.size(); ++i) {
+        if (!attrData.isa<OKLAttr>(i)) {
+            return tl::make_unexpected(Error{{},
+                            "[@tile] can only take attributes for the 2nd and 3rd arguments"});
+        }
+
+        auto data = attrData.get<OKLAttr>(i).value();
+        auto loop = parseLoopType(data);
+        if (!loop) {
+            return loop.error();
+        }
+
+        if (i == 1) {
+            ret.firstLoop = loop.value();
+            continue;
+        }
+        if (i == 2) {
+            ret.secondLoop = loop.value();
+            continue;
+        }
+    }
+
+    for (auto param : attrData.kwargs) {
+        if (param.first != "check") {
+            return tl::make_unexpected(Error{{}, "[@tile] does not take this kwarg"});
+            return false;
+        }
+
+        if (!param.second.isa<bool>()) {
+            return tl::make_unexpected(Error{{}, "[@tile] 'check' argument must be true or false"});
+            return false;
+        }
+        param.second.getTo(ret.check);
+    }
+
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

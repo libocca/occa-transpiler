@@ -13,6 +13,10 @@
 
 namespace oklt {
 
+inline bool OKLAttrParam::empty() {
+    return rawData.empty();
+}
+
 inline bool OKLAttrParam::is_integral() {
     return (data.has_value() && data.type() == typeid(llvm::APSInt));
 }
@@ -166,6 +170,8 @@ void OKLAttrParam::getTo(T& v, T&& u) {
 template <typename T>
 std::optional<T> OKLAttr::get(size_t n) {
     if (n < args.size()) {
+        if constexpr (std::is_same_v<T, OKLAttrParam>)
+            return args[n];
         return args[n].get<T>();
     }
     return std::nullopt;
@@ -173,8 +179,11 @@ std::optional<T> OKLAttr::get(size_t n) {
 
 template <typename T>
 T OKLAttr::get(size_t n, T&& u) {
-    if (n < args.size())
+    if (n < args.size()) {
+        if constexpr (std::is_same_v<T, OKLAttrParam>)
+            return args[n];
         return args[n].get<T>().value_or(u);
+    }
     return u;
 };
 
@@ -188,16 +197,22 @@ bool OKLAttr::isa(size_t n) {
 template <typename T>
 std::optional<T> OKLAttr::get(std::string_view k) {
     auto it = kwargs.find(k);
-    if (it != kwargs.end())
+    if (it != kwargs.end()) {
+        if constexpr (std::is_same_v<T, OKLAttrParam>)
+            return it->second;
         return it->second.get<T>();
+    }
     return std::nullopt;
 };
 
 template <typename T>
 T OKLAttr::get(std::string_view k, T&& u) {
     auto it = kwargs.find(k);
-    if (it != kwargs.end())
+    if (it != kwargs.end()) {
+        if constexpr (std::is_same_v<T, OKLAttrParam>)
+            return it->second;
         return it->second.get<T>().value_or(u);
+    }
     return u;
 };
 

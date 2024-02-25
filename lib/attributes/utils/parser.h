@@ -26,6 +26,9 @@ class OKLAttrParam {
     /// @brief return raw string representation
     [[nodiscard]] std::string_view getRaw() const { return rawData; }
 
+    /// @brief Checks if attribute is empty or not
+    [[nodiscard]] bool empty();
+
     /// @brief check if value is integer
     [[nodiscard]] bool is_integral();
     /// @brief check if value is unsigned integer
@@ -101,17 +104,17 @@ struct OKLAttr {
     std::string name;
 
     std::vector<OKLAttrParam> args;
-    template <typename T>
+    template <typename T = OKLAttrParam>
     [[nodiscard]] std::optional<T> get(size_t n);
-    template <typename T>
+    template <typename T = OKLAttrParam>
     [[nodiscard]] T get(size_t n, T&& u);
     template <typename... T>
     [[nodiscard]] bool isa(size_t n);
 
     std::map<std::string_view, OKLAttrParam> kwargs;
-    template <typename T>
+    template <typename T = OKLAttrParam>
     [[nodiscard]] std::optional<T> get(std::string_view k);
-    template <typename T>
+    template <typename T = OKLAttrParam>
     [[nodiscard]] T get(std::string_view k, T&& u);
     template <typename... T>
     [[nodiscard]] bool isa(std::string_view k);

@@ -1,7 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
-#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/dim.h"
+
+#include <oklt/util/string_utils.h>
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -107,7 +112,39 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseDimOrderAttrParams(const clang::Attr& a, SessionStage&) {
+ParseResult parseDimOrderAttrParams(const clang::Attr& attr, SessionStage& stage) {
+    auto attrData = ParseOKLAttr(attr, stage);
+
+    if (attrData.kwargs.empty()) {
+        stage.pushError(std::error_code(), "[@dimOrder] does not take kwargs");
+        return false;
+    }
+
+    if (attrData.args.empty()) {
+        stage.pushError(std::error_code(), "[@dimOrder] expects at least one argument");
+        return false;
+    }
+
+    AttributedDimOrder ret;
+    for (auto arg : attrData.args) {
+        auto idx = arg.get<size_t>();
+        if (!idx.has_value()) {
+            // TODO: pushError ?
+            return false;
+        }
+
+        auto it = ret.idx.find(idx.value());
+        if (it != ret.idx.end()) {
+            stage.pushError(std::error_code(), "[@dimOrder] Duplicate index");
+            return false;
+        }
+
+        ret.idx.insert(idx.value());
+    }
+
+    auto ctxKey = util::pointerToStr(&attr);
+    stage.tryEmplaceUserCtx<AttributedDimOrder>(ctxKey, ret);
+
     return true;
 }
 
