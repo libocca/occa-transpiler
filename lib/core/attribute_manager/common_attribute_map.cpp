@@ -13,10 +13,10 @@ bool CommonAttributeMap::registerHandler(std::string name, AttrStmtHandler handl
     return ret.second;
 }
 
-tl::expected<std::any, Error> CommonAttributeMap::handleAttr(const Attr* attr,
-                                                             const Decl* decl,
-                                                             const std::any* params,
-                                                             SessionStage& stage) {
+HandleResult CommonAttributeMap::handleAttr(const Attr* attr,
+                                            const Decl* decl,
+                                            const std::any* params,
+                                            SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     auto it = _declHandlers.find(name);
     if (it != _declHandlers.end()) {
@@ -25,10 +25,10 @@ tl::expected<std::any, Error> CommonAttributeMap::handleAttr(const Attr* attr,
     return tl::make_unexpected(Error{});
 }
 
-tl::expected<std::any, Error> CommonAttributeMap::handleAttr(const Attr* attr,
-                                                             const Stmt* stmt,
-                                                             const std::any* params,
-                                                             SessionStage& stage) {
+HandleResult CommonAttributeMap::handleAttr(const Attr* attr,
+                                            const Stmt* stmt,
+                                            const std::any* params,
+                                            SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     auto it = _stmtHandlers.find(name);
     if (it != _stmtHandlers.end()) {

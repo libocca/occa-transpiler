@@ -4,10 +4,10 @@
 namespace oklt {
 using namespace clang;
 
-tl::expected<std::any, Error> AttrStmtHandler::handle(const clang::Attr* attr,
-                                                      const clang::Stmt* stmt,
-                                                    const std::any* params,
-                                                      SessionStage& stage) {
+HandleResult AttrStmtHandler::handle(const clang::Attr* attr,
+                                     const clang::Stmt* stmt,
+                                     const std::any* params,
+                                     SessionStage& stage) {
     return _handler(attr, stmt, params, stage);
 }
 

@@ -14,10 +14,8 @@ class SessionStage;
 
 class AttrDeclHandler {
    public:
-    using HandleType = std::function<tl::expected<std::any, Error>(const clang::Attr*,
-                                                                   const clang::Decl*,
-                                                                   const std::any*,
-                                                                   SessionStage&)>;
+    using HandleType = std::function<
+        HandleResult(const clang::Attr*, const clang::Decl*, const std::any*, SessionStage&)>;
 
     explicit AttrDeclHandler(HandleType h)
         : _handler(std::move(h)) {}

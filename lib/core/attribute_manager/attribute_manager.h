@@ -24,8 +24,7 @@ class AttributeManager {
     ~AttributeManager() = default;
 
    public:
-    using AttrParamParserType =
-        std::function<tl::expected<std::any, Error>(const clang::Attr*, SessionStage&)>;
+    using AttrParamParserType = std::function<ParseResult(const clang::Attr*, SessionStage&)>;
 
     AttributeManager(const AttributeManager&) = delete;
     AttributeManager(AttributeManager&&) = delete;
@@ -107,7 +106,6 @@ AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
                 util::fmt("Failed to cast {} to {}", baseDeclStmtTypeName, handleDeclStmtTypeName)
                     .value()});
         }
-        HandleResult res;
         if constexpr (n_arguments == N_ARGUMENTS_WITH_PARAMS) {
             const ParamsType* params_ptr = std::any_cast<ParamsType>(params);
             if (params_ptr == nullptr) {
@@ -116,14 +114,10 @@ AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
                     util::fmt("Any cast fail: failed to cast to {}", typeid(ParamsType).name())
                         .value()});
             }
-            res = handler(attr, handleDeclStmt, params_ptr, stage);
+            return handler(attr, handleDeclStmt, params_ptr, stage);
         } else {
-            res = handler(attr, handleDeclStmt, stage);
+            return handler(attr, handleDeclStmt, stage);
         }
-        if (!res) {
-            return tl::make_unexpected(res.error());
-        }
-        return res.value();
     }};
 }
 }  // namespace detail
