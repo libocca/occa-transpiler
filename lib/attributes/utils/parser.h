@@ -15,7 +15,7 @@ class Attr;
 namespace oklt {
 
 class SessionStage;
-class OKLAttr;
+class OKLParsedAttr;
 
 class OKLAttrParam {
    public:
@@ -51,14 +51,14 @@ class OKLAttrParam {
     template <typename T, typename std::enable_if_t<is_string_v<T>, bool> = true>
     [[nodiscard]] bool isa();
 
-    template <typename T, typename std::enable_if_t<std::is_same_v<T, OKLAttr>, bool> = true>
+    template <typename T, typename std::enable_if_t<std::is_same_v<T, OKLParsedAttr>, bool> = true>
     [[nodiscard]] bool isa();
 
-    /// @brief check if value is of type
-    template <typename T>
-    [[nodiscard]] bool isa() const {
-        return false;
-    }
+    //    /// @brief check if value is of type
+    //    template <typename T>
+    //    [[nodiscard]] bool isa() const {
+    //        return false;
+    //    }
 
     /// @brief check if value if of given types
     template <typename F, typename S, typename... T>
@@ -76,14 +76,14 @@ class OKLAttrParam {
     [[nodiscard]] std::optional<T> get();
 
     template <typename T,
-              typename std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLAttr>, bool> = true>
+        typename std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLParsedAttr>, bool> = true>
     [[nodiscard]] std::optional<T> get();
 
-    /// @brief get value of desired type or std::nullopt
-    template <typename T>
-    [[nodiscard]] std::optional<T> get() const {
-        return std::nullopt;
-    }
+    //    /// @brief get value of desired type or std::nullopt
+    //    template <typename T>
+    //    [[nodiscard]] std::optional<T> get() const {
+    //        return std::nullopt;
+    //    }
 
     /// @brief get value to referenced buffer, return true on success.
     template <typename T>
@@ -97,9 +97,9 @@ class OKLAttrParam {
     std::any data;
 };
 
-struct OKLAttr {
-    explicit OKLAttr();
-    explicit OKLAttr(const std::string_view name);
+struct OKLParsedAttr {
+    explicit OKLParsedAttr();
+    explicit OKLParsedAttr(const std::string_view name);
 
     std::string name;
 
@@ -120,6 +120,6 @@ struct OKLAttr {
     [[nodiscard]] bool isa(std::string_view k);
 };
 
-OKLAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage);
+OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage);
 
 }  // namespace oklt

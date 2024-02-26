@@ -143,14 +143,12 @@ class DimDiagHandler : public DiagHandler {
 ParseResult parseDimAttrParams(const clang::Attr& attr, SessionStage& stage) {
     auto attrData = ParseOKLAttr(attr, stage);
 
-    if (attrData.kwargs.empty()) {
-        stage.pushError(std::error_code(), "[@dim] does not take kwargs");
-        return false;
+    if (!attrData.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@dim] does not take kwargs"});
     }
 
     if (attrData.args.empty()) {
-        stage.pushError(std::error_code(), "[@dim] expects at least one argument");
-        return false;
+        return tl::make_unexpected(Error{{}, "[@dim] expects at least one argument"});
     }
 
     AttributedDim ret;
@@ -159,10 +157,7 @@ ParseResult parseDimAttrParams(const clang::Attr& attr, SessionStage& stage) {
         ret.dim.emplace_back(arg.getRaw());
     }
 
-    auto ctxKey = util::pointerToStr(attr);
-    stage.tryEmplaceUserCtx<AttributedDim>(ctxKey, ret);
-
-    return true;
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

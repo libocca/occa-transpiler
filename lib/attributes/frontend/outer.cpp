@@ -53,14 +53,12 @@ struct OuterAttribute : public ParsedAttrInfo {
 
 ParseResult parseOuterAttrParams(const clang::Attr& attr, SessionStage& stage) {
     auto attrData = ParseOKLAttr(attr, stage);
-    if (attrData.kwargs.empty()) {
-        stage.pushError(std::error_code(), "[@outer] does not take kwargs");
-        return false;
+    if (!attrData.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@outer] does not take kwargs"});
     }
 
     if (attrData.args.size() > 1) {
-        stage.pushError(std::error_code(), "[@outer] takes at most one index");
-        return false;
+        return tl::make_unexpected(Error{{}, "[@outer] takes at most one index"});
     }
 
     AttributedLoop ret{
@@ -70,17 +68,14 @@ ParseResult parseOuterAttrParams(const clang::Attr& attr, SessionStage& stage) {
 
     if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
         if (dimSize.value() < 0 || dimSize.value() > 2) {
-            stage.pushError(std::error_code(), "[@outer] argument must be 0, 1, or 2");
-            return false;
+            return tl::make_unexpected(Error{{}, "[@outer] argument must be 0, 1, or 2"});
         }
         ret.dim = static_cast<Dim>(dimSize.value());
     }
 
-    auto ctxKey = util::pointerToStr(&attr);
-    stage.tryEmplaceUserCtx<AttributedLoop>(ctxKey, ret);
-
-    return true;
+    return ret;
 }
+
 __attribute__((constructor)) void registerAttrFrontend() {
     AttributeManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
                                                                       parseOuterAttrParams);

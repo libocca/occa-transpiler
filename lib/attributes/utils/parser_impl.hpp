@@ -40,7 +40,7 @@ inline bool OKLAttrParam::is_string() {
 }
 
 inline bool OKLAttrParam::is_attr() {
-    return (data.has_value() && data.type() == typeid(OKLAttr));
+    return (data.has_value() && data.type() == typeid(OKLParsedAttr));
 }
 
 inline bool OKLAttrParam::is_expr() {
@@ -79,7 +79,7 @@ bool OKLAttrParam::isa() {
     return (data.has_value() && (data.type() == typeid(std::string) || isa<cell_t>()));
 }
 
-template <typename T, std::enable_if_t<std::is_same_v<T, OKLAttr>, bool>>
+template <typename T, std::enable_if_t<std::is_same_v<T, OKLParsedAttr>, bool>>
 bool OKLAttrParam::isa() {
     return (data.has_value() && data.type() == typeid(T));
 }
@@ -143,12 +143,12 @@ std::optional<T> OKLAttrParam::get() {
     return std::nullopt;
 }
 
-template <typename T, std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLAttr>, bool>>
+template <typename T, std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLParsedAttr>, bool>>
 std::optional<T> OKLAttrParam::get() {
-    if (!data.has_value() || data.type() != typeid(OKLAttr))
-        return std::nullopt;  // Not an OKLAttr
+    if (!data.has_value() || data.type() != typeid(OKLParsedAttr))
+        return std::nullopt;  // Not an OKLParsedAttr
 
-    return std::any_cast<OKLAttr>(data);
+    return std::any_cast<OKLParsedAttr>(data);
 }
 
 template <typename T>
@@ -168,7 +168,7 @@ void OKLAttrParam::getTo(T& v, T&& u) {
 }
 
 template <typename T>
-std::optional<T> OKLAttr::get(size_t n) {
+std::optional<T> OKLParsedAttr::get(size_t n) {
     if (n < args.size()) {
         if constexpr (std::is_same_v<T, OKLAttrParam>)
             return args[n];
@@ -178,7 +178,7 @@ std::optional<T> OKLAttr::get(size_t n) {
 };
 
 template <typename T>
-T OKLAttr::get(size_t n, T&& u) {
+T OKLParsedAttr::get(size_t n, T&& u) {
     if (n < args.size()) {
         if constexpr (std::is_same_v<T, OKLAttrParam>)
             return args[n];
@@ -188,14 +188,14 @@ T OKLAttr::get(size_t n, T&& u) {
 };
 
 template <typename... T>
-bool OKLAttr::isa(size_t n) {
+bool OKLParsedAttr::isa(size_t n) {
     if (n < args.size())
         return args[n].isa<T...>();
     return false;
 };
 
 template <typename T>
-std::optional<T> OKLAttr::get(std::string_view k) {
+std::optional<T> OKLParsedAttr::get(std::string_view k) {
     auto it = kwargs.find(k);
     if (it != kwargs.end()) {
         if constexpr (std::is_same_v<T, OKLAttrParam>)
@@ -206,7 +206,7 @@ std::optional<T> OKLAttr::get(std::string_view k) {
 };
 
 template <typename T>
-T OKLAttr::get(std::string_view k, T&& u) {
+T OKLParsedAttr::get(std::string_view k, T&& u) {
     auto it = kwargs.find(k);
     if (it != kwargs.end()) {
         if constexpr (std::is_same_v<T, OKLAttrParam>)
@@ -217,7 +217,7 @@ T OKLAttr::get(std::string_view k, T&& u) {
 };
 
 template <typename... T>
-bool OKLAttr::isa(std::string_view k) {
+bool OKLParsedAttr::isa(std::string_view k) {
     auto it = kwargs.find(k);
     if (it != kwargs.end())
         return it->second.isa<T...>();

@@ -50,8 +50,8 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-tl::expected<AttributedLoop, Error> parseOuterLoop(OKLAttr& attrData) {
-    if (attrData.kwargs.empty()) {
+tl::expected<AttributedLoop, Error> parseOuterLoop(OKLParsedAttr& attrData) {
+    if (!attrData.kwargs.empty()) {
         return tl::make_unexpected(Error{std::error_code(), "[@outer] does not take kwargs"});
     }
 
@@ -75,8 +75,8 @@ tl::expected<AttributedLoop, Error> parseOuterLoop(OKLAttr& attrData) {
     return ret;
 };
 
-tl::expected<AttributedLoop, Error> parseInnerLoop(OKLAttr& attrData) {
-    if (attrData.kwargs.empty()) {
+tl::expected<AttributedLoop, Error> parseInnerLoop(OKLParsedAttr& attrData) {
+    if (!attrData.kwargs.empty()) {
         return tl::make_unexpected(Error{std::error_code(), "[@inner] does not take kwargs"});
     }
 
@@ -100,45 +100,45 @@ tl::expected<AttributedLoop, Error> parseInnerLoop(OKLAttr& attrData) {
     return ret;
 };
 
-tl::expected<AttributedLoop, Error> parseLoopType(OKLAttr& attrData) {
-    if (attrData.name == "@outer") {
+tl::expected<AttributedLoop, Error> parseLoopType(OKLParsedAttr& attrData) {
+    if (attrData.name == OUTER_ATTR_NAME) {
         return parseOuterLoop(attrData);
-    } else if (attrData.name == "@inner") {
+    } else if (attrData.name == INNER_ATTR_NAME) {
         return parseInnerLoop(attrData);
     }
     return tl::make_unexpected(Error{std::error_code(), "[@tile] loop type parse error"});
 };
 
-bool parseTileAttribute(const clang::Attr& attr, SessionStage& stage) {
+ParseResult parseTileAttribute(const clang::Attr& attr, SessionStage& stage) {
     TileParams ret = {};
-    auto attrData = ParseOKLAttr(&attr, stage);
+    auto attrData = ParseOKLAttr(attr, stage);
 
     if (attrData.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects at least one argument"});
     }
 
     if (attrData.args.size() > 3) {
-        return tl::make_unexpected(Error{{},
-                        "[@tile] takes 1-3 arguments, the last 2 being attributes for the block "
-                        "and in-block loops respectively"});
+        return tl::make_unexpected(
+            Error{{},
+                  "[@tile] takes 1-3 arguments, the last 2 being attributes for the block "
+                  "and in-block loops respectively"});
     }
 
     if (attrData.args[0].empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects a non-empty first argument"});
-        return false;
     }
     ret.tileSize = attrData.args[0].getRaw();
 
     for (auto i = size_t{1}; i < attrData.args.size(); ++i) {
-        if (!attrData.isa<OKLAttr>(i)) {
-            return tl::make_unexpected(Error{{},
-                            "[@tile] can only take attributes for the 2nd and 3rd arguments"});
+        if (!attrData.isa<OKLParsedAttr>(i)) {
+            return tl::make_unexpected(
+                Error{{}, "[@tile] can only take attributes for the 2nd and 3rd arguments"});
         }
 
-        auto data = attrData.get<OKLAttr>(i).value();
+        auto data = attrData.get<OKLParsedAttr>(i).value();
         auto loop = parseLoopType(data);
         if (!loop) {
-            return loop.error();
+            return tl::make_unexpected(loop.error());
         }
 
         if (i == 1) {
@@ -154,12 +154,10 @@ bool parseTileAttribute(const clang::Attr& attr, SessionStage& stage) {
     for (auto param : attrData.kwargs) {
         if (param.first != "check") {
             return tl::make_unexpected(Error{{}, "[@tile] does not take this kwarg"});
-            return false;
         }
 
         if (!param.second.isa<bool>()) {
             return tl::make_unexpected(Error{{}, "[@tile] 'check' argument must be true or false"});
-            return false;
         }
         param.second.getTo(ret.check);
     }

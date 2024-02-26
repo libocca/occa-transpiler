@@ -89,9 +89,6 @@ class AttrParamParser {
 
         BraceCounter cnt;
         while (TokIt != Toks.end()) {
-            if (TokIt->isOneOf(tok::comma, tok::r_paren) && !cnt)
-                break;
-
             argToks.push_back(*TokIt);
 
             if (TokIt->is(tok::l_paren)) {
@@ -118,12 +115,12 @@ class AttrParamParser {
             }
 
             ++TokIt;
+
+            if (TokIt->isOneOf(tok::comma, tok::r_paren) && !cnt)
+                break;
         };
 
         if (argToks.empty()) {
-            if (TokIt == Toks.end() || TokIt->is(tok::r_paren))
-                return std::nullopt;
-
             return std::make_optional<OKLAttrParam>(StringRef(), std::any{});
         }
 
@@ -280,27 +277,22 @@ class AttrParamParser {
 
         ++TokIt;
 
-        OKLAttr ret;
-        if (!TokIt->isOneOf(tok::comma, tok::r_paren)) {
-            ret = parseOKLAttr(name);
-
-            if (TokIt == Toks.end()) {
-                const auto* rawEnd = SM.getCharacterData(Toks.back().getEndLoc());
-                buffer = StringRef(rawStart, rawEnd - rawStart);
-            } else {
-                const auto* rawEnd = SM.getCharacterData(TokIt->getEndLoc());
-                buffer = StringRef(rawStart, rawEnd - rawStart);
-                if (TokIt->is(tok::r_paren))
-                    ++TokIt;
-            }
+        OKLParsedAttr ret = parseOKLAttr(name);
+        if (TokIt == Toks.end()) {
+            const auto* rawEnd = SM.getCharacterData(Toks.back().getEndLoc());
+            buffer = StringRef(rawStart, rawEnd - rawStart);
+        } else {
+            auto endIt = std::prev(TokIt);
+            const auto* rawEnd = SM.getCharacterData(endIt->getEndLoc());
+            buffer = StringRef(rawStart, rawEnd - rawStart);
         }
 
         return std::make_optional<OKLAttrParam>(buffer, std::move(ret));
     }
 
    public:
-    OKLAttr parseOKLAttr(StringRef attrFullName) {
-        OKLAttr ret;
+    OKLParsedAttr parseOKLAttr(StringRef attrFullName) {
+        OKLParsedAttr ret;
         if (!attrFullName.empty())
             ret.name = attrFullName;
 
@@ -310,8 +302,10 @@ class AttrParamParser {
         ++TokIt;
 
         while (TokIt != Toks.end()) {
-            if (TokIt->is(tok::r_paren))
+            if (TokIt->is(tok::r_paren)) {
+                ++TokIt;
                 break;
+            }
 
             bool isParsed = false;
 
@@ -365,6 +359,12 @@ class AttrParamParser {
             strVal = *sup->diagnosticIdentifiers_begin();
         }
 
+        // Check if there is payload
+        if (strVal.empty()) {
+            TokIt = Toks.begin();
+            return;
+        }
+
         // Prepare Buffer and virtual location
         auto tmpTok = Token{};
         tmpTok.startToken();
@@ -398,11 +398,11 @@ class AttrParamParser {
 namespace oklt {
 using namespace clang;
 
-OKLAttr::OKLAttr() = default;
-OKLAttr::OKLAttr(const std::string_view name)
+OKLParsedAttr::OKLParsedAttr() = default;
+OKLParsedAttr::OKLParsedAttr(const std::string_view name)
     : name(name){};
 
-OKLAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage) {
+OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage) {
     assert((isa<AnnotateAttr>(attr) || isa<SuppressAttr>(attr)) &&
            "We only support AnnotateAttr or SuppressAttr");
 

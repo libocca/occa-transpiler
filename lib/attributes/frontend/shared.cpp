@@ -4,6 +4,7 @@
 
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
+#include "params/empty_params.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
@@ -60,11 +61,10 @@ struct SharedAttribute : public ParsedAttrInfo {
 ParseResult parseSharedAttrParams(const clang::Attr& attr, SessionStage& stage) {
     auto attrData = ParseOKLAttr(attr, stage);
     if (!attrData.args.empty() || !attrData.kwargs.empty()) {
-        stage.pushError(std::error_code(), "[@shared] does not take arguments");
-        return false;
+        return tl::make_unexpected(Error{{}, "[@shared] does not take arguments"});
     }
 
-    return true;
+    return EmptyParams{};
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

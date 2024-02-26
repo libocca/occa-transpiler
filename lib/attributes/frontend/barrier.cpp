@@ -52,9 +52,8 @@ struct BarrierAttribute : public ParsedAttrInfo {
 
 ParseResult parseBarrierAttrParams(const clang::Attr& attr, SessionStage& stage) {
     auto attrData = ParseOKLAttr(attr, stage);
-    if (attrData.kwargs.empty()) {
-        stage.pushError(std::error_code(), "[@barrier] does not take kwargs");
-        return false;
+    if (!attrData.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@barrier] does not take kwargs"});
     }
 
     AttributedBarrier ret{
@@ -62,31 +61,27 @@ ParseResult parseBarrierAttrParams(const clang::Attr& attr, SessionStage& stage)
     };
 
     if (attrData.args.size() > 1) {
-        stage.pushError(std::error_code(), "[@barrier] takes at most one argument");
-        return false;
+        return tl::make_unexpected(Error{{}, "[@barrier] takes at most one argument"});
     }
 
     if (!attrData.args.empty()) {
         auto firstParam = attrData.get<std::string>(0);
         if (!firstParam.has_value()) {
-            stage.pushError(std::error_code(),
-                            "[@barrier] must have no arguments or have one string argument");
-            return false;
+            return tl::make_unexpected(
+                Error{{}, "[@barrier] must have no arguments or have one string argument"});
         }
 
         if (firstParam.value() != "warp") {
-            stage.pushError(std::error_code(),
-                            "[@barrier] has an invalid barrier type: " + firstParam.value());
-            return false;
+            return tl::make_unexpected(
+                Error{{},
+                      util::fmt("[@barrier] has an invalid barrier type: {}", firstParam.value())
+                          .value()});
         }
 
         ret.type = BarrierType::syncWarp;
     }
 
-    auto ctxKey = util::pointerToStr(static_cast<const void*>(&attr));
-    stage.tryEmplaceUserCtx<AttributedBarrier>(ctxKey, ret);
-
-    return true;
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

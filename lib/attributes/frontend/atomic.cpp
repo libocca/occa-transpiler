@@ -1,5 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/empty_params.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/Sema.h"
@@ -46,11 +51,10 @@ struct AtomicAttribute : public ParsedAttrInfo {
 ParseResult parseAtomicAttrParams(const Attr& attr, SessionStage& stage) {
     auto attrData = ParseOKLAttr(attr, stage);
     if (!attrData.args.empty() || !attrData.kwargs.empty()) {
-        stage.pushError(std::error_code(), "[@atomic] does not take arguments");
-        return false;
+        return tl::make_unexpected(Error{{}, "[@atomic] does not take arguments"});
     }
 
-    return true;
+    return EmptyParams{};
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

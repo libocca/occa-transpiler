@@ -115,37 +115,31 @@ struct DimOrderAttribute : public ParsedAttrInfo {
 ParseResult parseDimOrderAttrParams(const clang::Attr& attr, SessionStage& stage) {
     auto attrData = ParseOKLAttr(attr, stage);
 
-    if (attrData.kwargs.empty()) {
-        stage.pushError(std::error_code(), "[@dimOrder] does not take kwargs");
-        return false;
+    if (!attrData.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});
     }
 
     if (attrData.args.empty()) {
-        stage.pushError(std::error_code(), "[@dimOrder] expects at least one argument");
-        return false;
+        return tl::make_unexpected(Error{{}, "[@dimOrder] expects at least one argument"});
     }
 
     AttributedDimOrder ret;
     for (auto arg : attrData.args) {
         auto idx = arg.get<size_t>();
         if (!idx.has_value()) {
-            // TODO: pushError ?
-            return false;
+            return tl::make_unexpected(
+                Error{{}, "[@dimOrder] expects expects positive integer index"});
         }
 
         auto it = ret.idx.find(idx.value());
         if (it != ret.idx.end()) {
-            stage.pushError(std::error_code(), "[@dimOrder] Duplicate index");
-            return false;
+            return tl::make_unexpected(Error{{}, "[@dimOrder] Duplicate index"});
         }
 
         ret.idx.insert(idx.value());
     }
 
-    auto ctxKey = util::pointerToStr(&attr);
-    stage.tryEmplaceUserCtx<AttributedDimOrder>(ctxKey, ret);
-
-    return true;
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
