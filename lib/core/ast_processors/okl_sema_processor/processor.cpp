@@ -1,3 +1,4 @@
+#include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
@@ -87,16 +88,16 @@ bool runExprTranspilerHanders(const ExprType* expr,
         }
         return continueIfNoAttrs;
     }
+    auto& am = stage.getAttrManager();
 
     // finally parser it
-    auto params = stage.getAttrManager().parseAttr(attr, stage);
+    auto params = am.parseAttr(attr, stage);
     if (!params) {
         stage.pushError(params.error());
         return false;
     }
 
     // run specific kernel attribute handler
-    auto& am = stage.getAttrManager();
     if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
         // Get statement from attributed statement
         auto ok = am.handleAttr(attr, expr->getSubStmt(), &params.value(), stage);
@@ -216,6 +217,11 @@ bool runPreActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& s
 
     auto* attr = getOklAttr(attrStmt, stage);
     if (!attr) {
+        auto attrName = attrStmt->getAttrs()[0]->getNormalizedFullName();
+        stage.pushError(std::error_code(),
+                        util::fmt("No backend ({}) handler registered for attribute {}",
+                                  backendToString(stage.getBackend()),
+                                  attrName).value());
         return false;
     }
 
@@ -274,7 +280,8 @@ bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr, SessionStage& st
     }
 
     const Attr* attr = expectedAttr.value();
-    return am.handleAttr(attr, expr, {}, stage).has_value();    // TODO: where should I take parameters from
+    return am.handleAttr(attr, expr, {}, stage)
+        .has_value();  // TODO: where should I take parameters from
 }
 
 __attribute__((constructor)) void registerAstNodeHanlder() {

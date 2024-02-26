@@ -10,6 +10,7 @@ tl::expected<TargetBackend, std::string> backendFromString(const std::string& ty
         {"cuda", TargetBackend::CUDA},
         {"openmp", TargetBackend::OPENMP},
         {"hip", TargetBackend::HIP},
+        {"dpcpp", TargetBackend::DPCPP},
     };
 
     auto it = BACKENDS_MAP.find(util::toLower(type));
@@ -27,6 +28,8 @@ std::string backendToString(TargetBackend backend) {
             return std::string{"openmp"};
         case TargetBackend::HIP:
             return std::string{"hip"};
+        case TargetBackend::DPCPP:
+            return std::string{"dpcpp"};
     }
     return {};
 }

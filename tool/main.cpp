@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     transpile_command.add_argument("-b", "--backend")
         .required()
         //.choices("cuda", "openmp")
-        .help("backends: {cuda, openmp}");
+        .help("backends: {cuda, openmp, hip, dpcpp}");
     transpile_command.add_argument("-i", "--input").required().help("input file");
     transpile_command.add_argument("--normalize")
         .flag()
@@ -117,8 +117,6 @@ int main(int argc, char* argv[]) {
                 oklt::UserOutput userOutput = result.value();
                 std::ofstream ofs(output.string());
                 ofs << userOutput.kernel.sourceCode;
-
-                std::cout << userOutput.kernel.sourceCode << std::endl;
 
                 std::cout << "Transpiling success : true" << std::endl;
             } else {

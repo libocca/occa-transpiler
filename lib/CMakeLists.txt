@@ -90,6 +90,9 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
 
+    # DPCPP
+    attributes/backend/dpcpp/kernel.cpp
+
     # sugar attribute
     attributes/backend/common/dim.cpp
 
