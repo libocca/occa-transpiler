@@ -140,20 +140,18 @@ class DimDiagHandler : public DiagHandler {
     }
 };
 
-ParseResult parseDimAttrParams(const clang::Attr& attr, SessionStage& stage) {
-    auto attrData = ParseOKLAttr(attr, stage);
-
-    if (!attrData.kwargs.empty()) {
+ParseResult parseDimAttrParams(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
+    if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@dim] does not take kwargs"});
     }
 
-    if (attrData.args.empty()) {
+    if (data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@dim] expects at least one argument"});
     }
 
     AttributedDim ret;
-    ret.dim.reserve(attrData.args.size());
-    for (auto arg : attrData.args) {
+    ret.dim.reserve(data.args.size());
+    for (auto arg : data.args) {
         ret.dim.emplace_back(arg.getRaw());
     }
 

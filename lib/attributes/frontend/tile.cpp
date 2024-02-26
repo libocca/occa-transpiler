@@ -109,34 +109,32 @@ tl::expected<AttributedLoop, Error> parseLoopType(OKLParsedAttr& attrData) {
     return tl::make_unexpected(Error{std::error_code(), "[@tile] loop type parse error"});
 };
 
-ParseResult parseTileAttribute(const clang::Attr& attr, SessionStage& stage) {
+ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
     TileParams ret = {};
-    auto attrData = ParseOKLAttr(attr, stage);
-
-    if (attrData.args.empty()) {
+    if (data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects at least one argument"});
     }
 
-    if (attrData.args.size() > 3) {
+    if (data.args.size() > 3) {
         return tl::make_unexpected(
             Error{{},
                   "[@tile] takes 1-3 arguments, the last 2 being attributes for the block "
                   "and in-block loops respectively"});
     }
 
-    if (attrData.args[0].empty()) {
+    if (data.args[0].empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects a non-empty first argument"});
     }
-    ret.tileSize = attrData.args[0].getRaw();
+    ret.tileSize = data.args[0].getRaw();
 
-    for (auto i = size_t{1}; i < attrData.args.size(); ++i) {
-        if (!attrData.isa<OKLParsedAttr>(i)) {
+    for (auto i = size_t{1}; i < data.args.size(); ++i) {
+        if (!data.isa<OKLParsedAttr>(i)) {
             return tl::make_unexpected(
                 Error{{}, "[@tile] can only take attributes for the 2nd and 3rd arguments"});
         }
 
-        auto data = attrData.get<OKLParsedAttr>(i).value();
-        auto loop = parseLoopType(data);
+        auto subAttr = data.get<OKLParsedAttr>(i).value();
+        auto loop = parseLoopType(subAttr);
         if (!loop) {
             return tl::make_unexpected(loop.error());
         }
@@ -151,7 +149,7 @@ ParseResult parseTileAttribute(const clang::Attr& attr, SessionStage& stage) {
         }
     }
 
-    for (auto param : attrData.kwargs) {
+    for (auto param : data.kwargs) {
         if (param.first != "check") {
             return tl::make_unexpected(Error{{}, "[@tile] does not take this kwarg"});
         }

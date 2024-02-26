@@ -50,9 +50,10 @@ struct BarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseBarrierAttrParams(const clang::Attr& attr, SessionStage& stage) {
-    auto attrData = ParseOKLAttr(attr, stage);
-    if (!attrData.kwargs.empty()) {
+ParseResult parseBarrierAttrParams(const clang::Attr& attr,
+                                   OKLParsedAttr& data,
+                                   SessionStage& stage) {
+    if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@barrier] does not take kwargs"});
     }
 
@@ -60,12 +61,12 @@ ParseResult parseBarrierAttrParams(const clang::Attr& attr, SessionStage& stage)
         .type = BarrierType::syncDefault,
     };
 
-    if (attrData.args.size() > 1) {
+    if (data.args.size() > 1) {
         return tl::make_unexpected(Error{{}, "[@barrier] takes at most one argument"});
     }
 
-    if (!attrData.args.empty()) {
-        auto firstParam = attrData.get<std::string>(0);
+    if (!data.args.empty()) {
+        auto firstParam = data.get<std::string>(0);
         if (!firstParam.has_value()) {
             return tl::make_unexpected(
                 Error{{}, "[@barrier] must have no arguments or have one string argument"});

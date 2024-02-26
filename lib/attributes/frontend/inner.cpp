@@ -51,13 +51,14 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseInnerAttrParams(const clang::Attr& attr, SessionStage& stage) {
-    auto attrData = ParseOKLAttr(attr, stage);
-    if (!attrData.kwargs.empty()) {
+ParseResult parseInnerAttrParams(const clang::Attr& attr,
+                                 OKLParsedAttr& data,
+                                 SessionStage& stage) {
+    if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@inner] does not take kwargs"});
     }
 
-    if (attrData.args.size() > 1) {
+    if (data.args.size() > 1) {
         return tl::make_unexpected(Error{{}, "[@inner] takes at most one index"});
     }
 
@@ -66,7 +67,7 @@ ParseResult parseInnerAttrParams(const clang::Attr& attr, SessionStage& stage) {
         .dim = Dim::Auto,
     };
 
-    if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
+    if (auto dimSize = data.get<int>(0); dimSize.has_value()) {
         if (dimSize.value() < 0 || dimSize.value() > 2) {
             return tl::make_unexpected(Error{{}, "[@inner] argument must be 0, 1, or 2"});
         }

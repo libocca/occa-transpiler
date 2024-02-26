@@ -102,9 +102,10 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseExclusiveAttrParams(const clang::Attr& attr, SessionStage& stage) {
-    auto attrData = ParseOKLAttr(attr, stage);
-    if (!attrData.args.empty() || !attrData.kwargs.empty()) {
+ParseResult parseExclusiveAttrParams(const clang::Attr& attr,
+                                     OKLParsedAttr& data,
+                                     SessionStage& stage) {
+    if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@exclusive] does not take arguments"});
     }
 

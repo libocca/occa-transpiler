@@ -17,6 +17,7 @@
 namespace oklt {
 
 struct Error;
+struct OKLParsedAttr;
 
 class AttributeManager {
    protected:
@@ -24,7 +25,8 @@ class AttributeManager {
     ~AttributeManager() = default;
 
    public:
-    using AttrParamParserType = std::function<ParseResult(const clang::Attr&, SessionStage&)>;
+    using AttrParamParserType =
+        std::function<ParseResult(const clang::Attr&, OKLParsedAttr&, SessionStage&)>;
 
     AttributeManager(const AttributeManager&) = delete;
     AttributeManager(AttributeManager&&) = delete;

@@ -1,5 +1,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "attributes/frontend/params/empty_params.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
@@ -80,7 +82,8 @@ ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
     std::string name = attr.getNormalizedFullName();
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {
-        return it->second(attr, stage);
+        auto params = ParseOKLAttr(attr, stage);
+        return it->second(attr, params, stage);
     }
     return EmptyParams{};
 }
@@ -120,13 +123,10 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrV
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
     const ArrayRef<const Attr*>& attrs,
-    const Stmt& stmt,
+    const Stmt* decl,
     SessionStage& stage) {
     std::list<const Attr*> collectedAttrs;
     for (auto& attr : attrs) {
-        if (!attr)
-            continue;
-
         auto name = attr->getNormalizedFullName();
         if (_commonAttrs.hasAttrHandler(name)) {
             collectedAttrs.push_back(attr);

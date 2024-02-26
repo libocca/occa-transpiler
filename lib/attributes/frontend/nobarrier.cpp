@@ -50,12 +50,13 @@ struct NoBarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseNoBarrierAttrParams(const clang::Attr& attr, SessionStage& stage) {
-    auto attrData = ParseOKLAttr(attr, stage);
-    if (!attrData.kwargs.empty()) {
+ParseResult parseNoBarrierAttrParams(const clang::Attr& attr,
+                                     OKLParsedAttr& data,
+                                     SessionStage& stage) {
+    if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@nobarrier] does not take kwargs"});
     }
-    if (!attrData.args.empty()) {
+    if (!data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@nobarrier] does not take arguments"});
     }
 

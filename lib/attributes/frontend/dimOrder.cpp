@@ -112,19 +112,19 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseDimOrderAttrParams(const clang::Attr& attr, SessionStage& stage) {
-    auto attrData = ParseOKLAttr(attr, stage);
-
-    if (!attrData.kwargs.empty()) {
+ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
+                                    OKLParsedAttr& data,
+                                    SessionStage& stage) {
+    if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});
     }
 
-    if (attrData.args.empty()) {
+    if (data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] expects at least one argument"});
     }
 
     AttributedDimOrder ret;
-    for (auto arg : attrData.args) {
+    for (auto arg : data.args) {
         auto idx = arg.get<size_t>();
         if (!idx.has_value()) {
             return tl::make_unexpected(
