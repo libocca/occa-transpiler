@@ -60,15 +60,15 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
 }  // namespace
 
 HandleResult handleTileAttribute(const clang::Attr* a,
-                                              const clang::Stmt* d,
-                                              const TileParams* params,
-                                              SessionStage& s) {
+                                 const clang::ForStmt* forStmt,
+                                 const TileParams* params,
+                                 SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
 
-    if (!isa<ForStmt>(d)) {
-        return tl::make_unexpected(Error{{}, "@tile can be applied only to for loop"});
-    }
-    const auto* forStmt = dyn_cast<ForStmt>(d);
+    // if (!isa<ForStmt>(d)) {
+    //     return tl::make_unexpected(Error{{}, "@tile can be applied only to for loop"});
+    // }
+    // const auto* forStmt = dyn_cast<ForStmt>(d);
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {
@@ -76,8 +76,7 @@ HandleResult handleTileAttribute(const clang::Attr* a,
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode =
-        buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

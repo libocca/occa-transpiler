@@ -11,17 +11,12 @@ const std::string RESTRICT_MODIFIER = "__restrict__";
 }
 namespace oklt::cuda_subset {
 using namespace clang;
-HandleResult handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
+HandleResult handleRestrictAttribute(const clang::Attr* a, const clang::ParmVarDecl* parmDecl, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif
     auto& rewriter = s.getRewriter();
 
-    if (!isa<ParmVarDecl>(d)) {
-        return false;
-    }
-
-    auto parmDecl = cast<ParmVarDecl>(d);
     SourceLocation identifierLoc = parmDecl->getLocation();
     removeAttribute(a, s);
     std::string restrictText = " " + RESTRICT_MODIFIER + " ";

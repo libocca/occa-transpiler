@@ -11,16 +11,10 @@ namespace oklt::cuda_subset {
 using namespace clang;
 // TODO: function is very similar to handleInnerAttribute
 HandleResult handleOuterAttribute(const clang::Attr* a,
-                                  const clang::Stmt* d,
+                                  const clang::ForStmt* forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
-    if (!isa<ForStmt>(d)) {
-        s.pushError(std::error_code(), "@outer can be applied to only for loop");
-        return false;
-    }
-
-    const auto* forStmt = dyn_cast<ForStmt>(d);
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {

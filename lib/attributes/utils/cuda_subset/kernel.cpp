@@ -1,16 +1,14 @@
+#include <any>
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include <any>
 
 namespace oklt::cuda_subset {
 using namespace clang;
 
 const std::string CUDA_KERNEL_DEFINITION = "extern \"C\" __global__";
 
-HandleResult handleKernelAttribute(const clang::Attr* a,
-                                                    const clang::Decl* d,
-                                                    SessionStage& s) {
+HandleResult handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
     auto func = dyn_cast<FunctionDecl>(d);
 
     // TODO: add __launch_bounds__
