@@ -2,6 +2,7 @@
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/attribute_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
@@ -9,10 +10,10 @@
 namespace oklt::cuda_subset {
 using namespace clang;
 // TODO: function is very similar to handleInnerAttribute
-tl::expected<std::any, Error> handleOuterAttribute(const clang::Attr* a,
-                                                   const clang::Stmt* d,
-                                                   const AttributedLoop* params,
-                                                   SessionStage& s) {
+HandleResult handleOuterAttribute(const clang::Attr* a,
+                                  const clang::Stmt* d,
+                                  const AttributedLoop* params,
+                                  SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
     if (!isa<ForStmt>(d)) {
         s.pushError(std::error_code(), "@outer can be applied to only for loop");

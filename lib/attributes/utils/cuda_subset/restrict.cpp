@@ -1,4 +1,5 @@
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/attribute_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -10,9 +11,7 @@ const std::string RESTRICT_MODIFIER = "__restrict__";
 }
 namespace oklt::cuda_subset {
 using namespace clang;
-tl::expected<std::any, Error> handleRestrictAttribute(const clang::Attr* a,
-                                                      const clang::Decl* d,
-                                                      SessionStage& s) {
+HandleResult handleRestrictAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif

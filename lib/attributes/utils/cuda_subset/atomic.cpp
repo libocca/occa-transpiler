@@ -1,3 +1,4 @@
+#include "core/attribute_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -102,7 +103,7 @@ bool handleCXXCopyOp(const CXXOperatorCallExpr* assignOp,
 
 namespace oklt::cuda_subset {
 
-tl::expected<std::any, Error> handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
+HandleResult handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
     static const BinOpMapT atomicBinaryMap = {
         {BinaryOperatorKind::BO_Assign, "atomicExch"},
         {BinaryOperatorKind::BO_AddAssign, "atomicAdd"},

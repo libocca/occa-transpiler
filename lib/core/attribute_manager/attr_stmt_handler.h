@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/attribute_manager/result.h"
+
 #include <clang/AST/Attr.h>
 
 #include <functional>
@@ -21,7 +23,7 @@ class AttrStmtHandler {
     AttrStmtHandler(AttrStmtHandler&&) = default;
     ~AttrStmtHandler() = default;
 
-    tl::expected<std::any, Error> handle(const clang::Attr* attr,
+    HandleResult handle(const clang::Attr* attr,
                                          const clang::Stmt*,
                                                     const std::any* params,
                                          SessionStage& stage);

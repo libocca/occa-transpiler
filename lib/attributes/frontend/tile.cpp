@@ -105,7 +105,7 @@ tl::expected<bool, Error> parseCheck(const std::string& str) {
     return err;
 }
 
-tl::expected<std::any, Error> parseTileAttribute(const clang::Attr* a, SessionStage& s) {
+ParseResult parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     auto tileParamsStr = parseOKLAttributeParamsStr(a);
     if (!tileParamsStr.has_value()) {
         return tl::make_unexpected(tileParamsStr.error());

@@ -8,7 +8,7 @@
 namespace oklt {
 using namespace clang;
 
-tl::expected<std::any, Error> handleGlobalConstant(const clang::Decl* decl,
+HandleResult handleGlobalConstant(const clang::Decl* decl,
                                                    SessionStage& s,
                                                    const std::string& qualifier) {
     // Should be variable declaration
@@ -50,7 +50,7 @@ tl::expected<std::any, Error> handleGlobalConstant(const clang::Decl* decl,
     return true;
 }
 
-tl::expected<std::any, Error> handleGlobalFunction(const clang::Decl* decl,
+HandleResult handleGlobalFunction(const clang::Decl* decl,
                                                    SessionStage& s,
                                                    const std::string& funcQualifier) {
     // INFO: Check if function

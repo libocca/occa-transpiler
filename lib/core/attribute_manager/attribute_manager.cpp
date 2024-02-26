@@ -37,18 +37,18 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
-tl::expected<std::any, Error> AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
+HandleResult AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
     return _implicitHandlers(stmt, stage);
 }
 
-tl::expected<std::any, Error> AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
+HandleResult AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
     return _implicitHandlers(decl, stage);
 }
 
-tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
-                                                           const Decl* decl,
-                                                           const std::any* params,
-                                                           SessionStage& stage) {
+HandleResult AttributeManager::handleAttr(const Attr* attr,
+                                          const Decl* decl,
+                                          const std::any* params,
+                                          SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, decl, params, stage);
@@ -61,10 +61,10 @@ tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
     return false;
 }
 
-tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
-                                                           const Stmt* stmt,
-                                                           const std::any* params,
-                                                           SessionStage& stage) {
+HandleResult AttributeManager::handleAttr(const Attr* attr,
+                                          const Stmt* stmt,
+                                          const std::any* params,
+                                          SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
@@ -75,7 +75,7 @@ tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
     return false;
 }
 
-tl::expected<std::any, Error> AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
+ParseResult AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {

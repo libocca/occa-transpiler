@@ -4,7 +4,7 @@
 namespace {
 using namespace oklt;
 
-tl::expected<std::any, Error> handleCUDAGlobalFunction(const clang::Decl* decl, oklt::SessionStage& s) {
+HandleResult handleCUDAGlobalFunction(const clang::Decl* decl, oklt::SessionStage& s) {
     const std::string HIP_FUNCTION_QUALIFIER = "__device__";
     return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
 }

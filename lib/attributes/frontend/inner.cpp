@@ -46,7 +46,7 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-tl::expected<std::any, Error> parseInnerAttrParams(const clang::Attr* a, SessionStage& s) {
+ParseResult parseInnerAttrParams(const clang::Attr* a, SessionStage& s) {
     return parseLoopAttrParams(a, s, LoopType::Inner);
 }
 

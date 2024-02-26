@@ -1,9 +1,12 @@
 #pragma once
 
-#include <string>
-#include <tl/expected.hpp>
-#include <any>
 #include <oklt/core/error.h>
+#include "core/attribute_manager/result.h"
+
+#include <tl/expected.hpp>
+
+#include <any>
+#include <string>
 
 namespace clang {
 class Decl;
@@ -15,10 +18,10 @@ namespace oklt {
 
 class SessionStage;
 
-tl::expected<std::any, Error> handleGlobalConstant(const clang::Decl* decl,
-                                                   SessionStage& s,
-                                                   const std::string& qualifier);
-tl::expected<std::any, Error> handleGlobalFunction(const clang::Decl* decl,
-                                                   SessionStage& s,
-                                                   const std::string& funcQualifier);
+HandleResult handleGlobalConstant(const clang::Decl* decl,
+                                  SessionStage& s,
+                                  const std::string& qualifier);
+HandleResult handleGlobalFunction(const clang::Decl* decl,
+                                  SessionStage& s,
+                                  const std::string& funcQualifier);
 }  // namespace oklt

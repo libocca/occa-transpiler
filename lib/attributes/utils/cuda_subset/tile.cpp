@@ -59,7 +59,7 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
 
 }  // namespace
 
-tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a,
+HandleResult handleTileAttribute(const clang::Attr* a,
                                               const clang::Stmt* d,
                                               const TileParams* params,
                                               SessionStage& s) {

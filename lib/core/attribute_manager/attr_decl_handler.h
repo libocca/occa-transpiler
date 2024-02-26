@@ -1,11 +1,12 @@
 #pragma once
 
-#include <clang/AST/Attr.h>
+#include "core/attribute_manager/result.h"
 
-#include <functional>
+#include <clang/AST/Attr.h>
 #include <tl/expected.hpp>
+
 #include <any>
-#include <oklt/core/error.h>
+#include <functional>
 
 namespace oklt {
 
@@ -15,7 +16,7 @@ class AttrDeclHandler {
    public:
     using HandleType = std::function<tl::expected<std::any, Error>(const clang::Attr*,
                                                                    const clang::Decl*,
-                                                    const std::any*,
+                                                                   const std::any*,
                                                                    SessionStage&)>;
 
     explicit AttrDeclHandler(HandleType h)
@@ -24,10 +25,10 @@ class AttrDeclHandler {
     AttrDeclHandler(AttrDeclHandler&&) = default;
     ~AttrDeclHandler() = default;
 
-    tl::expected<std::any, Error> handle(const clang::Attr* attr,
-                                         const clang::Decl*,
-                                                    const std::any* params,
-                                         SessionStage& stage);
+    HandleResult handle(const clang::Attr* attr,
+                        const clang::Decl*,
+                        const std::any* params,
+                        SessionStage& stage);
 
    private:
     HandleType _handler;

@@ -4,7 +4,7 @@
 namespace {
 using namespace oklt;
 
-tl::expected<std::any, Error> handleDimDeclAttrbute(const clang::Attr* a,
+HandleResult handleDimDeclAttrbute(const clang::Attr* a,
                                                     const clang::Decl* decl,
                                                     const std::any* params,
                                                     SessionStage& s) {
@@ -12,7 +12,7 @@ tl::expected<std::any, Error> handleDimDeclAttrbute(const clang::Attr* a,
     return true;
 }
 
-tl::expected<std::any, Error> handleDimStmtAttrbute(const clang::Attr* a,
+HandleResult handleDimStmtAttrbute(const clang::Attr* a,
                                                     const clang::Stmt* stmt,
                                                     const std::any* params,
                                                     SessionStage& s) {

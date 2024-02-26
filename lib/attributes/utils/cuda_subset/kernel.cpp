@@ -8,7 +8,7 @@ using namespace clang;
 
 const std::string CUDA_KERNEL_DEFINITION = "extern \"C\" __global__";
 
-tl::expected<std::any, Error> handleKernelAttribute(const clang::Attr* a,
+HandleResult handleKernelAttribute(const clang::Attr* a,
                                                     const clang::Decl* d,
                                                     SessionStage& s) {
     auto func = dyn_cast<FunctionDecl>(d);

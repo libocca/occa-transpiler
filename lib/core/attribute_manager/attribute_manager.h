@@ -4,6 +4,7 @@
 #include "core/attribute_manager/backend_attribute_map.h"
 #include "core/attribute_manager/common_attribute_map.h"
 #include "core/attribute_manager/implicit_handlers/implicit_handler_map.h"
+#include "core/attribute_manager/result.h"
 
 #include <clang/Sema/ParsedAttr.h>
 #include <any>
@@ -47,19 +48,19 @@ class AttributeManager {
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, DeclHandler handler);
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, StmtHandler handler);
 
-    tl::expected<std::any, Error> parseAttr(const clang::Attr* attr, SessionStage& stage);
+    ParseResult parseAttr(const clang::Attr* attr, SessionStage& stage);
 
-    tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
-                                             const clang::Decl* decl,
-                                             const std::any* params,
-                                             SessionStage& stage);
-    tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
-                                             const clang::Stmt* stmt,
-                                             const std::any* params,
-                                             SessionStage& stage);
+    HandleResult handleAttr(const clang::Attr* attr,
+                            const clang::Decl* decl,
+                            const std::any* params,
+                            SessionStage& stage);
+    HandleResult handleAttr(const clang::Attr* attr,
+                            const clang::Stmt* stmt,
+                            const std::any* params,
+                            SessionStage& stage);
 
-    tl::expected<std::any, Error> handleDecl(const clang::Decl* decl, SessionStage& stage);
-    tl::expected<std::any, Error> handleStmt(const clang::Stmt* stmt, SessionStage& stage);
+    HandleResult handleDecl(const clang::Decl* decl, SessionStage& stage);
+    HandleResult handleStmt(const clang::Stmt* stmt, SessionStage& stage);
 
     tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
                                                        const clang::Decl* decl,
@@ -86,12 +87,11 @@ AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
     using ParamsType = typename std::remove_pointer_t<typename func_param_type<Handler, 3>::type>;
     constexpr size_t n_arguments = func_num_arguments<Handler>::value;
 
-    return AttrHandler{[&handler, n_arguments](
-                           const clang::Attr* attr,
-                           const DeclStmt* declStmt,
-                           const std::any* params,
-                           SessionStage& stage) -> tl::expected<std::any, Error> {
-        tl::expected<std::any, Error> res;
+    return AttrHandler{[&handler, n_arguments](const clang::Attr* attr,
+                                               const DeclStmt* declStmt,
+                                               const std::any* params,
+                                               SessionStage& stage) -> HandleResult {
+        HandleResult res;
         static_assert(
             n_arguments == N_ARGUMENTS_WITH_PARAMS || n_arguments == N_ARGUMENTS_WITHOUT_PARAMS,
             "Handler must have 3 or 4 arguments");
@@ -123,7 +123,6 @@ auto makeSpecificAttrHandle(Handler& handler) {
     } else {
         return detail::makeSpecificAttrXXXHandle<Handler, clang::Stmt, AttrStmtHandler>(handler);
     }
-    // return detail::makeSpecificAttrXXXHandle<Handler, clang::Stmt, AttrStmtHandler>(handler);
 }
 
 }  // namespace oklt

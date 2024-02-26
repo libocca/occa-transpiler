@@ -1,3 +1,4 @@
+#include "core/attribute_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -8,9 +9,7 @@ namespace {
 const std::string SHARED_MODIFIER = "__shared__";
 }
 namespace oklt::cuda_subset {
-tl::expected<std::any, Error> handleSharedAttribute(const clang::Attr* a,
-                                                    const clang::Decl* d,
-                                                    SessionStage& s) {
+HandleResult handleSharedAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif

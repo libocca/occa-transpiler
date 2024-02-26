@@ -42,7 +42,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
     }
 };
 
-tl::expected<std::any, Error> parseRestrictAttrParams(const clang::Attr* a, SessionStage&) {
+ParseResult parseRestrictAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

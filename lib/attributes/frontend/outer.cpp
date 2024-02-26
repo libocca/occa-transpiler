@@ -46,7 +46,7 @@ struct OuterAttribute : public ParsedAttrInfo {
     }
 };
 
-tl::expected<std::any, Error> parseOuterAttrParams(const clang::Attr* a, SessionStage& s) {
+ParseResult parseOuterAttrParams(const clang::Attr* a, SessionStage& s) {
     return parseLoopAttrParams(a, s, LoopType::Outer);
 }
 __attribute__((constructor)) void registerAttrFrontend() {
