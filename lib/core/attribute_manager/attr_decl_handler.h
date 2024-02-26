@@ -1,7 +1,11 @@
 #pragma once
 
-#include <clang/AST/Attr.h>
+#include "core/attribute_manager/result.h"
 
+#include <clang/AST/Attr.h>
+#include <tl/expected.hpp>
+
+#include <any>
 #include <functional>
 
 namespace oklt {
@@ -10,7 +14,8 @@ class SessionStage;
 
 class AttrDeclHandler {
    public:
-    using HandleType = std::function<bool(const clang::Attr*, const clang::Decl*, SessionStage&)>;
+    using HandleType = std::function<
+        HandleResult(const clang::Attr*, const clang::Decl*, const std::any*, SessionStage&)>;
 
     explicit AttrDeclHandler(HandleType h)
         : _handler(std::move(h)) {}
@@ -18,7 +23,10 @@ class AttrDeclHandler {
     AttrDeclHandler(AttrDeclHandler&&) = default;
     ~AttrDeclHandler() = default;
 
-    bool handle(const clang::Attr* attr, const clang::Decl*, SessionStage& stage);
+    HandleResult handle(const clang::Attr* attr,
+                        const clang::Decl*,
+                        const std::any* params,
+                        SessionStage& stage);
 
    private:
     HandleType _handler;

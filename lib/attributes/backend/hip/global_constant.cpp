@@ -4,7 +4,7 @@
 namespace {
 using namespace oklt;
 
-bool handleHIPGlobalConstant(const clang::Decl* decl, oklt::SessionStage& s) {
+HandleResult handleHIPGlobalConstant(const clang::Decl* decl, oklt::SessionStage& s) {
     const std::string HIP_CONST_QUALIFIER = "__constant__";
     return oklt::handleGlobalConstant(decl, s, HIP_CONST_QUALIFIER);
 }

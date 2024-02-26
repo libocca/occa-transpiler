@@ -2,6 +2,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
+#include <oklt/util/string_utils.h>
 
 #include <clang/AST/AST.h>
 
@@ -19,10 +20,12 @@ bool runPreActionDecl(const Decl* decl, SessionStage& stage) {
     }
 
     for (const auto& attr : decl->getAttrs()) {
-        auto cont = am.parseAttr(attr, stage);
-        if (!cont) {
-            return cont;
+        auto params = am.parseAttr(attr, stage);
+        if (!params) {
+            stage.pushError(params.error());
+            return false;
         }
+        stage.setUserCtx(util::pointerToStr(attr), params.value());
     }
     return true;
 }
@@ -34,9 +37,10 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
 
     auto& am = stage.getAttrManager();
     if (!decl->hasAttrs()) {
-        auto cont = am.handleDecl(decl, stage);
-        if (!cont) {
-            return cont;
+        auto ok = am.handleDecl(decl, stage);
+        if (!ok) {
+            stage.pushError(ok.error());
+            return false;
         }
         return true;
     }
@@ -55,7 +59,16 @@ bool runPostActionDecl(const clang::Decl* decl, SessionStage& stage) {
         return true;
     }
 
-    return am.handleAttr(attr, decl, stage);
+    auto params = stage.getUserCtx(util::pointerToStr(attr));
+    if (!params) {
+        return false;
+    }
+    auto ok = am.handleAttr(attr, decl, params, stage);
+    if (!ok) {
+        stage.pushError(ok.error());
+        return false;
+    }
+    return true;
 }
 
 bool runPreActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
@@ -75,10 +88,12 @@ bool runPostActionStmt(const clang::Stmt* stmt, SessionStage& stage) {
 bool runPreActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& stage) {
     auto& am = stage.getAttrManager();
     for (const auto& attr : attrStmt->getAttrs()) {
-        auto cont = am.parseAttr(attr, stage);
-        if (!cont) {
-            return cont;
+        auto params = am.parseAttr(attr, stage);
+        if (!params) {
+            stage.pushError(params.error());
+            return false;
         }
+        stage.setUserCtx(util::pointerToStr(attr), params.value());
     }
 
     return true;
@@ -102,8 +117,14 @@ bool runPostActionAttrStmt(const clang::AttributedStmt* attrStmt, SessionStage& 
     }
 
     const Stmt* subStmt = attrStmt->getSubStmt();
-    if (!am.handleAttr(attr, subStmt, stage)) {
-        return true;
+    auto params = stage.getUserCtx(util::pointerToStr(attr));
+    if (!params) {
+        return false;
+    }
+    auto ok = am.handleAttr(attr, subStmt, params, stage);
+    if (!ok) {
+        stage.pushError(ok.error());
+        return false;
     }
 
     return true;
@@ -143,7 +164,13 @@ bool runPostActionRecoveryExpr(const clang::RecoveryExpr* expr_, SessionStage& s
     }
 
     const Attr* attr = expectedAttr.value();
-    return am.handleAttr(attr, expr, stage);
+    auto* params = stage.getUserCtx(util::pointerToStr(attr));
+    auto ok = am.handleAttr(attr, expr, params, stage);
+    if (!ok) {
+        stage.pushError(ok.error());
+        return false;
+    }
+    return true;
 }
 
 __attribute__((constructor)) void registerAstNodeHanlder() {

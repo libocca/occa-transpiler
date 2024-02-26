@@ -7,7 +7,8 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
+HandleResult handleTranslationUnit(const clang::Decl* decl,
+                                                    SessionStage& s) {
     if (!isa<TranslationUnitDecl>(decl)) {
         return true;
     }

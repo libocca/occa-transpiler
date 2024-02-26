@@ -8,7 +8,9 @@
 namespace oklt {
 using namespace clang;
 
-bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s, const std::string& qualifier) {
+HandleResult handleGlobalConstant(const clang::Decl* decl,
+                                                   SessionStage& s,
+                                                   const std::string& qualifier) {
     // Should be variable declaration
     if (!isa<VarDecl>(decl)) {
         return true;
@@ -23,8 +25,8 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s, const std::s
     auto type_str = var->getType().getAsString();
     auto declname = var->getDeclName().getAsString();
 
-    llvm::outs() << "[DEBUG] Found constant global variable declaration:" << " type: " << type_str
-                 << ", name: " << declname << "\n";
+    llvm::outs() << "[DEBUG] Found constant global variable declaration:"
+                 << " type: " << type_str << ", name: " << declname << "\n";
 #endif
 
     std::string newDeclStr;
@@ -48,9 +50,9 @@ bool handleGlobalConstant(const clang::Decl* decl, SessionStage& s, const std::s
     return true;
 }
 
-bool handleGlobalFunction(const clang::Decl* decl,
-                          SessionStage& s,
-                          const std::string& funcQualifier) {
+HandleResult handleGlobalFunction(const clang::Decl* decl,
+                                                   SessionStage& s,
+                                                   const std::string& funcQualifier) {
     // INFO: Check if function
     if (!isa<FunctionDecl>(decl)) {
         return true;

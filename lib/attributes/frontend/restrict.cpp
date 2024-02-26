@@ -42,7 +42,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
     }
 };
 
-bool parseRestrictAttrParams(const clang::Attr* a, SessionStage&) {
+ParseResult parseRestrictAttrParams(const clang::Attr* a, SessionStage&) {
     return true;
 }
 

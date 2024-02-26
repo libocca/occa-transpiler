@@ -8,7 +8,7 @@ using namespace oklt;
 __attribute__((constructor)) void registerKernelHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, KERNEL_ATTR_NAME},
-        AttrDeclHandler{cuda_subset::handleKernelAttribute});
+        makeSpecificAttrHandle(cuda_subset::handleKernelAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler (CUDA)\n";

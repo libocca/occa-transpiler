@@ -4,10 +4,11 @@
 namespace oklt {
 using namespace clang;
 
-bool AttrStmtHandler::handle(const clang::Attr* attr,
-                             const clang::Stmt* stmt,
-                             SessionStage& stage) {
-    return _handler(attr, stmt, stage);
+HandleResult AttrStmtHandler::handle(const clang::Attr* attr,
+                                     const clang::Stmt* stmt,
+                                     const std::any* params,
+                                     SessionStage& stage) {
+    return _handler(attr, stmt, params, stage);
 }
 
 }  // namespace oklt

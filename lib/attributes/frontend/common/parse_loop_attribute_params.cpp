@@ -1,10 +1,11 @@
 #include "parse_loop_attribute_params.h"
 #include <oklt/util/string_utils.h>
+#include "attributes/frontend/params/inner_outer.h"
 #include "attributes/utils/parse.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
-bool parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType) {
+ParseResult parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType) {
     auto fail = [&s](const std::string& err) {
         s.pushError(std::error_code(), err);
         return false;
@@ -37,14 +38,12 @@ bool parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopTyp
     }
 
     AttributedLoop loop{loopType, static_cast<Dim>(dimIdx)};
-    auto ctxKey = util::pointerToStr(static_cast<const void*>(a));
-    s.tryEmplaceUserCtx<AttributedLoop>(ctxKey, loop);
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Parsed " << loopTypeStr << " parameters with dim "
                  << static_cast<int>(loop.dim) << "\n";
 #endif
 
-    return true;
+    return loop;
 }
 }  // namespace oklt

@@ -1,4 +1,3 @@
-#include "attributes/frontend/params/tile.h"
 #include <clang/AST/Decl.h>
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
@@ -60,32 +59,24 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
 
 }  // namespace
 
-bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStage& s) {
-    auto usrCtxKey = util::pointerToStr(a);
-    auto tileParams = std::any_cast<TileParams>(s.getUserCtx(usrCtxKey));
-    if (tileParams == nullptr) {
-        s.pushError(std::error_code(), "No @tile params in user context");
-        return false;
-    }
-
+HandleResult handleTileAttribute(const clang::Attr* a,
+                                 const clang::ForStmt* forStmt,
+                                 const TileParams* params,
+                                 SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
 
-    if (!isa<ForStmt>(d)) {
-        s.pushError(std::error_code(), "@tile can be applied only to for loop");
-        return false;
-    }
-    const auto* forStmt = dyn_cast<ForStmt>(d);
+    // if (!isa<ForStmt>(d)) {
+    //     return tl::make_unexpected(Error{{}, "@tile can be applied only to for loop"});
+    // }
+    // const auto* forStmt = dyn_cast<ForStmt>(d);
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {
-        s.pushError(std::error_code(), "@tile: failed to fetch loop meta data from sema");
-        return false;
+        return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
-    // auto forLoopMetaData = ParseForStmt(const_cast<ForStmt*>(forStmt), astCtx);
 
     int openedScopeCounter = 0;
-    auto prefixCode =
-        buildPreffixTiledCode(forLoopMetaData.value(), tileParams, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
@@ -98,6 +89,6 @@ bool handleTileAttribute(const clang::Attr* a, const clang::Stmt* d, SessionStag
                  << "), Inc(rhsInc: " << forLoopMetaData->inc.val
                  << ", isUnary: " << forLoopMetaData->isUnary() << ")\n";
 #endif
-    return true;
+    return {};
 }
 }  // namespace oklt::cuda_subset

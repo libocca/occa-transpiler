@@ -6,7 +6,8 @@ namespace {
 using namespace oklt;
 __attribute__((constructor)) void registerHIPTileAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, INNER_ATTR_NAME}, AttrStmtHandler{cuda_subset::handleInnerAttribute});
+        {TargetBackend::HIP, INNER_ATTR_NAME},
+        makeSpecificAttrHandle(cuda_subset::handleInnerAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register tile attribute handler\n";

@@ -8,7 +8,8 @@ using namespace clang;
 
 __attribute__((constructor)) void registerBackendHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, INNER_ATTR_NAME}, AttrStmtHandler{cuda_subset::handleInnerAttribute});
+        {TargetBackend::CUDA, INNER_ATTR_NAME},
+        makeSpecificAttrHandle(cuda_subset::handleInnerAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << INNER_ATTR_NAME << " attribute handler\n";

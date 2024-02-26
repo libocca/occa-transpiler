@@ -14,7 +14,7 @@ bool ImplicitHandlerMap::registerHandler(KeyType key, StmtHandler handler) {
     return ret.second;
 }
 
-bool ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stage) {
+HandleResult ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stage) {
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, decl->getKind()));
 
@@ -27,7 +27,7 @@ bool ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stage) {
     return it->second(decl, stage);
 }
 
-bool ImplicitHandlerMap::operator()(const Stmt* stmt, SessionStage& stage) {
+HandleResult ImplicitHandlerMap::operator()(const Stmt* stmt, SessionStage& stage) {
     auto backend = stage.getBackend();
     auto it = _stmtHandlers.find(std::make_tuple(backend, stmt->getStmtClass()));
 
