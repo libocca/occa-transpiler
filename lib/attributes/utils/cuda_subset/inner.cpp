@@ -12,7 +12,7 @@ namespace oklt::cuda_subset {
 using namespace clang;
 tl::expected<std::any, Error> handleInnerAttribute(const clang::Attr* a,
                                                    const clang::Stmt* d,
-                                                   const AttributedLoop& params,
+                                                   const AttributedLoop* params,
                                                    SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
     if (!isa<ForStmt>(d)) {
@@ -29,7 +29,7 @@ tl::expected<std::any, Error> handleInnerAttribute(const clang::Attr* a,
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        forLoopMetaData.value(), params, openedScopeCounter);
+        forLoopMetaData.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

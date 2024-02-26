@@ -96,13 +96,18 @@ bool runExprTranspilerHanders(const ExprType* expr,
     }
 
     // run specific kernel attribute handler
+    auto& am = stage.getAttrManager();
     if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
         // Get statement from attributed statement
-        if (!stage.getAttrManager().handleAttr(attr, expr->getSubStmt(), params.value(), stage)) {
+        auto ok = am.handleAttr(attr, expr->getSubStmt(), &params.value(), stage);
+        if (!ok) {
+            stage.pushError(ok.error());
             return false;
         }
     } else {
-        if (!stage.getAttrManager().handleAttr(attr, expr, params.value(), stage)) {
+        auto ok = am.handleAttr(attr, expr, &params.value(), stage);
+        if (!ok) {
+            stage.pushError(ok.error());
             return false;
         }
     }
@@ -185,7 +190,9 @@ bool transpileParmDecl(const ParmVarDecl* parm, SessionStage& stage) {
             stage.pushError(params.error());
             return false;
         }
-        if (!stage.getAttrManager().handleAttr(attr, parm, params.value(), stage)) {
+        auto handleResult = stage.getAttrManager().handleAttr(attr, parm, &params.value(), stage);
+        if (!handleResult) {
+            stage.pushError(handleResult.error());
             return false;
         }
     } else {

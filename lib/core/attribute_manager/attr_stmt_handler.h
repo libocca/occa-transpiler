@@ -12,7 +12,7 @@ class AttrStmtHandler {
    public:
     using HandleType = std::function<tl::expected<std::any, Error>(const clang::Attr*,
                                                                    const clang::Stmt*,
-                                                                   const std::any& params,
+                                                    const std::any*,
                                                                    SessionStage&)>;
 
     explicit AttrStmtHandler(HandleType h)
@@ -23,7 +23,7 @@ class AttrStmtHandler {
 
     tl::expected<std::any, Error> handle(const clang::Attr* attr,
                                          const clang::Stmt*,
-                                         const std::any& params,
+                                                    const std::any* params,
                                          SessionStage& stage);
 
    private:

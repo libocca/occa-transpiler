@@ -10,9 +10,7 @@ const std::string CUDA_KERNEL_DEFINITION = "extern \"C\" __global__";
 
 tl::expected<std::any, Error> handleKernelAttribute(const clang::Attr* a,
                                                     const clang::Decl* d,
-                                                    const std::any& params,
                                                     SessionStage& s) {
-    static_cast<void>(params);
     auto func = dyn_cast<FunctionDecl>(d);
 
     // TODO: add __launch_bounds__

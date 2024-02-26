@@ -1,12 +1,11 @@
 #pragma once
 
+#include <oklt/core/error.h>
 #include "core/attribute_manager/backend_attribute_map.h"
 #include "core/attribute_manager/common_attribute_map.h"
 #include "core/attribute_manager/implicit_handlers/implicit_handler_map.h"
 
 #include <clang/Sema/ParsedAttr.h>
-
-#include <oklt/core/error.h>
 #include <any>
 #include <tl/expected.hpp>
 
@@ -52,11 +51,11 @@ class AttributeManager {
 
     tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
                                              const clang::Decl* decl,
-                                             const std::any& params,
+                                             const std::any* params,
                                              SessionStage& stage);
     tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
                                              const clang::Stmt* stmt,
-                                             const std::any& params,
+                                             const std::any* params,
                                              SessionStage& stage);
 
     tl::expected<std::any, Error> handleDecl(const clang::Decl* decl, SessionStage& stage);
@@ -87,25 +86,31 @@ AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
     using ParamsType = typename std::remove_pointer_t<typename func_param_type<Handler, 3>::type>;
     constexpr size_t n_arguments = func_num_arguments<Handler>::value;
 
-    return AttrHandler{
-        [&handler, n_arguments](const clang::Attr* attr,
-                                const DeclStmt* declStmt,
-                                const std::any& params,
-                                SessionStage& stage) -> tl::expected<std::any, Error> {
-            tl::expected<std::any, Error> res;
-            static_assert(
-                n_arguments == N_ARGUMENTS_WITH_PARAMS || n_arguments == N_ARGUMENTS_WITHOUT_PARAMS,
-                "Handler must have 3 or 4 arguments");
-            if constexpr (n_arguments == N_ARGUMENTS_WITH_PARAMS) {
-                res = handler(attr, declStmt, std::any_cast<ParamsType>(params), stage);
-            } else {
-                res = handler(attr, declStmt, stage);
+    return AttrHandler{[&handler, n_arguments](
+                           const clang::Attr* attr,
+                           const DeclStmt* declStmt,
+                           const std::any* params,
+                           SessionStage& stage) -> tl::expected<std::any, Error> {
+        tl::expected<std::any, Error> res;
+        static_assert(
+            n_arguments == N_ARGUMENTS_WITH_PARAMS || n_arguments == N_ARGUMENTS_WITHOUT_PARAMS,
+            "Handler must have 3 or 4 arguments");
+        if constexpr (n_arguments == N_ARGUMENTS_WITH_PARAMS) {
+            const ParamsType* params_ptr = std::any_cast<ParamsType>(params);
+            if (params_ptr == nullptr) {
+                return tl::make_unexpected(Error{
+                    {},
+                    std::string("Any cast fail: failed to cast to ") + typeid(ParamsType).name()});
             }
-            if (!res) {
-                return tl::make_unexpected(res.error());
-            }
-            return res.value();
-        }};
+            res = handler(attr, declStmt, params_ptr, stage);
+        } else {
+            res = handler(attr, declStmt, stage);
+        }
+        if (!res) {
+            return tl::make_unexpected(res.error());
+        }
+        return res.value();
+    }};
 }
 }  // namespace detail
 

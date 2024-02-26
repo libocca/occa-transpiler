@@ -8,15 +8,15 @@ namespace oklt::cuda_subset {
 // TODO: create aliasing for tl::expected<std::any, Error>
 tl::expected<std::any, Error> handleTileAttribute(const clang::Attr*,
                                                   const clang::Stmt*,
-                                                  const TileParams& params,
+                                                  const TileParams* params,
                                                   SessionStage&);
 tl::expected<std::any, Error> handleInnerAttribute(const clang::Attr*,
                                                    const clang::Stmt*,
-                                                   const AttributedLoop& params,
+                                                   const AttributedLoop* params,
                                                    SessionStage&);
 tl::expected<std::any, Error> handleOuterAttribute(const clang::Attr*,
                                                    const clang::Stmt*,
-                                                   const AttributedLoop& params,
+                                                   const AttributedLoop* params,
                                                    SessionStage&);
 tl::expected<std::any, Error> handleAtomicAttribute(const clang::Attr*,
                                                     const clang::Stmt*,
@@ -24,7 +24,6 @@ tl::expected<std::any, Error> handleAtomicAttribute(const clang::Attr*,
 
 tl::expected<std::any, Error> handleKernelAttribute(const clang::Attr*,
                                                     const clang::Decl*,
-                                                    const std::any& params,
                                                     SessionStage&);
 tl::expected<std::any, Error> handleSharedAttribute(const clang::Attr*,
                                                     const clang::Decl*,

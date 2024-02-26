@@ -61,10 +61,8 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
 
 tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a,
                                               const clang::Stmt* d,
-                                              const TileParams& params,
+                                              const TileParams* params,
                                               SessionStage& s) {
-    // auto tileParams = std::any_cast<TileParams>(params);
-
     auto& astCtx = s.getCompiler().getASTContext();
 
     if (!isa<ForStmt>(d)) {
@@ -76,11 +74,10 @@ tl::expected<std::any, Error> handleTileAttribute(const clang::Attr* a,
     if (!forLoopMetaData) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
-    // auto forLoopMetaData = ParseForStmt(const_cast<ForStmt*>(forStmt), astCtx);
 
     int openedScopeCounter = 0;
     auto prefixCode =
-        buildPreffixTiledCode(forLoopMetaData.value(), &params, openedScopeCounter);
+        buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

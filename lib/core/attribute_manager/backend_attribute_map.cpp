@@ -16,7 +16,7 @@ bool BackendAttributeMap::registerHandler(KeyType key, AttrStmtHandler handler) 
 
 tl::expected<std::any, Error> BackendAttributeMap::handleAttr(const Attr* attr,
                                                               const Decl* decl,
-                                                              const std::any& params,
+                                                              const std::any* params,
                                                               SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     auto backend = stage.getBackend();
@@ -29,7 +29,7 @@ tl::expected<std::any, Error> BackendAttributeMap::handleAttr(const Attr* attr,
 
 tl::expected<std::any, Error> BackendAttributeMap::handleAttr(const Attr* attr,
                                                               const Stmt* stmt,
-                                                              const std::any& params,
+                                                              const std::any* params,
                                                               SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     auto backend = stage.getBackend();

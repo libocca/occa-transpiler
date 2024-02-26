@@ -6,7 +6,7 @@ using namespace oklt;
 
 tl::expected<std::any, Error> handleDimDeclAttrbute(const clang::Attr* a,
                                                     const clang::Decl* decl,
-                                                    const std::any& params,
+                                                    const std::any* params,
                                                     SessionStage& s) {
     llvm::outs() << "handle decl attribute: " << a->getNormalizedFullName() << '\n';
     return true;
@@ -14,7 +14,7 @@ tl::expected<std::any, Error> handleDimDeclAttrbute(const clang::Attr* a,
 
 tl::expected<std::any, Error> handleDimStmtAttrbute(const clang::Attr* a,
                                                     const clang::Stmt* stmt,
-                                                    const std::any& params,
+                                                    const std::any* params,
                                                     SessionStage& s) {
     llvm::outs() << "handle stmt attribute: " << a->getNormalizedFullName() << '\n';
     return true;

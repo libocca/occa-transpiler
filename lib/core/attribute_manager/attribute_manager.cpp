@@ -47,7 +47,7 @@ tl::expected<std::any, Error> AttributeManager::handleDecl(const Decl* decl, Ses
 
 tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
                                                            const Decl* decl,
-                                                           const std::any& params,
+                                                           const std::any* params,
                                                            SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
@@ -63,7 +63,7 @@ tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
 
 tl::expected<std::any, Error> AttributeManager::handleAttr(const Attr* attr,
                                                            const Stmt* stmt,
-                                                           const std::any& params,
+                                                           const std::any* params,
                                                            SessionStage& stage) {
     std::string name = attr->getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {

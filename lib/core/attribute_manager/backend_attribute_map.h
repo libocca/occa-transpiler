@@ -28,11 +28,11 @@ class BackendAttributeMap {
 
     tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
                                              const clang::Decl* decl,
-                                             const std::any& params,
+                                             const std::any* params,
                                              SessionStage& stage);
     tl::expected<std::any, Error> handleAttr(const clang::Attr* attr,
                                              const clang::Stmt* stmt,
-                                             const std::any& params,
+                                             const std::any* params,
                                              SessionStage& stage);
 
     bool hasAttrHandler(SessionStage& stage, const std::string& name);
