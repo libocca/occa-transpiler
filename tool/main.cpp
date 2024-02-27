@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
     transpile_command.add_description("transpile OKL to targeted backend");
     transpile_command.add_argument("-b", "--backend")
         .required()
-        //.choices("cuda", "openmp")
-        .help("backends: {cuda, openmp}");
+        //.choices("cuda", "hip", "openmp")
+        .help("backends: {cuda, hip, openmp}");
     transpile_command.add_argument("-i", "--input").required().help("input file");
     transpile_command.add_argument("--normalize")
         .flag()

@@ -14,6 +14,7 @@ bool runPreActionDecl(const Decl& decl, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl.getDeclKindName() << '\n';
 #endif
+
     auto& am = stage.getAttrManager();
     if (!decl.hasAttrs()) {
         return true;
@@ -78,6 +79,7 @@ bool runPreActionStmt(const Stmt& stmt, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt.getStmtClassName() << '\n';
 #endif
+
     return true;
 }
 
@@ -85,10 +87,15 @@ bool runPostActionStmt(const Stmt& stmt, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt.getStmtClassName() << '\n';
 #endif
+
     return true;
 }
 
 bool runPreActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << attrStmt.getStmtClassName() << '\n';
+#endif
+
     auto& am = stage.getAttrManager();
     for (const auto attr : attrStmt.getAttrs()) {
         if (!attr)
@@ -106,6 +113,10 @@ bool runPreActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
 }
 
 bool runPostActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << attrStmt.getStmtClassName() << '\n';
+#endif
+
     auto& am = stage.getAttrManager();
     auto expectedAttr = am.checkAttrs(attrStmt.getAttrs(), attrStmt, stage);
     if (!expectedAttr) {
@@ -139,6 +150,7 @@ bool runPreActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
 #endif
+
     return true;
 }
 
@@ -146,6 +158,7 @@ bool runPostActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
 #endif
+
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
         return true;
