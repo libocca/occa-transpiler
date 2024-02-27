@@ -1,4 +1,5 @@
 #include "core/attribute_manager/attribute_manager.h"
+#include "attributes/frontend/params/empty_params.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
@@ -37,19 +38,19 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
-HandleResult AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
+HandleResult AttributeManager::handleStmt(const Stmt& stmt, SessionStage& stage) {
     return _implicitHandlers(stmt, stage);
 }
 
-HandleResult AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
+HandleResult AttributeManager::handleDecl(const Decl& decl, SessionStage& stage) {
     return _implicitHandlers(decl, stage);
 }
 
-HandleResult AttributeManager::handleAttr(const Attr* attr,
-                                          const Decl* decl,
+HandleResult AttributeManager::handleAttr(const Attr& attr,
+                                          const Decl& decl,
                                           const std::any* params,
                                           SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+    std::string name = attr.getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, decl, params, stage);
     }
@@ -61,11 +62,11 @@ HandleResult AttributeManager::handleAttr(const Attr* attr,
     return false;
 }
 
-HandleResult AttributeManager::handleAttr(const Attr* attr,
-                                          const Stmt* stmt,
+HandleResult AttributeManager::handleAttr(const Attr& attr,
+                                          const Stmt& stmt,
                                           const std::any* params,
                                           SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+    std::string name = attr.getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
     }
@@ -75,20 +76,23 @@ HandleResult AttributeManager::handleAttr(const Attr* attr,
     return false;
 }
 
-ParseResult AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
+    std::string name = attr.getNormalizedFullName();
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {
         return it->second(attr, stage);
     }
-    return true;
+    return EmptyParams{};
 }
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
-                                                                     const Decl* decl,
+                                                                     const Decl& decl,
                                                                      SessionStage& stage) {
     std::list<Attr*> collectedAttrs;
     for (auto& attr : attrs) {
+        if (!attr)
+            continue;
+
         auto name = attr->getNormalizedFullName();
         if (_commonAttrs.hasAttrHandler(name)) {
             collectedAttrs.push_back(attr);
@@ -116,10 +120,13 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrV
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
     const ArrayRef<const Attr*>& attrs,
-    const Stmt* decl,
+    const Stmt& stmt,
     SessionStage& stage) {
     std::list<const Attr*> collectedAttrs;
     for (auto& attr : attrs) {
+        if (!attr)
+            continue;
+
         auto name = attr->getNormalizedFullName();
         if (_commonAttrs.hasAttrHandler(name)) {
             collectedAttrs.push_back(attr);

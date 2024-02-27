@@ -48,9 +48,9 @@ std::vector<std::string> splitCSV(const std::string& str) {
     return split(str, ",");
 }
 
-tl::expected<std::vector<std::string>, Error> parseOKLAttributeParamsStr(const clang::Attr* a) {
+tl::expected<std::vector<std::string>, Error> parseOKLAttributeParamsStr(const clang::Attr& a) {
     // TODO: add support for annotate attribute
-    auto supressAttr = dyn_cast_or_null<SuppressAttr>(a);
+    auto supressAttr = dyn_cast_or_null<SuppressAttr>(&a);
     if (supressAttr) {
         auto paramStr = parseCppAttributeParameterStr(supressAttr);
         if (!paramStr.has_value()) {

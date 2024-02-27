@@ -43,7 +43,7 @@ struct AtomicAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseAtomicAttrParams(const Attr* a, SessionStage&) {
+ParseResult parseAtomicAttrParams(const Attr& a, SessionStage&) {
     return true;
 }
 

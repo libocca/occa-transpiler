@@ -135,7 +135,7 @@ class DimDiagHandler : public DiagHandler {
     }
 };
 
-ParseResult parseDimAttrParams(const clang::Attr* a, SessionStage&) {
+ParseResult parseDimAttrParams(const clang::Attr& a, SessionStage&) {
     return true;
 }
 

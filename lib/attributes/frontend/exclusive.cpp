@@ -36,7 +36,7 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseExclusiveAttrParams(const clang::Attr* a, SessionStage&) {
+ParseResult parseExclusiveAttrParams(const clang::Attr& a, SessionStage&) {
     return true;
 }
 

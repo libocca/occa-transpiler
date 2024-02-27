@@ -7,5 +7,5 @@
 #include <clang/AST/Attr.h>
 
 namespace oklt {
-ParseResult parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType);
+ParseResult parseLoopAttrParams(const clang::Attr& a, SessionStage& s, LoopType loopType);
 }

@@ -24,7 +24,7 @@ class AttributeManager {
     ~AttributeManager() = default;
 
    public:
-    using AttrParamParserType = std::function<ParseResult(const clang::Attr*, SessionStage&)>;
+    using AttrParamParserType = std::function<ParseResult(const clang::Attr&, SessionStage&)>;
 
     AttributeManager(const AttributeManager&) = delete;
     AttributeManager(AttributeManager&&) = delete;
@@ -49,26 +49,26 @@ class AttributeManager {
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, DeclHandler handler);
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, StmtHandler handler);
 
-    ParseResult parseAttr(const clang::Attr* attr, SessionStage& stage);
+    ParseResult parseAttr(const clang::Attr& attr, SessionStage& stage);
 
-    HandleResult handleAttr(const clang::Attr* attr,
-                            const clang::Decl* decl,
+    HandleResult handleAttr(const clang::Attr& attr,
+                            const clang::Decl& decl,
                             const std::any* params,
                             SessionStage& stage);
-    HandleResult handleAttr(const clang::Attr* attr,
-                            const clang::Stmt* stmt,
+    HandleResult handleAttr(const clang::Attr& attr,
+                            const clang::Stmt& stmt,
                             const std::any* params,
                             SessionStage& stage);
 
-    HandleResult handleDecl(const clang::Decl* decl, SessionStage& stage);
-    HandleResult handleStmt(const clang::Stmt* stmt, SessionStage& stage);
+    HandleResult handleDecl(const clang::Decl& decl, SessionStage& stage);
+    HandleResult handleStmt(const clang::Stmt& stmt, SessionStage& stage);
 
     tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
-                                                       const clang::Decl* decl,
+                                                       const clang::Decl& decl,
                                                        SessionStage& stage);
     tl::expected<const clang::Attr*, Error> checkAttrs(
         const clang::ArrayRef<const clang::Attr*>& attrs,
-        const clang::Stmt* decl,
+        const clang::Stmt& decl,
         SessionStage& stage);
 
    private:
@@ -83,41 +83,61 @@ class AttributeManager {
 };
 
 namespace detail {
-template <typename Handler, typename DeclStmt, typename AttrHandler>
+template <typename Handler, typename NodeType, typename AttrHandler>
 AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
     using ParamsType = typename std::remove_pointer_t<typename func_param_type<Handler, 3>::type>;
     using HandleDeclStmt =
-        typename std::remove_pointer_t<typename func_param_type<Handler, 2>::type>;
+        typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
     constexpr size_t n_arguments = func_num_arguments<Handler>::value;
 
-    return AttrHandler{[&handler, n_arguments](const clang::Attr* attr,
-                                               const DeclStmt* declStmt,
+    return AttrHandler{[&handler, n_arguments](const clang::Attr& attr,
+                                               const NodeType& node,
                                                const std::any* params,
                                                SessionStage& stage) -> HandleResult {
         static_assert(
             n_arguments == N_ARGUMENTS_WITH_PARAMS || n_arguments == N_ARGUMENTS_WITHOUT_PARAMS,
             "Handler must have 3 or 4 arguments");
-        const auto* handleDeclStmt = clang::dyn_cast_or_null<HandleDeclStmt>(declStmt);
-        if (handleDeclStmt == nullptr) {
-            auto baseDeclStmtTypeName = typeid(DeclStmt).name();
-            auto handleDeclStmtTypeName = typeid(HandleDeclStmt).name();
+        const auto localNode = clang::dyn_cast_or_null<HandleDeclStmt>(&node);
+        if (!localNode) {
+            auto baseNodeTypeName = typeid(NodeType).name();
+            auto handleNodeTypeName = typeid(HandleDeclStmt).name();
             return tl::make_unexpected(Error{
                 {},
-                util::fmt("Failed to cast {} to {}", baseDeclStmtTypeName, handleDeclStmtTypeName)
-                    .value()});
+                      util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
+                          .value()});
         }
         if constexpr (n_arguments == N_ARGUMENTS_WITH_PARAMS) {
-            const ParamsType* params_ptr = std::any_cast<ParamsType>(params);
-            if (params_ptr == nullptr) {
+            const ParamsType* params_ptr =
+                params->type() == typeid(ParamsType) ? std::any_cast<ParamsType>(params) : nullptr;
+            if (!params_ptr) {
                 return tl::make_unexpected(Error{
                     {},
                     util::fmt("Any cast fail: failed to cast to {}", typeid(ParamsType).name())
                         .value()});
             }
-            return handler(attr, handleDeclStmt, params_ptr, stage);
+            return handler(attr, *localNode, params_ptr, stage);
         } else {
-            return handler(attr, handleDeclStmt, stage);
+            return handler(attr, *localNode, stage);
         }
+    }};
+}
+
+template <typename Handler, typename NodeType, typename NodeHandler>
+NodeHandler makeSpecificImplicitXXXHandle(Handler& handler) {
+    using HandleDeclStmt =
+        typename std::remove_reference_t<typename func_param_type<Handler, 1>::type>;
+
+    return NodeHandler{[&handler](const NodeType& node, SessionStage& stage) -> HandleResult {
+        const auto localNode = clang::dyn_cast_or_null<HandleDeclStmt>(&node);
+        if (!localNode) {
+            auto baseNodeTypeName = typeid(NodeType).name();
+            auto handleNodeTypeName = typeid(HandleDeclStmt).name();
+            return tl::make_unexpected(
+                Error{{},
+                      util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
+                          .value()});
+        }
+        return handler(*localNode, stage);
     }};
 }
 }  // namespace detail
@@ -125,13 +145,24 @@ AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
 template <typename Handler>
 auto makeSpecificAttrHandle(Handler& handler) {
     using DeclOrStmt = typename std::remove_const_t<
-        typename std::remove_pointer_t<typename func_param_type<Handler, 2>::type>>;
+        typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>>;
 
-    // if constexpr (std::is_same_v<DeclOrStmt, clang::Decl>) {
     if constexpr (std::is_base_of_v<clang::Decl, DeclOrStmt>) {
         return detail::makeSpecificAttrXXXHandle<Handler, clang::Decl, AttrDeclHandler>(handler);
     } else {
         return detail::makeSpecificAttrXXXHandle<Handler, clang::Stmt, AttrStmtHandler>(handler);
+    }
+}
+
+template <typename Handler>
+auto makeSpecificImplicitHandle(Handler& handler) {
+    using nodeType = typename std::remove_const_t<
+        typename std::remove_reference_t<typename func_param_type<Handler, 1>::type>>;
+
+    if constexpr (std::is_base_of_v<clang::Decl, nodeType>) {
+        return detail::makeSpecificImplicitXXXHandle<Handler, clang::Decl, DeclHandler>(handler);
+    } else {
+        return detail::makeSpecificImplicitXXXHandle<Handler, clang::Stmt, StmtHandler>(handler);
     }
 }
 

@@ -8,41 +8,35 @@
 namespace oklt {
 using namespace clang;
 
-HandleResult handleGlobalConstant(const clang::Decl* decl,
-                                                   SessionStage& s,
-                                                   const std::string& qualifier) {
-    // Should be variable declaration
-    if (!isa<VarDecl>(decl)) {
-        return true;
-    }
-    auto var = dyn_cast<VarDecl>(decl);
-
-    if (!isGlobalConstVariable(var)) {
+HandleResult handleGlobalConstant(const clang::VarDecl& decl,
+                                  SessionStage& s,
+                                  const std::string& qualifier) {
+    if (!isGlobalConstVariable(decl)) {
         return true;
     }
 
 #ifdef TRANSPILER_DEBUG_LOG
-    auto type_str = var->getType().getAsString();
-    auto declname = var->getDeclName().getAsString();
+    auto type_str = decl.getType().getAsString();
+    auto declname = decl.getDeclName().getAsString();
 
     llvm::outs() << "[DEBUG] Found constant global variable declaration:"
                  << " type: " << type_str << ", name: " << declname << "\n";
 #endif
 
     std::string newDeclStr;
-    if (isConstantSizeArray(var)) {
-        newDeclStr = getNewDeclStrConstantArray(var, qualifier);
-    } else if (isPointerToConst(var)) {
-        newDeclStr = getNewDeclStrPointerToConst(var, qualifier);
+    if (isConstantSizeArray(decl)) {
+        newDeclStr = getNewDeclStrConstantArray(decl, qualifier);
+    } else if (isPointerToConst(decl)) {
+        newDeclStr = getNewDeclStrPointerToConst(decl, qualifier);
     } else {
-        newDeclStr = getNewDeclStrVariable(var, qualifier);
+        newDeclStr = getNewDeclStrVariable(decl, qualifier);
     }
 
     // INFO: volatile const int var_const = 0;
     //       ^                          ^
     //      start_loc                  end_loc
-    auto start_loc = var->getBeginLoc();
-    auto end_loc = var->getLocation();
+    auto start_loc = decl.getBeginLoc();
+    auto end_loc = decl.getLocation();
     auto range = SourceRange(start_loc, end_loc);
 
     auto& rewriter = s.getRewriter();
@@ -50,28 +44,22 @@ HandleResult handleGlobalConstant(const clang::Decl* decl,
     return true;
 }
 
-HandleResult handleGlobalFunction(const clang::Decl* decl,
-                                                   SessionStage& s,
-                                                   const std::string& funcQualifier) {
-    // INFO: Check if function
-    if (!isa<FunctionDecl>(decl)) {
-        return true;
-    }
-
+HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
+                                  SessionStage& s,
+                                  const std::string& funcQualifier) {
     // INFO: Check if function is not attributed with OKL attribute
     auto& am = s.getAttrManager();
-    if ((decl->hasAttrs()) && (am.checkAttrs(decl->getAttrs(), decl, s))) {
+    if ((decl.hasAttrs()) && (am.checkAttrs(decl.getAttrs(), decl, s))) {
         return true;
     }
 
     auto& rewriter = s.getRewriter();
-    auto loc = decl->getSourceRange().getBegin();
+    auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
     rewriter.InsertTextBefore(loc, spacedModifier);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    auto func = dyn_cast<FunctionDecl>(decl);
-    llvm::outs() << "[DEBUG] Handle global function '" << func->getNameAsString() << "'\n";
+    llvm::outs() << "[DEBUG] Handle global function '" << decl.getNameAsString() << "'\n";
 #endif
     return true;
 }

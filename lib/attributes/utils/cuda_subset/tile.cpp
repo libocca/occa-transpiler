@@ -34,9 +34,9 @@ std::string buildLoopIdxLine(const LoopMetaData& forLoop,
 }
 
 std::string buildCheckLine(const LoopMetaData& forLoop,
-                           const TileParams* tileParams,
+                           const TileParams* params,
                            int& openedScopeCounter) {
-    if (!tileParams->check) {
+    if (!params->check) {
         return "";
     }
     auto cmpStr = getCondCompStr(forLoop.condition.op);
@@ -48,19 +48,19 @@ std::string buildCheckLine(const LoopMetaData& forLoop,
 
 // TODO: add check handling
 std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
-                                  const TileParams* tileParams,
+                                  const TileParams* params,
                                   int& openedScopeCounter) {
     std::string res;
-    res += buildLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::First, openedScopeCounter);
-    res += buildLoopIdxLine(forLoopMetaData, tileParams, LoopOrder::Second, openedScopeCounter);
-    res += buildCheckLine(forLoopMetaData, tileParams, openedScopeCounter);
+    res += buildLoopIdxLine(forLoopMetaData, params, LoopOrder::First, openedScopeCounter);
+    res += buildLoopIdxLine(forLoopMetaData, params, LoopOrder::Second, openedScopeCounter);
+    res += buildCheckLine(forLoopMetaData, params, openedScopeCounter);
     return res;
 }
 
 }  // namespace
 
-HandleResult handleTileAttribute(const clang::Attr* a,
-                                 const clang::ForStmt* forStmt,
+HandleResult handleTileAttribute(const clang::Attr& a,
+                                 const clang::ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
