@@ -9,7 +9,6 @@ std::string dimToStr(const Dim& dim) {
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.dim);
     switch (loop.type) {
         case (LoopType::Inner):
             return util::fmt("threadIdx.{}", dimToStr(loop.dim)).value();

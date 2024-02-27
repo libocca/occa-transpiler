@@ -1,7 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
-#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/dim.h"
+
+#include <oklt/util/string_utils.h>
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -107,8 +112,34 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseDimOrderAttrParams(const clang::Attr& a, SessionStage&) {
-    return true;
+ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
+                                    OKLParsedAttr& data,
+                                    SessionStage& stage) {
+    if (!data.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});
+    }
+
+    if (data.args.empty()) {
+        return tl::make_unexpected(Error{{}, "[@dimOrder] expects at least one argument"});
+    }
+
+    AttributedDimOrder ret;
+    for (auto arg : data.args) {
+        auto idx = arg.get<size_t>();
+        if (!idx.has_value()) {
+            return tl::make_unexpected(
+                Error{{}, "[@dimOrder] expects expects positive integer index"});
+        }
+
+        auto it = ret.idx.find(idx.value());
+        if (it != ret.idx.end()) {
+            return tl::make_unexpected(Error{{}, "[@dimOrder] Duplicate index"});
+        }
+
+        ret.idx.insert(idx.value());
+    }
+
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
