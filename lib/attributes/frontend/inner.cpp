@@ -63,8 +63,8 @@ ParseResult parseInnerAttrParams(const clang::Attr& attr,
     }
 
     AttributedLoop ret{
-        .type = LoopType::Outer,
-        .dim = Dim::Auto,
+        .type = LoopType::Inner,
+        .dim = Dim::X,
     };
 
     if (auto dimSize = data.get<int>(0); dimSize.has_value()) {

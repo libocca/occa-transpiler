@@ -50,65 +50,6 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-tl::expected<AttributedLoop, Error> parseOuterLoop(OKLParsedAttr& attrData) {
-    if (!attrData.kwargs.empty()) {
-        return tl::make_unexpected(Error{std::error_code(), "[@outer] does not take kwargs"});
-    }
-
-    if (attrData.args.size() > 1) {
-        return tl::make_unexpected(Error{std::error_code(), "[@outer] takes at most one index"});
-    }
-
-    AttributedLoop ret{
-        .type = LoopType::Outer,
-        .dim = Dim::Auto,
-    };
-
-    if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
-        if (dimSize.value() < 0 || dimSize.value() > 2) {
-            return tl::make_unexpected(
-                Error{std::error_code(), "[@outer] argument must be 0, 1, or 2"});
-        }
-        ret.dim = static_cast<Dim>(dimSize.value());
-    }
-
-    return ret;
-};
-
-tl::expected<AttributedLoop, Error> parseInnerLoop(OKLParsedAttr& attrData) {
-    if (!attrData.kwargs.empty()) {
-        return tl::make_unexpected(Error{std::error_code(), "[@inner] does not take kwargs"});
-    }
-
-    if (attrData.args.size() > 1) {
-        return tl::make_unexpected(Error{std::error_code(), "[@inner] takes at most one index"});
-    }
-
-    AttributedLoop ret{
-        .type = LoopType::Outer,
-        .dim = Dim::Auto,
-    };
-
-    if (auto dimSize = attrData.get<int>(0); dimSize.has_value()) {
-        if (dimSize.value() < 0 || dimSize.value() > 2) {
-            return tl::make_unexpected(
-                Error{std::error_code(), "[@inner] argument must be 0, 1, or 2"});
-        }
-        ret.dim = static_cast<Dim>(dimSize.value());
-    }
-
-    return ret;
-};
-
-tl::expected<AttributedLoop, Error> parseLoopType(OKLParsedAttr& attrData) {
-    if (attrData.name == OUTER_ATTR_NAME) {
-        return parseOuterLoop(attrData);
-    } else if (attrData.name == INNER_ATTR_NAME) {
-        return parseInnerLoop(attrData);
-    }
-    return tl::make_unexpected(Error{std::error_code(), "[@tile] loop type parse error"});
-};
-
 ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
     TileParams ret = {};
     if (data.args.empty()) {
@@ -134,17 +75,21 @@ ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, Ses
         }
 
         auto subAttr = data.get<OKLParsedAttr>(i).value();
-        auto loop = parseLoopType(subAttr);
+        auto loop = stage.getAttrManager().parseAttr(attr, subAttr, stage);
         if (!loop) {
             return tl::make_unexpected(loop.error());
         }
 
+        if (loop.value().type() != typeid(AttributedLoop)) {
+            return tl::make_unexpected(Error{{}, "[@tile] loop type parse error"});
+        }
+
         if (i == 1) {
-            ret.firstLoop = loop.value();
+            ret.firstLoop = std::any_cast<AttributedLoop>(loop.value());
             continue;
         }
         if (i == 2) {
-            ret.secondLoop = loop.value();
+            ret.secondLoop = std::any_cast<AttributedLoop>(loop.value());
             continue;
         }
     }

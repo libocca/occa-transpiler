@@ -88,6 +88,16 @@ ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
     return EmptyParams{};
 }
 
+ParseResult AttributeManager::parseAttr(const Attr& attr,
+                                        OKLParsedAttr& params,
+                                        SessionStage& stage) {
+    auto it = _attrParsers.find(params.name);
+    if (it != _attrParsers.end()) {
+        return it->second(attr, params, stage);
+    }
+    return EmptyParams{};
+}
+
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
                                                                      const Decl& decl,
                                                                      SessionStage& stage) {

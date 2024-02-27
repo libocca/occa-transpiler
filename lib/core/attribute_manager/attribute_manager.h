@@ -52,6 +52,7 @@ class AttributeManager {
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, StmtHandler handler);
 
     ParseResult parseAttr(const clang::Attr& attr, SessionStage& stage);
+    ParseResult parseAttr(const clang::Attr& attr, OKLParsedAttr& params, SessionStage& stage);
 
     HandleResult handleAttr(const clang::Attr& attr,
                             const clang::Decl& decl,
