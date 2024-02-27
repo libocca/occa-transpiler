@@ -6,9 +6,9 @@
 namespace oklt {
 using namespace clang;
 
-bool removeAttribute(const clang::Attr* attr, SessionStage& stage) {
+bool removeAttribute(const clang::Attr& attr, SessionStage& stage) {
     auto& rewriter = stage.getRewriter();
-    auto range = getAttrFullSourceRange(*attr);
+    auto range = getAttrFullSourceRange(attr);
     // INFO: sometimes rewrite functions does the job but return false value
     rewriter.RemoveText(range);
     return true;

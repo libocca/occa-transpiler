@@ -54,9 +54,9 @@ bool AstProcessorManager::registerSpecificNodeHandle(KeyType key, StmtNodeHandle
 }
 
 bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                 const Decl* decl,
+                                                 const Decl& decl,
                                                  SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, decl->getKind()),
+    return runNodeHandler(std::make_tuple(procType, decl.getKind()),
                           _declHandlers,
                           procType,
                           _genericDeclHandle,
@@ -64,9 +64,9 @@ bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
 }
 
 bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                  const Decl* decl,
+                                                  const Decl& decl,
                                                   SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, decl->getKind()),
+    return runNodeHandler(std::make_tuple(procType, decl.getKind()),
                           _declHandlers,
                           procType,
                           _genericDeclHandle,
@@ -74,9 +74,9 @@ bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
 }
 
 bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                 const Stmt* stmt,
+                                                 const Stmt& stmt,
                                                  SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, stmt->getStmtClass()),
+    return runNodeHandler(std::make_tuple(procType, stmt.getStmtClass()),
                           _stmtHandlers,
                           procType,
                           _genericStmtHandle,
@@ -84,9 +84,9 @@ bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
 }
 
 bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                  const Stmt* stmt,
+                                                  const Stmt& stmt,
                                                   SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, stmt->getStmtClass()),
+    return runNodeHandler(std::make_tuple(procType, stmt.getStmtClass()),
                           _stmtHandlers,
                           procType,
                           _genericStmtHandle,

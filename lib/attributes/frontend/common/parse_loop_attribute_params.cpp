@@ -5,7 +5,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
-ParseResult parseLoopAttrParams(const clang::Attr* a, SessionStage& s, LoopType loopType) {
+ParseResult parseLoopAttrParams(const clang::Attr& a, SessionStage& s, LoopType loopType) {
     auto fail = [&s](const std::string& err) {
         s.pushError(std::error_code(), err);
         return false;

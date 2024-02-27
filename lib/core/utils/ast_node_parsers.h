@@ -11,5 +11,5 @@ namespace oklt {
 struct Error;
 struct LoopMetaData;
 
-tl::expected<LoopMetaData, Error> parseForStmt(const clang::ForStmt* s, clang::ASTContext& ctx);
+tl::expected<LoopMetaData, Error> parseForStmt(const clang::ForStmt& s, clang::ASTContext& ctx);
 }  // namespace oklt

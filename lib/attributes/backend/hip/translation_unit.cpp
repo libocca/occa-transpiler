@@ -7,11 +7,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
-    if (!isa<TranslationUnitDecl>(decl)) {
-        return true;
-    }
-
+HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl, SessionStage& s) {
     auto& sourceManager = s.getCompiler().getSourceManager();
     auto mainFileId = sourceManager.getMainFileID();
     auto loc = sourceManager.getLocForStartOfFile(mainFileId);
@@ -29,7 +25,7 @@ HandleResult handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
-        DeclHandler{handleTranslationUnit});
+        makeSpecificImplicitHandle(handleTranslationUnit));
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";

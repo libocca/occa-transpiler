@@ -36,7 +36,7 @@ bool traverseExpr(TraversalType& traversal,
         return true;
     }
     auto procType = stage.getAstProccesorType();
-    if (!procMng.runPreActionNodeHandle(procType, expr, stage)) {
+    if (!procMng.runPreActionNodeHandle(procType, *expr, stage)) {
         return false;
     }
 
@@ -44,7 +44,7 @@ bool traverseExpr(TraversalType& traversal,
     if (!dispatchTraverseFunc(traversal, expr)) {
         return false;
     }
-    return procMng.runPostActionNodeHandle(procType, expr, stage);
+    return procMng.runPostActionNodeHandle(procType, *expr, stage);
 }
 }  // namespace
 namespace oklt {

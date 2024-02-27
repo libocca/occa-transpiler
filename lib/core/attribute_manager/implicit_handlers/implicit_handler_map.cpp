@@ -14,9 +14,9 @@ bool ImplicitHandlerMap::registerHandler(KeyType key, StmtHandler handler) {
     return ret.second;
 }
 
-HandleResult ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stage) {
+HandleResult ImplicitHandlerMap::operator()(const Decl& decl, SessionStage& stage) {
     auto backend = stage.getBackend();
-    auto it = _declHandlers.find(std::make_tuple(backend, decl->getKind()));
+    auto it = _declHandlers.find(std::make_tuple(backend, decl.getKind()));
 
     // INFO: implcit handler means that only some specific stmt/decl has specific handler
     //       missing of handler is ok
@@ -27,9 +27,9 @@ HandleResult ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stag
     return it->second(decl, stage);
 }
 
-HandleResult ImplicitHandlerMap::operator()(const Stmt* stmt, SessionStage& stage) {
+HandleResult ImplicitHandlerMap::operator()(const Stmt& stmt, SessionStage& stage) {
     auto backend = stage.getBackend();
-    auto it = _stmtHandlers.find(std::make_tuple(backend, stmt->getStmtClass()));
+    auto it = _stmtHandlers.find(std::make_tuple(backend, stmt.getStmtClass()));
 
     // INFO: implcit handler means that only some specific stmt/decl has specific handler
     //       missing of handler is ok

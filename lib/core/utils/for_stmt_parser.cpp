@@ -63,14 +63,14 @@ bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
     return true;
 };
 
-tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt* s, ASTContext& ctx) {
+tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext& ctx) {
     LoopMetaData ret;
     const Expr *start, *end = nullptr;
 
     auto policy = ctx.getPrintingPolicy();
 
-    if (isa<DeclStmt>(s->getInit())) {
-        auto d = dyn_cast<DeclStmt>(s->getInit());
+    if (isa<DeclStmt>(s.getInit())) {
+        auto d = dyn_cast<DeclStmt>(s.getInit());
         if (!d->isSingleDecl()) {
             // TODO: add error code
             return tl::make_unexpected(Error{std::error_code(), "loop parse: multi-declaration"});
@@ -98,8 +98,8 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt* s, ASTContext&
     }
 
     // Condition
-    if (isa<BinaryOperator>(s->getCond())) {
-        auto node = dyn_cast<BinaryOperator>(s->getCond());
+    if (isa<BinaryOperator>(s.getCond())) {
+        auto node = dyn_cast<BinaryOperator>(s.getCond());
         if (!node->isComparisonOp()) {
             // TODO: add error code
             return tl::make_unexpected(Error{std::error_code(), "loop parse: not comparison op"});
@@ -143,11 +143,11 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt* s, ASTContext&
     }
 
     // Increment
-    if (isa<UnaryOperator>(s->getInc())) {
-        auto node = dyn_cast<UnaryOperator>(s->getInc());
+    if (isa<UnaryOperator>(s.getInc())) {
+        auto node = dyn_cast<UnaryOperator>(s.getInc());
         ret.inc.op.uo = toOkl(node->getOpcode());
-    } else if (isa<CompoundAssignOperator>(s->getInc())) {
-        auto node = dyn_cast<CompoundAssignOperator>(s->getInc());
+    } else if (isa<CompoundAssignOperator>(s.getInc())) {
+        auto node = dyn_cast<CompoundAssignOperator>(s.getInc());
 
         auto lsh = dyn_cast_or_null<DeclRefExpr>(node->getLHS());
         if (lsh && lsh->getNameInfo().getAsString() != ret.name) {
@@ -179,7 +179,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt* s, ASTContext&
 }  // namespace
 
 namespace oklt {
-tl::expected<LoopMetaData, Error> parseForStmt(const ForStmt* s, ASTContext& ctx) {
+tl::expected<LoopMetaData, Error> parseForStmt(const ForStmt& s, ASTContext& ctx) {
     return parseForStmtImpl(s, ctx);
 }
 }  // namespace oklt

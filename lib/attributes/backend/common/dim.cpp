@@ -4,19 +4,19 @@
 namespace {
 using namespace oklt;
 
-HandleResult handleDimDeclAttrbute(const clang::Attr* a,
-                                                    const clang::Decl* decl,
-                                                    const std::any* params,
-                                                    SessionStage& s) {
-    llvm::outs() << "handle decl attribute: " << a->getNormalizedFullName() << '\n';
+HandleResult handleDimDeclAttrbute(const clang::Attr& a,
+                                   const clang::Decl& decl,
+                                   const std::any* params,
+                                   SessionStage& s) {
+    llvm::outs() << "handle decl attribute: " << a.getNormalizedFullName() << '\n';
     return true;
 }
 
-HandleResult handleDimStmtAttrbute(const clang::Attr* a,
-                                                    const clang::Stmt* stmt,
-                                                    const std::any* params,
-                                                    SessionStage& s) {
-    llvm::outs() << "handle stmt attribute: " << a->getNormalizedFullName() << '\n';
+HandleResult handleDimStmtAttrbute(const clang::Attr& a,
+                                   const clang::Stmt& stmt,
+                                   const std::any* params,
+                                   SessionStage& s) {
+    llvm::outs() << "handle stmt attribute: " << a.getNormalizedFullName() << '\n';
     return true;
 }
 

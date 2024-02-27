@@ -13,7 +13,7 @@ using namespace oklt;
 }  // namespace
 
 namespace oklt {
-bool preValidateOklKernelSema(const FunctionDecl* fd, SessionStage& stage, OklSemaCtx& sema) {
+bool preValidateOklKernelSema(const FunctionDecl& fd, SessionStage& stage, OklSemaCtx& sema) {
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
         //  make approptiate error code
@@ -27,7 +27,7 @@ bool preValidateOklKernelSema(const FunctionDecl* fd, SessionStage& stage, OklSe
     return true;
 }
 
-bool postValidateOklKernelSema(const FunctionDecl* fd, SessionStage& stage, OklSemaCtx& sema) {
+bool postValidateOklKernelSema(const FunctionDecl& fd, SessionStage& stage, OklSemaCtx& sema) {
     // bypass possible nested functions/closures
     if (!sema.isParsingOklKernel()) {
         return true;
@@ -44,7 +44,7 @@ bool postValidateOklKernelSema(const FunctionDecl* fd, SessionStage& stage, OklS
     return true;
 }
 
-bool preValidateOklKernelParamSema(const ParmVarDecl* parm, SessionStage& stage, OklSemaCtx& sema) {
+bool preValidateOklKernelParamSema(const ParmVarDecl& parm, SessionStage& stage, OklSemaCtx& sema) {
     if (!sema.isParsingOklKernel()) {
         return true;
     }
@@ -61,7 +61,7 @@ bool preValidateOklKernelParamSema(const ParmVarDecl* parm, SessionStage& stage,
     return true;
 }
 
-bool postValidateOklKernelParamSema(const ParmVarDecl* parm,
+bool postValidateOklKernelParamSema(const ParmVarDecl& parm,
                                     SessionStage& stage,
                                     OklSemaCtx& sema) {
     // skip nested function/closure
@@ -71,7 +71,7 @@ bool postValidateOklKernelParamSema(const ParmVarDecl* parm,
 
     // for attributed param decl backend handler is responsible to fill raw string representation of
     // func argument
-    if (!parm->hasAttrs()) {
+    if (!parm.hasAttrs()) {
         sema.setKernelArgRawString(parm);
         return true;
     }
