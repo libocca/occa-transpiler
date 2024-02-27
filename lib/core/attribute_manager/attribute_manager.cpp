@@ -133,7 +133,7 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrV
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
     const ArrayRef<const Attr*>& attrs,
-    const Stmt* decl,
+    const Stmt& decl,
     SessionStage& stage) {
     std::list<const Attr*> collectedAttrs;
     for (auto& attr : attrs) {
