@@ -100,6 +100,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/shared.cpp
     attributes/backend/dpcpp/restrict.cpp
     attributes/backend/dpcpp/atomic.cpp
+    attributes/backend/dpcpp/common.cpp
+    attributes/backend/dpcpp/common.hpp
 
     # sugar attribute
     attributes/backend/common/dim.cpp
