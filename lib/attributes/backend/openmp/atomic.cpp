@@ -7,9 +7,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPAtomicAttribute(const Attr* attr, const Decl* d, SessionStage& stage) {
+bool handleOPENMPAtomicAttribute(const Attr& attr, const Decl& decl, SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
     removeAttribute(attr, stage);
@@ -19,7 +19,8 @@ bool handleOPENMPAtomicAttribute(const Attr* attr, const Decl* d, SessionStage& 
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, ATOMIC_ATTR_NAME}, AttrDeclHandler{handleOPENMPAtomicAttribute});
+        {TargetBackend::OPENMP, ATOMIC_ATTR_NAME},
+        makeSpecificAttrHandle(handleOPENMPAtomicAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME

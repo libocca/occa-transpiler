@@ -7,9 +7,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPBarrierAttribute(const Attr* attr, const Decl* d, SessionStage& stage) {
+bool handleOPENMPBarrierAttribute(const Attr& attr, const Decl& decl, SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
     removeAttribute(attr, stage);
@@ -19,7 +19,8 @@ bool handleOPENMPBarrierAttribute(const Attr* attr, const Decl* d, SessionStage&
 
 __attribute__((constructor)) void registerOPENMPBarrierHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, BARRIER_ATTR_NAME}, AttrDeclHandler{handleOPENMPBarrierAttribute});
+        {TargetBackend::OPENMP, BARRIER_ATTR_NAME},
+        makeSpecificAttrHandle(handleOPENMPBarrierAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << BARRIER_ATTR_NAME

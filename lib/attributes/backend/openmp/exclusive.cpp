@@ -7,27 +7,22 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPExclusiveAttribute(const Attr* attr, const Decl* d, SessionStage& stage) {
+bool handleOPENMPExclusiveAttribute(const Attr& attr, const VarDecl& var, SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
-    auto varDecl = dyn_cast_or_null<VarDecl>(d);
-    if (!varDecl) {
-        return false;
-    }
-
     removeAttribute(attr, stage);
 
     // TODO: Add hasExclusive flag to currently open @outer loop.
 
     std::string exclusiveText = " int _occa_exclusive_index;";
-    return stage.getRewriter().InsertText(varDecl->getLocation(), exclusiveText, false, true);
+    return stage.getRewriter().InsertText(var.getLocation(), exclusiveText, false, true);
 }
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME},
-        AttrDeclHandler{handleOPENMPExclusiveAttribute});
+        makeSpecificAttrHandle(handleOPENMPExclusiveAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME

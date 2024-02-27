@@ -7,29 +7,23 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPRestrictAttribute(const clang::Attr* attr,
-                                   const clang::Decl* d,
+bool handleOPENMPRestrictAttribute(const clang::Attr& attr,
+                                   const clang::VarDecl& decl,
                                    SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
-    auto& rewriter = stage.getRewriter();
-
-    if (!isa<VarDecl>(d)) {
-        return false;
-    }
-    auto varDecl = cast<VarDecl>(d);
 
     removeAttribute(attr, stage);
 
     std::string restrictText = " __restrict__ ";
-    return rewriter.InsertText(varDecl->getLocation(), restrictText, false, false);
+    return stage.getRewriter().InsertText(decl.getLocation(), restrictText, false, false);
 }
 
 __attribute__((constructor)) void registerOPENMPRestrictHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::OPENMP, RESTRICT_ATTR_NAME},
-        AttrDeclHandler{handleOPENMPRestrictAttribute});
+        makeSpecificAttrHandle(handleOPENMPRestrictAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << RESTRICT_ATTR_NAME

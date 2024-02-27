@@ -7,9 +7,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPSharedAttribute(const Attr* attr, const Decl* d, SessionStage& stage) {
+bool handleOPENMPSharedAttribute(const Attr& attr, const Decl& decl, SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
     removeAttribute(attr, stage);
@@ -19,7 +19,8 @@ bool handleOPENMPSharedAttribute(const Attr* attr, const Decl* d, SessionStage& 
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, SHARED_ATTR_NAME}, AttrDeclHandler{handleOPENMPSharedAttribute});
+        {TargetBackend::OPENMP, SHARED_ATTR_NAME},
+        makeSpecificAttrHandle(handleOPENMPSharedAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME
