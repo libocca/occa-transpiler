@@ -24,4 +24,8 @@ HandleResult handleGlobalConstant(const clang::Decl* decl,
 HandleResult handleGlobalFunction(const clang::Decl* decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier);
+
+HandleResult handleTranslationUnit(const clang::Decl* decl,
+                                   SessionStage& s,
+                                   const std::string& include);
 }  // namespace oklt

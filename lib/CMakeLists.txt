@@ -92,6 +92,14 @@ set (OCCA_TRANSPILER_SOURCES
 
     # DPCPP
     attributes/backend/dpcpp/kernel.cpp
+    attributes/backend/dpcpp/translation_unit.cpp
+    attributes/backend/dpcpp/global_function.cpp
+    attributes/backend/dpcpp/outer.cpp
+    attributes/backend/dpcpp/inner.cpp
+    attributes/backend/dpcpp/tile.cpp
+    attributes/backend/dpcpp/shared.cpp
+    attributes/backend/dpcpp/restrict.cpp
+    attributes/backend/dpcpp/atomic.cpp
 
     # sugar attribute
     attributes/backend/common/dim.cpp

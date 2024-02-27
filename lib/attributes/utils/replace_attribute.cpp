@@ -9,8 +9,8 @@ namespace oklt {
 using namespace clang;
 
 HandleResult handleGlobalConstant(const clang::Decl* decl,
-                                                   SessionStage& s,
-                                                   const std::string& qualifier) {
+                                  SessionStage& s,
+                                  const std::string& qualifier) {
     // Should be variable declaration
     if (!isa<VarDecl>(decl)) {
         return true;
@@ -51,8 +51,8 @@ HandleResult handleGlobalConstant(const clang::Decl* decl,
 }
 
 HandleResult handleGlobalFunction(const clang::Decl* decl,
-                                                   SessionStage& s,
-                                                   const std::string& funcQualifier) {
+                                  SessionStage& s,
+                                  const std::string& funcQualifier) {
     // INFO: Check if function
     if (!isa<FunctionDecl>(decl)) {
         return true;
@@ -73,6 +73,26 @@ HandleResult handleGlobalFunction(const clang::Decl* decl,
     auto func = dyn_cast<FunctionDecl>(decl);
     llvm::outs() << "[DEBUG] Handle global function '" << func->getNameAsString() << "'\n";
 #endif
+    return true;
+}
+
+HandleResult handleTranslationUnit(const clang::Decl* decl,
+                                   SessionStage& s,
+                                   const std::string& include) {
+    if (!isa<TranslationUnitDecl>(decl)) {
+        return true;
+    }
+    auto& sourceManager = s.getCompiler().getSourceManager();
+    auto mainFileId = sourceManager.getMainFileID();
+    auto loc = sourceManager.getLocForStartOfFile(mainFileId);
+    auto& rewriter = s.getRewriter();
+    rewriter.InsertTextBefore(loc, include + "\n");
+
+#ifdef TRANSPILER_DEBUG_LOG
+    auto offset = sourceManager.getFileOffset(decl->getLocation());
+    llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
+#endif
+
     return true;
 }
 

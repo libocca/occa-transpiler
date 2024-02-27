@@ -1,3 +1,4 @@
+#include "attributes/utils/replace_attribute.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -7,29 +8,15 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleTranslationUnit(const clang::Decl* decl, SessionStage& s) {
-    if (!isa<TranslationUnitDecl>(decl)) {
-        return true;
-    }
-
-    auto& sourceManager = s.getCompiler().getSourceManager();
-    auto mainFileId = sourceManager.getMainFileID();
-    auto loc = sourceManager.getLocForStartOfFile(mainFileId);
-    auto& rewriter = s.getRewriter();
-    rewriter.InsertTextBefore(loc, "#include <hip/hip_runtime.h>\n");
-
-#ifdef TRANSPILER_DEBUG_LOG
-    auto offset = sourceManager.getFileOffset(decl->getLocation());
-    llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
-#endif
-
-    return true;
+HandleResult handleTranslationUnitHip(const clang::Decl* decl, SessionStage& s) {
+    const std::string HIP_INCLUDE = "#include <hip/hip_runtime.h>";
+    return oklt::handleTranslationUnit(decl, s, HIP_INCLUDE);
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
-        DeclHandler{handleTranslationUnit});
+        DeclHandler{handleTranslationUnitHip});
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";
