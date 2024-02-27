@@ -119,16 +119,28 @@ bool runExprTranspilerHanders(const ExprType& expr,
 
 // Generic Decl pre handlers
 bool runPreActionDecl(const Decl& decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl.getDeclKindName() << '\n';
+#endif
+
     return true;
 }
 
 // Generic Decl post handlers
 bool runPostActionDecl(const clang::Decl& decl, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl.getDeclKindName() << '\n';
+#endif
+
     return runExprTranspilerHanders(decl, stage);
 }
 
 // OKL kernel sema validator
 bool validateFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << fd.Decl::getDeclKindName() << '\n';
+#endif
+
     // we interested only in OKL kernel function
     auto attr = getOklAttr(fd, stage, KERNEL_ATTR_NAME);
     if (!attr) {
@@ -145,6 +157,10 @@ bool validateFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
 }
 
 bool transpileFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << fd.Decl::getDeclKindName() << '\n';
+#endif
+
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
 
     // ensure it is backward path for current parsing OKL kernel
@@ -166,6 +182,10 @@ bool transpileFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
 
 // OKL kernel parameters sema validator
 bool validateParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << parm.getDeclKindName() << '\n';
+#endif
+
     // not inside OKL kernel
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!sema.isParsingOklKernel()) {
@@ -181,6 +201,10 @@ bool validateParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
 }
 
 bool transpileParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << parm.getDeclKindName() << '\n';
+#endif
+
     // for attributed parm decl backend hadnler should set arg raw string representation
     const auto attr = getOklAttr(parm, stage);
     if (attr) {
@@ -207,16 +231,20 @@ bool transpileParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
 }
 
 bool runPreActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << attrStmt.getStmtClassName() << '\n';
+#endif
+
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!sema.isParsingOklKernel()) {
-        //  make approptiate error code
+        //  make appropriate error code
         stage.pushError(std::error_code(), "OKL attribute inside of non OKL kernel function");
         return false;
     }
 
     auto* attr = getOklAttr(attrStmt, stage);
     if (!attr) {
-        return false;
+        return true;
     }
 
     // dispatch specific sema handler
@@ -228,6 +256,10 @@ bool runPreActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& s
 }
 
 bool runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << attrStmt.getStmtClassName() << '\n';
+#endif
+
     // legacy OKL applies one attribute per stmt/decl
     if (!runExprTranspilerHanders(attrStmt, stage)) {
         return false;
@@ -235,7 +267,7 @@ bool runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& 
 
     auto* attr = getOklAttr(attrStmt, stage);
     if (!attr) {
-        return false;
+        return true;
     }
 
     // sema transpiler action
@@ -248,10 +280,18 @@ bool runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& 
 }
 
 bool runPreActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
+#endif
+
     return true;
 }
 
 bool runPostActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
+#ifdef OKL_SEMA_DEBUG_LOG
+    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
+#endif
+
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
         return true;
