@@ -5,7 +5,7 @@ namespace {
 using namespace oklt;
 
 HandleResult handleAtomicAttribute(const clang::Attr* a,
-                                   const clang::ForStmt* forStmt,
+                                   const clang::Stmt* stmt,
                                    SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] DPCPP: Handle @atomic.\n";
