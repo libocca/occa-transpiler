@@ -68,7 +68,7 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
         .build();
 }
 
-HandleResult handleTranslationUnit(const clang::Decl& decl,
+HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,
                                    std::string_view includes) {
     auto& sourceManager = s.getCompiler().getSourceManager();
@@ -80,7 +80,7 @@ HandleResult handleTranslationUnit(const clang::Decl& decl,
     llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
 #endif
 
-    return TranspilationBuilder(sourceManager, decl.getDeclKindName(), 1)
+    return TranspilationBuilder(sourceManager, cast<Decl>(decl).getDeclKindName(), 1)
         .addInclude(includes)
         .build();
 }

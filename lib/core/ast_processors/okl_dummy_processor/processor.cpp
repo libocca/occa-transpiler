@@ -17,7 +17,7 @@ HandleResult runPreActionDecl(const Decl& decl, SessionStage& stage) {
     return {};
 }
 
-HandleResult runPostActionDecl(const clang::Decl& decl, SessionStage& stage) {
+HandleResult runPostActionDecl(const Decl& decl, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl.getDeclKindName() << '\n';
 #endif
@@ -49,25 +49,25 @@ HandleResult runPostActionDecl(const clang::Decl& decl, SessionStage& stage) {
     return am.handleAttr(*attr, decl, &params.value(), stage);
 }
 
-HandleResult runPreActionStmt(const clang::Stmt& stmt, SessionStage& stage) {
+HandleResult runPreActionStmt(const Stmt& stmt, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt.getStmtClassName() << '\n';
 #endif
     return {};
 }
 
-HandleResult runPostActionStmt(const clang::Stmt& stmt, SessionStage& stage) {
+HandleResult runPostActionStmt(const Stmt& stmt, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << stmt.getStmtClassName() << '\n';
 #endif
     return {};
 }
 
-HandleResult runPreActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
+HandleResult runPreActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
     return {};
 }
 
-HandleResult runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
+HandleResult runPostActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
     auto& am = stage.getAttrManager();
     auto expectedAttr = am.checkAttrs(attrStmt.getAttrs(), attrStmt, stage);
     if (!expectedAttr) {
@@ -97,14 +97,14 @@ HandleResult runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, Sessio
     return am.handleAttr(*attr, *subStmt, &params.value(), stage);
 }
 
-HandleResult runPreActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
+HandleResult runPreActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
 #endif
     return {};
 }
 
-HandleResult runPostActionRecoveryExpr(const clang::RecoveryExpr& expr_, SessionStage& stage) {
+HandleResult runPostActionRecoveryExpr(const RecoveryExpr& expr_, SessionStage& stage) {
     auto* expr = dyn_cast_or_null<RecoveryExpr>(&expr_);
 #ifdef OKL_SEMA_DEBUG_LOG
     llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr->getStmtClassName() << '\n';

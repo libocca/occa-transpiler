@@ -9,12 +9,14 @@ using namespace oklt;
 using namespace clang;
 
 const std::string HIP_RT_INC = "<hip/hip_runtime.h>";
+HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
+    return handleTranslationUnit(d, s, HIP_RT_INC);
+}
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
-        DeclHandler{
-            [](const auto& d, auto& s) { return handleTranslationUnit(d, s, HIP_RT_INC); }});
+        makeSpecificImplicitHandle(handleTranslationUnit));
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";

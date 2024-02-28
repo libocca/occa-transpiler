@@ -74,10 +74,6 @@ HandleResult handleUnOp(const UnaryOperator& unOp,
     auto unOpText = getSourceText(*expr, ctx);
     std::string atomicOpText = it->second + "(&(" + unOpText + "), 1)";
 
-    // removeAttribute(attr, stage);
-    // auto& rewriter = stage.getRewriter();
-    // rewriter.ReplaceText(unOp->getSourceRange(), atomicOpText);
-
     return makeTranspilation(stage.getCompiler().getSourceManager(),
                              attr,
                              getAttrFullSourceRange(attr).getBegin(),

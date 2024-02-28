@@ -3,6 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 #include "params/tile.h"
 
 #include <oklt/util/string_utils.h>

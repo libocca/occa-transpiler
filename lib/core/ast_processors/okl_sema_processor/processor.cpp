@@ -14,9 +14,7 @@ using namespace clang;
 using namespace oklt;
 
 template <typename ExprType>
-const clang::Attr* getOklAttr(const ExprType& expr,
-                              SessionStage& stage,
-                              std::string_view attrName = {}) {
+const Attr* getOklAttr(const ExprType& expr, SessionStage& stage, std::string_view attrName = {}) {
     auto attrResult = stage.getAttrManager().checkAttrs(expr.getAttrs(), expr, stage);
     if (!attrResult) {
         stage.pushError(std::move(attrResult.error()));
@@ -86,16 +84,20 @@ HandleResult runExprTranspilerHanders(const ExprType& expr,
     }
 
     // finally parser it
-    auto params = stage.getAttrManager().parseAttr(*attr, stage);
+    auto& am = stage.getAttrManager();
+    auto params = am.parseAttr(*attr, stage);
     if (!params) {
         return tl::make_unexpected(std::move(params.error()));
     }
 
     // run specific kernel attribute handler
-    auto& am = stage.getAttrManager();
     if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
         // Get statement from attributed statement
-        return am.handleAttr(*attr, *expr.getSubStmt(), &params.value(), stage);
+        auto* subStmt = expr.getSubStmt();
+        if (!subStmt) {
+            return tl::make_unexpected(Error());
+        }
+        return am.handleAttr(*attr, *subStmt, &params.value(), stage);
     } else {
         return am.handleAttr(*attr, expr, &params.value(), stage);
     }
@@ -111,7 +113,7 @@ HandleResult runPreActionDecl(const Decl& decl, SessionStage& stage) {
 }
 
 // Generic Decl post handlers
-HandleResult runPostActionDecl(const clang::Decl& decl, SessionStage& stage) {
+HandleResult runPostActionDecl(const Decl& decl, SessionStage& stage) {
     return runExprTranspilerHanders(decl, stage);
 }
 
@@ -170,7 +172,7 @@ HandleResult validateParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
 }
 
 HandleResult transpileParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
-    // for attributed parm decl backend hadnler should set arg raw string representation
+    // for attributed parm decl backend handler should set arg raw string representation
     auto* attr = getOklAttr(parm, stage);
     if (attr) {
         // or parse it if attributed
@@ -190,7 +192,7 @@ HandleResult transpileParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
     return {};
 }
 
-HandleResult runPreActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
+HandleResult runPreActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!sema.isParsingOklKernel()) {
         //  make approptiate error code
@@ -211,7 +213,7 @@ HandleResult runPreActionAttrStmt(const clang::AttributedStmt& attrStmt, Session
     return {};
 }
 
-HandleResult runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
+HandleResult runPostActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
     // legacy OKL applies one attribute per stmt/decl
     auto result = runExprTranspilerHanders(attrStmt, stage);
     if (!result) {
@@ -232,11 +234,11 @@ HandleResult runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, Sessio
     return result;
 }
 
-HandleResult runPreActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
+HandleResult runPreActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
     return {};
 }
 
-HandleResult runPostActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
+HandleResult runPostActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
         return {};
