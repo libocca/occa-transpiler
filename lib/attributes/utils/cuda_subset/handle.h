@@ -25,4 +25,5 @@ HandleResult handleAtomicAttribute(const clang::Attr&, const clang::Stmt&, Sessi
 HandleResult handleKernelAttribute(const clang::Attr&, const clang::FunctionDecl&, SessionStage&);
 HandleResult handleSharedAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
 HandleResult handleRestrictAttribute(const clang::Attr&, const clang::ParmVarDecl&, SessionStage&);
+HandleResult handleBarrierAttribute(const clang::Attr&, const clang::Stmt&, SessionStage&);
 }  // namespace oklt::cuda_subset

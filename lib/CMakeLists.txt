@@ -55,6 +55,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/cuda_subset/tile.cpp
     attributes/utils/cuda_subset/inner.cpp
     attributes/utils/cuda_subset/outer.cpp
+    attributes/utils/cuda_subset/barrier.cpp
     attributes/utils/cuda_subset/handle.h
     attributes/utils/cuda_subset/loop_code_gen.h
     attributes/utils/cuda_subset/loop_code_gen.cpp
@@ -70,6 +71,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/hip/atomic.cpp
     attributes/backend/hip/restrict.cpp
     attributes/backend/hip/shared.cpp
+    attributes/backend/hip/barrier.cpp
 
     # CUDA
     attributes/backend/cuda/global_constant.cpp
@@ -82,6 +84,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/tile.cpp
     attributes/backend/cuda/restrict.cpp
     attributes/backend/cuda/shared.cpp
+    attributes/backend/cuda/barrier.cpp
 
     # DPCPP
     attributes/backend/dpcpp/kernel.cpp
@@ -93,6 +96,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/shared.cpp
     attributes/backend/dpcpp/restrict.cpp
     attributes/backend/dpcpp/atomic.cpp
+    attributes/backend/dpcpp/barrier.cpp
     attributes/backend/dpcpp/common.cpp
     attributes/backend/dpcpp/common.hpp
 
