@@ -15,7 +15,7 @@ bool handleOPENMPKernelAttribute(const clang::Attr& attr,
 #endif
     removeAttribute(attr, stage);
 
-    std::string outerText = "#pragma omp parallel for\n";
+    std::string outerText = "extern \"C\"\n";
     return stage.getRewriter().InsertText(decl.getBeginLoc(), outerText, false, true);
 
     return true;

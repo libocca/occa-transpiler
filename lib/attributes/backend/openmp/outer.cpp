@@ -23,12 +23,11 @@ bool handleOPENMPOuterAttribute(const Attr& attr,
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::OPENMP, OUTER_ATTR_NAME},
         makeSpecificAttrHandle(handleOPENMPOuterAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME
-                     << " attribute handler (OpenMP)\n";
+        llvm::errs() << "failed to register " << OUTER_ATTR_NAME << " attribute handler (OpenMP)\n";
     }
 }
 }  // namespace
