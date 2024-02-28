@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 
             if (result) {
                 oklt::UserOutput userOutput = result.value();
-                oklt::util::writeFileAsStr(normalization_output.string(), userOutput.normalized.sourceCode);
+                // oklt::util::writeFileAsStr(normalization_output.string(), userOutput.normalized.sourceCode);
                 oklt::util::writeFileAsStr(transpilation_output.string(), userOutput.kernel.sourceCode);
                 std::cout << "Transpiling success : true" << std::endl;
             } else {
