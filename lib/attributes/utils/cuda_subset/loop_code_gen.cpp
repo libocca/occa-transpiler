@@ -13,7 +13,6 @@ std::string dimToStr(const Dim& dim) {
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.dim);
     switch (loop.type) {
         case (LoopType::Inner):
             return util::fmt("threadIdx.{}", dimToStr(loop.dim)).value();
@@ -24,8 +23,8 @@ std::string getIdxVariable(const AttributedLoop& loop) {
     }
 }
 
-HandleResult replaceAttributedLoop(const clang::Attr* a,
-                                   const clang::ForStmt* f,
+HandleResult replaceAttributedLoop(const clang::Attr& a,
+                                   const clang::ForStmt& f,
                                    const std::string& prefixCode,
                                    const std::string& suffixCode,
                                    SessionStage& s) {
@@ -35,21 +34,12 @@ HandleResult replaceAttributedLoop(const clang::Attr* a,
     //      @attribute(...) for (int i = start; i < end; i += inc)
     //  or: for (int i = start; i < end; i += inc; @attribute(...))
     clang::SourceRange range;
-    range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
-    range.setEnd(f->getRParenLoc());
-    // rewriter.RemoveText(range);
+    range.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
+    range.setEnd(f.getRParenLoc());
 
-    //// Insert preffix
-    // rewriter.ReplaceText(range, prefixCode);
-
-    ////// Insert suffix
-    // rewriter.InsertText(f->getEndLoc(),
-    //                     suffixCode);  // TODO: seems to not work correclty for for loop without
-    //                      {}
-
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a->getNormalizedFullName(), 2)
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
         .addReplacement(OKL_LOOP_PROLOGUE, range, prefixCode)
-        .addReplacement(OKL_LOOP_EPILOGUE, f->getEndLoc(), suffixCode)
+        .addReplacement(OKL_LOOP_EPILOGUE, f.getEndLoc(), suffixCode)
         .build();
 }
 

@@ -16,11 +16,11 @@ bool BackendAttributeMap::registerHandler(KeyType key, AttrStmtHandler handler) 
     return ret.second;
 }
 
-HandleResult BackendAttributeMap::handleAttr(const Attr* attr,
-                                             const Decl* decl,
+HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
+                                             const Decl& decl,
                                              const std::any* params,
                                              SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+    std::string name = attr.getNormalizedFullName();
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, name));
     if (it == _declHandlers.end()) {
@@ -29,11 +29,11 @@ HandleResult BackendAttributeMap::handleAttr(const Attr* attr,
     return it->second.handle(attr, decl, params, stage);
 }
 
-HandleResult BackendAttributeMap::handleAttr(const Attr* attr,
-                                             const Stmt* stmt,
+HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
+                                             const Stmt& stmt,
                                              const std::any* params,
                                              SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+    std::string name = attr.getNormalizedFullName();
     auto backend = stage.getBackend();
     auto it = _stmtHandlers.find(std::make_tuple(backend, name));
     if (it == _stmtHandlers.end()) {

@@ -38,7 +38,7 @@ bool traverseExpr(TraversalType& traversal,
         return true;
     }
     auto procType = stage.getAstProccesorType();
-    auto result = procMng.runPreActionNodeHandle(procType, expr, stage);
+    auto result = procMng.runPreActionNodeHandle(procType, *expr, stage);
     if (!result) {
         return false;
     }
@@ -52,7 +52,7 @@ bool traverseExpr(TraversalType& traversal,
         return false;
     }
 
-    result = procMng.runPostActionNodeHandle(procType, expr, stage);
+    result = procMng.runPostActionNodeHandle(procType, *expr, stage);
     if (!result) {
         return false;
     }

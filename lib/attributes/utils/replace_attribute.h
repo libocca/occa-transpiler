@@ -8,22 +8,22 @@
 #include <string>
 
 namespace clang {
+class FunctionDecl;
+class VarDecl;
 class Decl;
-class Stmt;
-class Attr;
 }  // namespace clang
 
 namespace oklt {
 
 class SessionStage;
 
-HandleResult handleGlobalConstant(const clang::Decl* decl,
+HandleResult handleGlobalConstant(const clang::VarDecl& decl,
                                   SessionStage& s,
                                   const std::string& qualifier);
-HandleResult handleGlobalFunction(const clang::Decl* decl,
+HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier);
-HandleResult handleTranslationUnit(const clang::Decl* decl,
+HandleResult handleTranslationUnit(const clang::Decl& decl,
                                    SessionStage& s,
                                    std::string_view includes);
 }  // namespace oklt

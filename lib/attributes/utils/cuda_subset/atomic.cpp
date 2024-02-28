@@ -25,20 +25,20 @@ HandleResult makeTranspilation(const SourceManager& sm,
         .build();
 }
 
-HandleResult handleBinOp(const BinaryOperator* binOp,
-                         const Attr* attr,
+HandleResult handleBinOp(const BinaryOperator& binOp,
+                         const Attr& attr,
                          SessionStage& stage,
                          const BinOpMapT& binaryConvertMap) {
     auto& ctx = stage.getCompiler().getASTContext();
-    auto it = binaryConvertMap.find(binOp->getOpcode());
+    auto it = binaryConvertMap.find(binOp.getOpcode());
     if (it == binaryConvertMap.end()) {
-        auto binOpStr = getSourceText(*binOp, ctx);
+        auto binOpStr = getSourceText(binOp, ctx);
         std::string description = "Atomic does not support this operation: " + binOpStr;
         return tl::make_unexpected(
             Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
-    auto left = binOp->getLHS();
+    auto left = binOp.getLHS();
     if (!left->isLValue()) {
         auto leftText = getSourceText(*left, ctx);
         std::string description = leftText + ": is not lvalue";
@@ -47,34 +47,30 @@ HandleResult handleBinOp(const BinaryOperator* binOp,
     }
 
     auto leftText = getSourceText(*left, ctx);
-    auto right = binOp->getRHS();
+    auto right = binOp.getRHS();
     auto rigthText = getSourceText(*right, ctx);
     std::string atomicOpText = it->second + "(&(" + leftText + "), " + rigthText + ")";
 
-    // auto& rewriter = stage.getRewriter();
-    // removeAttribute(attr, stage);
-    // rewriter.ReplaceText(binOp->getSourceRange(), atomicOpText);
-
     return makeTranspilation(stage.getCompiler().getSourceManager(),
-                             *attr,
-                             getAttrFullSourceRange(*attr).getBegin(),
-                             binOp->getEndLoc(),
+                             attr,
+                             getAttrFullSourceRange(attr).getBegin(),
+                             binOp.getEndLoc(),
                              atomicOpText);
 }
 
-HandleResult handleUnOp(const UnaryOperator* unOp,
-                        const Attr* attr,
+HandleResult handleUnOp(const UnaryOperator& unOp,
+                        const Attr& attr,
                         SessionStage& stage,
                         const UnaryOpMapT& atomicUnaryMap) {
     auto& ctx = stage.getCompiler().getASTContext();
-    auto it = atomicUnaryMap.find(unOp->getOpcode());
+    auto it = atomicUnaryMap.find(unOp.getOpcode());
     if (it == atomicUnaryMap.end()) {
-        auto binOpStr = getSourceText(*unOp, ctx);
+        auto binOpStr = getSourceText(unOp, ctx);
         std::string description = "Atomic does not support this operation: " + binOpStr;
         return tl::make_unexpected(
             Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
-    auto expr = unOp->getSubExpr();
+    auto expr = unOp.getSubExpr();
     auto unOpText = getSourceText(*expr, ctx);
     std::string atomicOpText = it->second + "(&(" + unOpText + "), 1)";
 
@@ -83,27 +79,27 @@ HandleResult handleUnOp(const UnaryOperator* unOp,
     // rewriter.ReplaceText(unOp->getSourceRange(), atomicOpText);
 
     return makeTranspilation(stage.getCompiler().getSourceManager(),
-                             *attr,
-                             getAttrFullSourceRange(*attr).getBegin(),
-                             unOp->getEndLoc(),
+                             attr,
+                             getAttrFullSourceRange(attr).getBegin(),
+                             unOp.getEndLoc(),
                              atomicOpText);
 }
 
-HandleResult handleCXXCopyOp(const CXXOperatorCallExpr* assignOp,
-                             const Attr* attr,
+HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
+                             const Attr& attr,
                              SessionStage& stage,
                              const BinOpMapT& binaryConvertMap) {
     auto& ctx = stage.getCompiler().getASTContext();
-    auto numArgs = assignOp->getNumArgs();
-    if (assignOp->getOperator() != OverloadedOperatorKind::OO_Equal || numArgs != 2) {
-        auto exprStr = getSourceText(*assignOp, ctx);
+    auto numArgs = assignOp.getNumArgs();
+    if (assignOp.getOperator() != OverloadedOperatorKind::OO_Equal || numArgs != 2) {
+        auto exprStr = getSourceText(assignOp, ctx);
         std::string description = "Atomic does not support this operation: " + exprStr;
         return tl::make_unexpected(
             Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
-    auto left = assignOp->getArg(0);
-    auto right = assignOp->getArg(1);
+    auto left = assignOp.getArg(0);
+    auto right = assignOp.getArg(1);
     if (!left->isLValue()) {
         auto leftText = getSourceText(*left, ctx);
         std::string description = leftText + ": is not lvalue";
@@ -116,14 +112,10 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr* assignOp,
     auto atomicFunc = binaryConvertMap.at(BinaryOperatorKind::BO_Assign);
     std::string atomicOpText = atomicFunc + "(&(" + leftText + "), " + rigthText + ")";
 
-    // removeAttribute(attr, stage);
-    // auto& rewriter = stage.getRewriter();
-    // rewriter.ReplaceText(assignOp->getSourceRange(), atomicOpText);
-
     return makeTranspilation(stage.getCompiler().getSourceManager(),
-                             *attr,
-                             getAttrFullSourceRange(*attr).getBegin(),
-                             assignOp->getEndLoc(),
+                             attr,
+                             getAttrFullSourceRange(attr).getBegin(),
+                             assignOp.getEndLoc(),
                              atomicOpText);
 }
 
@@ -131,7 +123,7 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr* assignOp,
 
 namespace oklt::cuda_subset {
 
-HandleResult handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionStage& stage) {
+HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionStage& stage) {
     static const BinOpMapT atomicBinaryMap = {
         {BinaryOperatorKind::BO_Assign, "atomicExch"},
         {BinaryOperatorKind::BO_AddAssign, "atomicAdd"},
@@ -148,24 +140,20 @@ HandleResult handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionSt
     };
 
     auto& ctx = stage.getCompiler().getASTContext();
-    if (isa<BinaryOperator>(stmt)) {
-        const BinaryOperator* binOp = cast<BinaryOperator>(stmt);
-        return handleBinOp(binOp, attr, stage, atomicBinaryMap);
+    if (const auto binOp = dyn_cast_or_null<BinaryOperator>(&stmt)) {
+        return handleBinOp(*binOp, attr, stage, atomicBinaryMap);
     }
 
-    if (isa<UnaryOperator>(stmt)) {
-        const UnaryOperator* unOp = cast<UnaryOperator>(stmt);
-        return handleUnOp(unOp, attr, stage, atomicUnaryMap);
+    if (const auto unOp = dyn_cast_or_null<UnaryOperator>(&stmt)) {
+        return handleUnOp(*unOp, attr, stage, atomicUnaryMap);
     }
 
-    if (isa<CXXOperatorCallExpr>(stmt)) {
-        auto assignOp = cast<CXXOperatorCallExpr>(stmt);
-        return handleCXXCopyOp(assignOp, attr, stage, atomicBinaryMap);
+    if (const auto assignOp = dyn_cast_or_null<CXXOperatorCallExpr>(&stmt)) {
+        return handleCXXCopyOp(*assignOp, attr, stage, atomicBinaryMap);
     }
 
     // INFO: for Expr there must be used different overloaded getSourceText method
-    if (isa<Expr>(stmt)) {
-        const Expr* expr = cast<Expr>(stmt);
+    if (const auto expr = dyn_cast_or_null<Expr>(&stmt)) {
         auto exprStr = getSourceText(*expr, ctx);
         std::string description = "Atomic does not support this operation: " + exprStr;
 
@@ -174,7 +162,7 @@ HandleResult handleAtomicAttribute(const Attr* attr, const Stmt* stmt, SessionSt
     }
 
     // INFO: looks like it's really statemet that actually should not happen
-    auto stmtStr = getSourceText(stmt->getSourceRange(), ctx);
+    auto stmtStr = getSourceText(stmt.getSourceRange(), ctx);
     std::string description = "Atomic does not support this operation: " + stmtStr;
 
     return tl::make_unexpected(

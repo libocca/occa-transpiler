@@ -1,5 +1,8 @@
 #include <oklt/core/error.h>
 
+#include "attributes/frontend/params/empty_params.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -39,19 +42,19 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
-HandleResult AttributeManager::handleStmt(const Stmt* stmt, SessionStage& stage) {
+HandleResult AttributeManager::handleStmt(const Stmt& stmt, SessionStage& stage) {
     return _implicitHandlers(stmt, stage);
 }
 
-HandleResult AttributeManager::handleDecl(const Decl* decl, SessionStage& stage) {
+HandleResult AttributeManager::handleDecl(const Decl& decl, SessionStage& stage) {
     return _implicitHandlers(decl, stage);
 }
 
-HandleResult AttributeManager::handleAttr(const Attr* attr,
-                                          const Decl* decl,
+HandleResult AttributeManager::handleAttr(const Attr& attr,
+                                          const Decl& decl,
                                           const std::any* params,
                                           SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+    std::string name = attr.getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, decl, params, stage);
     }
@@ -63,11 +66,11 @@ HandleResult AttributeManager::handleAttr(const Attr* attr,
     return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
-HandleResult AttributeManager::handleAttr(const Attr* attr,
-                                          const Stmt* stmt,
+HandleResult AttributeManager::handleAttr(const Attr& attr,
+                                          const Stmt& stmt,
                                           const std::any* params,
                                           SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+    std::string name = attr.getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
     }
@@ -79,20 +82,35 @@ HandleResult AttributeManager::handleAttr(const Attr* attr,
     return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
-ParseResult AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
-    std::string name = attr->getNormalizedFullName();
+ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
+    std::string name = attr.getNormalizedFullName();
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {
-        return it->second(attr, stage);
+        auto params = ParseOKLAttr(attr, stage);
+        return it->second(attr, params, stage);
     }
-    return tl::make_unexpected(Error{std::error_code(), "no handler"});
+
+    return EmptyParams{};
+}
+
+ParseResult AttributeManager::parseAttr(const Attr& attr,
+                                        OKLParsedAttr& params,
+                                        SessionStage& stage) {
+    auto it = _attrParsers.find(params.name);
+    if (it != _attrParsers.end()) {
+        return it->second(attr, params, stage);
+    }
+    return EmptyParams{};
 }
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
-                                                                     const Decl* decl,
+                                                                     const Decl& decl,
                                                                      SessionStage& stage) {
     std::list<Attr*> collectedAttrs;
     for (auto& attr : attrs) {
+        if (!attr)
+            continue;
+
         auto name = attr->getNormalizedFullName();
         if (_commonAttrs.hasAttrHandler(name)) {
             collectedAttrs.push_back(attr);
@@ -120,7 +138,7 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrV
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
     const ArrayRef<const Attr*>& attrs,
-    const Stmt* decl,
+    const Stmt& decl,
     SessionStage& stage) {
     std::list<const Attr*> collectedAttrs;
     for (auto& attr : attrs) {

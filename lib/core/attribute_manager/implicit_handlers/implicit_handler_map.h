@@ -24,8 +24,8 @@ class ImplicitHandlerMap {
     bool registerHandler(KeyType key, DeclHandler handler);
     bool registerHandler(KeyType key, StmtHandler handler);
 
-    HandleResult operator()(const clang::Decl* decl, SessionStage& stage);
-    HandleResult operator()(const clang::Stmt* stmt, SessionStage& stage);
+    HandleResult operator()(const clang::Decl& decl, SessionStage& stage);
+    HandleResult operator()(const clang::Stmt& stmt, SessionStage& stage);
 
    private:
     DeclHandlers _declHandlers;

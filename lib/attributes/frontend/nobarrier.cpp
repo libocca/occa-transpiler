@@ -1,5 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/empty_params.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
@@ -45,8 +50,17 @@ struct NoBarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseNoBarrierAttrParams(const clang::Attr* a, SessionStage&) {
-    return true;
+ParseResult parseNoBarrierAttrParams(const clang::Attr& attr,
+                                     OKLParsedAttr& data,
+                                     SessionStage& stage) {
+    if (!data.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@nobarrier] does not take kwargs"});
+    }
+    if (!data.args.empty()) {
+        return tl::make_unexpected(Error{{}, "[@nobarrier] does not take arguments"});
+    }
+
+    return EmptyParams{};
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

@@ -20,8 +20,8 @@ class AstProcessorManager {
 
    public:
     using KeyType = std::tuple<AstProcessorType, int>;
-    using DeclHandleType = std::function<HandleResult(const clang::Decl*, SessionStage&)>;
-    using StmtHandleType = std::function<HandleResult(const clang::Stmt*, SessionStage&)>;
+    using DeclHandleType = std::function<HandleResult(const clang::Decl&, SessionStage&)>;
+    using StmtHandleType = std::function<HandleResult(const clang::Stmt&, SessionStage&)>;
 
     struct DeclNodeHandle {
         // run in direction from parent to child
@@ -54,16 +54,16 @@ class AstProcessorManager {
     bool registerSpecificNodeHandle(KeyType key, StmtNodeHandle handle);
 
     HandleResult runPreActionNodeHandle(AstProcessorType procType,
-                                        const clang::Decl* decl,
+                                        const clang::Decl& decl,
                                         SessionStage& stage);
     HandleResult runPostActionNodeHandle(AstProcessorType procType,
-                                         const clang::Decl* decl,
+                                         const clang::Decl& decl,
                                          SessionStage& stage);
     HandleResult runPreActionNodeHandle(AstProcessorType procType,
-                                        const clang::Stmt* stmt,
+                                        const clang::Stmt& stmt,
                                         SessionStage& stage);
     HandleResult runPostActionNodeHandle(AstProcessorType procType,
-                                         const clang::Stmt* stmt,
+                                         const clang::Stmt& stmt,
                                          SessionStage& stage);
 
    private:
@@ -80,33 +80,41 @@ template <typename DeclHandleType>
 AstProcessorManager::DeclNodeHandle makeSpecificDeclHandle(DeclHandleType& preAction,
                                                            DeclHandleType& postAction) {
     using SpecificDeclType =
-        typename std::remove_pointer_t<typename func_param_type<DeclHandleType, 1>::type>;
+        typename std::remove_reference_t<typename func_param_type<DeclHandleType, 1>::type>;
 
     return AstProcessorManager::DeclNodeHandle{
-        .preAction =
-            [&preAction](const clang::Decl* decl, SessionStage& stage) {
-                return preAction(clang::dyn_cast_or_null<SpecificDeclType>(decl), stage);
-            },
-        .postAction =
-            [&postAction](const clang::Decl* decl, SessionStage& stage) {
-                return postAction(clang::dyn_cast_or_null<SpecificDeclType>(decl), stage);
-            }};
+        .preAction = [&preAction](const clang::Decl& decl, SessionStage& stage) -> HandleResult {
+            if (const auto node = clang::dyn_cast_or_null<SpecificDeclType>(&decl)) {
+                return preAction(*node, stage);
+            }
+            return tl::make_unexpected(Error());
+        },
+        .postAction = [&postAction](const clang::Decl& decl, SessionStage& stage) -> HandleResult {
+            if (const auto node = clang::dyn_cast_or_null<SpecificDeclType>(&decl)) {
+                return postAction(*node, stage);
+            }
+            return tl::make_unexpected(Error());
+        }};
 }
 
 template <typename StmtHandleType>
 AstProcessorManager::StmtNodeHandle makeSpecificStmtHandle(StmtHandleType& preAction,
                                                            StmtHandleType& postAction) {
     using SpecificStmtType =
-        std::remove_pointer_t<typename func_param_type<StmtHandleType, 1>::type>;
+        std::remove_reference_t<typename func_param_type<StmtHandleType, 1>::type>;
 
     return AstProcessorManager::StmtNodeHandle{
-        .preAction =
-            [&preAction](const clang::Stmt* stmt, SessionStage& stage) {
-                return preAction(clang::dyn_cast_or_null<SpecificStmtType>(stmt), stage);
-            },
-        .postAction =
-            [&postAction](const clang::Stmt* stmt, SessionStage& stage) {
-                return postAction(clang::dyn_cast_or_null<SpecificStmtType>(stmt), stage);
-            }};
+        .preAction = [&preAction](const clang::Stmt& stmt, SessionStage& stage) -> HandleResult {
+            if (const auto node = clang::dyn_cast_or_null<SpecificStmtType>(&stmt)) {
+                return preAction(*node, stage);
+            }
+            return tl::make_unexpected(Error());
+        },
+        .postAction = [&postAction](const clang::Stmt& stmt, SessionStage& stage) -> HandleResult {
+            if (const auto node = clang::dyn_cast_or_null<SpecificStmtType>(&stmt)) {
+                return postAction(*node, stage);
+            }
+            return tl::make_unexpected(Error());
+        }};
 }
 }  // namespace oklt

@@ -1,5 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
+
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/empty_params.h"
 
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
@@ -42,8 +47,14 @@ struct RestrictAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseRestrictAttrParams(const clang::Attr* a, SessionStage&) {
-    return true;
+ParseResult parseRestrictAttrParams(const clang::Attr& attr,
+                                    OKLParsedAttr& data,
+                                    SessionStage& stage) {
+    if (!data.args.empty() || !data.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@atomic] does not take arguments"});
+    }
+
+    return EmptyParams{};
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

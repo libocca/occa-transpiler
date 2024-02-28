@@ -11,18 +11,14 @@ namespace {
 const std::string SHARED_MODIFIER = "__shared__";
 }
 namespace oklt::cuda_subset {
-HandleResult handleSharedAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
+HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
-    // auto& rewriter = s.getRewriter();
-    // removeAttribute(a, s);
     std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a->getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, getAttrFullSourceRange(*a), replacedAttribute)
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
+        .addReplacement(OKL_TRANSPILED_ATTR, getAttrFullSourceRange(a), replacedAttribute)
         .build();
-
-    // return rewriter.InsertText(d->getBeginLoc(), replacedAttribute, false, false);
 }
 }  // namespace oklt::cuda_subset

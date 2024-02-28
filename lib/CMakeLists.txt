@@ -36,22 +36,15 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
 
-    attributes/utils/replace_attribute.h
-    attributes/utils/replace_attribute.cpp
-    attributes/utils/parse.h
-    attributes/frontend/common/parse_loop_attribute_params.cpp
-    attributes/frontend/common/parse_loop_attribute_params.h
-
     # Backends common
-    attributes/utils/attribute_utils.cpp
 
-    attributes/utils/replace_attribute.h
-    attributes/utils/replace_attribute.cpp
-    attributes/utils/parse.h
-    # attributes/utils/loop_meta_data.h
-    # attributes/utils/loop_meta_data.cpp
+    attributes/utils/parser.h
+    attributes/utils/parser.cpp
+    attributes/utils/parser_impl.hpp
     attributes/utils/code_gen.h
     attributes/utils/code_gen.cpp
+    attributes/utils/replace_attribute.h
+    attributes/utils/replace_attribute.cpp
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp

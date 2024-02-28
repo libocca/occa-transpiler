@@ -28,7 +28,7 @@ struct OklSemaCtx {
         LoopBlockParserState state{NotStarted};
 
         struct OklForStmt {
-            const clang::Attr* attr;
+            const clang::Attr& attr;
             const clang::ForStmt* stmt;
             LoopMetaData meta;
         };
@@ -45,24 +45,23 @@ struct OklSemaCtx {
     OklSemaCtx() = default;
 
     // method to make/get/reset context of parsing OKL kernel
-    ParsingKernelInfo* startParsingOklKernel(const clang::FunctionDecl*);
+    ParsingKernelInfo* startParsingOklKernel(const clang::FunctionDecl&);
     [[nodiscard]] ParsingKernelInfo* getParsingKernelInfo();
     void stopParsingKernelInfo();
 
     [[nodiscard]] bool isParsingOklKernel() const;
-    [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl* fd) const;
-    [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl*) const;
+    [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const;
+    [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
-    [[nodiscard]] std::optional<LoopMetaData> getLoopMetaData(
-        const clang::ForStmt* forStmt = nullptr) const;
+    [[nodiscard]] std::optional<LoopMetaData> getLoopMetaData(const clang::ForStmt& forStmt) const;
 
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr*,
-                                                                            const clang::ForStmt*);
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr*,
-                                                                             const clang::ForStmt*);
+    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
+                                                                            const clang::ForStmt&);
+    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr&,
+                                                                             const clang::ForStmt&);
 
-    void setKernelArgInfo(const clang::ParmVarDecl* parm);
-    void setKernelArgRawString(const clang::ParmVarDecl* parm,
+    void setKernelArgInfo(const clang::ParmVarDecl& parm);
+    void setKernelArgRawString(const clang::ParmVarDecl& parm,
                                std::string_view transpiledType = {});
 
     void setKernelTranspiledAttrStr(std::string attrStr);

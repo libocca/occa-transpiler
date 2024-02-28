@@ -11,8 +11,8 @@ namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim);
 std::string getIdxVariable(const AttributedLoop& loop);
 
-HandleResult replaceAttributedLoop(const clang::Attr* a,
-                                   const clang::ForStmt* f,
+HandleResult replaceAttributedLoop(const clang::Attr& a,
+                                   const clang::ForStmt& f,
                                    const std::string& prefixCode,
                                    const std::string& suffixCode,
                                    SessionStage& s);

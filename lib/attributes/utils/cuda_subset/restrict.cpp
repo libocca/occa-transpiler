@@ -13,35 +13,27 @@ const std::string RESTRICT_MODIFIER = "__restrict__";
 }
 namespace oklt::cuda_subset {
 using namespace clang;
-HandleResult handleRestrictAttribute(const clang::Attr* a,
-                                     const clang::ParmVarDecl* parmDecl,
+HandleResult handleRestrictAttribute(const clang::Attr& a,
+                                     const clang::ParmVarDecl& parmDecl,
                                      SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
-    SourceLocation identifierLoc = parmDecl->getLocation();
+    SourceLocation identifierLoc = parmDecl.getLocation();
     std::string restrictText = " " + RESTRICT_MODIFIER + " ";
-    // auto& rewriter = s.getRewriter();
-    //  removeAttribute(a, s);
-    //  rewriter.InsertText(identifierLoc, restrictText, false, false);
-
     // INFO: might be better to use rewriter.getRewrittenText() method
 
-    auto& ctx = parmDecl->getASTContext();
-    SourceRange r1(parmDecl->getSourceRange().getBegin(), identifierLoc);
+    auto& ctx = parmDecl.getASTContext();
+    SourceRange r1(parmDecl.getSourceRange().getBegin(), identifierLoc);
     auto part1 = getSourceText(r1, ctx);
-    auto ident = parmDecl->getQualifiedNameAsString();
+    auto ident = parmDecl.getQualifiedNameAsString();
     std::string modifiedArgument = part1 + restrictText + ident;
 
-    if (s.getAstProccesorType() == AstProcessorType::OKL_WITH_SEMA) {
-        s.tryEmplaceUserCtx<OklSemaCtx>().setKernelArgRawString(parmDecl, modifiedArgument);
-    }
-
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a->getNormalizedFullName(), 1)
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
         .addReplacement(OKL_TRANSPILED_ARG,
-                        getAttrFullSourceRange(*a).getBegin(),
-                        parmDecl->getEndLoc(),
+                        getAttrFullSourceRange(a).getBegin(),
+                        parmDecl.getEndLoc(),
                         part1 + restrictText + ident)
         .build();
 }

@@ -10,8 +10,8 @@
 namespace oklt::cuda_subset {
 using namespace clang;
 // TODO: function is very similar to handleInnerAttribute
-HandleResult handleOuterAttribute(const clang::Attr* a,
-                                  const clang::ForStmt* forStmt,
+HandleResult handleOuterAttribute(const clang::Attr& a,
+                                  const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
