@@ -2,7 +2,7 @@
 #include "core/diag/diag_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
-#include "llvm/Support/ManagedStatic.h"
+#include <llvm/Support/ManagedStatic.h>
 
 LLVM_INSTANTIATE_REGISTRY(oklt::DiagHandlerRegistry);
 
