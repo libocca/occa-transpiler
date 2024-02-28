@@ -1,7 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
-#include "attributes/frontend/common/parse_loop_attribute_params.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/loop.h"
+
+#include <oklt/util/string_utils.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/ParsedAttr.h"
 #include "clang/Sema/Sema.h"
@@ -46,8 +51,30 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseInnerAttrParams(const clang::Attr* a, SessionStage& s) {
-    return parseLoopAttrParams(a, s, LoopType::Inner);
+ParseResult parseInnerAttrParams(const clang::Attr& attr,
+                                 OKLParsedAttr& data,
+                                 SessionStage& stage) {
+    if (!data.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@inner] does not take kwargs"});
+    }
+
+    if (data.args.size() > 1) {
+        return tl::make_unexpected(Error{{}, "[@inner] takes at most one index"});
+    }
+
+    AttributedLoop ret{
+        .type = LoopType::Inner,
+        .dim = Dim::X,
+    };
+
+    if (auto dimSize = data.get<int>(0); dimSize.has_value()) {
+        if (dimSize.value() < 0 || dimSize.value() > 2) {
+            return tl::make_unexpected(Error{{}, "[@inner] argument must be 0, 1, or 2"});
+        }
+        ret.dim = static_cast<Dim>(dimSize.value());
+    }
+
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

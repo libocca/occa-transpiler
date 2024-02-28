@@ -1,6 +1,12 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "params/barrier.h"
+
+#include <oklt/util/string_utils.h>
+
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Sema/Sema.h"
 
@@ -44,8 +50,39 @@ struct BarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseBarrierAttrParams(const clang::Attr* a, SessionStage&) {
-    return true;
+ParseResult parseBarrierAttrParams(const clang::Attr& attr,
+                                   OKLParsedAttr& data,
+                                   SessionStage& stage) {
+    if (!data.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@barrier] does not take kwargs"});
+    }
+
+    AttributedBarrier ret{
+        .type = BarrierType::syncDefault,
+    };
+
+    if (data.args.size() > 1) {
+        return tl::make_unexpected(Error{{}, "[@barrier] takes at most one argument"});
+    }
+
+    if (!data.args.empty()) {
+        auto firstParam = data.get<std::string>(0);
+        if (!firstParam.has_value()) {
+            return tl::make_unexpected(
+                Error{{}, "[@barrier] must have no arguments or have one string argument"});
+        }
+
+        if (firstParam.value() != "warp") {
+            return tl::make_unexpected(
+                Error{{},
+                      util::fmt("[@barrier] has an invalid barrier type: {}", firstParam.value())
+                          .value()});
+        }
+
+        ret.type = BarrierType::syncWarp;
+    }
+
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {

@@ -6,9 +6,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleSharedAttribute(const Attr* a, const VarDecl* var, SessionStage& s) {
-    auto varName = var->getNameAsString();
-    auto typeStr = var->getType().getLocalUnqualifiedType().getAsString();
+HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionStage& s) {
+    auto varName = var.getNameAsString();
+    auto typeStr = var.getType().getLocalUnqualifiedType().getAsString();
 
     auto newDeclaration =
         util::fmt(
@@ -19,8 +19,8 @@ HandleResult handleSharedAttribute(const Attr* a, const VarDecl* var, SessionSta
             .value();
 
     auto& rewriter = s.getRewriter();
-    SourceRange range(a->getRange().getBegin().getLocWithOffset(-2),
-                      var->getSourceRange().getEnd());
+    SourceRange range(a.getRange().getBegin().getLocWithOffset(-2),
+                      var.getSourceRange().getEnd());
     rewriter.ReplaceText(range, newDeclaration);
 
 #ifdef TRANSPILER_DEBUG_LOG

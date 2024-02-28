@@ -7,8 +7,8 @@ namespace oklt {
 
 tl::expected<TargetBackend, std::string> backendFromString(const std::string& type) {
     static const std::map<std::string, TargetBackend> BACKENDS_MAP = {
-        {"cuda", TargetBackend::CUDA},
         {"openmp", TargetBackend::OPENMP},
+        {"cuda", TargetBackend::CUDA},
         {"hip", TargetBackend::HIP},
         {"dpcpp", TargetBackend::DPCPP},
     };
@@ -17,15 +17,15 @@ tl::expected<TargetBackend, std::string> backendFromString(const std::string& ty
     if (it != BACKENDS_MAP.end()) {
         return it->second;
     }
-    return tl::unexpected("unknown backend is requisted");
+    return tl::unexpected("unknown backend is requested");
 }
 
 std::string backendToString(TargetBackend backend) {
     switch (backend) {
-        case TargetBackend::CUDA:
-            return std::string{"cuda"};
         case TargetBackend::OPENMP:
             return std::string{"openmp"};
+        case TargetBackend::CUDA:
+            return std::string{"cuda"};
         case TargetBackend::HIP:
             return std::string{"hip"};
         case TargetBackend::DPCPP:

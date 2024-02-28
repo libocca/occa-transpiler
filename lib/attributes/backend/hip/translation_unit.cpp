@@ -8,7 +8,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleTranslationUnitHip(const clang::Decl* decl, SessionStage& s) {
+HandleResult handleTranslationUnitHip(const clang::TranslationUnitDecl& decl, SessionStage& s) {
     const std::string HIP_INCLUDE = "#include <hip/hip_runtime.h>";
     return oklt::handleTranslationUnit(decl, s, HIP_INCLUDE);
 }
@@ -16,7 +16,7 @@ HandleResult handleTranslationUnitHip(const clang::Decl* decl, SessionStage& s) 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
-        DeclHandler{handleTranslationUnitHip});
+        makeSpecificImplicitHandle(handleTranslationUnitHip));
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";

@@ -8,7 +8,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleTranslationUnitDpcpp(const clang::Decl* decl, SessionStage& s) {
+HandleResult handleTranslationUnitDpcpp(const clang::TranslationUnitDecl& decl, SessionStage& s) {
     const std::string SYCL_INCLUDE = "  #include <CL/sycl.hpp>\nusing namespace sycl;";
     return oklt::handleTranslationUnit(decl, s, SYCL_INCLUDE);
 }
@@ -16,7 +16,7 @@ HandleResult handleTranslationUnitDpcpp(const clang::Decl* decl, SessionStage& s
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::DPCPP, clang::Decl::Kind::TranslationUnit},
-        DeclHandler{handleTranslationUnitDpcpp});
+        makeSpecificImplicitHandle(handleTranslationUnitDpcpp));
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for translation unit (DPCPP)\n";

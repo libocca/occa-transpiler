@@ -13,8 +13,8 @@ using namespace clang;
 }  // namespace
 
 namespace oklt {
-bool preValidateOklForLoopSema(const Attr* attr,
-                               const ForStmt* stmt,
+bool preValidateOklForLoopSema(const Attr& attr,
+                               const ForStmt& stmt,
                                SessionStage& stage,
                                OklSemaCtx& sema) {
     auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt);
@@ -27,8 +27,8 @@ bool preValidateOklForLoopSema(const Attr* attr,
     return true;
 }
 
-bool postValidateOklForLoopSema(const Attr* attr,
-                                const clang::ForStmt* stmt,
+bool postValidateOklForLoopSema(const Attr& attr,
+                                const clang::ForStmt& stmt,
                                 SessionStage& stage,
                                 OklSemaCtx& sema) {
     auto result = sema.validateOklForLoopOnPostTraverse(attr, stmt);

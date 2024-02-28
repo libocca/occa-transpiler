@@ -9,8 +9,8 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleInnerAttribute(const clang::Attr* a,
-                                  const clang::ForStmt* forStmt,
+HandleResult handleInnerAttribute(const clang::Attr& a,
+                                  const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();

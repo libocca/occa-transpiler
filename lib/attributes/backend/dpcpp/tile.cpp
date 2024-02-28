@@ -186,8 +186,8 @@ std::string buildPreffixTiledCode(const LoopMetaData& forLoopMetaData,
     return res;
 }
 
-HandleResult handleTileAttribute(const clang::Attr* a,
-                                 const clang::ForStmt* forStmt,
+HandleResult handleTileAttribute(const clang::Attr& a,
+                                 const clang::ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();

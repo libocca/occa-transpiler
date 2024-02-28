@@ -10,12 +10,12 @@ struct SessionStage;
 struct OklSemaCtx;
 
 // validator and translator for OKL attributed for loop
-bool preValidateOklForLoopSema(const clang::Attr*,
-                               const clang::ForStmt*,
+bool preValidateOklForLoopSema(const clang::Attr&,
+                               const clang::ForStmt&,
                                SessionStage&,
                                OklSemaCtx& sema);
-bool postValidateOklForLoopSema(const clang::Attr*,
-                                const clang::ForStmt*,
+bool postValidateOklForLoopSema(const clang::Attr&,
+                                const clang::ForStmt&,
                                 SessionStage&,
                                 OklSemaCtx& sema);
 

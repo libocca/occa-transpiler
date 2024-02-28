@@ -10,22 +10,22 @@ using namespace oklt;
 using namespace clang;
 const std::string RESTRICT_MODIFIER = "__restrict__";
 
-HandleResult handleRestrictAttribute(const clang::Attr* a,
-                                     const clang::ParmVarDecl* parmDecl,
+HandleResult handleRestrictAttribute(const clang::Attr& a,
+                                     const clang::ParmVarDecl& parmDecl,
                                      SessionStage& s) {
     auto& rewriter = s.getRewriter();
 
-    SourceLocation identifierLoc = parmDecl->getLocation();
+    SourceLocation identifierLoc = parmDecl.getLocation();
     removeAttribute(a, s);
     std::string restrictText = " " + RESTRICT_MODIFIER + " ";
     rewriter.InsertText(identifierLoc, restrictText, false, false);
 
     // INFO: might be better to use rewriter.getRewrittenText() method
 
-    auto& ctx = parmDecl->getASTContext();
-    SourceRange r1(parmDecl->getSourceRange().getBegin(), identifierLoc);
+    auto& ctx = parmDecl.getASTContext();
+    SourceRange r1(parmDecl.getSourceRange().getBegin(), identifierLoc);
     auto part1 = getSourceText(r1, ctx);
-    auto ident = parmDecl->getQualifiedNameAsString();
+    auto ident = parmDecl.getQualifiedNameAsString();
     std::string modifiedArgument = part1 + restrictText + ident;
 
     if (s.getAstProccesorType() == AstProcessorType::OKL_WITH_SEMA) {

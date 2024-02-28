@@ -10,8 +10,8 @@ namespace oklt {
 std::string getCondCompStr(const BinOp& bo);
 std::string getUnaryStr(const UnOp& uo, const std::string& var);
 std::string buildCloseScopes(int& openedScopeCounter);
-void replaceAttributedLoop(const clang::Attr* a,
-                           const clang::ForStmt* f,
+void replaceAttributedLoop(const clang::Attr& a,
+                           const clang::ForStmt& f,
                            const std::string& prefixCode,
                            const std::string& suffixCode,
                            SessionStage& s);

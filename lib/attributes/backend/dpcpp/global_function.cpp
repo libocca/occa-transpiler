@@ -4,14 +4,15 @@
 namespace {
 using namespace oklt;
 
-HandleResult handleGlobalFunctionDpcpp(const clang::Decl* decl, oklt::SessionStage& s) {
+HandleResult handleGlobalFunctionDpcpp(const clang::FunctionDecl& decl, oklt::SessionStage& s) {
     const std::string HIP_FUNCTION_QUALIFIER = "SYCL_EXTERNAL";
     return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::DPCPP, clang::Decl::Kind::Function}, DeclHandler{handleGlobalFunctionDpcpp});
+        {TargetBackend::DPCPP, clang::Decl::Kind::Function},
+        makeSpecificImplicitHandle(handleGlobalFunctionDpcpp));
 
     if (!ok) {
         llvm::errs() << "Failed to register implicit handler for global function (DPCPP)\n";
