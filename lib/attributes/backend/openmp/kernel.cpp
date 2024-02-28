@@ -14,9 +14,22 @@ bool handleOPENMPKernelAttribute(const clang::Attr& attr,
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
     removeAttribute(attr, stage);
+    auto& rewriter = stage.getRewriter();
 
-    std::string outerText = "extern \"C\"\n";
-    return stage.getRewriter().InsertText(decl.getBeginLoc(), outerText, false, true);
+    static std::string_view outerText = "extern \"C\"\n";
+    rewriter.InsertText(decl.getBeginLoc(), outerText, false, true);
+
+    for (const auto param : decl.parameters()) {
+        if (!param || !param->getType().getTypePtrOrNull()) {
+            continue;
+        }
+
+        auto t = param->getType();
+        if (!t->isPointerType()) {
+            auto locRange = param->DeclaratorDecl::getSourceRange();
+            rewriter.InsertText(locRange.getEnd(), " &");
+        }
+    }
 
     return true;
 }
