@@ -166,8 +166,7 @@ ParseResult parseTileAttribute(const clang::Attr* a, SessionStage& s) {
     }
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Parsed @tile parameters: "
-                 << ": {tile size: " << tileParams.tileSize
+    llvm::outs() << "[DEBUG] Parsed @tile parameters: " << ": {tile size: " << tileParams.tileSize
                  << ", first loop: " << static_cast<int>(tileParams.firstLoop.type)
                  << " with dim: " << static_cast<int>(tileParams.firstLoop.dim)
                  << ", second loop: " << static_cast<int>(tileParams.secondLoop.type)

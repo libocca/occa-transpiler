@@ -18,10 +18,14 @@ struct TranspilerSession;
 // INFO: could hold not the reference to the global AttributeManager
 //       but hold the pointer to the AttributeManagerView
 //       that is built for current session with set of interested attribute handlers
-class SessionStage {
+struct SessionStage {
    public:
     explicit SessionStage(TranspilerSession& session, clang::CompilerInstance& compiler);
     ~SessionStage() = default;
+
+    const TranspilerSession& getSession() const { return _session; }
+
+    TranspilerSession& getSession() { return _session; }
 
     clang::CompilerInstance& getCompiler();
 

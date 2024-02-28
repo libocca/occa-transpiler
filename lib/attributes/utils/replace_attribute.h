@@ -5,7 +5,6 @@
 
 #include <tl/expected.hpp>
 
-#include <any>
 #include <string>
 
 namespace clang {
@@ -24,4 +23,7 @@ HandleResult handleGlobalConstant(const clang::Decl* decl,
 HandleResult handleGlobalFunction(const clang::Decl* decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier);
+HandleResult handleTranslationUnit(const clang::Decl* decl,
+                                   SessionStage& s,
+                                   std::string_view includes);
 }  // namespace oklt

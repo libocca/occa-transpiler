@@ -7,7 +7,7 @@ using namespace oklt;
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, SHARED_ATTR_NAME},
+        {TargetBackend::HIP, SHARED_ATTR_NAME},
         makeSpecificAttrHandle(cuda_subset::handleSharedAttribute));
 
     if (!ok) {

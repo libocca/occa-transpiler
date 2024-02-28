@@ -21,7 +21,7 @@ HandleResult ImplicitHandlerMap::operator()(const Decl* decl, SessionStage& stag
     // INFO: implcit handler means that only some specific stmt/decl has specific handler
     //       missing of handler is ok
     if (it == _declHandlers.end()) {
-        return true;
+        return {};
     }
 
     return it->second(decl, stage);
@@ -34,7 +34,7 @@ HandleResult ImplicitHandlerMap::operator()(const Stmt* stmt, SessionStage& stag
     // INFO: implcit handler means that only some specific stmt/decl has specific handler
     //       missing of handler is ok
     if (it == _stmtHandlers.end()) {
-        return true;
+        return {};
     }
 
     return it->second(stmt, stage);

@@ -18,8 +18,8 @@ HandleResult handleOuterAttribute(const clang::Attr* a,
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {
-        s.pushError(std::error_code(), "@tile: failed to fetch loop meta data from sema");
-        return false;
+        return tl::make_unexpected(Error{
+            .ec = std::error_code(), .desc = "@tile: failed to fetch loop meta data from sema"});
     }
 
     int openedScopeCounter = 0;
@@ -27,10 +27,9 @@ HandleResult handleOuterAttribute(const clang::Attr* a,
         forLoopMetaData.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-    replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @outer attribute\n";
 #endif
-    return true;
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
 }  // namespace oklt::cuda_subset

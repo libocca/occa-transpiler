@@ -1,3 +1,5 @@
+#include <oklt/core/error.h>
+
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -58,7 +60,7 @@ HandleResult AttributeManager::handleAttr(const Attr* attr,
         return _backendAttrs.handleAttr(attr, decl, params, stage);
     }
 
-    return false;
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 HandleResult AttributeManager::handleAttr(const Attr* attr,
@@ -69,10 +71,12 @@ HandleResult AttributeManager::handleAttr(const Attr* attr,
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
     }
+
     if (_backendAttrs.hasAttrHandler(stage, name)) {
         return _backendAttrs.handleAttr(attr, stmt, params, stage);
     }
-    return false;
+
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 ParseResult AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
@@ -81,7 +85,7 @@ ParseResult AttributeManager::parseAttr(const Attr* attr, SessionStage& stage) {
     if (it != _attrParsers.end()) {
         return it->second(attr, stage);
     }
-    return true;
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,

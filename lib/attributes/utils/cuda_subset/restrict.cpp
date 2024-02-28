@@ -1,5 +1,7 @@
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/result.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -11,16 +13,18 @@ const std::string RESTRICT_MODIFIER = "__restrict__";
 }
 namespace oklt::cuda_subset {
 using namespace clang;
-HandleResult handleRestrictAttribute(const clang::Attr* a, const clang::ParmVarDecl* parmDecl, SessionStage& s) {
+HandleResult handleRestrictAttribute(const clang::Attr* a,
+                                     const clang::ParmVarDecl* parmDecl,
+                                     SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
 #endif
-    auto& rewriter = s.getRewriter();
 
     SourceLocation identifierLoc = parmDecl->getLocation();
-    removeAttribute(a, s);
     std::string restrictText = " " + RESTRICT_MODIFIER + " ";
-    rewriter.InsertText(identifierLoc, restrictText, false, false);
+    // auto& rewriter = s.getRewriter();
+    //  removeAttribute(a, s);
+    //  rewriter.InsertText(identifierLoc, restrictText, false, false);
 
     // INFO: might be better to use rewriter.getRewrittenText() method
 
@@ -34,7 +38,12 @@ HandleResult handleRestrictAttribute(const clang::Attr* a, const clang::ParmVarD
         s.tryEmplaceUserCtx<OklSemaCtx>().setKernelArgRawString(parmDecl, modifiedArgument);
     }
 
-    return true;
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a->getNormalizedFullName(), 1)
+        .addReplacement(OKL_TRANSPILED_ARG,
+                        getAttrFullSourceRange(*a).getBegin(),
+                        parmDecl->getEndLoc(),
+                        part1 + restrictText + ident)
+        .build();
 }
 
 }  // namespace oklt::cuda_subset

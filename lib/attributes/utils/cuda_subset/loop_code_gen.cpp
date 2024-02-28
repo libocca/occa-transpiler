@@ -1,6 +1,10 @@
-#include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include <oklt/util/string_utils.h>
+
 #include "attributes/utils/code_gen.h"
+#include "attributes/utils/cuda_subset/loop_code_gen.h"
+
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 
 namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim) {
@@ -20,11 +24,11 @@ std::string getIdxVariable(const AttributedLoop& loop) {
     }
 }
 
-void replaceAttributedLoop(const clang::Attr* a,
-                           const clang::ForStmt* f,
-                           const std::string& prefixCode,
-                           const std::string& suffixCode,
-                           SessionStage& s) {
+HandleResult replaceAttributedLoop(const clang::Attr* a,
+                                   const clang::ForStmt* f,
+                                   const std::string& prefixCode,
+                                   const std::string& suffixCode,
+                                   SessionStage& s) {
     auto& rewriter = s.getRewriter();
 
     // Remove attribute + for loop:
@@ -33,14 +37,20 @@ void replaceAttributedLoop(const clang::Attr* a,
     clang::SourceRange range;
     range.setBegin(a->getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
     range.setEnd(f->getRParenLoc());
-    rewriter.RemoveText(range);
+    // rewriter.RemoveText(range);
 
-    // Insert preffix
-    rewriter.InsertText(f->getRParenLoc(), prefixCode);
+    //// Insert preffix
+    // rewriter.ReplaceText(range, prefixCode);
 
-    // Insert suffix
-    rewriter.InsertText(f->getEndLoc(),
-                        suffixCode);  // TODO: seems to not work correclty for for loop without {}
+    ////// Insert suffix
+    // rewriter.InsertText(f->getEndLoc(),
+    //                     suffixCode);  // TODO: seems to not work correclty for for loop without
+    //                      {}
+
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a->getNormalizedFullName(), 2)
+        .addReplacement(OKL_LOOP_PROLOGUE, range, prefixCode)
+        .addReplacement(OKL_LOOP_EPILOGUE, f->getEndLoc(), suffixCode)
+        .build();
 }
 
 namespace tile {

@@ -112,6 +112,8 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/kernel_metadata.cpp
 
+    core/transpilation.cpp
+
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp
