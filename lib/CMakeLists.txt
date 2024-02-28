@@ -97,6 +97,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/restrict.cpp
     attributes/backend/dpcpp/atomic.cpp
     attributes/backend/dpcpp/barrier.cpp
+    attributes/backend/dpcpp/exclusive.cpp
     attributes/backend/dpcpp/common.cpp
     attributes/backend/dpcpp/common.hpp
 

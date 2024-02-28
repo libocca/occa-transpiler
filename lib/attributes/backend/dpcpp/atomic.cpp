@@ -100,7 +100,7 @@ HandleResult handleAtomicAttribute(const clang::Attr& attr,
     rewriter.ReplaceText(range, newExpression.value());
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] DPCPP: Handle @atomic.\n";
+    llvm::outs() << "[DEBUG] Handle @atomic.\n";
 #endif
     return true;
 }

@@ -12,7 +12,7 @@ HandleResult handleBarrierAttribute(const clang::Attr& a,
                                     const clang::Stmt& stmt,
                                     SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
+    llvm::outs() << "[DEBUG] handle attribute: @barrier\n";
 #endif
     auto& rewriter = s.getRewriter();
     SourceRange range(a.getRange().getBegin().getLocWithOffset(-2), stmt.getEndLoc());

@@ -97,6 +97,11 @@ bool runExprTranspilerHanders(const ExprType& expr,
         return false;
     }
 
+    llvm::outs() << "Try to handle " << attr->getNormalizedFullName() << " attribute\n";
+    if (attr->getNormalizedFullName() == "okl::exclusive") {
+        int iiii = 0;
+    }
+
     // run specific kernel attribute handler
     if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
         // Get statement from attributed statement
