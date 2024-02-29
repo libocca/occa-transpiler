@@ -24,7 +24,7 @@ HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, name));
     if (it == _declHandlers.end()) {
-        return tl::make_unexpected(Error{std::error_code(), "no handler"});
+        return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
     }
     return it->second.handle(attr, decl, params, stage);
 }
@@ -37,7 +37,7 @@ HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
     auto backend = stage.getBackend();
     auto it = _stmtHandlers.find(std::make_tuple(backend, name));
     if (it == _stmtHandlers.end()) {
-        return tl::make_unexpected(Error{std::error_code(), "no handler"});
+        return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
     }
     return it->second.handle(attr, stmt, params, stage);
 }

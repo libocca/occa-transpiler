@@ -9,7 +9,7 @@ namespace oklt {
 
 class SessionStage;
 class AstProcessorManager;
-class TranspilationCtx;
+struct OklSemaCtx;
 
 class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraversal> {
    public:
@@ -25,6 +25,7 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
     AstProcessorManager& _procMng;
     SessionStage& _stage;
     Transpilations _trasnpilations;
+    OklSemaCtx& _sema;
 };
 
 }  // namespace oklt

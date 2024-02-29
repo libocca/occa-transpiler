@@ -1,5 +1,5 @@
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/result.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"

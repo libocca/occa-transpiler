@@ -63,7 +63,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
         return _backendAttrs.handleAttr(attr, decl, params, stage);
     }
 
-    return tl::make_unexpected(Error{std::error_code(), "no handler"});
+    return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
 }
 
 HandleResult AttributeManager::handleAttr(const Attr& attr,
@@ -79,7 +79,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
         return _backendAttrs.handleAttr(attr, stmt, params, stage);
     }
 
-    return tl::make_unexpected(Error{std::error_code(), "no handler"});
+    return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
 }
 
 ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {

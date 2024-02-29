@@ -1,5 +1,4 @@
 #pragma once
-
 #include <clang/AST/Attr.h>
 
 namespace oklt {

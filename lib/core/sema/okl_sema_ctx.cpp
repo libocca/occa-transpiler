@@ -1,7 +1,8 @@
 #include <oklt/core/error.h>
 
 #include "attributes/attribute_names.h"
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+
+#include "core/sema/okl_sema_ctx.h"
 #include "core/utils/ast_node_parsers.h"
 #include "core/utils/type_converter.h"
 

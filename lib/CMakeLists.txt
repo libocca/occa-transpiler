@@ -90,16 +90,17 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/ast_processors/okl_dummy_processor/processor.cpp
 
-    core/ast_processors/okl_sema_processor/processor.cpp
-    core/ast_processors/okl_sema_processor/okl_sema_ctx.cpp
-    core/ast_processors/okl_sema_processor/handlers/function.h
-    core/ast_processors/okl_sema_processor/handlers/function.cpp
-    core/ast_processors/okl_sema_processor/handlers/loop.h
-    core/ast_processors/okl_sema_processor/handlers/loop.cpp
+    #core/ast_processors/okl_sema_processor/processor.cpp
+    #core/ast_processors/okl_sema_processor/handlers/function.h
+    #core/ast_processors/okl_sema_processor/handlers/function.cpp
+    #core/ast_processors/okl_sema_processor/handlers/loop.h
+    #core/ast_processors/okl_sema_processor/handlers/loop.cpp
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
     core/ast_traversal/preorder_traversal_nlr.cpp
+
+    core/sema/okl_sema_ctx.cpp
 
     core/diag/diag_consumer.cpp
 
