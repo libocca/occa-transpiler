@@ -5,12 +5,13 @@
 
 #include <tl/expected.hpp>
 
-#include <any>
 #include <string>
 
 namespace clang {
+class TranslationUnitDecl;
 class FunctionDecl;
 class VarDecl;
+class Decl;
 }  // namespace clang
 
 namespace oklt {
@@ -23,4 +24,7 @@ HandleResult handleGlobalConstant(const clang::VarDecl& decl,
 HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier);
+HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
+                                   SessionStage& s,
+                                   std::string_view includes);
 }  // namespace oklt

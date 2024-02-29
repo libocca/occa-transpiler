@@ -9,7 +9,7 @@ HandleResult handleDimDeclAttrbute(const clang::Attr& a,
                                    const std::any* params,
                                    SessionStage& s) {
     llvm::outs() << "handle decl attribute: " << a.getNormalizedFullName() << '\n';
-    return true;
+    return {};
 }
 
 HandleResult handleDimStmtAttrbute(const clang::Attr& a,
@@ -17,7 +17,7 @@ HandleResult handleDimStmtAttrbute(const clang::Attr& a,
                                    const std::any* params,
                                    SessionStage& s) {
     llvm::outs() << "handle stmt attribute: " << a.getNormalizedFullName() << '\n';
-    return true;
+    return {};
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

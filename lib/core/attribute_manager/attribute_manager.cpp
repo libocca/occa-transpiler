@@ -1,7 +1,9 @@
-#include "core/attribute_manager/attribute_manager.h"
+#include <oklt/core/error.h>
+
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
+#include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
@@ -61,7 +63,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
         return _backendAttrs.handleAttr(attr, decl, params, stage);
     }
 
-    return false;
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 HandleResult AttributeManager::handleAttr(const Attr& attr,
@@ -72,10 +74,12 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
     }
+
     if (_backendAttrs.hasAttrHandler(stage, name)) {
         return _backendAttrs.handleAttr(attr, stmt, params, stage);
     }
-    return false;
+
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
@@ -85,6 +89,7 @@ ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
         auto params = ParseOKLAttr(attr, stage);
         return it->second(attr, params, stage);
     }
+
     return EmptyParams{};
 }
 

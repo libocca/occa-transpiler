@@ -3,6 +3,7 @@
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/ast_traversal/preorder_traversal_nlr.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 using namespace clang;
@@ -13,8 +14,13 @@ TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage)
 void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
     TranslationUnitDecl* tu = context.getTranslationUnitDecl();
 
-    PreorderNlrTraversal traversal(AstProcessorManager::instance(), _stage);
-    traversal.TraverseTranslationUnitDecl(tu);
+    auto result =
+        PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProccessor(tu);
+    if (!result) {
+        return;
+    }
+
+    _stage.getSession().output.kernel.sourceCode = std::move(result.value());
 
 #ifdef OKL_SEMA_DEBUG_LOG
     auto& md = _stage.tryEmplaceUserCtx<OklSemaCtx>().getProgramMetaData();
