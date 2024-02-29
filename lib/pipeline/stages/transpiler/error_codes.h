@@ -11,6 +11,7 @@ enum class OkltTranspilerErrorCode {
     OTHER_ERROR = 200,
     ATOMIC_NOT_SUPPORTED_OP = 201,
     ATOMIC_NON_LVALUE_EXPR = 202,
+    INTERNAL_ERROR_PARAMS_NULL_OBJ = 203
 };
 
 namespace std {

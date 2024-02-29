@@ -1,10 +1,6 @@
 #include "attributes/frontend/params/barrier.h"
 #include "attributes/frontend/params/tile.h"
 #include "core/attribute_manager/result.h"
-// #include "core/transpiler_session/session_stage.h"
-// #include <clang/AST/Attr.h>
-// #include <clang/AST/Stmt.h>
-// #include <any>
 
 namespace clang {
 class Attr;

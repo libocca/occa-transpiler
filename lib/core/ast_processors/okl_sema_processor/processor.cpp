@@ -13,9 +13,9 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-template <typename ExprType>
-const Attr* getOklAttr(const ExprType& expr, SessionStage& stage, std::string_view attrName = {}) {
-    auto attrResult = stage.getAttrManager().checkAttrs(expr.getAttrs(), expr, stage);
+const Attr* getOklAttrImpl(tl::expected<const Attr*, Error> attrResult,
+                           SessionStage& stage,
+                           std::string_view attrName = {}) {
     if (!attrResult) {
         stage.pushError(std::move(attrResult.error()));
         return nullptr;
@@ -35,6 +35,21 @@ const Attr* getOklAttr(const ExprType& expr, SessionStage& stage, std::string_vi
     }
 
     return attr;
+}
+
+const Attr* getOklAttr(const Decl& decl, SessionStage& stage, std::string_view attrName = {}) {
+    if (decl.hasAttrs()) {
+        auto attrResult = stage.getAttrManager().checkAttrs(decl.getAttrs(), decl, stage);
+        return getOklAttrImpl(attrResult, stage, attrName);
+    }
+    return nullptr;
+}
+
+const Attr* getOklAttr(const AttributedStmt& stmt,
+                       SessionStage& stage,
+                       std::string_view attrName = {}) {
+    auto attrResult = stage.getAttrManager().checkAttrs(stmt.getAttrs(), stmt, stage);
+    return getOklAttrImpl(attrResult, stage, attrName);
 }
 
 bool dispatchPreValidationAttrStmtSema(const Attr& attr,

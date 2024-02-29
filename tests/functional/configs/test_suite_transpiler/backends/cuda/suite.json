@@ -1,5 +1,7 @@
 [
     "shared.json",
     "restrict.json",
-    "atomic.json"
+    "atomic.json",
+    "barrier.json",
+    "exclusive.json"
 ]

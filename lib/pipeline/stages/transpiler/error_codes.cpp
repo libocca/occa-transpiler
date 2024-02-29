@@ -24,6 +24,8 @@ std::string TranspilerErrorsCategory::message(int ev) const {
             return "not supported atomic expression";
         case OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR:
             return "atomic left expression must be lvalue";
+        case OkltTranspilerErrorCode::INTERNAL_ERROR_PARAMS_NULL_OBJ:
+            return "internal error, parameter object can't be null pointer";
     }
     return "unrecognized error";
 }

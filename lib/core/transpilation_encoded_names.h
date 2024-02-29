@@ -11,4 +11,5 @@ constexpr const char OKL_TRANSPILED_NAME[] = "okl_transpiled_name";
 constexpr const char OKL_ADDED_KERNEL_ARG[] = "okl_added_kernel_arg";
 constexpr const char OKL_ATOMIC_OP[] = "okl_atomic_op";
 constexpr const char OKL_BARRIER[] = "okl_barrier";
+constexpr const char OKL_EXCLUSIVE[] = "okl_exclusive";
 }  // namespace oklt
