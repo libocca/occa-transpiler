@@ -1,3 +1,5 @@
+#include <core/transpilation.h>
+#include <core/transpilation_encoded_names.h>
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
@@ -95,14 +97,15 @@ HandleResult handleAtomicAttribute(const clang::Attr& attr,
         return tl::make_unexpected(newExpression.error());
     }
 
-    auto& rewriter = stage.getRewriter();
-    SourceRange range(attr.getRange().getBegin().getLocWithOffset(-2), stmt.getEndLoc());
-    rewriter.ReplaceText(range, newExpression.value());
-
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @atomic.\n";
 #endif
-    return true;
+
+    SourceRange range(attr.getRange().getBegin().getLocWithOffset(-2), stmt.getEndLoc());
+    return TranspilationBuilder(
+               stage.getCompiler().getSourceManager(), attr.getNormalizedFullName(), 1)
+        .addReplacement(OKL_ATOMIC_OP, range, newExpression.value())
+        .build();
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

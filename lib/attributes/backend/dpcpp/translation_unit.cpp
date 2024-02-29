@@ -9,7 +9,7 @@ using namespace oklt;
 using namespace clang;
 
 HandleResult handleTranslationUnitDpcpp(const clang::TranslationUnitDecl& decl, SessionStage& s) {
-    const std::string SYCL_INCLUDE = "  #include <CL/sycl.hpp>\nusing namespace sycl;";
+    const std::string SYCL_INCLUDE = "<CL/sycl.hpp>\nusing namespace sycl;";
     return oklt::handleTranslationUnit(decl, s, SYCL_INCLUDE);
 }
 

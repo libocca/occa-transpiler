@@ -1,5 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace {
@@ -7,6 +9,10 @@ using namespace oklt;
 using namespace clang;
 
 HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "[DEBUG] DPCPP: Handle @shared.\n";
+#endif
+
     auto varName = var.getNameAsString();
     auto typeStr = var.getType().getLocalUnqualifiedType().getAsString();
 
@@ -18,15 +24,11 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
             typeStr)
             .value();
 
-    auto& rewriter = s.getRewriter();
-    SourceRange range(a.getRange().getBegin().getLocWithOffset(-2),
-                      var.getSourceRange().getEnd());
-    rewriter.ReplaceText(range, newDeclaration);
+    SourceRange range(a.getRange().getBegin().getLocWithOffset(-2), var.getSourceRange().getEnd());
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] DPCPP: Handle @shared.\n";
-#endif
-    return {};
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
+        .addReplacement(OKL_TRANSPILED_ATTR, range, newDeclaration)
+        .build();
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {

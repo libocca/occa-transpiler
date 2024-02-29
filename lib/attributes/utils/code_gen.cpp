@@ -1,4 +1,6 @@
 #include "attributes/utils/code_gen.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 
 namespace oklt {
 std::string getCondCompStr(const BinOp& bo) {
@@ -41,11 +43,35 @@ std::string buildCloseScopes(int& openedScopeCounter) {
     return res;
 }
 
-void replaceAttributedLoop(const clang::Attr& a,
-                           const clang::ForStmt& f,
-                           const std::string& prefixCode,
-                           const std::string& suffixCode,
-                           SessionStage& s) {
+// void replaceAttributedLoop(const clang::Attr& a,
+//                            const clang::ForStmt& f,
+//                            const std::string& prefixCode,
+//                            const std::string& suffixCode,
+//                            SessionStage& s) {
+//     auto& rewriter = s.getRewriter();
+
+//     // Remove attribute + for loop:
+//     //      @attribute(...) for (int i = start; i < end; i += inc)
+//     //  or: for (int i = start; i < end; i += inc; @attribute(...))
+//     clang::SourceRange range;
+//     range.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
+//     range.setEnd(f.getRParenLoc());
+//     rewriter.RemoveText(range);
+
+//     // Insert preffix
+//     rewriter.InsertText(f.getRParenLoc(), prefixCode);
+
+//     // Insert suffix
+//     rewriter.InsertText(f.getEndLoc(),
+//                         suffixCode);  // TODO: seems to not work correclty for for loop without
+//                         {}
+// }
+
+HandleResult replaceAttributedLoop(const clang::Attr& a,
+                                   const clang::ForStmt& f,
+                                   const std::string& prefixCode,
+                                   const std::string& suffixCode,
+                                   SessionStage& s) {
     auto& rewriter = s.getRewriter();
 
     // Remove attribute + for loop:
@@ -54,15 +80,11 @@ void replaceAttributedLoop(const clang::Attr& a,
     clang::SourceRange range;
     range.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
     range.setEnd(f.getRParenLoc());
-    rewriter.RemoveText(range);
 
-    // Insert preffix
-    rewriter.InsertText(f.getRParenLoc(), prefixCode);
-
-    // Insert suffix
-    rewriter.InsertText(f.getEndLoc(),
-                        suffixCode);  // TODO: seems to not work correclty for for loop without {}
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
+        .addReplacement(OKL_LOOP_PROLOGUE, range, prefixCode)
+        .addReplacement(OKL_LOOP_EPILOGUE, f.getEndLoc(), suffixCode)
+        .build();
 }
-
 
 }  // namespace oklt

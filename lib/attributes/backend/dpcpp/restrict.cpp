@@ -4,6 +4,8 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 
 namespace {
 using namespace oklt;
@@ -13,12 +15,8 @@ const std::string RESTRICT_MODIFIER = "__restrict__";
 HandleResult handleRestrictAttribute(const clang::Attr& a,
                                      const clang::ParmVarDecl& parmDecl,
                                      SessionStage& s) {
-    auto& rewriter = s.getRewriter();
-
     SourceLocation identifierLoc = parmDecl.getLocation();
-    removeAttribute(a, s);
     std::string restrictText = " " + RESTRICT_MODIFIER + " ";
-    rewriter.InsertText(identifierLoc, restrictText, false, false);
 
     // INFO: might be better to use rewriter.getRewrittenText() method
 
@@ -35,7 +33,14 @@ HandleResult handleRestrictAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] DPCPP: Handle @restrict.\n";
 #endif
-    return true;
+
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
+        .addReplacement(OKL_TRANSPILED_ARG,
+                        getAttrFullSourceRange(a).getBegin(),
+                        parmDecl.getEndLoc(),
+                        part1 + restrictText + ident)
+        .build();
+
 }
 
 __attribute__((constructor)) void registerCUDARestrictHandler() {

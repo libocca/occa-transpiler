@@ -2,13 +2,13 @@
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
+#include "attributes/backend/dpcpp/common.hpp"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
-#include "attributes/backend/dpcpp/common.hpp"
 
 namespace {
 using namespace oklt;
@@ -141,7 +141,6 @@ std::string buildRegularLoopIdxLineSecond(const LoopMetaData& forLoop,
     return res;
 }
 
-
 std::string buildLoopIdxLine(const LoopMetaData& forLoop,
                              const TileParams* params,
                              const LoopOrder& ord,
@@ -196,13 +195,6 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     if (!forLoopMetaData) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
-
-    int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
-    auto suffixCode = buildCloseScopes(openedScopeCounter);
-
-    replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
-
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
                  << "type: " << forLoopMetaData->type << ", name: " << forLoopMetaData->name
@@ -211,7 +203,12 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                  << "), Inc(rhsInc: " << forLoopMetaData->inc.val
                  << ", isUnary: " << forLoopMetaData->isUnary() << ")\n";
 #endif
-    return {};
+
+    int openedScopeCounter = 0;
+    auto prefixCode = buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
+    auto suffixCode = buildCloseScopes(openedScopeCounter);
+
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(

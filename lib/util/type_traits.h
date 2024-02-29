@@ -45,7 +45,8 @@ struct func_param_type {
 
 template <typename FuncType>
 struct func_num_arguments {
-    static constexpr size_t value = std::tuple_size_v<typename function_traits<FuncType>::arguments>;
+    static constexpr size_t value =
+        std::tuple_size_v<typename function_traits<FuncType>::arguments>;
 };
 
 }  // namespace oklt

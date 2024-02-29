@@ -1,7 +1,9 @@
-#include "core/attribute_manager/attribute_manager.h"
+#include <oklt/core/error.h>
+
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
+#include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
@@ -61,7 +63,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
         return _backendAttrs.handleAttr(attr, decl, params, stage);
     }
 
-    return false;
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 HandleResult AttributeManager::handleAttr(const Attr& attr,
@@ -72,10 +74,12 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
     }
+
     if (_backendAttrs.hasAttrHandler(stage, name)) {
         return _backendAttrs.handleAttr(attr, stmt, params, stage);
     }
-    return false;
+
+    return tl::make_unexpected(Error{std::error_code(), "no handler"});
 }
 
 ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
@@ -85,6 +89,7 @@ ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
         auto params = ParseOKLAttr(attr, stage);
         return it->second(attr, params, stage);
     }
+
     return EmptyParams{};
 }
 
@@ -98,11 +103,12 @@ ParseResult AttributeManager::parseAttr(const Attr& attr,
     return EmptyParams{};
 }
 
-tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
-                                                                     const Decl& decl,
-                                                                     SessionStage& stage) {
-    std::list<Attr*> collectedAttrs;
-    for (auto& attr : attrs) {
+tl::expected<const Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
+                                                              const Decl& decl,
+                                                              SessionStage& stage) {
+    std::vector<const Attr*> collectedAttrs;
+    collectedAttrs.reserve(attrs.size());
+    for (const auto attr : attrs) {
         if (!attr)
             continue;
 
@@ -116,6 +122,7 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrV
             continue;
         }
     }
+
     // INFO: there are no OKL attributes at all
     //       might need better solution for this
     if (collectedAttrs.empty()) {
@@ -131,12 +138,15 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(const AttrV
     return attr;
 }
 
-tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
-    const ArrayRef<const Attr*>& attrs,
-    const Stmt& decl,
-    SessionStage& stage) {
-    std::list<const Attr*> collectedAttrs;
-    for (auto& attr : attrs) {
+tl::expected<const Attr*, Error> AttributeManager::checkAttrs(const ArrayRef<const Attr*>& attrs,
+                                                              const Stmt& decl,
+                                                              SessionStage& stage) {
+    std::vector<const Attr*> collectedAttrs;
+    collectedAttrs.reserve(attrs.size());
+    for (const auto attr : attrs) {
+        if (!attr)
+            continue;
+
         auto name = attr->getNormalizedFullName();
         if (_commonAttrs.hasAttrHandler(name)) {
             collectedAttrs.push_back(attr);
@@ -147,6 +157,7 @@ tl::expected<const clang::Attr*, Error> AttributeManager::checkAttrs(
             continue;
         }
     }
+
     // INFO: there are no OKL attributes at all
     //       might need better solution for this
     if (collectedAttrs.empty()) {

@@ -25,11 +25,10 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
         dpcpp::buildInnerOuterLoopIdxLine(forLoopMetaData.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-    replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @outer attribute\n";
 #endif
-    return true;
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {

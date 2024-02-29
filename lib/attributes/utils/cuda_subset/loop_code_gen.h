@@ -1,8 +1,11 @@
 #pragma once
 
 #include <oklt/core/kernel_metadata.h>
-#include <string>
 #include "attributes/frontend/params/tile.h"
+#include "core/attribute_manager/result.h"
+#include "core/transpiler_session/session_stage.h"
+
+#include <string>
 
 namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim);

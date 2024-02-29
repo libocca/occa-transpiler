@@ -76,8 +76,6 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto prefixCode = buildPreffixTiledCode(forLoopMetaData.value(), params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-    replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
-
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
                  << "type: " << forLoopMetaData->type << ", name: " << forLoopMetaData->name
@@ -86,6 +84,6 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                  << "), Inc(rhsInc: " << forLoopMetaData->inc.val
                  << ", isUnary: " << forLoopMetaData->isUnary() << ")\n";
 #endif
-    return {};
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
 }  // namespace oklt::cuda_subset

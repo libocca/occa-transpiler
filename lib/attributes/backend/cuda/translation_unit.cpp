@@ -8,18 +8,16 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleTranslationUnitCuda(const clang::TranslationUnitDecl& decl, SessionStage& s) {
-    const std::string CUDA_INCLUDE = "#include <cuda_runtime.h>";
-    return oklt::handleTranslationUnit(decl, s, CUDA_INCLUDE);
+const std::string CUDA_RT_INC = "<cuda_runtime.h>";
+HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
+    return handleTranslationUnit(d, s, CUDA_RT_INC);
 }
-
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::CUDA, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleTranslationUnitCuda));
-
+        makeSpecificImplicitHandle(handleTranslationUnit));
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";
+        llvm::errs() << "Failed to register implicit handler for translation unit (CUDA)\n";
     }
 }
 }  // namespace
