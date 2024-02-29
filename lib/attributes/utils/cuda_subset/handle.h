@@ -1,11 +1,23 @@
+#include "attributes/frontend/params/barrier.h"
 #include "attributes/frontend/params/tile.h"
 #include "core/attribute_manager/result.h"
-#include "core/transpiler_session/session_stage.h"
+// #include "core/transpiler_session/session_stage.h"
+// #include <clang/AST/Attr.h>
+// #include <clang/AST/Stmt.h>
+// #include <any>
 
-#include <clang/AST/Attr.h>
-#include <clang/AST/Stmt.h>
+namespace clang {
+class Attr;
+class Stmt;
+class ForStmt;
+class Decl;
+class FunctionDecl;
+class ParmVarDecl;
+}  // namespace clang
 
-#include <any>
+namespace oklt {
+class SessionStage;
+}
 
 namespace oklt::cuda_subset {
 HandleResult handleTileAttribute(const clang::Attr&,
@@ -25,4 +37,11 @@ HandleResult handleAtomicAttribute(const clang::Attr&, const clang::Stmt&, Sessi
 HandleResult handleKernelAttribute(const clang::Attr&, const clang::FunctionDecl&, SessionStage&);
 HandleResult handleSharedAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
 HandleResult handleRestrictAttribute(const clang::Attr&, const clang::ParmVarDecl&, SessionStage&);
+
+HandleResult handleExclusiveAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
+HandleResult handleBarrierAttribute(const clang::Attr&,
+                                    const clang::Stmt&,
+                                    const oklt::AttributedBarrier*,
+                                    SessionStage&);
+
 }  // namespace oklt::cuda_subset

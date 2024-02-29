@@ -1,6 +1,7 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include <oklt/util/string_utils.h>
 #include "attributes/utils/code_gen.h"
+#include "core/transpiler_session/session_stage.h"
 
 namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim) {
