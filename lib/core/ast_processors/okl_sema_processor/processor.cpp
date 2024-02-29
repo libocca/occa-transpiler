@@ -14,9 +14,7 @@ using namespace clang;
 using namespace oklt;
 
 template <typename ExprType>
-const clang::Attr* getOklAttr(const ExprType& expr,
-                              SessionStage& stage,
-                              std::string_view attrName = {}) {
+const Attr* getOklAttr(const ExprType& expr, SessionStage& stage, std::string_view attrName = {}) {
     auto attrResult = stage.getAttrManager().checkAttrs(expr.getAttrs(), expr, stage);
     if (!attrResult) {
         stage.pushError(std::move(attrResult.error()));
@@ -70,236 +68,185 @@ bool dispatchPostValidationAttrStmtSema(const Attr& attr,
 }
 
 template <typename ExprType>
-bool runExprTranspilerHanders(const ExprType& expr,
-                              SessionStage& stage,
-                              std::string_view attrName = {},
-                              bool continueIfNoAttrs = true) {
+HandleResult runExprTranspilerHanders(const ExprType& expr,
+                                      SessionStage& stage,
+                                      std::string_view attrName = {}) {
     auto* attr = getOklAttr(expr, stage, attrName);
     if (!attr) {
-        if (continueIfNoAttrs) {
-            if constexpr (std::is_same_v<ExprType, Stmt>) {
-                return stage.getAttrManager().handleStmt(expr, stage).has_value();
-            } else if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
-                return stage.getAttrManager().handleStmt(*expr.getSubStmt(), stage).has_value();
-            } else {
-                return stage.getAttrManager().handleDecl(expr, stage).has_value();
-            }
+        if constexpr (std::is_same_v<ExprType, Stmt>) {
+            return stage.getAttrManager().handleStmt(expr, stage);
+        } else if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
+            return stage.getAttrManager().handleStmt(*expr.getSubStmt(), stage);
+        } else {
+            return stage.getAttrManager().handleDecl(expr, stage);
         }
-        return continueIfNoAttrs;
+        return {};
     }
 
     // finally parser it
-    auto params = stage.getAttrManager().parseAttr(*attr, stage);
+    auto& am = stage.getAttrManager();
+    auto params = am.parseAttr(*attr, stage);
     if (!params) {
-        stage.pushError(params.error());
-        return false;
+        return tl::make_unexpected(std::move(params.error()));
     }
 
     // run specific kernel attribute handler
-    auto& am = stage.getAttrManager();
     if constexpr (std::is_same_v<ExprType, AttributedStmt>) {
         // Get statement from attributed statement
-        auto ok = am.handleAttr(*attr, *expr.getSubStmt(), &params.value(), stage);
-        if (!ok) {
-            stage.pushError(ok.error());
-            return false;
+        auto* subStmt = expr.getSubStmt();
+        if (!subStmt) {
+            return tl::make_unexpected(Error());
         }
+        return am.handleAttr(*attr, *subStmt, &params.value(), stage);
     } else {
-        auto ok = am.handleAttr(*attr, expr, &params.value(), stage);
-        if (!ok) {
-            stage.pushError(ok.error());
-            return false;
-        }
+        return am.handleAttr(*attr, expr, &params.value(), stage);
     }
 
-    return true;
+    return {};
 }
 ///////////////////// handlers entry points ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Generic Decl pre handlers
-bool runPreActionDecl(const Decl& decl, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl.getDeclKindName() << '\n';
-#endif
-
-    return true;
+HandleResult runPreActionDecl(const Decl& decl, SessionStage& stage) {
+    return {};
 }
 
 // Generic Decl post handlers
-bool runPostActionDecl(const clang::Decl& decl, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << decl.getDeclKindName() << '\n';
-#endif
-
+HandleResult runPostActionDecl(const Decl& decl, SessionStage& stage) {
     return runExprTranspilerHanders(decl, stage);
 }
 
 // OKL kernel sema validator
-bool validateFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << fd.Decl::getDeclKindName() << '\n';
-#endif
-
-    // we interested only in OKL kernel function
+HandleResult validateFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
+    // we interesting only in OKL kernel function
     auto attr = getOklAttr(fd, stage, KERNEL_ATTR_NAME);
     if (!attr) {
-        return true;
+        return {};
     }
 
-    // go through sema validation
+    // go though sema validation
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!preValidateOklKernelSema(fd, stage, sema)) {
-        return false;
+        return tl::make_unexpected(Error());
     }
 
-    return true;
+    return {};
 }
 
-bool transpileFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << fd.Decl::getDeclKindName() << '\n';
-#endif
-
+HandleResult transpileFunctionDecl(const FunctionDecl& fd, SessionStage& stage) {
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
 
     // ensure it is backward path for current parsing OKL kernel
     if (!sema.isCurrentParsingOklKernel(fd)) {
-        return stage.getAttrManager().handleDecl(fd, stage).has_value();
+        return stage.getAttrManager().handleDecl(fd, stage);
     }
 
-    if (!runExprTranspilerHanders(fd, stage, KERNEL_ATTR_NAME, false)) {
-        return false;
+    auto result = runExprTranspilerHanders(fd, stage, KERNEL_ATTR_NAME);
+    if (!result) {
+        return result;
     }
 
     // finalize sema tranpsilation of OKL kernel
     if (!postValidateOklKernelSema(fd, stage, sema)) {
-        return false;
+        return tl::make_unexpected(Error());
     }
 
-    return true;
+    return result;
 }
 
 // OKL kernel parameters sema validator
-bool validateParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << parm.getDeclKindName() << '\n';
-#endif
-
+HandleResult validateParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
     // not inside OKL kernel
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!sema.isParsingOklKernel()) {
-        return true;
+        return {};
     }
 
     // run param sema
     if (!preValidateOklKernelParamSema(parm, stage, sema)) {
-        return false;
+        return tl::make_unexpected(Error());
     }
 
-    return true;
+    return {};
 }
 
-bool transpileParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " decl name: " << parm.getDeclKindName() << '\n';
-#endif
-
-    // for attributed parm decl backend hadnler should set arg raw string representation
-    const auto attr = getOklAttr(parm, stage);
+HandleResult transpileParmDecl(const ParmVarDecl& parm, SessionStage& stage) {
+    // for attributed parm decl backend handler should set arg raw string representation
+    auto* attr = getOklAttr(parm, stage);
     if (attr) {
         // or parse it if attributed
         auto params = stage.getAttrManager().parseAttr(*attr, stage);
         if (!params) {
-            stage.pushError(params.error());
-            return false;
+            return tl::make_unexpected(params.error());
         }
-        auto handleResult = stage.getAttrManager().handleAttr(*attr, parm, &params.value(), stage);
-        if (!handleResult) {
-            stage.pushError(handleResult.error());
-            return false;
-        }
+        return stage.getAttrManager().handleAttr(*attr, parm, &params.value(), stage);
     } else {
         // for regular parm decl sema sets raw string representation
         auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
         if (!postValidateOklKernelParamSema(parm, stage, sema)) {
-            return false;
+            return tl::make_unexpected(Error());
         }
     }
 
-    return true;
+    return {};
 }
 
-bool runPreActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << attrStmt.getStmtClassName() << '\n';
-#endif
-
+HandleResult runPreActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!sema.isParsingOklKernel()) {
-        //  make appropriate error code
-        stage.pushError(std::error_code(), "OKL attribute inside of non OKL kernel function");
-        return false;
+        //  make approptiate error code
+        return tl::make_unexpected(
+            Error{std::error_code(), "OKL attribute inside of non OKL kernel function"});
     }
 
     auto* attr = getOklAttr(attrStmt, stage);
     if (!attr) {
-        return true;
+        return tl::make_unexpected(Error());
     }
 
     // dispatch specific sema handler
     if (!dispatchPreValidationAttrStmtSema(*attr, *attrStmt.getSubStmt(), stage, sema)) {
-        return false;
+        return tl::make_unexpected(Error());
     }
 
-    return true;
+    return {};
 }
 
-bool runPostActionAttrStmt(const clang::AttributedStmt& attrStmt, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << attrStmt.getStmtClassName() << '\n';
-#endif
-
+HandleResult runPostActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& stage) {
     // legacy OKL applies one attribute per stmt/decl
-    if (!runExprTranspilerHanders(attrStmt, stage)) {
-        return false;
+    auto result = runExprTranspilerHanders(attrStmt, stage);
+    if (!result) {
+        return result;
     }
 
     auto* attr = getOklAttr(attrStmt, stage);
     if (!attr) {
-        return true;
+        return tl::make_unexpected(Error());
     }
 
     // sema transpiler action
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (!dispatchPostValidationAttrStmtSema(*attr, *attrStmt.getSubStmt(), stage, sema)) {
-        return false;
+        return tl::make_unexpected(Error());
     }
 
-    return true;
+    return result;
 }
 
-bool runPreActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
-#endif
-
-    return true;
+HandleResult runPreActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
+    return {};
 }
 
-bool runPostActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " stmt name: " << expr.getStmtClassName() << '\n';
-#endif
-
+HandleResult runPostActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& stage) {
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
-        return true;
+        return {};
     }
 
     auto declRefExpr = dyn_cast<DeclRefExpr>(subExpr[0]);
     if (!declRefExpr) {
-        return true;
+        return {};
     }
 
     auto& ctx = stage.getCompiler().getASTContext();
@@ -310,17 +257,11 @@ bool runPostActionRecoveryExpr(const clang::RecoveryExpr& expr, SessionStage& st
     auto expectedAttr = am.checkAttrs(attrs, expr, stage);
     if (!expectedAttr) {
         // TODO report diagnostic error using clang tooling
-        return true;
+        return {};
     }
 
     const Attr* attr = expectedAttr.value();
-    // INFO: no OKL attributes to process, continue
-    if (!attr) {
-        return true;
-    }
-
-    auto* params = stage.getUserCtx(util::pointerToStr(attr));
-    return am.handleAttr(*attr, expr, params, stage).has_value();
+    return am.handleAttr(*attr, expr, {}, stage);
 }
 
 __attribute__((constructor)) void registerAstNodeHanlder() {

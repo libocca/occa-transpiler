@@ -2,10 +2,12 @@
 
 #include <oklt/core/error.h>
 #include <oklt/util/string_utils.h>
+
 #include "core/attribute_manager/backend_attribute_map.h"
 #include "core/attribute_manager/common_attribute_map.h"
 #include "core/attribute_manager/implicit_handlers/implicit_handler_map.h"
 #include "core/attribute_manager/result.h"
+#include "core/transpilation.h"
 
 #include <clang/Sema/ParsedAttr.h>
 #include <any>
@@ -104,8 +106,8 @@ AttrHandler makeSpecificAttrXXXHandle(Handler& handler) {
         if (!localNode) {
             auto baseNodeTypeName = typeid(NodeType).name();
             auto handleNodeTypeName = typeid(HandleDeclStmt).name();
-            return tl::make_unexpected(Error{
-                {},
+            return tl::make_unexpected(
+                Error{{},
                       util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
                           .value()});
         }

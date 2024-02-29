@@ -23,6 +23,10 @@ class SessionStage {
     explicit SessionStage(TranspilerSession& session, clang::CompilerInstance& compiler);
     ~SessionStage() = default;
 
+    const TranspilerSession& getSession() const { return _session; }
+
+    TranspilerSession& getSession() { return _session; }
+
     clang::CompilerInstance& getCompiler();
 
     clang::Rewriter& getRewriter();
