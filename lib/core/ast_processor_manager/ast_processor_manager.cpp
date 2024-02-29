@@ -1,5 +1,5 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
-#include "core/transpilation.h"
+
 #include "core/transpiler_session/session_stage.h"
 
 namespace {
@@ -8,16 +8,16 @@ template <typename KeyType,
           typename GenKeyType,
           typename GenMapType,
           typename ActionFunc>
-oklt::HandleResult runNodeHandler(KeyType key,
-                                  MapType& map_,
-                                  GenKeyType gen_key,
-                                  GenMapType& gen_map,
-                                  ActionFunc action) {
+bool runNodeHandler(KeyType key,
+                    MapType& map_,
+                    GenKeyType gen_key,
+                    GenMapType& gen_map,
+                    ActionFunc action) {
     auto it = map_.find(key);
     if (it == map_.end()) {
         auto gen_it = gen_map.find(gen_key);
         if (gen_it == gen_map.end()) {
-            return {};
+            return true;
         }
         return action(gen_it->second);
     }
@@ -53,9 +53,9 @@ bool AstProcessorManager::registerSpecificNodeHandle(KeyType key, StmtNodeHandle
     return ret;
 }
 
-HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                         const Decl& decl,
-                                                         SessionStage& stage) {
+bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
+                                                 const Decl& decl,
+                                                 SessionStage& stage) {
     return runNodeHandler(std::make_tuple(procType, decl.getKind()),
                           _declHandlers,
                           procType,
@@ -63,9 +63,9 @@ HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procTy
                           [&decl, &stage](auto h) { return h.preAction(decl, stage); });
 }
 
-HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                          const Decl& decl,
-                                                          SessionStage& stage) {
+bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
+                                                  const Decl& decl,
+                                                  SessionStage& stage) {
     return runNodeHandler(std::make_tuple(procType, decl.getKind()),
                           _declHandlers,
                           procType,
@@ -73,9 +73,9 @@ HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procT
                           [&decl, &stage](auto h) { return h.postAction(decl, stage); });
 }
 
-HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                         const Stmt& stmt,
-                                                         SessionStage& stage) {
+bool AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
+                                                 const Stmt& stmt,
+                                                 SessionStage& stage) {
     return runNodeHandler(std::make_tuple(procType, stmt.getStmtClass()),
                           _stmtHandlers,
                           procType,
@@ -83,9 +83,9 @@ HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procTy
                           [&stmt, &stage](auto h) { return h.preAction(stmt, stage); });
 }
 
-HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                          const Stmt& stmt,
-                                                          SessionStage& stage) {
+bool AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
+                                                  const Stmt& stmt,
+                                                  SessionStage& stage) {
     return runNodeHandler(std::make_tuple(procType, stmt.getStmtClass()),
                           _stmtHandlers,
                           procType,

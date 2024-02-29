@@ -4,6 +4,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include <memory>
+#include <typeinfo>
 
 namespace oklt {
 
@@ -21,4 +22,8 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
     return std::move(astConsumer);
 }
 
+void TranspileFrontendAction::EndSourceFileAction() {
+    assert(_stage != nullptr);
+    _session.output.kernel.sourceCode = _stage->getRewriterResult();
+}
 }  // namespace oklt

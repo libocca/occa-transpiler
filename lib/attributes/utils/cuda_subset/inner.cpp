@@ -7,6 +7,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
+#include <any>
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -18,8 +19,8 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {
-        return tl::make_unexpected(
-            Error{std::error_code(), "@tile: failed to fetch loop meta data from sema"});
+        s.pushError(std::error_code(), "@tile: failed to fetch loop meta data from sema");
+        return false;
     }
 
     int openedScopeCounter = 0;
@@ -27,9 +28,11 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         forLoopMetaData.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
+    replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";
 #endif
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+    return true;
 }
 }  // namespace oklt::cuda_subset

@@ -1,5 +1,3 @@
-#include <oklt/core/error.h>
-
 #include "core/attribute_manager/backend_attribute_map.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -24,7 +22,7 @@ HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, name));
     if (it == _declHandlers.end()) {
-        return tl::make_unexpected(Error{std::error_code(), "no handler"});
+        return false;
     }
     return it->second.handle(attr, decl, params, stage);
 }
@@ -37,7 +35,7 @@ HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
     auto backend = stage.getBackend();
     auto it = _stmtHandlers.find(std::make_tuple(backend, name));
     if (it == _stmtHandlers.end()) {
-        return tl::make_unexpected(Error{std::error_code(), "no handler"});
+        return false;
     }
     return it->second.handle(attr, stmt, params, stage);
 }

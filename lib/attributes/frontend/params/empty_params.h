@@ -1,3 +1,3 @@
 namespace oklt {
-struct EmptyParams {};
-}  // namespace oklt
+    struct EmptyParams {};
+}

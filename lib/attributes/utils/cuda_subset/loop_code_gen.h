@@ -1,21 +1,17 @@
 #pragma once
 
 #include <oklt/core/kernel_metadata.h>
-#include "attributes/frontend/params/tile.h"
-#include "core/attribute_manager/result.h"
-#include "core/transpiler_session/session_stage.h"
-
 #include <string>
+#include "attributes/frontend/params/tile.h"
 
 namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim);
 std::string getIdxVariable(const AttributedLoop& loop);
-
-HandleResult replaceAttributedLoop(const clang::Attr& a,
-                                   const clang::ForStmt& f,
-                                   const std::string& prefixCode,
-                                   const std::string& suffixCode,
-                                   SessionStage& s);
+void replaceAttributedLoop(const clang::Attr& a,
+                           const clang::ForStmt& f,
+                           const std::string& prefixCode,
+                           const std::string& suffixCode,
+                           SessionStage& s);
 
 namespace tile {
 std::string getTiledVariableName(const LoopMetaData& forLoop);

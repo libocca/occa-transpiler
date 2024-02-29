@@ -7,6 +7,7 @@
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APSInt.h>
 
+#include <memory>
 #include <optional>
 #include <utility>
 

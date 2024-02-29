@@ -1,4 +1,3 @@
-#include "attributes/utils/replace_attribute.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -8,16 +7,28 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string CUDA_RT_INC = "<cuda_runtime.h>";
-HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
-    return handleTranslationUnit(d, s, CUDA_RT_INC);
+HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl, SessionStage& s) {
+    auto& sourceManager = s.getCompiler().getSourceManager();
+    auto mainFileId = sourceManager.getMainFileID();
+    auto loc = sourceManager.getLocForStartOfFile(mainFileId);
+    auto& rewriter = s.getRewriter();
+    rewriter.InsertTextBefore(loc, "#include <cuda_runtime.h>\n");
+
+#ifdef TRANSPILER_DEBUG_LOG
+    auto offset = sourceManager.getFileOffset(decl->getLocation());
+    llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
+#endif
+
+    return true;
 }
+
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::CUDA, clang::Decl::Kind::TranslationUnit},
         makeSpecificImplicitHandle(handleTranslationUnit));
+
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (CUDA)\n";
+        llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";
     }
 }
 }  // namespace

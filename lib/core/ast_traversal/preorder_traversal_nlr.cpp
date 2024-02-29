@@ -1,6 +1,5 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
-#include "core/transpilation.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace {
@@ -32,36 +31,20 @@ template <typename TraversalType, typename ExprType>
 bool traverseExpr(TraversalType& traversal,
                   ExprType expr,
                   AstProcessorManager& procMng,
-                  SessionStage& stage,
-                  Transpilations& transpilations) {
+                  SessionStage& stage) {
     if (expr == nullptr) {
         return true;
     }
     auto procType = stage.getAstProccesorType();
-    auto result = procMng.runPreActionNodeHandle(procType, *expr, stage);
-    if (!result) {
+    if (!procMng.runPreActionNodeHandle(procType, *expr, stage)) {
         return false;
-    }
-
-    if (!isEmpty(result.value())) {
-        transpilations.emplace_back(std::move(result.value()));
     }
 
     // dispatch the next node
     if (!dispatchTraverseFunc(traversal, expr)) {
         return false;
     }
-
-    result = procMng.runPostActionNodeHandle(procType, *expr, stage);
-    if (!result) {
-        return false;
-    }
-
-    if (!isEmpty(result.value())) {
-        transpilations.emplace_back(std::move(result.value()));
-    }
-
-    return true;
+    return procMng.runPostActionNodeHandle(procType, *expr, stage);
 }
 }  // namespace
 namespace oklt {
@@ -69,35 +52,21 @@ namespace oklt {
 PreorderNlrTraversal::PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage)
     : _procMng(procMng),
       _stage(stage) {}
-
 bool PreorderNlrTraversal::TraverseDecl(clang::Decl* decl) {
-    return traverseExpr(*this, decl, _procMng, _stage, _trasnpilations);
+    return traverseExpr(*this, decl, _procMng, _stage);
 }
 
 bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
-    return traverseExpr(*this, stmt, _procMng, _stage, _trasnpilations);
+    return traverseExpr(*this, stmt, _procMng, _stage);
 }
 
 bool PreorderNlrTraversal::TraverseRecoveryExpr(clang::RecoveryExpr* recoveryExpr) {
-    return traverseExpr(*this, recoveryExpr, _procMng, _stage, _trasnpilations);
+    return traverseExpr(*this, recoveryExpr, _procMng, _stage);
 }
 
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translationUnitDecl) {
-    return traverseExpr(*this, translationUnitDecl, _procMng, _stage, _trasnpilations);
+    return traverseExpr(*this, translationUnitDecl, _procMng, _stage);
 }
 
-tl::expected<std::string, std::error_code> PreorderNlrTraversal::applyAstProccessor(
-    clang::TranslationUnitDecl* translationUnitDecl) {
-    if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-        return tl::make_unexpected(std::error_code());
-    }
-
-    auto ok = applyTranspilations(_trasnpilations, _stage.getRewriter());
-    if (!ok) {
-        return tl::make_unexpected(std::error_code());
-    }
-
-    return _stage.getRewriterResult();
-}
 }  // namespace oklt

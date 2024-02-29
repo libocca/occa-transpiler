@@ -38,13 +38,13 @@ set (OCCA_TRANSPILER_SOURCES
 
     # Backends common
 
-    attributes/utils/parser.h
-    attributes/utils/parser.cpp
-    attributes/utils/parser_impl.hpp
+        attributes/utils/parser.h
+        attributes/utils/parser.cpp
+        attributes/utils/parser_impl.hpp
     attributes/utils/code_gen.h
     attributes/utils/code_gen.cpp
-    attributes/utils/replace_attribute.h
-    attributes/utils/replace_attribute.cpp
+        attributes/utils/replace_attribute.h
+        attributes/utils/replace_attribute.cpp
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
@@ -104,8 +104,6 @@ set (OCCA_TRANSPILER_SOURCES
     core/diag/diag_consumer.cpp
 
     core/kernel_metadata.cpp
-
-    core/transpilation.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp

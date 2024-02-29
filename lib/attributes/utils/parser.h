@@ -75,8 +75,7 @@ class OKLAttrParam {
     template <typename T, typename std::enable_if_t<is_string_v<T>, bool> = true>
     [[nodiscard]] std::optional<T> get();
 
-    template <
-        typename T,
+    template <typename T,
         typename std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLParsedAttr>, bool> = true>
     [[nodiscard]] std::optional<T> get();
 

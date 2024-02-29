@@ -4,19 +4,18 @@
 namespace {
 using namespace oklt;
 
-const std::string CUDA_FUNCTION_QUALIFIER = "__device__";
-
-HandleResult handleCudaGlobalFunction(const clang::FunctionDecl& d, SessionStage& s) {
-    return handleGlobalFunction(d, s, CUDA_FUNCTION_QUALIFIER);
+HandleResult handleCUDAGlobalFunction(const clang::FunctionDecl& decl, oklt::SessionStage& s) {
+    const std::string HIP_FUNCTION_QUALIFIER = "__device__";
+    return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::CUDA, clang::Decl::Kind::Function},
-        makeSpecificImplicitHandle(handleCudaGlobalFunction));
+        makeSpecificImplicitHandle(handleCUDAGlobalFunction));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global function (CUDA)\n";
+        llvm::errs() << "Failed to register implicit handler for global function (HIP)\n";
     }
 }
 }  // namespace
