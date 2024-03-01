@@ -3,6 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
+#include "core/utils/attributes.h"
 
 
 namespace oklt::cuda_subset {
@@ -16,13 +17,11 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     // TODO: add __launch_bounds__
 
     // Replace attribute with cuda kernel definition
-    SourceRange arange;
-    arange.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
-    arange.setEnd(a.getRange().getEnd().getLocWithOffset(2));
+    SourceRange arange = getAttrFullSourceRange(a);
 
     // Rename function
     auto oldFunctionName = func.getNameAsString();
-    auto newFunctionName = "_occa_" + oldFunctionName + "_0";  // TODO: use correct dim
+    auto newFunctionName = "_occa_" + oldFunctionName + "_0";
     SourceRange frange(func.getNameInfo().getSourceRange());
 
 #ifdef TRANSPILER_DEBUG_LOG

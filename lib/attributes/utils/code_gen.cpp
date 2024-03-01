@@ -1,6 +1,7 @@
 #include "attributes/utils/code_gen.h"
 #include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
+#include "core/utils/attributes.h"
 
 namespace oklt {
 std::string getCondCompStr(const BinOp& bo) {
@@ -54,7 +55,7 @@ HandleResult replaceAttributedLoop(const clang::Attr& a,
     //      @attribute(...) for (int i = start; i < end; i += inc)
     //  or: for (int i = start; i < end; i += inc; @attribute(...))
     clang::SourceRange range;
-    range.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
+    range.setBegin(getAttrFullSourceRange(a).getBegin());
     range.setEnd(f.getRParenLoc());
 
     return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
