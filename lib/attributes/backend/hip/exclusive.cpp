@@ -5,13 +5,13 @@
 namespace {
 using namespace oklt;
 
-__attribute__((constructor)) void registerHIPBarrierAttrBackend() {
+__attribute__((constructor)) void registerHIPExclusiveAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, BARRIER_ATTR_NAME},
-        makeSpecificAttrHandle(cuda_subset::handleBarrierAttribute));
+        {TargetBackend::HIP, EXCLUSIVE_ATTR_NAME},
+        makeSpecificAttrHandle(cuda_subset::handleExclusiveAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << BARRIER_ATTR_NAME << " attribute handler (HIP)\n";
+        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME << " attribute handler\n";
     }
 }
 }  // namespace

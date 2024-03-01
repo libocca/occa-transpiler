@@ -5,7 +5,7 @@
 namespace {
 using namespace oklt;
 
-__attribute__((constructor)) void registerAttrBackend() {
+__attribute__((constructor)) void registerCUDABarrierAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::CUDA, BARRIER_ATTR_NAME},
         makeSpecificAttrHandle(cuda_subset::handleBarrierAttribute));
