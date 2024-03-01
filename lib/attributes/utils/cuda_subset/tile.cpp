@@ -13,6 +13,10 @@
 
 #include <functional>
 
+#include <clang/AST/Decl.h>
+
+#include <functional>
+
 namespace oklt::cuda_subset {
 using namespace clang;
 namespace {
@@ -68,7 +72,6 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                                  const TileParams* params,
                                  SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
-
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {

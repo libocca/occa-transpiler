@@ -84,5 +84,4 @@ HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
         .addInclude(includes)
         .build();
 }
-
 }  // namespace oklt

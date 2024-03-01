@@ -1,0 +1,36 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "dpcpp",
+            "source": "transpiler/backends/dpcpp/shared/shared_builtin_types.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/dpcpp/shared/shared_builtin_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "dpcpp",
+            "source": "transpiler/backends/dpcpp/shared/shared_struct_types.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/dpcpp/shared/shared_struct_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "dpcpp",
+            "source": "transpiler/backends/dpcpp/shared/shared_template_type.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/dpcpp/shared/shared_template_type_ref.cpp"
+     }
+
+]

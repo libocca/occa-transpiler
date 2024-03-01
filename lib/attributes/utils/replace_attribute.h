@@ -4,6 +4,7 @@
 #include "core/attribute_manager/result.h"
 
 #include <tl/expected.hpp>
+#include <clang/AST/Decl.h>
 
 #include <string>
 

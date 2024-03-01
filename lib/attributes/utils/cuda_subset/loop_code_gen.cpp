@@ -1,10 +1,8 @@
 #include <oklt/util/string_utils.h>
 
 #include "attributes/utils/code_gen.h"
+#include "core/transpiler_session/session_stage.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 
 namespace oklt::cuda_subset {
 std::string dimToStr(const Dim& dim) {
@@ -13,34 +11,15 @@ std::string dimToStr(const Dim& dim) {
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
+    auto strDim = dimToStr(loop.dim);
     switch (loop.type) {
         case (LoopType::Inner):
-            return util::fmt("threadIdx.{}", dimToStr(loop.dim)).value();
+            return util::fmt("threadIdx.{}", strDim).value();
         case (LoopType::Outer):
-            return util::fmt("blockIdx.{}", dimToStr(loop.dim)).value();
+            return util::fmt("blockIdx.{}", strDim).value();
         default:  // Incorrect case
             return "";
     }
-}
-
-HandleResult replaceAttributedLoop(const clang::Attr& a,
-                                   const clang::ForStmt& f,
-                                   const std::string& prefixCode,
-                                   const std::string& suffixCode,
-                                   SessionStage& s) {
-    auto& rewriter = s.getRewriter();
-
-    // Remove attribute + for loop:
-    //      @attribute(...) for (int i = start; i < end; i += inc)
-    //  or: for (int i = start; i < end; i += inc; @attribute(...))
-    clang::SourceRange range;
-    range.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
-    range.setEnd(f.getRParenLoc());
-
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
-        .addReplacement(OKL_LOOP_PROLOGUE, range, prefixCode)
-        .addReplacement(OKL_LOOP_EPILOGUE, f.getEndLoc(), suffixCode)
-        .build();
 }
 
 namespace tile {
@@ -196,7 +175,7 @@ std::string buildInnerOuterLoopIdxLine(const LoopMetaData& forLoop,
                                   idx)
                             .value());
     }
-    return res;  // Open new scope
+    return res;
 }
 
 }  // namespace inner_outer

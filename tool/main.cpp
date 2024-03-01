@@ -13,8 +13,14 @@
 #include <fstream>
 #include <iostream>
 
-std::string build_output_filename(const std::filesystem::path& input_file_path) {
+std::string build_transpilation_output_filename(const std::filesystem::path& input_file_path) {
     std::string out_file = input_file_path.filename().stem().string() + "_transpiled" +
+                           input_file_path.filename().extension().string();
+    return out_file;
+}
+
+std::string build_normalization_output_filename(const std::filesystem::path& input_file_path) {
+    std::string out_file = input_file_path.filename().stem().string() + "_normalized" +
                            input_file_path.filename().extension().string();
     return out_file;
 }
@@ -31,15 +37,20 @@ int main(int argc, char* argv[]) {
     transpile_command.add_description("transpile OKL to targeted backend");
     transpile_command.add_argument("-b", "--backend")
         .required()
-        //.choices("cuda", "hip", "openmp")
-        .help("backends: {cuda, hip, openmp}");
+        //.choices("cuda", "openmp")
+        .help("backends: {cuda, hip, dpcpp, openmp}");
     transpile_command.add_argument("-i", "--input").required().help("input file");
     transpile_command.add_argument("--normalize")
         .flag()
         .default_value(false)
         .implicit_value(true)
         .help("should normalize before transpiling");
-    transpile_command.add_argument("-o", "--output").default_value("").help("optional output file");
+    transpile_command.add_argument("-o", "--output")
+        .default_value("")
+        .help("optional transpilation output file");
+    transpile_command.add_argument("-n", "--normalizer-output")
+        .default_value("")
+        .help("optional normalization output file");
     transpile_command.add_argument("-s", "--sema")
         .help("sema: {no-sema, with-sema}")
         .required()
@@ -52,9 +63,9 @@ int main(int argc, char* argv[]) {
         program.parse_args(argc, argv);
         if (program.is_subcommand_used(normalize_command)) {
             auto input = std::filesystem::path(normalize_command.get("-i"));
-            auto output = std::filesystem::path(normalize_command.get("-o"));
+            auto output = std::filesystem::path(normalize_command.get("-n"));
             if (output.empty()) {
-                output = build_output_filename(input);
+                output = build_normalization_output_filename(input);
             }
 
             auto input_source = oklt::util::readFileAsStr(input);
@@ -83,9 +94,14 @@ int main(int argc, char* argv[]) {
             auto source_path = std::filesystem::path(transpile_command.get("-i"));
             auto backend = oklt::backendFromString(transpile_command.get("-b"));
             auto need_normalize = transpile_command.get<bool>("--normalize");
-            auto output = std::filesystem::path(transpile_command.get("-o"));
-            if (output.empty()) {
-                output = build_output_filename(source_path);
+            auto transpilation_output = std::filesystem::path(transpile_command.get("-o"));
+            if (transpilation_output.empty()) {
+                transpilation_output = build_transpilation_output_filename(source_path);
+            }
+
+            auto normalization_output = std::filesystem::path(transpile_command.get("-n"));
+            if (normalization_output.empty()) {
+                normalization_output = build_normalization_output_filename(source_path);
             }
 
             oklt::AstProcessorType procType = [&]() {
@@ -115,8 +131,8 @@ int main(int argc, char* argv[]) {
 
             if (result) {
                 oklt::UserOutput userOutput = result.value();
-                std::ofstream ofs(output.string());
-                ofs << userOutput.kernel.sourceCode;
+                // oklt::util::writeFileAsStr(normalization_output.string(), userOutput.normalized.sourceCode);
+                oklt::util::writeFileAsStr(transpilation_output.string(), userOutput.kernel.sourceCode);
                 std::cout << "Transpiling success : true" << std::endl;
             } else {
                 std::cout << "Transpiling errors: " << std::endl;

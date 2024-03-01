@@ -21,7 +21,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
     if (!forLoopMetaData) {
         return tl::make_unexpected(Error{
-            .ec = std::error_code(), .desc = "@tile: failed to fetch loop meta data from sema"});
+            .ec = std::error_code(), .desc = "@outer: failed to fetch loop meta data from sema"});
     }
 
     int openedScopeCounter = 0;
