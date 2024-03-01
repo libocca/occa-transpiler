@@ -99,7 +99,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/barrier.cpp
     attributes/backend/dpcpp/exclusive.cpp
     attributes/backend/dpcpp/common.cpp
-    attributes/backend/dpcpp/common.hpp
+    attributes/backend/dpcpp/common.h
 
     # sugar attribute
     attributes/backend/common/dim.cpp

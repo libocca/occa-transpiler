@@ -3,6 +3,7 @@
 #include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 namespace {
 using namespace oklt;
@@ -23,10 +24,9 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto trans =
         TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 5);
 
+    // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z]]"
     // 1. Add 'extern "C"`
-    SourceRange attr_range;
-    attr_range.setBegin(a.getRange().getBegin().getLocWithOffset(-2));  // TODO: remove magic number
-    attr_range.setEnd(a.getRange().getEnd().getLocWithOffset(2));
+    SourceRange attr_range = getAttrFullSourceRange(a);
     trans.addReplacement(OKL_TRANSPILED_ATTR, attr_range, externC);
 
     // 2. Rename function

@@ -1,4 +1,4 @@
-#include "attributes/backend/dpcpp/common.hpp"
+#include "attributes/backend/dpcpp/common.h"
 #include <oklt/util/string_utils.h>
 
 namespace oklt::dpcpp {

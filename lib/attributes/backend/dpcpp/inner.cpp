@@ -1,6 +1,6 @@
 #include <attributes/utils/code_gen.h>
 #include "attributes/attribute_names.h"
-#include "attributes/backend/dpcpp/common.hpp"
+#include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
@@ -13,6 +13,10 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
+    if (!params) {
+        return tl::make_unexpected(Error{std::error_code(), "@inner params nullptr"});
+    }
+
     auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);

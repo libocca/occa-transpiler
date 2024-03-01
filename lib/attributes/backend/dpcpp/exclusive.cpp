@@ -3,6 +3,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
+#include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
 #include <clang/AST/Stmt.h>
@@ -17,11 +18,8 @@ HandleResult handleExclusiveAttribute(const clang::Attr& a,
     llvm::outs() << "[DEBUG] handle attribute: @exclusive\n";
 #endif
 
-    SourceRange range(a.getRange().getBegin().getLocWithOffset(-2),
-                      a.getRange().getEnd().getLocWithOffset(2));
-
     return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, range, "")
+        .addReplacement(OKL_TRANSPILED_ATTR, getAttrFullSourceRange(a), "")
         .build();
 }
 

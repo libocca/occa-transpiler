@@ -2,7 +2,7 @@
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
-#include "attributes/backend/dpcpp/common.hpp"
+#include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
@@ -189,6 +189,10 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                                  const clang::ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
+    if (!params) {
+        return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
+    }
+
     auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto forLoopMetaData = sema.getLoopMetaData(forStmt);
