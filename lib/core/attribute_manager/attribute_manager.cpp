@@ -42,11 +42,11 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
-HandleResult AttributeManager::handleStmt(const Stmt& stmt, SessionStage& stage) {
+HandleResult AttributeManager::handleNode(const Stmt& stmt, SessionStage& stage) {
     return _implicitHandlers(stmt, stage);
 }
 
-HandleResult AttributeManager::handleDecl(const Decl& decl, SessionStage& stage) {
+HandleResult AttributeManager::handleNode(const Decl& decl, SessionStage& stage) {
     return _implicitHandlers(decl, stage);
 }
 

@@ -12,6 +12,7 @@
 #include <clang/AST/Decl.h>
 
 #include <functional>
+
 namespace oklt::cuda_subset {
 using namespace clang;
 namespace {

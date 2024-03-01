@@ -224,15 +224,16 @@ void OklSemaCtx::setKernelArgInfo(const ParmVarDecl& parm) {
     ki->args[parm.getFunctionScopeIndex()] = std::move(result.value());
 }
 
-void OklSemaCtx::setKernelArgRawString(const ParmVarDecl& parm, std::string_view transpiledType) {
+void OklSemaCtx::setTranspiledArgStr(const ParmVarDecl& parm, std::string_view transpiledArgStr) {
     assert(_parsingKernInfo.has_value());
-
-    auto varType = [](const auto& p, auto transpiledType) {
-        return !transpiledType.empty() ? std::string(transpiledType) : p.getType().getAsString();
-    }(parm, transpiledType);
+    if (!transpiledArgStr.empty()) {
+        auto& pki = _parsingKernInfo.value();
+        pki.argStrs[parm.getFunctionScopeIndex()] = std::string(transpiledArgStr);
+    }
 
     auto& pki = _parsingKernInfo.value();
-    pki.argStrs[parm.getFunctionScopeIndex()] = varType + " " + parm.getNameAsString();
+    pki.argStrs[parm.getFunctionScopeIndex()] =
+        parm.getType().getAsString() + " " + parm.getNameAsString();
 }
 
 void OklSemaCtx::setKernelTranspiledAttrStr(std::string attrStr) {

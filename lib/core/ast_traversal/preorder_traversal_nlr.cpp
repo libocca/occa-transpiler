@@ -12,7 +12,8 @@ using namespace clang;
 
 template <typename TraversalType, typename ExprType>
 bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
-    if constexpr (std::is_same_v<ExprType, Stmt*>) {
+    using PureType = std::remove_pointer_t<ExprType>;
+    if constexpr (std::is_same_v<PureType, Stmt>) {
         auto* expr_ = [](auto* expr) {
             if (expr->getStmtClass() == clang::Stmt::AttributedStmtClass) {
                 return cast<AttributedStmt>(expr)->getSubStmt();
@@ -20,11 +21,9 @@ bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
             return expr;
         }(expr);
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseStmt(expr_);
-    } else if constexpr (std::is_same_v<ExprType, Decl*>) {
+    } else if constexpr (std::is_same_v<PureType, Decl>) {
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseDecl(expr);
-    } else if constexpr (std::is_same_v<ExprType, RecoveryExpr*>) {
-        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseRecoveryExpr(expr);
-    } else if constexpr (std::is_same_v<ExprType, TranslationUnitDecl*>) {
+    } else if constexpr (std::is_same_v<PureType, TranslationUnitDecl>) {
         return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseTranslationUnitDecl(
             expr);
     }
@@ -122,10 +121,6 @@ bool PreorderNlrTraversal::TraverseDecl(clang::Decl* decl) {
 
 bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
     return traverseExpr(*this, stmt, _procMng, _stage, _sema, _trasnpilations);
-}
-
-bool PreorderNlrTraversal::TraverseRecoveryExpr(clang::RecoveryExpr* recoveryExpr) {
-    return traverseExpr(*this, recoveryExpr, _procMng, _stage, _sema, _trasnpilations);
 }
 
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
