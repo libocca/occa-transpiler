@@ -4,6 +4,8 @@
 namespace oklt::dpcpp {
 
 std::string dimToStr(const Dim& dim) {
+    // TODO: Verify that this is a correct mapping from original OKL transpiler developera
+    //      (intuitively should be x->0, y->1, z->2)
     static std::map<Dim, std::string> mapping{{Dim::X, "2"}, {Dim::Y, "1"}, {Dim::Z, "0"}};
     return mapping[dim];
 }
