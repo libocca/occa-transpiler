@@ -10,6 +10,7 @@ enum struct TargetBackend : unsigned char {
     OPENMP,
     CUDA,
     HIP,
+    DPCPP,
 };
 
 tl::expected<TargetBackend, std::string> backendFromString(const std::string& type);

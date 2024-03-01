@@ -4,7 +4,7 @@
 
 namespace {
 using namespace oklt;
-__attribute__((constructor)) void registerHIPTileAttrBackend() {
+__attribute__((constructor)) void registerHIPInnerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, INNER_ATTR_NAME},
         makeSpecificAttrHandle(cuda_subset::handleInnerAttribute));

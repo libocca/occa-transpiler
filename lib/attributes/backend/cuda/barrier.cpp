@@ -11,7 +11,7 @@ __attribute__((constructor)) void registerCUDABarrierAttrBackend() {
         makeSpecificAttrHandle(cuda_subset::handleBarrierAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << BARRIER_ATTR_NAME << " attribute handler\n";
+        llvm::errs() << "failed to register " << BARRIER_ATTR_NAME << " attribute handler (CUDA)\n";
     }
 }
 }  // namespace

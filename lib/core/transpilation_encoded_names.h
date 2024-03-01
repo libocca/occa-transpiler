@@ -4,6 +4,8 @@ namespace oklt {
 
 constexpr const char OKL_LOOP_PROLOGUE[] = "okl_loop_prologue";
 constexpr const char OKL_LOOP_EPILOGUE[] = "okl_loop_epilogue";
+constexpr const char OKL_FUNCTION_PROLOGUE[] = "okl_function_prologue";
+constexpr const char OKL_FUNCTION_EPILOGUE[] = "okl_function_epilogue";
 constexpr const char OKL_INCLUDES[] = "okl_includes";
 constexpr const char OKL_TRANSPILED_ARG[] = "okl_transpiled_param";
 constexpr const char OKL_TRANSPILED_ATTR[] = "okl_transpiled_attr";

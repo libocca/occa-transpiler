@@ -1,3 +1,4 @@
+#include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
@@ -217,7 +218,13 @@ HandleResult runPreActionAttrStmt(const AttributedStmt& attrStmt, SessionStage& 
 
     auto* attr = getOklAttr(attrStmt, stage);
     if (!attr) {
-        return tl::make_unexpected(Error());
+        auto attrName = attrStmt.getAttrs()[0]->getNormalizedFullName();
+        return tl::make_unexpected(
+            Error{std::error_code(),
+                  util::fmt("No backend ({}) handler registered for attribute {}",
+                            backendToString(stage.getBackend()),
+                            attrName)
+                      .value()});
     }
 
     // dispatch specific sema handler

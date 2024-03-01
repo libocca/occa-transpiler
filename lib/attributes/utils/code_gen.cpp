@@ -1,4 +1,7 @@
 #include "attributes/utils/code_gen.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
+#include "core/utils/attributes.h"
 
 namespace oklt {
 std::string getCondCompStr(const BinOp& bo) {
@@ -39,6 +42,26 @@ std::string buildCloseScopes(int& openedScopeCounter) {
         res += "}";
     }
     return res;
+}
+
+HandleResult replaceAttributedLoop(const clang::Attr& a,
+                                   const clang::ForStmt& f,
+                                   const std::string& prefixCode,
+                                   const std::string& suffixCode,
+                                   SessionStage& s) {
+    auto& rewriter = s.getRewriter();
+
+    // Remove attribute + for loop:
+    //      @attribute(...) for (int i = start; i < end; i += inc)
+    //  or: for (int i = start; i < end; i += inc; @attribute(...))
+    clang::SourceRange range;
+    range.setBegin(getAttrFullSourceRange(a).getBegin());
+    range.setEnd(f.getRParenLoc());
+
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
+        .addReplacement(OKL_LOOP_PROLOGUE, range, prefixCode)
+        .addReplacement(OKL_LOOP_EPILOGUE, f.getEndLoc(), suffixCode)
+        .build();
 }
 
 }  // namespace oklt
