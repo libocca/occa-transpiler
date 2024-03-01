@@ -1,6 +1,7 @@
 #include <oklt/util/string_utils.h>
 
 #include "attributes/utils/code_gen.h"
+#include "core/transpiler_session/session_stage.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 
 #include "core/transpilation.h"
