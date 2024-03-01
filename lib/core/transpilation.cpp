@@ -13,15 +13,15 @@ tl::expected<Replacements, std::error_code> toReplacements(const Transpilations&
 #endif
     for (const auto& t : transpilations) {
 #ifdef TRANSPILER_DEBUG_LOG
-        llvm::outs() << "applying replacemnt: " << t.name << " - ";
+        llvm::outs() << "applying transpilation for: " << t.name << "\n";
 #endif
         for (const auto& r : t.replacemnts) {
 #ifdef TRANSPILER_DEBUG_LOG
-            llvm::outs() << "applying replacemnt: " << r.name << " - ";
+            llvm::outs() << "\tapplying replacemnt for: " << r.name << " - ";
 #endif
             auto error = replacemnts.add(r.replacemnt);
             if (error) {
-                llvm::errs() << toString(std::move(error));
+                llvm::errs() << "\t" << toString(std::move(error));
 
                 Replacements second;
                 error = second.add(r.replacemnt);
@@ -34,9 +34,12 @@ tl::expected<Replacements, std::error_code> toReplacements(const Transpilations&
                 replacemnts = std::move(merged);
             }
 #ifdef TRANSPILER_DEBUG_LOG
-            llvm::outs() << "ok.\n";
+            llvm::outs() << "replacement ok.\n";
 #endif
         }
+#ifdef TRANSPILER_DEBUG_LOG
+        llvm::outs() << "transpilation ok.\n";
+#endif
     }
 
     return replacemnts;

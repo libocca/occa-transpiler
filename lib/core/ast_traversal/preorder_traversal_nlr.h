@@ -16,7 +16,6 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
     explicit PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage);
     bool TraverseDecl(clang::Decl* decl);
     bool TraverseStmt(clang::Stmt* stmt);
-    bool TraverseRecoveryExpr(clang::RecoveryExpr* recoveryExpr);
     bool TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl);
 
     tl::expected<std::string, std::error_code> applyAstProccessor(clang::TranslationUnitDecl*);
