@@ -12,7 +12,7 @@ HandleResult handleExclusiveAttribute(const clang::Attr& attr,
                                       const clang::Decl& decl,
                                       SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
     return TranspilationBuilder(

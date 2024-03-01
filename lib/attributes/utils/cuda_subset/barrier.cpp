@@ -14,7 +14,7 @@ oklt::HandleResult handleBarrierAttribute(const clang::Attr& attr,
                                           const oklt::AttributedBarrier* params,
                                           SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
     if (!params) {
         return tl::make_unexpected(
