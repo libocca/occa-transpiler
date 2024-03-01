@@ -1,6 +1,10 @@
+#include <oklt/core/error.h>
 #include <oklt/core/kernel_metadata.h>
 
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/ast_processors/default_actions.h"
+#include "core/ast_processors/okl_sema_processor/handlers/function.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpilation_decoders.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/AST.h>
@@ -13,25 +17,38 @@ using namespace oklt;
 }  // namespace
 
 namespace oklt {
-bool preValidateOklKernelSema(const FunctionDecl& fd, SessionStage& stage, OklSemaCtx& sema) {
+HandleResult preValidateOklKernel(const Attr& attr,
+                                  const FunctionDecl& fd,
+                                  OklSemaCtx& sema,
+                                  SessionStage& stage) {
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
         //  make approptiate error code
-        stage.pushError(std::error_code(), "nested OKL kernels are illegal");
-        return false;
+        return tl::make_unexpected(
+            Error{.ec = std::error_code(), .desc = "nested OKL kernels are illegal"});
     }
 
     auto* parsingKernInfo = sema.startParsingOklKernel(fd);
     assert(parsingKernInfo);
 
-    return true;
+    return {};
 }
 
-bool postValidateOklKernelSema(const FunctionDecl& fd, SessionStage& stage, OklSemaCtx& sema) {
-    // bypass possible nested functions/closures
-    if (!sema.isParsingOklKernel()) {
-        return true;
+HandleResult postValidateOklKernel(const Attr& attr,
+                                   const FunctionDecl& fd,
+                                   OklSemaCtx& sema,
+                                   SessionStage& stage) {
+    auto result = runDefaultPostActionDecl(&attr, fd, sema, stage);
+    if (!result) {
+        return result;
     }
+
+    // set transpiled kernel attribute
+    auto kernelModifier = decodeKernelModifier(result.value());
+    if (!kernelModifier) {
+        return tl::make_unexpected(std::move(kernelModifier.error()));
+    }
+    sema.setKernelTranspiledAttrStr(kernelModifier.value());
 
     auto* ki = sema.getParsingKernelInfo();
     if (ki->kernInfo->instances.size() > 1) {
@@ -41,41 +58,87 @@ bool postValidateOklKernelSema(const FunctionDecl& fd, SessionStage& stage, OklS
     // stop parsing of current kernel info and reset internal state of sema
     sema.stopParsingKernelInfo();
 
-    return true;
+    return result;
 }
 
-bool preValidateOklKernelParamSema(const ParmVarDecl& parm, SessionStage& stage, OklSemaCtx& sema) {
+HandleResult preValidateOklKernelAttrArg(const Attr&,
+                                         const ParmVarDecl& parm,
+                                         OklSemaCtx& sema,
+                                         SessionStage& stage) {
     if (!sema.isParsingOklKernel()) {
-        return true;
+        return {};
     }
 
     // skip if param belongs to nested function/closure
     if (!sema.isDeclInLexicalTraversal(parm)) {
-        return true;
+        return {};
     }
 
     // fill parsed function parameter info
     // even it's attributed we care about regular propertities: name, is_const, is_ptr, custom, etc
     sema.setKernelArgInfo(parm);
 
-    return true;
+    return {};
 }
 
-bool postValidateOklKernelParamSema(const ParmVarDecl& parm,
-                                    SessionStage& stage,
-                                    OklSemaCtx& sema) {
+HandleResult postValidateOklKernelAttrArg(const Attr& attr,
+                                          const ParmVarDecl& parm,
+                                          OklSemaCtx& sema,
+                                          SessionStage& stage) {
+    auto result = runDefaultPostActionDecl(&attr, parm, sema, stage);
+    if (!result) {
+        return result;
+    }
+
     // skip nested function/closure
     if (!sema.isDeclInLexicalTraversal(parm)) {
-        return true;
+        return {};
     }
 
-    // for attributed param decl backend handler is responsible to fill raw string representation of
-    // func argument
-    if (!parm.hasAttrs()) {
-        sema.setKernelArgRawString(parm);
-        return true;
+    auto paramModifier = decodeParamModifier(result.value());
+    if (!paramModifier) {
+        return tl::make_unexpected(std::move(paramModifier.error()));
     }
 
-    return true;
+    sema.setTranspiledArgStr(parm, paramModifier.value());
+
+    return result;
+}
+
+HandleResult preValidateOklKernelParam(const ParmVarDecl& parm,
+                                       OklSemaCtx& sema,
+                                       SessionStage& stage) {
+    if (!sema.isParsingOklKernel()) {
+        return {};
+    }
+
+    // skip if param belongs to nested function/closure
+    if (!sema.isDeclInLexicalTraversal(parm)) {
+        return {};
+    }
+
+    // fill parsed function parameter info
+    // even it's attributed we care about regular propertities: name, is_const, is_ptr, custom, etc
+    sema.setKernelArgInfo(parm);
+
+    return {};
+}
+
+HandleResult postValidateOklKernelParam(const ParmVarDecl& parm,
+                                        OklSemaCtx& sema,
+                                        SessionStage& stage) {
+    auto result = runDefaultPostActionDecl(nullptr, parm, sema, stage);
+    if (!result) {
+        return result;
+    }
+
+    // skip nested function/closure
+    if (!sema.isDeclInLexicalTraversal(parm)) {
+        return result;
+    }
+
+    sema.setTranspiledArgStr(parm);
+
+    return result;
 }
 }  // namespace oklt

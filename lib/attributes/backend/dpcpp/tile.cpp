@@ -6,7 +6,7 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 

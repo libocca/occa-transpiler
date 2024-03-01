@@ -2,7 +2,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 
 namespace {

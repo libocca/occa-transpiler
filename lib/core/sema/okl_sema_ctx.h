@@ -61,8 +61,8 @@ struct OklSemaCtx {
                                                                              const clang::ForStmt&);
 
     void setKernelArgInfo(const clang::ParmVarDecl& parm);
-    void setKernelArgRawString(const clang::ParmVarDecl& parm,
-                               std::string_view transpiledType = {});
+    void setTranspiledArgStr(const clang::ParmVarDecl& parm,
+                             std::string_view transpiledArgStr = {});
 
     void setKernelTranspiledAttrStr(std::string attrStr);
 
