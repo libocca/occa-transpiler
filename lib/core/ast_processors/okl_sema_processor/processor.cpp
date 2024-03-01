@@ -283,7 +283,12 @@ HandleResult runPostActionRecoveryExpr(const RecoveryExpr& expr, SessionStage& s
     }
 
     const Attr* attr = expectedAttr.value();
-    return am.handleAttr(*attr, expr, {}, stage);
+    auto params = am.parseAttr(*attr, stage);
+    if (!params) {
+        return tl::make_unexpected(params.error());
+    }
+
+    return am.handleAttr(*attr, expr, &params.value(), stage);
 }
 
 __attribute__((constructor)) void registerAstNodeHanlder() {

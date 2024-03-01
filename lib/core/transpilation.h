@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oklt/core/error.h>
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/Tooling/Core/Replacement.h>
 #include <clang/Tooling/Refactoring/AtomicChange.h>
@@ -62,4 +63,5 @@ using Transpilations = std::deque<Transpilation>;
 tl::expected<std::string, std::error_code> applyTranspilations(const Transpilations&,
                                                                const clang::SourceManager&);
 bool applyTranspilations(const Transpilations&, clang::Rewriter&);
+bool applyTranspilations(const Transpilations&, SessionStage&);
 }  // namespace oklt

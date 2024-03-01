@@ -34,7 +34,6 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     SourceRange fname_range(func.getNameInfo().getSourceRange());
     auto newFunctionName = "_occa_" + oldFunctionName + "_0";
     trans.addReplacement(OKL_TRANSPILED_NAME, fname_range, newFunctionName);
-    // rewriter.ReplaceText(fname_range, newFunctionName);
 
     // 3. Update function arguments
     auto insertedArgs = dpcppAdditionalArguments;
@@ -47,11 +46,9 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
 
     // 4. Add submission of kernel in the queue:
     auto* body = dyn_cast<CompoundStmt>(func.getBody());
-    // rewriter.InsertText(body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), submitQueue);
     trans.addReplacement(
         OKL_FUNCTION_PROLOGUE, body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), submitQueue);
     // Close two new scopes
-    // rewriter.InsertText(body->getRBracLoc(), "});});");
     trans.addReplacement(OKL_FUNCTION_EPILOGUE, body->getRBracLoc(), "});});");
 
 #ifdef TRANSPILER_DEBUG_LOG

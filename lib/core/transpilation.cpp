@@ -117,7 +117,8 @@ tl::expected<std::string, std::error_code> applyTranspilations(const Transpilati
     return transpiledResult.get();
 }
 
-bool applyTranspilations(const Transpilations& transpilations, Rewriter& rewriter) {
+bool applyTranspilations(const Transpilations& transpilations,
+                         Rewriter& rewriter) {
     auto result = toReplacements(transpilations);
     if (!result) {
         return false;
@@ -125,5 +126,35 @@ bool applyTranspilations(const Transpilations& transpilations, Rewriter& rewrite
 
     return applyAllReplacements(result.value(), rewriter);
 }
+
+bool applyTranspilations(const Transpilations& transpilations,
+                         SessionStage& stage) {
+    auto& rewriter = stage.getRewriter();
+    auto& sourceManager = stage.getCompiler().getSourceManager();
+    auto mainFileId = sourceManager.getMainFileID();
+
+    Replacements replacemnts;
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "applying transpilations\n";
+#endif
+    for (const auto& t : transpilations) {
+#ifdef TRANSPILER_DEBUG_LOG
+        llvm::outs() << "applying replacemnt: " << t.name << " - ";
+#endif
+        for (const auto& r : t.replacemnts) {
+#ifdef TRANSPILER_DEBUG_LOG
+            llvm::outs() << "applying replacemnt: " << r.name << " - ";
+#endif
+            SourceLocation beg = sourceManager.getComposedLoc(mainFileId, r.replacemnt.getOffset());
+            SourceLocation end = sourceManager.getComposedLoc(mainFileId, r.replacemnt.getOffset() + r.replacemnt.getLength());
+            rewriter.ReplaceText(SourceRange(beg, end), r.replacemnt.getReplacementText());
+#ifdef TRANSPILER_DEBUG_LOG
+            llvm::outs() << "ok.\n";
+#endif
+        }
+    }
+    return true;
+}
+
 
 }  // namespace oklt

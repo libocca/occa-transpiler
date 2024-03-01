@@ -40,6 +40,7 @@ bool traverseExpr(TraversalType& traversal,
     auto procType = stage.getAstProccesorType();
     auto result = procMng.runPreActionNodeHandle(procType, *expr, stage);
     if (!result) {
+        stage.pushError(result.error());
         return false;
     }
 
@@ -54,6 +55,7 @@ bool traverseExpr(TraversalType& traversal,
 
     result = procMng.runPostActionNodeHandle(procType, *expr, stage);
     if (!result) {
+        stage.pushError(result.error());
         return false;
     }
 
@@ -94,6 +96,7 @@ tl::expected<std::string, std::error_code> PreorderNlrTraversal::applyAstProcces
     }
 
     auto ok = applyTranspilations(_trasnpilations, _stage.getRewriter());
+    // auto ok = applyTranspilations(_trasnpilations, _stage);
     if (!ok) {
         return tl::make_unexpected(std::error_code());
     }
