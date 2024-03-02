@@ -1,5 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"
+#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -8,19 +9,20 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPNMPInnerAttribute(const Attr& attr,
-                               const ForStmt& stmt,
-                               const AttributedLoop* params,
-                               SessionStage& stage) {
+HandleResult handleOPNMPInnerAttribute(const Attr& attr,
+                                       const ForStmt& stmt,
+                                       const AttributedLoop* params,
+                                       SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
     removeAttribute(attr, stage);
 
-    //    if (get("@outer").hasExclusive()) {
-    //        std::string outerText = "_occa_exclusive_index = 0;\n";
-    //        return stage.getRewriter().InsertText(stmt.>getBeginLoc(), outerText, false, true);
-    //    }
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    auto forLoopMetaData = sema.getLoopMetaData(stmt);
+    if (!forLoopMetaData) {
+        return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
+    }
 
     return true;
 }

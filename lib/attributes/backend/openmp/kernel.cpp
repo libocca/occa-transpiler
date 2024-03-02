@@ -7,9 +7,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPKernelAttribute(const clang::Attr& attr,
-                                 const clang::FunctionDecl& decl,
-                                 SessionStage& stage) {
+HandleResult handleOPENMPKernelAttribute(const clang::Attr& attr,
+                                         const clang::FunctionDecl& decl,
+                                         SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
@@ -19,6 +19,7 @@ bool handleOPENMPKernelAttribute(const clang::Attr& attr,
     static std::string_view outerText = "extern \"C\"\n";
     rewriter.InsertText(decl.getBeginLoc(), outerText, false, true);
 
+    auto& ctx = stage.getCompiler().getASTContext();
     for (const auto param : decl.parameters()) {
         if (!param || !param->getType().getTypePtrOrNull()) {
             continue;

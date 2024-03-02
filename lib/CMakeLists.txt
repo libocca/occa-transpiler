@@ -110,6 +110,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/openmp/kernel.cpp
     attributes/backend/openmp/outer.cpp
     attributes/backend/openmp/inner.cpp
+        attributes/backend/openmp/tile.cpp
     attributes/backend/openmp/restrict.cpp
     attributes/backend/openmp/shared.cpp
     attributes/backend/openmp/exclusive.cpp

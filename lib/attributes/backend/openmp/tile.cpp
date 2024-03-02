@@ -1,5 +1,5 @@
+#include "attributes/frontend/params/tile.h"
 #include "attributes/attribute_names.h"
-#include "attributes/frontend/params/loop.h"
 #include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
@@ -31,13 +31,10 @@ bool isRootLevel(ParentMapContext& ctx, OklSemaCtx& sema, const DynTypedNode nod
     return true;
 }
 
-HandleResult handleOPENMPOuterAttribute(const Attr& attr,
-                                        const ForStmt& stmt,
-                                        const AttributedLoop* params,
-                                        SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
-#endif
+HandleResult handleOPENMPTileAttribute(const Attr& attr,
+                                       const ForStmt& stmt,
+                                       const TileParams* params,
+                                       SessionStage& stage) {
     removeAttribute(attr, stage);
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
@@ -46,22 +43,23 @@ HandleResult handleOPENMPOuterAttribute(const Attr& attr,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto& ctx = stage.getCompiler().getASTContext();
-    if (!isRootLevel(ctx.getParentMapContext(), sema, DynTypedNode::create(stmt))) {
-        return true;
-    }
-
-    std::string outerText = "#pragma omp parallel for\n";
-    return stage.getRewriter().InsertText(stmt.getBeginLoc(), outerText, false, true);
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
+                 << "type: " << forLoopMetaData->type << ", name: " << forLoopMetaData->name
+                 << ", initValue: " << forLoopMetaData->range.start
+                 << "), Cond(rhsExpr: " << forLoopMetaData->range.end
+                 << "), Inc(rhsInc: " << forLoopMetaData->inc.val
+                 << ", isUnary: " << forLoopMetaData->isUnary() << ")\n";
+#endif
+    return true;
 }
 
-__attribute__((constructor)) void registerOPENMPOuterHandler() {
+__attribute__((constructor)) void registerOPENMPSharedHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, OUTER_ATTR_NAME},
-        makeSpecificAttrHandle(handleOPENMPOuterAttribute));
+        {TargetBackend::OPENMP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleOPENMPTileAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << OUTER_ATTR_NAME << " attribute handler (OpenMP)\n";
+        llvm::errs() << "failed to register " << TILE_ATTR_NAME << " attribute handler (OpenMP)\n";
     }
 }
 }  // namespace
