@@ -5,7 +5,6 @@
 #include <clang/AST/AST.h>
 
 #include <optional>
-#include <stack>
 
 #include <tl/expected.hpp>
 
@@ -14,32 +13,31 @@ namespace oklt {
 struct KernelInfo;
 struct Error;
 
+struct OklLoopInfo {
+    const clang::Attr& attr;
+    const clang::ForStmt& stmt;
+    LoopMetaData& metadata;
+
+    OklLoopInfo* parent = nullptr;
+    std::list<OklLoopInfo> children = {};
+};
+
+struct OklKernelInfo {
+    explicit OklKernelInfo(const clang::FunctionDecl& decl)
+        : decl(std::ref(decl)){};
+    const std::reference_wrapper<const clang::FunctionDecl> decl;
+    std::list<OklLoopInfo> children = {};
+};
+
 struct OklSemaCtx {
-    struct ParsingKernelInfo {
+    struct ParsingKernelInfo : public OklKernelInfo {
+        explicit ParsingKernelInfo(const clang::FunctionDecl& d, KernelInfo* info = nullptr)
+            : OklKernelInfo(d),
+              kernInfo(info){};
         KernelInfo* kernInfo{nullptr};
 
-        std::string transpiledFuncAttrStr;
-        std::vector<std::string> argStrs;
-
-        const clang::FunctionDecl* kernFuncDecl;
-        std::stack<const clang::CompoundStmt*> compoundStack;
-
-        enum LoopBlockParserState { NotStarted, PreTraverse, PostTraverse };
-        LoopBlockParserState state{NotStarted};
-
-        struct OklForStmt {
-            const clang::Attr& attr;
-            const clang::ForStmt* stmt;
-            LoopMetaData meta;
-        };
-        struct ParsedLoopBlock {
-            clang::SourceLocation loopLocs;
-            uint32_t numInnerThreads;
-            std::list<OklForStmt> nestedLoops;
-        };
-        std::list<ParsedLoopBlock> outerLoopBlocks;
-        std::list<ParsedLoopBlock>::iterator parsingLoopBlockIt;
-        std::list<OklForStmt>::iterator postLoopIt;
+        OklLoopInfo* currentLoop = nullptr;
+        std::map<const clang::ForStmt*, OklLoopInfo*> loopMap;
     };
 
     OklSemaCtx() = default;
@@ -53,12 +51,14 @@ struct OklSemaCtx {
     [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const;
     [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
-    [[nodiscard]] std::optional<LoopMetaData> getLoopMetaData(const clang::ForStmt& forStmt) const;
+    [[nodiscard]] std::optional<OklLoopInfo> getLoopInfo(const clang::ForStmt& forStmt) const;
 
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
-                                                                            const clang::ForStmt&);
+                                                                            const clang::ForStmt&,
+                                                                            const std::any* params);
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr&,
-                                                                             const clang::ForStmt&);
+        const clang::ForStmt&,
+        const std::any* params);
 
     void setKernelArgInfo(const clang::ParmVarDecl& parm);
     void setTranspiledArgStr(const clang::ParmVarDecl& parm,

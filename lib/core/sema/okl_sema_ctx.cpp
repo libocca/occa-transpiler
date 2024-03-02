@@ -1,10 +1,12 @@
-#include <oklt/core/error.h>
-
 #include "attributes/attribute_names.h"
+#include "attributes/frontend/params/tile.h"
 
 #include "core/sema/okl_sema_ctx.h"
 #include "core/utils/ast_node_parsers.h"
 #include "core/utils/type_converter.h"
+
+#include <oklt/core/error.h>
+#include <oklt/util/string_utils.h>
 
 #include <clang/AST/Attr.h>
 
@@ -19,44 +21,71 @@ DatatypeCategory toDatatypeCategory(const QualType& qt) {
     return DatatypeCategory::CUSTOM;
 }
 
-bool hasParentLoopConflictWithNestedLoop(std::string_view parentAttr, std::string_view childAttr) {
-    static std::map<std::string_view, uint32_t> loopScore = {
-        {OUTER_ATTR_NAME, 1}, {TILE_ATTR_NAME, 1}, {INNER_ATTR_NAME, 0}};
-
-    if (loopScore[parentAttr] < loopScore[childAttr]) {
-        return true;
+LoopMetaType getLoopType(const std::any* param) {
+    if (!param) {
+        return LoopMetaType::Regular;
     }
 
-    return false;
+    if (param->type() == typeid(TileParams)) {
+        auto tile = std::any_cast<TileParams>(*param);
+        if (tile.firstLoop.type == AttributedLoopType::Inner) {
+            return LoopMetaType::Inner;
+        }
+        if (tile.firstLoop.type == AttributedLoopType::Outer) {
+            if (tile.secondLoop.type == AttributedLoopType::Inner) {
+                return LoopMetaType::OuterInner;
+            }
+            return LoopMetaType::Outer;
+        }
+    } else if (param->type() == typeid(AttributedLoop)) {
+        auto loop = std::any_cast<AttributedLoop>(*param);
+        if (loop.type == AttributedLoopType::Outer) {
+            return LoopMetaType::Outer;
+        } else if (loop.type == AttributedLoopType::Inner) {
+            return LoopMetaType::Inner;
+        }
+    }
+
+    return LoopMetaType::Regular;
 }
 
-using OklForStmt = OklSemaCtx::ParsingKernelInfo::OklForStmt;
-tl::expected<OklForStmt, Error> makeOklForStmt(const clang::ForStmt& forStmt,
-                                               const clang::Attr& attr,
-                                               ASTContext& ctx) {
-    auto parsedLoopMeta = parseForStmt(forStmt, ctx);
+tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
+                                                 const clang::Attr& attr,
+                                                 LoopMetaType loopType,
+                                                 OklSemaCtx::ParsingKernelInfo& kernelInfo) {
+    assert(kernelInfo.kernInfo);
+
+    auto parsedLoopMeta = parseForStmt(stmt, kernelInfo.decl.get().getASTContext());
     if (!parsedLoopMeta) {
         return tl::make_unexpected(std::move(parsedLoopMeta.error()));
     }
 
-    return OklForStmt{.attr = attr, .stmt = &forStmt, .meta = std::move(parsedLoopMeta.value())};
+    auto& metaList = kernelInfo.currentLoop ? kernelInfo.currentLoop->metadata.childrens
+                                            : kernelInfo.kernInfo->childrens;
+    metaList.emplace_back(std::move(parsedLoopMeta.value()));
+
+    auto ret = OklLoopInfo{.attr = attr, .stmt = stmt, .metadata = metaList.back()};
+    ret.metadata.type = loopType;
+    return ret;
 }
 
-using ParsedLoopBlock = OklSemaCtx::ParsingKernelInfo::ParsedLoopBlock;
-tl::expected<ParsedLoopBlock, Error> makeParsedLoopBlock(const clang::ForStmt& stmt,
-                                                         const clang::Attr& attr,
-                                                         ASTContext& ctx) {
-    return makeOklForStmt(stmt, attr, ctx)
-        .and_then([&](auto&& val) -> tl::expected<ParsedLoopBlock, Error> {
-            return ParsedLoopBlock{.loopLocs = stmt.getBeginLoc(),
-                                   .numInnerThreads = 0,
-                                   .nestedLoops = {std::move(val)}};
-        });
+bool isLegalLoopLevel(LoopMetaType childType, LoopMetaType parentType = LoopMetaType::Regular) {
+    if (parentType == LoopMetaType::OuterInner) {
+        parentType = LoopMetaType::Inner;
+    }
+    if (childType == LoopMetaType::OuterInner) {
+        childType = LoopMetaType::Outer;
+    } else if (childType == LoopMetaType::Regular) {
+        childType = parentType;
+    }
+    return parentType == LoopMetaType::Regular || parentType == childType ||
+           (parentType == LoopMetaType::Outer && childType == LoopMetaType::Inner);
 }
 
-bool isLegalTopLevelLoopAttr(std::string_view attrName) {
-    return (attrName == TILE_ATTR_NAME || attrName == OUTER_ATTR_NAME);
+bool isLegalTopLoopLevel(LoopMetaType loopType) {
+    return loopType == LoopMetaType::OuterInner || loopType == LoopMetaType::Outer;
 }
+
 }  // namespace
 
 namespace oklt {
@@ -66,11 +95,7 @@ OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionD
     }
 
     auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size(), 1);
-
-    // link created slot with current parsing kernel context
-    _parsingKernInfo = ParsingKernelInfo{.kernInfo = kiPtr,
-                                         .argStrs = std::vector<std::string>(fd.param_size()),
-                                         .kernFuncDecl = &fd};
+    _parsingKernInfo.emplace(fd, kiPtr);
 
     return &_parsingKernInfo.value();
 }
@@ -91,123 +116,92 @@ bool OklSemaCtx::isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const 
     if (!_parsingKernInfo) {
         return false;
     }
+    auto& kernelInfo = _parsingKernInfo.value();
 
-    return _parsingKernInfo->kernFuncDecl == &fd;
+    return std::addressof(kernelInfo.decl.get()) == std::addressof(fd);
 }
 
 bool OklSemaCtx::isDeclInLexicalTraversal(const Decl& decl) const {
     if (!_parsingKernInfo.has_value()) {
         return false;
     }
+    auto& kernelInfo = _parsingKernInfo.value();
 
-    return cast<FunctionDecl>(decl.getParentFunctionOrMethod()) == _parsingKernInfo->kernFuncDecl;
+    return cast<FunctionDecl>(decl.getParentFunctionOrMethod()) ==
+           std::addressof(kernelInfo.decl.get());
 }
 
-std::optional<LoopMetaData> OklSemaCtx::getLoopMetaData(const clang::ForStmt& forStmt) const {
+std::optional<OklLoopInfo> OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
     if (!_parsingKernInfo) {
         return std::nullopt;
     }
+    auto& kernelInfo = _parsingKernInfo.value();
 
-    if (_parsingKernInfo->state == ParsingKernelInfo::LoopBlockParserState::NotStarted) {
+    auto it = kernelInfo.loopMap.find(&forStmt);
+    if (it == kernelInfo.loopMap.end() || !it->second) {
         return std::nullopt;
     }
 
-    auto& loops = _parsingKernInfo->parsingLoopBlockIt->nestedLoops;
-    auto it = std::find_if(
-        loops.begin(), loops.end(), [&forStmt](const auto& l) { return l.stmt == &forStmt; });
-    if (it == loops.end()) {
-        return std::nullopt;
-    }
-
-    return it->meta;
+    return *it->second;
 }
 
 tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,
-                                                                      const clang::ForStmt& stmt) {
-    switch (_parsingKernInfo->state) {
-        case ParsingKernelInfo::LoopBlockParserState::NotStarted: {
-            if (!isLegalTopLevelLoopAttr(attr.getNormalizedFullName())) {
-                // TODO add source loc
-                return tl::make_unexpected(Error{
-                    .ec = std::error_code(), .desc = "first loop is not outer/tile attributed"});
-            }
-            // make loop block and set iterator cursor to it
-            return makeParsedLoopBlock(stmt, attr, _parsingKernInfo->kernFuncDecl->getASTContext())
-                .and_then([this](auto&& loopBlock) -> tl::expected<void, Error> {
-                    _parsingKernInfo->outerLoopBlocks.emplace_back(std::move(loopBlock));
-                    _parsingKernInfo->parsingLoopBlockIt =
-                        std::prev(_parsingKernInfo->outerLoopBlocks.end());
-                    _parsingKernInfo->state = ParsingKernelInfo::LoopBlockParserState::PreTraverse;
-                    return {};
-                });
-        }
-        case ParsingKernelInfo::LoopBlockParserState::PreTraverse: {
-            const auto& parentLoop = _parsingKernInfo->parsingLoopBlockIt->nestedLoops.back()
-                                         .attr.getNormalizedFullName();
-            if (hasParentLoopConflictWithNestedLoop(parentLoop, attr.getNormalizedFullName())) {
-                // TODO add source loc
-                return tl::make_unexpected(
-                    Error{.ec = std::error_code(), .desc = "tile/outer after inner"});
-            }
+                                                                      const clang::ForStmt& stmt,
+                                                                      const std::any* params) {
+    assert(_parsingKernInfo);
 
-            // push nested loop
-            return makeOklForStmt(stmt, attr, _parsingKernInfo->kernFuncDecl->getASTContext())
-                .and_then([this](auto&& val) -> tl::expected<void, Error> {
-                    _parsingKernInfo->parsingLoopBlockIt->nestedLoops.push_back(std::move(val));
-                    return {};
-                });
-        }
-        case ParsingKernelInfo::LoopBlockParserState::PostTraverse: {
-            // TODO add source loc
-            return tl::make_unexpected(
-                Error{.ec = std::error_code(), .desc = "push loop on post traverse"});
-        }
+    auto loopType = getLoopType(params);
+    //    if (loopType == LoopMetaType::Regular) {
+    //        return {};
+    //    }
+
+    auto& kernelInfo = _parsingKernInfo.value();
+
+    if (!kernelInfo.currentLoop && !isLegalTopLoopLevel(loopType)) {
+        return tl::make_unexpected(Error{
+            .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer] for-loop"});
     }
 
-    // TODO add source loc
-    return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "buggy"});
+    auto& children =
+        kernelInfo.currentLoop ? kernelInfo.currentLoop->children : kernelInfo.children;
+    auto parentType =
+        kernelInfo.currentLoop ? kernelInfo.currentLoop->metadata.type : LoopMetaType::Regular;
+
+    if (!isLegalLoopLevel(loopType, parentType)) {
+        return tl::make_unexpected(
+            Error{.ec = std::error_code(),
+                  .desc = "Cannot have [@inner] loop outside of an [@outer] loop"});
+    }
+
+    return makeOklLoopInfo(stmt, attr, loopType, kernelInfo)
+        .and_then([&children, &kernelInfo](auto&& loopInfo) -> tl::expected<void, Error> {
+            children.emplace_back(loopInfo);
+
+            auto& child = children.back();
+            child.parent = kernelInfo.currentLoop;
+            kernelInfo.currentLoop = &child;
+            kernelInfo.loopMap.emplace(&child.stmt, &child);
+            return {};
+        });
 }
 
 tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPostTraverse(const clang::Attr& attr,
-                                                                       const clang::ForStmt& stmt) {
+                                                                       const clang::ForStmt& stmt,
+                                                                       const std::any* params) {
     assert(_parsingKernInfo);
 
-    switch (_parsingKernInfo->state) {
-        case ParsingKernelInfo::PreTraverse: {
-            auto& loops = _parsingKernInfo->parsingLoopBlockIt->nestedLoops;
-            // set iterator for most nested loop and validate sema
-            _parsingKernInfo->postLoopIt = std::prev(loops.end());
-
-            // single tile loop, fill output metadata, reset state and go on
-            if (loops.size() == 1) {
-                if (_parsingKernInfo->postLoopIt->attr.getNormalizedFullName() != TILE_ATTR_NAME) {
-                    // TODO add source loc
-                    return tl::make_unexpected(Error{.ec = std::error_code(),
-                                                     .desc = "single loop is not tile attributed"});
-                }
-                _parsingKernInfo->state = ParsingKernelInfo::NotStarted;
-                return {};
-            }
-
-            --_parsingKernInfo->postLoopIt;
-            _parsingKernInfo->state = ParsingKernelInfo::PostTraverse;
-        } break;
-        case ParsingKernelInfo::PostTraverse: {
-            // all loops in block are processed - reset state and go on
-            if (_parsingKernInfo->postLoopIt ==
-                _parsingKernInfo->parsingLoopBlockIt->nestedLoops.begin()) {
-                _parsingKernInfo->state = ParsingKernelInfo::NotStarted;
-                return {};
-            }
-            --_parsingKernInfo->postLoopIt;
-            _parsingKernInfo->state = ParsingKernelInfo::PostTraverse;
-        } break;
-        case ParsingKernelInfo::LoopBlockParserState::NotStarted: {
-            // TODO add source loc
-            return tl::make_unexpected(
-                Error{.ec = std::error_code(), .desc = "OKL loop block is not parsing"});
-        }
+    auto loopType = getLoopType(params);
+    if (loopType == LoopMetaType::Regular) {
+        return {};
     }
+
+    auto loopInfo = getLoopInfo(stmt);
+    if (!loopInfo) {
+        return {};
+    }
+
+    auto& kernelInfo = _parsingKernInfo.value();
+    kernelInfo.currentLoop = loopInfo->parent;
 
     return {};
 }
@@ -222,23 +216,6 @@ void OklSemaCtx::setKernelArgInfo(const ParmVarDecl& parm) {
 
     auto* ki = _parsingKernInfo.value().kernInfo;
     ki->args[parm.getFunctionScopeIndex()] = std::move(result.value());
-}
-
-void OklSemaCtx::setTranspiledArgStr(const ParmVarDecl& parm, std::string_view transpiledArgStr) {
-    assert(_parsingKernInfo.has_value());
-    if (!transpiledArgStr.empty()) {
-        auto& pki = _parsingKernInfo.value();
-        pki.argStrs[parm.getFunctionScopeIndex()] = std::string(transpiledArgStr);
-    }
-
-    auto& pki = _parsingKernInfo.value();
-    pki.argStrs[parm.getFunctionScopeIndex()] =
-        parm.getType().getAsString() + " " + parm.getNameAsString();
-}
-
-void OklSemaCtx::setKernelTranspiledAttrStr(std::string attrStr) {
-    assert(_parsingKernInfo.has_value());
-    _parsingKernInfo.value().transpiledFuncAttrStr = std::move(attrStr);
 }
 
 ProgramMetaData& OklSemaCtx::getProgramMetaData() {
