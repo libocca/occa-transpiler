@@ -31,8 +31,11 @@ struct OklKernelInfo {
 
 struct OklSemaCtx {
     struct ParsingKernelInfo : public OklKernelInfo {
-        explicit ParsingKernelInfo(const clang::FunctionDecl& d, KernelInfo* info = nullptr)
+        explicit ParsingKernelInfo(const clang::FunctionDecl& d,
+                                   std::vector<std::string>&& args,
+                                   KernelInfo* info = nullptr)
             : OklKernelInfo(d),
+              argStrs(args),
               kernInfo(info){};
         KernelInfo* kernInfo{nullptr};
 
