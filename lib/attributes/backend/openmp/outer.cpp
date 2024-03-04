@@ -13,6 +13,14 @@ using namespace clang;
 
 std::string prefixText = "#pragma omp parallel for\n";
 
+OklLoopInfo* getParent(OklLoopInfo& info) {
+    auto parent = info.parent;
+    while (parent && parent->metadata.type == LoopMetaType::Regular) {
+        parent = parent->parent;
+    }
+    return parent;
+}
+
 HandleResult handleOPENMPOuterAttribute(const Attr& a,
                                         const ForStmt& stmt,
                                         const AttributedLoop* params,
@@ -30,12 +38,7 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
     if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
-
-    // Traverse up till Kernel or attributed loop.
-    auto parent = loopInfo->parent;
-    while (parent && parent->metadata.type == LoopMetaType::Regular) {
-        parent = parent->parent;
-    }
+    auto parent = getParent(loopInfo.value());
 
     SourceRange attr_range = getAttrFullSourceRange(a);
     return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
