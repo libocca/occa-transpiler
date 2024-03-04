@@ -95,7 +95,8 @@ OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionD
     }
 
     auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size(), 1);
-    _parsingKernInfo.emplace(fd, kiPtr, std::vector<std::string>(fd.param_size()));
+    auto kiParams = std::vector<std::string>(fd.param_size());
+    _parsingKernInfo.emplace(fd, std::move(kiParams), kiPtr);
 
     return &_parsingKernInfo.value();
 }
