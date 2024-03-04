@@ -131,12 +131,12 @@ ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
                 Error{{}, "[@dimOrder] expects expects positive integer index"});
         }
 
-        auto it = ret.idx.find(idx.value());
+        auto it = std::find(ret.idx.begin(), ret.idx.end(), idx.value());
         if (it != ret.idx.end()) {
             return tl::make_unexpected(Error{{}, "[@dimOrder] Duplicate index"});
         }
 
-        ret.idx.insert(idx.value());
+        ret.idx.push_back(idx.value());
     }
 
     return ret;
