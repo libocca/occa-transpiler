@@ -3,6 +3,7 @@
 #include "core/ast_processors/default_actions.h"
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/transpilation_decoders.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/AST.h>
@@ -40,6 +41,13 @@ HandleResult postValidateOklKernel(const Attr& attr,
     if (!result) {
         return result;
     }
+
+    // set transpiled kernel attribute
+    auto kernelModifier = decodeKernelModifier(result.value());
+    if (!kernelModifier) {
+        return tl::make_unexpected(std::move(kernelModifier.error()));
+    }
+    sema.setKernelTranspiledAttrStr(kernelModifier.value());
 
     auto* ki = sema.getParsingKernelInfo();
     if (ki->kernInfo->childrens.size() > 1) {
@@ -86,6 +94,13 @@ HandleResult postValidateOklKernelAttrArg(const Attr& attr,
         return {};
     }
 
+    auto paramModifier = decodeParamModifier(result.value());
+    if (!paramModifier) {
+        return tl::make_unexpected(std::move(paramModifier.error()));
+    }
+
+    sema.setTranspiledArgStr(parm, paramModifier.value());
+
     return result;
 }
 
@@ -120,6 +135,8 @@ HandleResult postValidateOklKernelParam(const ParmVarDecl& parm,
     if (!sema.isDeclInLexicalTraversal(parm)) {
         return result;
     }
+
+    sema.setTranspiledArgStr(parm);
 
     return result;
 }

@@ -36,8 +36,11 @@ struct OklSemaCtx {
               kernInfo(info){};
         KernelInfo* kernInfo{nullptr};
 
+        std::string transpiledFuncAttrStr = {};
+        std::vector<std::string> argStrs = {};
+
         OklLoopInfo* currentLoop = nullptr;
-        std::map<const clang::ForStmt*, OklLoopInfo*> loopMap;
+        std::map<const clang::ForStmt*, OklLoopInfo*> loopMap = {};
     };
 
     OklSemaCtx() = default;

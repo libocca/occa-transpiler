@@ -218,6 +218,23 @@ void OklSemaCtx::setKernelArgInfo(const ParmVarDecl& parm) {
     ki->args[parm.getFunctionScopeIndex()] = std::move(result.value());
 }
 
+void OklSemaCtx::setTranspiledArgStr(const ParmVarDecl& parm, std::string_view transpiledArgStr) {
+    assert(_parsingKernInfo.has_value());
+    if (!transpiledArgStr.empty()) {
+        auto& pki = _parsingKernInfo.value();
+        pki.argStrs[parm.getFunctionScopeIndex()] = std::string(transpiledArgStr);
+    }
+
+    auto& pki = _parsingKernInfo.value();
+    pki.argStrs[parm.getFunctionScopeIndex()] =
+        parm.getType().getAsString() + " " + parm.getNameAsString();
+}
+
+void OklSemaCtx::setKernelTranspiledAttrStr(std::string attrStr) {
+    assert(_parsingKernInfo.has_value());
+    _parsingKernInfo.value().transpiledFuncAttrStr = std::move(attrStr);
+}
+
 ProgramMetaData& OklSemaCtx::getProgramMetaData() {
     return _programMetaData;
 }
