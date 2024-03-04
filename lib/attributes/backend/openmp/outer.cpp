@@ -24,7 +24,6 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
         return tl::make_unexpected(Error{std::error_code(), "@outer params nullptr"});
     }
 
-    auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
