@@ -34,14 +34,21 @@ struct ArgumentInfo {
     bool is_ptr;
 };
 
+enum class LoopMetaType { Regular, Outer, Inner, OuterInner };
+
 // TODO replace clang types by own
 enum class BinOp { Eq, Le, Lt, Gt, Ge, AddAssign, RemoveAssign, Other };
 
 enum class UnOp { PreInc, PostInc, PreDec, PostDec, Other };
 
 struct LoopMetaData {
-    std::string type;
-    std::string name;
+    LoopMetaType type = LoopMetaType::Regular;
+    std::list<LoopMetaData> childrens;
+
+    struct {
+        std::string type;
+        std::string name;
+    } var;
     struct {
         std::string start;
         std::string end;
@@ -88,19 +95,10 @@ struct LoopMetaData {
     }
 };
 
-struct KernelInstance {
-    // INFO: for launcher template generation only
-    int dimOuter = 0;
-    int dimInner = 0;
-    int tileSize = 0;
-    std::list<LoopMetaData> outer = {};
-    std::list<LoopMetaData> inner = {};
-};
-
 struct KernelInfo {
     std::string name;
     std::vector<ArgumentInfo> args;
-    std::vector<KernelInstance> instances;
+    std::list<LoopMetaData> childrens;
 };
 
 struct DependeciesInfo {};
@@ -128,13 +126,13 @@ struct ProgramMetaData {
         auto& kiPtr = kernels.back();
         kiPtr.name = std::move(name);
         kiPtr.args.resize(numArg);
-        kiPtr.instances.resize(numKern);
+        kiPtr.childrens.resize(numKern);
 
         return kiPtr;
     }
 };
 
-// INFO: because of different behaviour of presense field bytes when category is builtin
+// INFO: because of different behaviour of presence field bytes when category is builtin
 void to_json(nlohmann::json& json, const DataType& dt);
 void from_json(const nlohmann::json& json, DataType& dt);
 

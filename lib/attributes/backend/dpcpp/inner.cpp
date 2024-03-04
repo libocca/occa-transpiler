@@ -19,20 +19,19 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
 
     auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    auto forLoopMetaData = sema.getLoopMetaData(forStmt);
-    if (!forLoopMetaData) {
+    auto loopInfo = sema.getLoopInfo(forStmt);
+    if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
     int openedScopeCounter = 0;
     auto prefixCode =
-        dpcpp::buildInnerOuterLoopIdxLine(forLoopMetaData.value(), *params, openedScopeCounter);
+        dpcpp::buildInnerOuterLoopIdxLine(loopInfo.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";
 #endif
-
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
 

@@ -2,6 +2,7 @@
 
 #include "core/ast_processors/default_actions.h"
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
+#include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
@@ -19,9 +20,13 @@ HandleResult preValidateOklForLoop(const Attr& attr,
                                    const ForStmt& stmt,
                                    OklSemaCtx& sema,
                                    SessionStage& stage) {
-    auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt);
+    auto params = stage.getAttrManager().parseAttr(attr, stage);
+    if (!params) {
+        return tl::make_unexpected(std::move(params.error()));
+    }
+
+    auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt, &params.value());
     if (!result) {
-        //  make approptiate error code
         return tl::make_unexpected(std::move(result.error()));
     }
 
@@ -37,7 +42,12 @@ HandleResult postValidateOklForLoop(const Attr& attr,
         return result;
     }
 
-    auto ok = sema.validateOklForLoopOnPostTraverse(attr, stmt);
+    auto params = stage.getAttrManager().parseAttr(attr, stage);
+    if (!params) {
+        return tl::make_unexpected(std::move(params.error()));
+    }
+
+    auto ok = sema.validateOklForLoopOnPostTraverse(attr, stmt, &params.value());
     if (!ok) {
         //  make approptiate error code
         return tl::make_unexpected(std::move(ok.error()));

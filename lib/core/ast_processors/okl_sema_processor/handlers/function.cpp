@@ -1,5 +1,4 @@
 #include <oklt/core/error.h>
-#include <oklt/core/kernel_metadata.h>
 
 #include "core/ast_processors/default_actions.h"
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
@@ -23,7 +22,7 @@ HandleResult preValidateOklKernel(const Attr& attr,
                                   SessionStage& stage) {
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
-        //  make approptiate error code
+        //  make appropriate error code
         return tl::make_unexpected(
             Error{.ec = std::error_code(), .desc = "nested OKL kernels are illegal"});
     }
@@ -51,8 +50,8 @@ HandleResult postValidateOklKernel(const Attr& attr,
     sema.setKernelTranspiledAttrStr(kernelModifier.value());
 
     auto* ki = sema.getParsingKernelInfo();
-    if (ki->kernInfo->instances.size() > 1) {
-        // TODO perfrom kernel split
+    if (ki->kernInfo->childrens.size() > 1) {
+        // TODO perform kernel split
     }
 
     // stop parsing of current kernel info and reset internal state of sema
@@ -75,7 +74,7 @@ HandleResult preValidateOklKernelAttrArg(const Attr&,
     }
 
     // fill parsed function parameter info
-    // even it's attributed we care about regular propertities: name, is_const, is_ptr, custom, etc
+    // even it's attributed we care about regular properties: name, is_const, is_ptr, custom, etc
     sema.setKernelArgInfo(parm);
 
     return {};
@@ -118,7 +117,7 @@ HandleResult preValidateOklKernelParam(const ParmVarDecl& parm,
     }
 
     // fill parsed function parameter info
-    // even it's attributed we care about regular propertities: name, is_const, is_ptr, custom, etc
+    // even it's attributed we care about regular properties: name, is_const, is_ptr, custom, etc
     sema.setKernelArgInfo(parm);
 
     return {};

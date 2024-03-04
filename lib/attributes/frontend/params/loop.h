@@ -3,13 +3,13 @@
 
 namespace oklt {
 
-enum class LoopType {
+enum class AttributedLoopType {
     Regular,
     Inner,
     Outer,
 };
 
-enum class Dim {
+enum class DimType {
     X = 0,
     Y = 1,
     Z = 2,
@@ -17,8 +17,8 @@ enum class Dim {
 };
 
 struct AttributedLoop {
-    LoopType type = LoopType::Regular;
-    Dim dim = Dim::Auto;
+    AttributedLoopType type = AttributedLoopType::Regular;
+    DimType dim = DimType::Auto;
 };
 
 }  // namespace oklt

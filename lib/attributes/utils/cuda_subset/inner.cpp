@@ -17,15 +17,14 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
                                   SessionStage& s) {
     auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    auto forLoopMetaData = sema.getLoopMetaData(forStmt);
-    if (!forLoopMetaData) {
+    auto loopInfo = sema.getLoopInfo(forStmt);
+    if (!loopInfo) {
         return tl::make_unexpected(
             Error{std::error_code(), "@inner: failed to fetch loop meta data from sema"});
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        forLoopMetaData.value(), *params, openedScopeCounter);
+    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(loopInfo.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG
