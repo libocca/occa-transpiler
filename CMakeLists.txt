@@ -62,11 +62,11 @@ install(
 
 install(
     EXPORT oklt-config
-    NAMESPACE oklt::
+    NAMESPACE occa::
     FILE oklt-targets.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/oklt)
 
-configure_file(cmake/oklt-config.cmake.in oklt-config.cmake @ONLY)
+configure_file(cmake/oklt-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/oklt-config.cmake @ONLY)
 
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/oklt-config.cmake"
