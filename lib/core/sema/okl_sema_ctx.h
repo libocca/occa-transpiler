@@ -58,6 +58,7 @@ struct OklSemaCtx {
     [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
     [[nodiscard]] std::optional<OklLoopInfo> getLoopInfo(const clang::ForStmt& forStmt) const;
+    [[nodiscard]] std::optional<OklLoopInfo> getLoopInfo();
 
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
                                                                             const clang::ForStmt&,

@@ -1,4 +1,3 @@
-#include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 
 #include "core/sema/okl_sema_ctx.h"
@@ -13,13 +12,6 @@
 namespace {
 using namespace clang;
 using namespace oklt;
-
-DatatypeCategory toDatatypeCategory(const QualType& qt) {
-    if (qt->isBuiltinType()) {
-        return DatatypeCategory::BUILTIN;
-    }
-    return DatatypeCategory::CUSTOM;
-}
 
 LoopMetaType getLoopType(const std::any* param) {
     if (!param) {
@@ -144,6 +136,19 @@ std::optional<OklLoopInfo> OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt
     }
 
     return *it->second;
+}
+
+[[nodiscard]] std::optional<OklLoopInfo> OklSemaCtx::getLoopInfo() {
+    if (!_parsingKernInfo) {
+        return std::nullopt;
+    }
+
+    auto& kernelInfo = _parsingKernInfo.value();
+    if (kernelInfo.currentLoop) {
+        return *kernelInfo.currentLoop;
+    }
+
+    return std::nullopt;
 }
 
 tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,
