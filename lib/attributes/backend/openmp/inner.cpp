@@ -19,14 +19,14 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
     if (!params) {
-        return tl::make_unexpected(Error{std::error_code(), "@outer params nullptr"});
+        return tl::make_unexpected(Error{std::error_code(), "@inner params nullptr"});
     }
 
     auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
-        return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
+        return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
     SourceRange attr_range = getAttrFullSourceRange(a);
