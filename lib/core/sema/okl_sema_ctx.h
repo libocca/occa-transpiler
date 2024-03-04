@@ -62,7 +62,8 @@ struct OklSemaCtx {
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
                                                                             const clang::ForStmt&,
                                                                             const std::any* params);
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(const clang::Attr&,
+    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(
+        const clang::Attr&,
         const clang::ForStmt&,
         const std::any* params);
 

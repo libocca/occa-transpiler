@@ -1,7 +1,5 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -27,9 +25,9 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), var.getSourceRange().getEnd());
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, range, newDeclaration)
-        .build();
+    s.getRewriter().ReplaceText(range, newDeclaration);
+
+    return {};
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {

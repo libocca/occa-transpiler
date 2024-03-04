@@ -35,6 +35,19 @@ struct ArgumentInfo {
 };
 
 enum class LoopMetaType { Regular, Outer, Inner, OuterInner };
+inline std::string toString(LoopMetaType lmd) {
+    switch (lmd) {
+        case LoopMetaType::Regular:
+            return "regular";
+        case LoopMetaType::OuterInner:
+            return "outer_inner";
+        case LoopMetaType::Outer:
+            return "outer";
+        case LoopMetaType::Inner:
+            return "inner";
+    }
+    return "<uknown>";
+}
 
 // TODO replace clang types by own
 enum class BinOp { Eq, Le, Lt, Gt, Ge, AddAssign, RemoveAssign, Other };

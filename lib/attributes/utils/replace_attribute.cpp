@@ -1,7 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
 
@@ -41,9 +39,9 @@ HandleResult handleGlobalConstant(const clang::VarDecl& decl,
     auto end_loc = decl.getLocation();
     auto range = SourceRange(start_loc, end_loc);
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), decl.getDeclKindName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, range, newDeclStr)
-        .build();
+    s.getRewriter().ReplaceText(range, newDeclStr);
+
+    return {};
 }
 
 HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
@@ -62,15 +60,14 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
     llvm::outs() << "[DEBUG] Handle global function '" << decl.getNameAsString() << "'\n";
 #endif
 
-    return TranspilationBuilder(
-               s.getCompiler().getSourceManager(), cast<Decl>(decl).getDeclKindName(), 1u)
-        .addReplacement(OKL_TRANSPILED_ATTR, loc, spacedModifier)
-        .build();
+    s.getRewriter().InsertTextBefore(loc, spacedModifier);
+
+    return {};
 }
 
 HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,
-                                   std::string_view includes) {
+                                   std::string_view include) {
     auto& sourceManager = s.getCompiler().getSourceManager();
     auto mainFileId = sourceManager.getMainFileID();
     auto loc = sourceManager.getLocForStartOfFile(mainFileId);
@@ -80,8 +77,8 @@ HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
     llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
 #endif
 
-    return TranspilationBuilder(sourceManager, cast<Decl>(decl).getDeclKindName(), 1)
-        .addInclude(includes)
-        .build();
+    s.getRewriter().InsertTextBefore(loc, "#include " + std::string(include) + "\n");
+
+    return {};
 }
 }  // namespace oklt

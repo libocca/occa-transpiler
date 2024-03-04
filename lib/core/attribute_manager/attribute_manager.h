@@ -7,7 +7,6 @@
 #include "core/attribute_manager/common_attribute_map.h"
 #include "core/attribute_manager/implicit_handlers/implicit_handler_map.h"
 #include "core/attribute_manager/result.h"
-#include "core/transpilation.h"
 
 #include <clang/Sema/ParsedAttr.h>
 #include <any>

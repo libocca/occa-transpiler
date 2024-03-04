@@ -1,7 +1,5 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -21,38 +19,33 @@ const std::string submitQueue =
 HandleResult handleKernelAttribute(const clang::Attr& a,
                                    const clang::FunctionDecl& func,
                                    SessionStage& s) {
-    auto trans =
-        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 5);
+    auto& rewriter = s.getRewriter();
 
     // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z]]"
     // 1. Add 'extern "C"`
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    trans.addReplacement(OKL_TRANSPILED_ATTR, attr_range, externC);
+    SourceRange attrRange = getAttrFullSourceRange(a);
+    rewriter.ReplaceText(attrRange, externC);
 
     // 2. Rename function
     auto oldFunctionName = func.getNameAsString();
-    SourceRange fname_range(func.getNameInfo().getSourceRange());
+    SourceRange fnameRange(func.getNameInfo().getSourceRange());
     auto newFunctionName = "_occa_" + oldFunctionName + "_0";
-    trans.addReplacement(OKL_TRANSPILED_NAME, fname_range, newFunctionName);
-    // rewriter.ReplaceText(fname_range, newFunctionName);
+    rewriter.ReplaceText(fnameRange, newFunctionName);
 
     // 3. Update function arguments
     auto insertedArgs = dpcppAdditionalArguments;
     if (func.getNumParams() > 0) {
         insertedArgs += ",";
     }
-    trans.addReplacement(OKL_TRANSPILED_ARG,
-                         func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(sizeof("(") - 1),
-                         insertedArgs);
+    rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(sizeof("(") - 1),
+                        insertedArgs);
 
     // 4. Add submission of kernel in the queue:
     auto* body = dyn_cast<CompoundStmt>(func.getBody());
-    // rewriter.InsertText(body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), submitQueue);
-    trans.addReplacement(
-        OKL_FUNCTION_PROLOGUE, body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), submitQueue);
+    rewriter.InsertText(body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), submitQueue);
+
     // Close two new scopes
-    // rewriter.InsertText(body->getRBracLoc(), "});});");
-    trans.addReplacement(OKL_FUNCTION_EPILOGUE, body->getRBracLoc(), "});});");
+    rewriter.InsertText(body->getRBracLoc(), "});});");
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @kernel attribute (DPCPP backend): return type: "
@@ -60,7 +53,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
                  << '\n';
 #endif
 
-    return trans.build();
+    return {};
 }
 
 __attribute__((constructor)) void registerKernelHandler() {

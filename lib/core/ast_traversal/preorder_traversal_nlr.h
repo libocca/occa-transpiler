@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/transpilation.h"
-
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <tl/expected.hpp>
 
@@ -23,7 +21,6 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
    private:
     AstProcessorManager& _procMng;
     SessionStage& _stage;
-    Transpilations _trasnpilations;
     OklSemaCtx& _sema;
 };
 
