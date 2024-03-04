@@ -1,5 +1,4 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
-#include "core/transpilation.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Attr.h>

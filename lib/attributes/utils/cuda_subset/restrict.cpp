@@ -1,7 +1,5 @@
 #include "core/attribute_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -30,12 +28,10 @@ HandleResult handleRestrictAttribute(const clang::Attr& a,
     auto ident = parmDecl.getQualifiedNameAsString();
     std::string modifiedArgument = part1 + restrictText + ident;
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ARG,
-                        getAttrFullSourceRange(a).getBegin(),
-                        parmDecl.getEndLoc(),
-                        part1 + restrictText + ident)
-        .build();
+    s.getRewriter().ReplaceText({getAttrFullSourceRange(a).getBegin(), parmDecl.getEndLoc()},
+                                part1 + restrictText + ident);
+
+    return {};
 }
 
 }  // namespace oklt::cuda_subset

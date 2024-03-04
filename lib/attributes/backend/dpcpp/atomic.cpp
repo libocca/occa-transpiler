@@ -1,5 +1,3 @@
-#include <core/transpilation.h>
-#include <core/transpilation_encoded_names.h>
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
@@ -103,10 +101,9 @@ HandleResult handleAtomicAttribute(const clang::Attr& attr,
 #endif
 
     SourceRange range(getAttrFullSourceRange(attr).getBegin(), stmt.getEndLoc());
-    return TranspilationBuilder(
-               stage.getCompiler().getSourceManager(), attr.getNormalizedFullName(), 1)
-        .addReplacement(OKL_ATOMIC_OP, range, newExpression.value())
-        .build();
+    stage.getRewriter().ReplaceText(range, newExpression.value());
+
+    return {};
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

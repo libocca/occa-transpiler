@@ -1,6 +1,4 @@
 #include "core/attribute_manager/result.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -14,16 +12,6 @@ using namespace oklt;
 using namespace clang;
 using BinOpMapT = std::map<BinaryOperatorKind, std::string>;
 using UnaryOpMapT = std::map<UnaryOperatorKind, std::string>;
-
-HandleResult makeTranspilation(const SourceManager& sm,
-                               const Attr& attr,
-                               const SourceLocation& startLoc,
-                               const SourceLocation& endLoc,
-                               std::string_view textReplacement) {
-    return TranspilationBuilder(sm, attr.getNormalizedFullName(), 1)
-        .addReplacement(OKL_ATOMIC_OP, SourceRange(startLoc, endLoc), textReplacement)
-        .build();
-}
 
 HandleResult handleBinOp(const BinaryOperator& binOp,
                          const Attr& attr,
@@ -51,11 +39,9 @@ HandleResult handleBinOp(const BinaryOperator& binOp,
     auto rigthText = getSourceText(*right, ctx);
     std::string atomicOpText = it->second + "(&(" + leftText + "), " + rigthText + ")";
 
-    return makeTranspilation(stage.getCompiler().getSourceManager(),
-                             attr,
-                             getAttrFullSourceRange(attr).getBegin(),
-                             binOp.getEndLoc(),
-                             atomicOpText);
+    stage.getRewriter().ReplaceText({getAttrFullSourceRange(attr).getBegin(), binOp.getEndLoc()},
+                                    atomicOpText);
+    return {};
 }
 
 HandleResult handleUnOp(const UnaryOperator& unOp,
@@ -74,11 +60,10 @@ HandleResult handleUnOp(const UnaryOperator& unOp,
     auto unOpText = getSourceText(*expr, ctx);
     std::string atomicOpText = it->second + "(&(" + unOpText + "), 1)";
 
-    return makeTranspilation(stage.getCompiler().getSourceManager(),
-                             attr,
-                             getAttrFullSourceRange(attr).getBegin(),
-                             unOp.getEndLoc(),
-                             atomicOpText);
+    stage.getRewriter().ReplaceText({getAttrFullSourceRange(attr).getBegin(), unOp.getEndLoc()},
+                                    atomicOpText);
+
+    return {};
 }
 
 HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
@@ -108,11 +93,10 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
     auto atomicFunc = binaryConvertMap.at(BinaryOperatorKind::BO_Assign);
     std::string atomicOpText = atomicFunc + "(&(" + leftText + "), " + rigthText + ")";
 
-    return makeTranspilation(stage.getCompiler().getSourceManager(),
-                             attr,
-                             getAttrFullSourceRange(attr).getBegin(),
-                             assignOp.getEndLoc(),
-                             atomicOpText);
+    stage.getRewriter().ReplaceText({getAttrFullSourceRange(attr).getBegin(), assignOp.getEndLoc()},
+                                    atomicOpText);
+
+    return {};
 }
 
 }  // namespace

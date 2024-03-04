@@ -1,6 +1,4 @@
 #include "attributes/utils/code_gen.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/utils/attributes.h"
 
 namespace oklt {
@@ -50,18 +48,15 @@ HandleResult replaceAttributedLoop(const clang::Attr& a,
                                    const std::string& suffixCode,
                                    SessionStage& s) {
     auto& rewriter = s.getRewriter();
-
     // Remove attribute + for loop:
     //      @attribute(...) for (int i = start; i < end; i += inc)
     //  or: for (int i = start; i < end; i += inc; @attribute(...))
-    clang::SourceRange range;
-    range.setBegin(getAttrFullSourceRange(a).getBegin());
-    range.setEnd(f.getRParenLoc());
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
-        .addReplacement(OKL_LOOP_PROLOGUE, range, prefixCode)
-        .addReplacement(OKL_LOOP_EPILOGUE, f.getEndLoc(), suffixCode)
-        .build();
+    rewriter.RemoveText({getAttrFullSourceRange(a).getBegin(), f.getRParenLoc()});
+    rewriter.InsertText(f.getRParenLoc(), prefixCode);
+    rewriter.InsertText(f.getEndLoc(), suffixCode);
+
+    return {};
 }
 
 }  // namespace oklt
