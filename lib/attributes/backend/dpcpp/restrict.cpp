@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -25,10 +25,6 @@ HandleResult handleRestrictAttribute(const clang::Attr& a,
     auto part1 = getSourceText(r1, ctx);
     auto ident = parmDecl.getQualifiedNameAsString();
     std::string modifiedArgument = part1 + restrictText + ident;
-
-    if (s.getAstProccesorType() == AstProcessorType::OKL_WITH_SEMA) {
-        s.tryEmplaceUserCtx<OklSemaCtx>().setKernelArgRawString(parmDecl, modifiedArgument);
-    }
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] DPCPP: Handle @restrict.\n";

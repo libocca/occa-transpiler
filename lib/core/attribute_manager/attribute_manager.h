@@ -65,8 +65,8 @@ class AttributeManager {
                             const std::any* params,
                             SessionStage& stage);
 
-    HandleResult handleDecl(const clang::Decl& decl, SessionStage& stage);
-    HandleResult handleStmt(const clang::Stmt& stmt, SessionStage& stage);
+    HandleResult handleNode(const clang::Decl& decl, SessionStage& stage);
+    HandleResult handleNode(const clang::Stmt& stmt, SessionStage& stage);
 
     tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
                                                        const clang::Decl& decl,

@@ -110,26 +110,32 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
+    core/ast_processors/default_actions.cpp
+
     core/ast_processors/okl_dummy_processor/processor.cpp
 
     core/ast_processors/okl_sema_processor/processor.cpp
-    core/ast_processors/okl_sema_processor/okl_sema_ctx.cpp
     core/ast_processors/okl_sema_processor/handlers/function.h
     core/ast_processors/okl_sema_processor/handlers/function.cpp
     core/ast_processors/okl_sema_processor/handlers/loop.h
     core/ast_processors/okl_sema_processor/handlers/loop.cpp
+    core/ast_processors/okl_sema_processor/handlers/recovery_expr.h
+    core/ast_processors/okl_sema_processor/handlers/recovery_expr.cpp
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
     core/ast_traversal/preorder_traversal_nlr.cpp
+
+    core/sema/okl_sema_ctx.cpp
 
     core/diag/diag_consumer.cpp
 
     core/kernel_metadata.cpp
 
     core/transpilation.cpp
+        core/transpilation_decoders.cpp
 
-    core/attribute_manager/attr_decl_handler.cpp
+        core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp
     core/attribute_manager/attributed_type_map.cpp
@@ -218,4 +224,14 @@ target_link_libraries(occa-transpiler
         nlohmann_json::nlohmann_json
     PRIVATE
         ${CLANG_LIBS}
-  )
+)
+
+add_custom_command(TARGET occa-transpiler
+    # Run after all other rules within the target have been executed
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_SOURCE_DIR}
+    COMMENT "update compile_command.json"
+    VERBATIM
+)

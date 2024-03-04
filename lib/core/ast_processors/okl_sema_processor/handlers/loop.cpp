@@ -1,6 +1,9 @@
 #include <oklt/core/kernel_metadata.h>
 
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/ast_processors/default_actions.h"
+#include "core/ast_processors/okl_sema_processor/handlers/loop.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/AST.h>
@@ -13,32 +16,44 @@ using namespace clang;
 }  // namespace
 
 namespace oklt {
-bool preValidateOklForLoopSema(const Attr& attr,
-                               const ForStmt& stmt,
-                               SessionStage& stage,
-                               OklSemaCtx& sema) {
-    auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt);
-    if (!result) {
-        //  make approptiate error code
-        stage.pushError(result.error());
-        return false;
+HandleResult preValidateOklForLoop(const Attr& attr,
+                                   const ForStmt& stmt,
+                                   OklSemaCtx& sema,
+                                   SessionStage& stage) {
+    auto params = stage.getAttrManager().parseAttr(attr, stage);
+    if (!params) {
+        return tl::make_unexpected(std::move(params.error()));
     }
 
-    return true;
+    auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt, &params.value());
+    if (!result) {
+        return tl::make_unexpected(std::move(result.error()));
+    }
+
+    return {};
 }
 
-bool postValidateOklForLoopSema(const Attr& attr,
-                                const clang::ForStmt& stmt,
-                                SessionStage& stage,
-                                OklSemaCtx& sema) {
-    auto result = sema.validateOklForLoopOnPostTraverse(attr, stmt);
+HandleResult postValidateOklForLoop(const Attr& attr,
+                                    const clang::ForStmt& stmt,
+                                    OklSemaCtx& sema,
+                                    SessionStage& stage) {
+    auto result = runDefaultPostActionStmt(&attr, stmt, sema, stage);
     if (!result) {
-        //  make approptiate error code
-        stage.pushError(result.error());
-        return false;
+        return result;
     }
 
-    return true;
+    auto params = stage.getAttrManager().parseAttr(attr, stage);
+    if (!params) {
+        return tl::make_unexpected(std::move(params.error()));
+    }
+
+    auto ok = sema.validateOklForLoopOnPostTraverse(attr, stmt, &params.value());
+    if (!ok) {
+        //  make approptiate error code
+        return tl::make_unexpected(std::move(ok.error()));
+    }
+
+    return result;
 }
 
 }  // namespace oklt

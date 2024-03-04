@@ -1,12 +1,15 @@
-#include <oklt/core/kernel_metadata.h>
 #include "attributes/frontend/params/loop.h"
 
 #include <string>
 
+namespace oklt {
+struct OklLoopInfo;
+}
+
 namespace oklt::dpcpp {
-std::string dimToStr(const Dim& dim);
+std::string dimToStr(const DimType& dim);
 std::string getIdxVariable(const AttributedLoop& loop);
-std::string buildInnerOuterLoopIdxLine(const LoopMetaData& forLoop,
+std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
                                        int& openedScopeCounter);
 }  // namespace oklt::dpcpp

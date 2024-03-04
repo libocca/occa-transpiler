@@ -2,19 +2,23 @@
 #include "core/transpilation.h"
 #include "core/transpiler_session/session_stage.h"
 
+#include <clang/AST/Attr.h>
+
 namespace {
+using namespace oklt;
+
 template <typename KeyType,
           typename MapType,
           typename GenKeyType,
           typename GenMapType,
           typename ActionFunc>
 oklt::HandleResult runNodeHandler(KeyType key,
-                                  MapType& map_,
+                                  MapType& attr_map,
                                   GenKeyType gen_key,
                                   GenMapType& gen_map,
                                   ActionFunc action) {
-    auto it = map_.find(key);
-    if (it == map_.end()) {
+    auto it = attr_map.find(key);
+    if (it == attr_map.end()) {
         auto gen_it = gen_map.find(gen_key);
         if (gen_it == gen_map.end()) {
             return {};
@@ -22,6 +26,10 @@ oklt::HandleResult runNodeHandler(KeyType key,
         return action(gen_it->second);
     }
     return action(it->second);
+}
+
+AstProcessorManager::AttrKeyType makeAttrKey(AstProcessorType procType, const clang::Attr* attr) {
+    return {procType, attr ? attr->getNormalizedFullName() : ""};
 }
 }  // namespace
 
@@ -33,63 +41,67 @@ AstProcessorManager& AstProcessorManager::instance() {
     return manager;
 }
 
-bool AstProcessorManager::registerGenericHandle(AstProcessorType procType, DeclNodeHandle handle) {
-    auto [_, ret] = _genericDeclHandle.try_emplace(procType, std::move(handle));
+bool AstProcessorManager::registerDefaultHandle(DefaultKeyType key, DeclNodeHandle handle) {
+    auto [_, ret] = _defaultDeclHandlers.try_emplace(key, std::move(handle));
     return ret;
 }
 
-bool AstProcessorManager::registerGenericHandle(AstProcessorType procType, StmtNodeHandle handle) {
-    auto [_, ret] = _genericStmtHandle.try_emplace(procType, std::move(handle));
+bool AstProcessorManager::registerDefaultHandle(DefaultKeyType key, StmtNodeHandle handle) {
+    auto [_, ret] = _defaultStmtHandlers.try_emplace(key, std::move(handle));
     return ret;
 }
 
-bool AstProcessorManager::registerSpecificNodeHandle(KeyType key, DeclNodeHandle handler) {
+bool AstProcessorManager::registerSpecificNodeHandle(AttrKeyType key, DeclNodeHandle handler) {
     auto [_, ret] = _declHandlers.try_emplace(std::move(key), std::move(handler));
     return ret;
 }
 
-bool AstProcessorManager::registerSpecificNodeHandle(KeyType key, StmtNodeHandle handler) {
+bool AstProcessorManager::registerSpecificNodeHandle(AttrKeyType key, StmtNodeHandle handler) {
     auto [_, ret] = _stmtHandlers.try_emplace(std::move(key), std::move(handler));
     return ret;
 }
 
 HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
+                                                         const clang::Attr* attr,
                                                          const Decl& decl,
+                                                         OklSemaCtx& sema,
                                                          SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, decl.getKind()),
-                          _declHandlers,
-                          procType,
-                          _genericDeclHandle,
-                          [&decl, &stage](auto h) { return h.preAction(decl, stage); });
+    return runNodeHandler(
+        makeAttrKey(procType, attr), _declHandlers, procType, _defaultDeclHandlers, [&](auto h) {
+            return h.preAction(attr, decl, sema, stage);
+        });
 }
 
 HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
+                                                          const clang::Attr* attr,
                                                           const Decl& decl,
+                                                          OklSemaCtx& sema,
                                                           SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, decl.getKind()),
-                          _declHandlers,
-                          procType,
-                          _genericDeclHandle,
-                          [&decl, &stage](auto h) { return h.postAction(decl, stage); });
+    return runNodeHandler(
+        makeAttrKey(procType, attr), _declHandlers, procType, _defaultDeclHandlers, [&](auto h) {
+            return h.postAction(attr, decl, sema, stage);
+        });
 }
 
 HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
+                                                         const clang::Attr* attr,
                                                          const Stmt& stmt,
+                                                         OklSemaCtx& sema,
                                                          SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, stmt.getStmtClass()),
-                          _stmtHandlers,
-                          procType,
-                          _genericStmtHandle,
-                          [&stmt, &stage](auto h) { return h.preAction(stmt, stage); });
+    return runNodeHandler(
+        makeAttrKey(procType, attr), _stmtHandlers, procType, _defaultStmtHandlers, [&](auto h) {
+            return h.preAction(attr, stmt, sema, stage);
+        });
 }
 
 HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
+                                                          const clang::Attr* attr,
                                                           const Stmt& stmt,
+                                                          OklSemaCtx& sema,
                                                           SessionStage& stage) {
-    return runNodeHandler(std::make_tuple(procType, stmt.getStmtClass()),
-                          _stmtHandlers,
-                          procType,
-                          _genericStmtHandle,
-                          [&stmt, &stage](auto h) { return h.postAction(stmt, stage); });
+    return runNodeHandler(
+        makeAttrKey(procType, attr), _stmtHandlers, procType, _defaultStmtHandlers, [&](auto h) {
+            return h.postAction(attr, stmt, sema, stage);
+        });
 }
 }  // namespace oklt

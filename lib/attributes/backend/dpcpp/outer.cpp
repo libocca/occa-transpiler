@@ -2,7 +2,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
 
 namespace {
@@ -19,14 +19,14 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
 
     auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    auto forLoopMetaData = sema.getLoopMetaData(forStmt);
-    if (!forLoopMetaData) {
+    auto loopInfo = sema.getLoopInfo(forStmt);
+    if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
 
     int openedScopeCounter = 0;
     auto prefixCode =
-        dpcpp::buildInnerOuterLoopIdxLine(forLoopMetaData.value(), *params, openedScopeCounter);
+        dpcpp::buildInnerOuterLoopIdxLine(loopInfo.value(), *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

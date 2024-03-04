@@ -68,7 +68,6 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
     const Expr *start, *end = nullptr;
 
     auto policy = ctx.getPrintingPolicy();
-
     if (isa<DeclStmt>(s.getInit())) {
         auto d = dyn_cast<DeclStmt>(s.getInit());
         if (!d->isSingleDecl()) {
@@ -82,8 +81,8 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
             return tl::make_unexpected(Error{std::error_code(), "loop parse: no init"});
         }
 
-        ret.name = node->getDeclName().getAsString();
-        ret.type = node->getType().getAsString();
+        ret.var.name = node->getDeclName().getAsString();
+        ret.var.type = node->getType().getAsString();
 
         start = node->getInit();
         while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
@@ -115,7 +114,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         };
         if (lsh && lsh->getSubExpr()) {
             auto decl = dyn_cast_or_null<DeclRefExpr>(lsh->getSubExpr());
-            if (decl && decl->getNameInfo().getAsString() == ret.name) {
+            if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getRHS();
                 ret.range.end = prettyPrint(end, policy);
             }
@@ -128,7 +127,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         };
         if (rsh && rsh->getSubExpr()) {
             auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
-            if (decl && decl->getNameInfo().getAsString() == ret.name) {
+            if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getLHS();
                 ret.range.end = prettyPrint(end, policy);
                 ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
@@ -150,7 +149,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         auto node = dyn_cast<CompoundAssignOperator>(s.getInc());
 
         auto lsh = dyn_cast_or_null<DeclRefExpr>(node->getLHS());
-        if (lsh && lsh->getNameInfo().getAsString() != ret.name) {
+        if (lsh && lsh->getNameInfo().getAsString() != ret.var.name) {
             // TODO: add error code
             return tl::make_unexpected(Error{std::error_code(), "loop parse: decl not inc"});
         }
