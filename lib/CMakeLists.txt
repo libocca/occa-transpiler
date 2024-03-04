@@ -209,8 +209,7 @@ endif()
 
 target_include_directories(occa-transpiler
       PUBLIC
-      # ${CMAKE_SOURCE_DIR}/include
-      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       PRIVATE
         ${LLVM_INCLUDE_DIRS}

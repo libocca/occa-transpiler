@@ -45,8 +45,6 @@ if(TRANSPILER_TESTS)
 endif()
 
 
-# occa-transpiler
-
 install(
     TARGETS occa-transpiler
     EXPORT oklt-config
