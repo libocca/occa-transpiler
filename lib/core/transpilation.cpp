@@ -21,7 +21,10 @@ tl::expected<Replacements, std::error_code> toReplacements(const Transpilations&
 #endif
             auto error = replacemnts.add(r.replacemnt);
             if (error) {
-                llvm::errs() << "\t" << toString(std::move(error));
+                // Return error for everything except header insertions.
+                if (r.replacemnt.getOffset() != 0 && r.replacemnt.getLength() != 0) {
+                    llvm::errs() << "\t" << toString(std::move(error));
+                }
 
                 Replacements second;
                 error = second.add(r.replacemnt);
@@ -92,9 +95,7 @@ TranspilationBuilder& TranspilationBuilder::addInclude(std::string_view include)
 
     _trasnpilation.replacemnts.emplace_back(
         OKL_INCLUDES,
-        clang::tooling::Replacement(_sm,
-                                    CharSourceRange(SourceRange(loc, loc), false),
-                                    "#include " + std::string(include) + "\n"));
+        clang::tooling::Replacement(_sm, loc, 0, "#include " + std::string(include) + "\n"));
 
     return *this;
 }
