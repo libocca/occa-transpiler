@@ -12,7 +12,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-std::string prefixText = "#pragma omp parallel for\n";
+const std::string prefixText = "#pragma omp parallel for\n";
 
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     auto& meta = forLoop.metadata;
