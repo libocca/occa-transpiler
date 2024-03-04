@@ -7,8 +7,8 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPRestrictAttribute(const clang::Attr& attr,
-                                   const clang::VarDecl& decl,
+HandleResult handleOPENMPRestrictAttribute(const clang::Attr& attr,
+                                           const clang::VarDecl& decl,
                                    SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
@@ -17,7 +17,9 @@ bool handleOPENMPRestrictAttribute(const clang::Attr& attr,
     removeAttribute(attr, stage);
 
     std::string restrictText = " __restrict__ ";
-    return stage.getRewriter().InsertText(decl.getLocation(), restrictText, false, false);
+    stage.getRewriter().InsertText(decl.getLocation(), restrictText, false, false);
+
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPRestrictHandler() {

@@ -7,14 +7,14 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPAtomicAttribute(const Attr& attr, const Decl& decl, SessionStage& stage) {
+HandleResult handleOPENMPAtomicAttribute(const Attr& attr, const Decl& decl, SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
     removeAttribute(attr, stage);
 
-    return true;
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {

@@ -7,7 +7,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-bool handleOPENMPExclusiveAttribute(const Attr& attr, const VarDecl& var, SessionStage& stage) {
+HandleResult handleOPENMPExclusiveAttribute(const Attr& attr,
+                                            const VarDecl& var,
+                                            SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
@@ -16,7 +18,9 @@ bool handleOPENMPExclusiveAttribute(const Attr& attr, const VarDecl& var, Sessio
     // TODO: Add hasExclusive flag to currently open @outer loop.
 
     std::string exclusiveText = " int _occa_exclusive_index;";
-    return stage.getRewriter().InsertText(var.getLocation(), exclusiveText, false, true);
+    stage.getRewriter().InsertText(var.getLocation(), exclusiveText, false, true);
+
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {

@@ -1,7 +1,9 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/ast_processors/okl_sema_processor/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -9,22 +11,28 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleOPNMPInnerAttribute(const Attr& attr,
+HandleResult handleOPNMPInnerAttribute(const Attr& a,
                                        const ForStmt& stmt,
                                        const AttributedLoop* params,
-                                       SessionStage& stage) {
+                                       SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
-    removeAttribute(attr, stage);
-
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto forLoopMetaData = sema.getLoopMetaData(stmt);
-    if (!forLoopMetaData) {
-        return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
+    if (!params) {
+        return tl::make_unexpected(Error{std::error_code(), "@outer params nullptr"});
     }
 
-    return true;
+    auto& astCtx = s.getCompiler().getASTContext();
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto loopInfo = sema.getLoopInfo(stmt);
+    if (!loopInfo) {
+        return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
+    }
+
+    SourceRange attr_range = getAttrFullSourceRange(a);
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
+        .addReplacement(OKL_TRANSPILED_ATTR, attr_range, "")
+        .build();
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
