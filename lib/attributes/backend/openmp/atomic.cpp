@@ -1,10 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
 #include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+
 namespace {
 using namespace oklt;
 using namespace clang;
