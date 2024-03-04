@@ -14,14 +14,6 @@ using namespace clang;
 
 std::string prefixText = "#pragma omp parallel for\n";
 
-OklLoopInfo* getParent(OklLoopInfo& info) {
-    auto parent = info.parent;
-    while (parent && parent->metadata.type == LoopMetaType::Regular) {
-        parent = parent->parent;
-    }
-    return parent;
-}
-
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     auto& meta = forLoop.metadata;
     return "_occa_tiled_" + meta.var.name;
@@ -143,7 +135,6 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
         return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
     }
 
-    auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
@@ -159,7 +150,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
                  << ", isUnary: " << loopInfo.metadata.isUnary() << ")\n";
 #endif
 
-    auto parent = getParent(loopInfo.value());
+    auto parent = loopInfo->getAttributedParent();
 
     size_t parenCtx = 0;
     std::string prefixCode = (!parent && loopInfo->metadata.isOuter() ? prefixText : "");

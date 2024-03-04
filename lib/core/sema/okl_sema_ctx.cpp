@@ -8,6 +8,7 @@
 #include <oklt/util/string_utils.h>
 
 #include <clang/AST/Attr.h>
+#include <deque>
 
 namespace {
 using namespace clang;
@@ -81,6 +82,35 @@ bool isLegalTopLoopLevel(LoopMetaType loopType) {
 }  // namespace
 
 namespace oklt {
+
+OklLoopInfo* OklLoopInfo::getAttributedParent() {
+    auto ret = parent;
+    while (ret && ret->metadata.isRegular()) {
+        ret = ret->parent;
+    }
+    return ret;
+}
+
+OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
+    std::deque<OklLoopInfo*> elements = {};
+    for (auto& v : children) {
+        elements.push_back(&v);
+    }
+
+    while (!elements.empty()) {
+        auto el = elements.front();
+        elements.pop_front();
+        if (!el->metadata.isRegular())
+            return el;
+
+        for (auto& v : el->children) {
+            elements.push_back(&v);
+        }
+    }
+
+    return nullptr;
+}
+
 OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
     if (_parsingKernInfo.has_value()) {
         return nullptr;
