@@ -58,7 +58,7 @@ install(
 
 install(
     DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/oklt
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/oklt)
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
     EXPORT oklt-config
