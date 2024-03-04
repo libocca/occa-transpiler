@@ -1,0 +1,24 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# CPMAddPackage(expected
+    # GITHUB_REPOSITORY
+    # TartanLlama/expected
+    # GIT_TAG v1.1.0
+    # OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" ""
+    # )
+
+# CPMAddPackage(NAME nlohmann_json
+#    VERSION 3.11.2
+#    GITHUB_REPOSITORY nlohmann/json
+#    OPTIONS "JSON_BuildTests OFF")
+
+find_dependency(expected REQUIRED)
+find_dependency(nlohmann_json REQUIRED)
+
+# find_dependency(CUDAToolkit REQUIRED)
+# find_dependency(fmt REQUIRED)
+
+include(${CMAKE_CURRENT_LIST_DIR}/oklt-targets.cmake)
+
