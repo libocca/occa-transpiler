@@ -1,8 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
@@ -17,10 +15,8 @@ HandleResult handleExclusiveAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] handle attribute: @exclusive\n";
 #endif
-
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, getAttrFullSourceRange(a), "")
-        .build();
+    s.getRewriter().RemoveText(getAttrFullSourceRange(a));
+    return {};
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

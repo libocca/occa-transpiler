@@ -52,6 +52,9 @@ bool OKLAttrParam::isa() {
         return false;
 
     auto& val = std::any_cast<llvm::APSInt&>(data);
+    if (val.isNonNegative())
+        val.setIsSigned(std::numeric_limits<T>::is_signed);
+
     if (val.getBitWidth() > sizeof(T))
         return false;
     if (val.isSigned() != std::numeric_limits<T>::is_signed)
@@ -89,7 +92,14 @@ std::optional<T> OKLAttrParam::get() {
         return std::nullopt;  // Not an integer
 
     auto& val = std::any_cast<llvm::APSInt&>(data);
-    if (val < std::numeric_limits<T>::min() || val > std::numeric_limits<T>::max())
+    if (val.isNonNegative())
+        val.setIsSigned(std::numeric_limits<T>::is_signed);
+
+    static auto minVal =
+        llvm::APSInt::getMinValue(sizeof(T) * 8, !std::numeric_limits<T>::is_signed);
+    static auto maxVal =
+        llvm::APSInt::getMaxValue(sizeof(T) * 8, !std::numeric_limits<T>::is_signed);
+    if (val < minVal || val > maxVal)
         return std::nullopt;
 
     T ret = *reinterpret_cast<const T*>(val.abs().getRawData());

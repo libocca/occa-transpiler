@@ -1,10 +1,7 @@
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/utils/attributes.h"
-
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -30,10 +27,10 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
                  << '\n';
 #endif
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2u)
-        .addReplacement(OKL_TRANSPILED_ATTR, arange, CUDA_KERNEL_DEFINITION)
-        .addReplacement(OKL_TRANSPILED_NAME, frange, newFunctionName)
-        .build();
+    s.getRewriter().ReplaceText(arange, CUDA_KERNEL_DEFINITION);
+    s.getRewriter().ReplaceText(frange, newFunctionName);
+
+    return {};
 }
 
 }  // namespace oklt::cuda_subset
