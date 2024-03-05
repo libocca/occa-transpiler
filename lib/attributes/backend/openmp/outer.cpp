@@ -1,8 +1,6 @@
 #include "attributes/attribute_names.h"
+#include "attributes/backend/openmp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpilation.h"
 #include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -12,6 +10,14 @@ using namespace oklt;
 using namespace clang;
 
 const std::string prefixText = "#pragma omp parallel for\n";
+
+std::string getScopesCloseStr(size_t& parenCnt) {
+    std::string ret;
+    while (parenCnt--) {
+        ret += "}\n";
+    }
+    return ret;
+}
 
 HandleResult handleOPENMPOuterAttribute(const Attr& a,
                                         const ForStmt& stmt,
@@ -30,22 +36,26 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
 
-    // Diagnose `@shared` that are within current loop.
-    if (!loopInfo->vars.shared.empty()) {
-        auto child = loopInfo->getFirstAttributedChild();
-        if (!loopInfo->metadata.isOuter() || !child ||
-            child->metadata.type != LoopMetaType::Inner) {
-            return tl::make_unexpected(
-                Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
-        }
-    }
+    auto trans =
+        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
 
     auto parent = loopInfo->getAttributedParent();
 
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, attr_range, (!parent ? prefixText : ""))
-        .build();
+    SourceRange attrRange = getAttrFullSourceRange(a);
+    trans.addReplacement(OKL_TRANSPILED_ATTR, attrRange, (!parent ? prefixText : ""));
+
+    // process `@exclusive` that are within current loop.
+    if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, trans);
+        !procExclusive.has_value()) {
+        return procExclusive;
+    }
+
+    // process `@shared` that are within current loop.
+    if (auto procShared = openmp::postHandleShared(*loopInfo, trans); !procShared.has_value()) {
+        return procShared;
+    }
+
+    return trans.build();
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {

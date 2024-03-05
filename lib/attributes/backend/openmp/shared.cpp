@@ -21,7 +21,12 @@ HandleResult handleOPENMPSharedAttribute(const Attr& a, const Decl& decl, Sessio
         return tl::make_unexpected(Error{{}, "@shared: failed to fetch loop meta data from sema"});
     }
 
-    // Diag later?
+    if (loopInfo->metadata.type != LoopMetaType::Outer) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+    }
+
+    // Process later when processing ForStmt
     loopInfo->vars.shared.emplace_back(std::ref(decl));
 
     SourceRange attr_range = getAttrFullSourceRange(a);

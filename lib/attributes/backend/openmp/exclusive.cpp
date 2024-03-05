@@ -1,5 +1,8 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpilation.h"
+#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -7,20 +10,40 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleOPENMPExclusiveAttribute(const Attr& attr,
-                                            const VarDecl& var,
-                                            SessionStage& stage) {
+const std::string outerLoopText = "\nint _occa_exclusive_index;";
+
+HandleResult handleOPENMPExclusiveAttribute(const Attr& a, const VarDecl& decl, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
-    removeAttribute(attr, stage);
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto loopInfo = sema.getLoopInfo();
+    if (!loopInfo) {
+        return tl::make_unexpected(
+            Error{{}, "@exclusive: failed to fetch loop meta data from sema"});
+    }
 
-    // TODO: Add hasExclusive flag to currently open @outer loop.
+    auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
+    if (!compStmt || loopInfo->metadata.type != LoopMetaType::Outer) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
+    }
 
-    std::string exclusiveText = " int _occa_exclusive_index;";
-    stage.getRewriter().InsertText(var.getLocation(), exclusiveText, false, true);
+    auto trans =
+        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
 
-    return {};
+    SourceRange attrRange = getAttrFullSourceRange(a);
+    trans.addReplacement(OKL_TRANSPILED_ATTR, attrRange, "");
+
+    if (loopInfo->vars.exclusive.empty()) {
+        auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
+        trans.addReplacement(OKL_TRANSPILED_ATTR, indexLoc, outerLoopText);
+    }
+
+    // Process later when processing ForStmt
+    loopInfo->vars.exclusive.emplace_back(std::ref(decl));
+
+    return trans.build();
 }
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {

@@ -11,23 +11,20 @@ using namespace clang;
 
 const std::string externC = "extern \"C\"";
 
-HandleResult handleOPENMPKernelAttribute(const clang::Attr& attr,
-                                         const clang::FunctionDecl& decl,
-                                         SessionStage& stage) {
+HandleResult handleOPENMPKernelAttribute(const Attr& a, const FunctionDecl& decl, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
-    auto trans = TranspilationBuilder(stage.getCompiler().getSourceManager(),
-                                      attr.getNormalizedFullName(),
-                                      1 + decl.param_size());
+    auto trans = TranspilationBuilder(
+        s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1 + decl.param_size());
 
     // Add 'extern "C"'
-    SourceRange attr_range = getAttrFullSourceRange(attr);
+    SourceRange attr_range = getAttrFullSourceRange(a);
     trans.addReplacement(OKL_TRANSPILED_ATTR, attr_range, externC);
 
     // Convert ann non-pointer params to references
-    auto& ctx = stage.getCompiler().getASTContext();
+    auto& ctx = s.getCompiler().getASTContext();
     for (const auto param : decl.parameters()) {
         if (!param || !param->getType().getTypePtrOrNull()) {
             continue;

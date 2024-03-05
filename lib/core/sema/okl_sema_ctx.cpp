@@ -111,6 +111,29 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
     return nullptr;
 }
 
+std::optional<size_t> OklLoopInfo::getSize() {
+    if (metadata.isRegular()) {
+        if (children.empty()) {
+            return std::nullopt;
+        }
+    } else if (metadata.range.size == 0) {
+        return std::nullopt;
+    }
+
+    auto sz = size_t{1};
+    sz = std::max(metadata.range.size, sz);
+
+    auto ret = sz;
+    for (auto& child : children) {
+        auto v = child.getSize();
+        if (!v.has_value()) {
+            return std::nullopt;
+        }
+        ret = std::max(sz * v.value(), ret);
+    }
+    return ret;
+}
+
 OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
     if (_parsingKernInfo.has_value()) {
         return nullptr;
@@ -154,31 +177,31 @@ bool OklSemaCtx::isDeclInLexicalTraversal(const Decl& decl) const {
            std::addressof(kernelInfo.decl.get());
 }
 
-std::optional<OklLoopInfo> OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
+OklLoopInfo* OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
     if (!_parsingKernInfo) {
-        return std::nullopt;
+        return nullptr;
     }
     auto& kernelInfo = _parsingKernInfo.value();
 
     auto it = kernelInfo.loopMap.find(&forStmt);
     if (it == kernelInfo.loopMap.end() || !it->second) {
-        return std::nullopt;
+        return nullptr;
     }
 
-    return *it->second;
+    return it->second;
 }
 
-[[nodiscard]] std::optional<OklLoopInfo> OklSemaCtx::getLoopInfo() {
+[[nodiscard]] OklLoopInfo* OklSemaCtx::getLoopInfo() {
     if (!_parsingKernInfo) {
-        return std::nullopt;
+        return nullptr;
     }
 
     auto& kernelInfo = _parsingKernInfo.value();
     if (kernelInfo.currentLoop) {
-        return *kernelInfo.currentLoop;
+        return kernelInfo.currentLoop;
     }
 
-    return std::nullopt;
+    return nullptr;
 }
 
 tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,

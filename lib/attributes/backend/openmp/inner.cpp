@@ -11,6 +11,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
+const std::string exclusiveNullText = "_occa_exclusive_index = 0;\n";
+const std::string exclusiveIncText = "++_occa_exclusive_index;\n";
+
 HandleResult handleOPNMPInnerAttribute(const Attr& a,
                                        const ForStmt& stmt,
                                        const AttributedLoop* params,
@@ -28,10 +31,35 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, attr_range, "")
-        .build();
+    auto trans =
+        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
+
+    SourceRange attrRange = getAttrFullSourceRange(a);
+    trans.addReplacement(OKL_TRANSPILED_ATTR, attrRange, "");
+
+    // Top most `@inner` loop
+    auto parent = loopInfo->getAttributedParent();
+    if (parent && parent->metadata.isOuter()) {
+        trans.addReplacement(OKL_LOOP_EPILOGUE, stmt.getBeginLoc(), exclusiveNullText);
+    }
+
+    // Bottom most `@inner` loop
+    if (loopInfo->children.empty()) {
+        // Get `@outer` attributed loop
+        auto outerParent = parent;
+        while (outerParent && !outerParent->metadata.isOuter()) {
+            outerParent = outerParent->parent;
+        }
+
+        if (outerParent && !outerParent->vars.exclusive.empty()) {
+            auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
+            SourceLocation incLoc =
+                compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
+            trans.addReplacement(OKL_LOOP_EPILOGUE, incLoc, exclusiveIncText);
+        }
+    }
+
+    return trans.build();
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {

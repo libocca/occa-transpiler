@@ -1,9 +1,10 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/attribute_names.h"
+#include "attributes/backend/openmp/common.h"
 #include "attributes/utils/code_gen.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
+#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
@@ -13,15 +14,17 @@ using namespace oklt;
 using namespace clang;
 
 const std::string prefixText = "#pragma omp parallel for\n";
+const std::string exclusiveNullText = "_occa_exclusive_index = 0;\n";
+const std::string exclusiveIncText = "++_occa_exclusive_index;\n";
 
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     auto& meta = forLoop.metadata;
     return "_occa_tiled_" + meta.var.name;
 }
 
-std::string getScopesCloseStr(size_t& openedScopeCounter) {
+std::string getScopesCloseStr(size_t& parenCnt) {
     std::string ret;
-    while (openedScopeCounter--) {
+    while (parenCnt--) {
         ret += "}\n";
     }
     return ret;
@@ -29,7 +32,7 @@ std::string getScopesCloseStr(size_t& openedScopeCounter) {
 
 std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
                                  const OklLoopInfo& loopInfo,
-                                 const TileParams* params,
+                                 [[maybe_unused]] const TileParams* params,
                                  size_t& parenCnt) {
     auto tiledVar = getTiledVariableName(loopInfo);
     auto& meta = loopInfo.metadata;
@@ -60,7 +63,7 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
 
 std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
                                   const OklLoopInfo& loopInfo,
-                                  const TileParams* params,
+                                  [[maybe_unused]] const TileParams* params,
                                   size_t& parenCnt) {
     auto tiledVar = getTiledVariableName(loopInfo);
     auto& meta = loopInfo.metadata;
@@ -108,12 +111,8 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
 
 std::string buildCheckString([[maybe_unused]] const ForStmt& stmt,
                              const OklLoopInfo& loopInfo,
-                             const TileParams* params,
+                             [[maybe_unused]] const TileParams* params,
                              size_t& parenCnt) {
-    if (!params->check) {
-        return "";
-    }
-
     auto& meta = loopInfo.metadata;
     auto cmpStr = getCondCompStr(meta.condition.op);
 
@@ -150,20 +149,82 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
                  << ", isUnary: " << loopInfo.metadata.isUnary() << ")\n";
 #endif
 
+    auto trans =
+        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
+
     auto parent = loopInfo->getAttributedParent();
 
-    size_t parenCtx = 0;
-    std::string prefixCode = (!parent && loopInfo->metadata.isOuter() ? prefixText : "");
-    prefixCode += buildFirstLoopString(stmt, loopInfo.value(), params, parenCtx);
-    prefixCode += buildSecondLoopString(stmt, loopInfo.value(), params, parenCtx);
-    prefixCode += buildCheckString(stmt, loopInfo.value(), params, parenCtx);
+    size_t parenCnt = 0;
+    std::string prefixCode;
 
-    std::string suffixCode;
-    while (parenCtx--) {
-        suffixCode += "}\n";
+    // Top level `@outer` loop
+    if (!parent && loopInfo->metadata.isOuter()) {
+        prefixCode += prefixText;
     }
 
-    return replaceAttributedLoop(a, stmt, prefixCode, suffixCode, s);
+    // `@inner` loop just after `@outer`
+    // Top most `@inner` loop
+    if (parent && parent->metadata.isOuter() && loopInfo->metadata.type == LoopMetaType::Inner) {
+        if (!parent->vars.exclusive.empty()) {
+            prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
+        }
+    }
+
+    // First loop. usually `@outer`
+    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt);
+
+    // `@inner` loop just after `@outer`
+    // Top most `@inner` loop
+    if (parent && loopInfo->metadata.type == LoopMetaType::OuterInner) {
+        if (!parent->vars.exclusive.empty()) {
+            prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
+        }
+    }
+
+    // Second loop. usually `@inner`
+    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt);
+
+    // Check code
+    if (params->check) {
+        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt);
+    }
+
+    trans.addReplacement(OKL_LOOP_PROLOGUE,
+                         SourceRange{getAttrFullSourceRange(a).getBegin(), stmt.getRParenLoc()},
+                         prefixCode);
+
+    // Bottom most `@inner` loop
+    if (loopInfo->children.empty()) {
+        auto outerParent = loopInfo;
+        while (parent && !parent->metadata.isOuter()) {
+            parent = parent->parent;
+        }
+
+        if (parent && !parent->vars.exclusive.empty()) {
+            auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
+            SourceLocation incLoc =
+                compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
+            trans.addReplacement(OKL_LOOP_EPILOGUE, incLoc, exclusiveIncText);
+        }
+    }
+
+    std::string suffixCode = getScopesCloseStr(parenCnt);
+    trans.addReplacement(OKL_LOOP_EPILOGUE, stmt.getEndLoc(), suffixCode);
+
+    if (loopInfo->metadata.type == LoopMetaType::Outer) {
+        // process `@exclusive` that are within current loop.
+        if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, trans);
+            !procExclusive.has_value()) {
+            return procExclusive;
+        }
+
+        // process `@shared` that are within current loop.
+        if (auto procShared = openmp::postHandleShared(*loopInfo, trans); !procShared.has_value()) {
+            return procShared;
+        }
+    }
+
+    return trans.build();
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
