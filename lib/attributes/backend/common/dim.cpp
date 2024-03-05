@@ -129,16 +129,17 @@ std::string buildIndexCalculation(const ExprVec& dimVarArgs,
                                   const DimOrder& dimOrder,
                                   SessionStage& stage) {
     auto& ctx = stage.getCompiler().getASTContext();
+    auto& rewriter = stage.getRewriter();
     int n_dims = params->dim.size();
     std::string indexCalculation;
     // Open brackets
     for (int dim = 0; dim < n_dims - 1; ++dim) {
         auto idx = dimOrder[dim];
-        auto dimVarArgStr = getSourceText(*dimVarArgs[idx], ctx);
+        auto dimVarArgStr = rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
         indexCalculation += util::fmt("{} + ({} * (", dimVarArgStr, params->dim[idx]).value();
     }
     auto idx = dimOrder[n_dims - 1];
-    indexCalculation += getSourceText(*dimVarArgs[idx], ctx);
+    indexCalculation += rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
     // Close brackets
     for (int i = 0; i < 2 * (n_dims - 1); ++i) {
         indexCalculation += ")";
