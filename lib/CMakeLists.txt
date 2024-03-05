@@ -17,7 +17,6 @@ set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_metadata.h
 
-
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
     ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
@@ -180,7 +179,7 @@ CPMAddPackage(expected
     GITHUB_REPOSITORY
     TartanLlama/expected
     GIT_TAG v1.1.0
-    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" ""
+    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" 
 )
 
 CPMAddPackage(NAME nlohmann_json
@@ -207,7 +206,8 @@ endif()
 
 target_include_directories(occa-transpiler
       PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       PRIVATE
         ${LLVM_INCLUDE_DIRS}
         ${LIBCLANG_INCLUDE_DIRS}
@@ -217,9 +217,9 @@ target_include_directories(occa-transpiler
 
 target_link_libraries(occa-transpiler
     PUBLIC
-        tl::expected
-        nlohmann_json::nlohmann_json
+        $<BUILD_INTERFACE:tl::expected>
     PRIVATE
+        $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>
         ${CLANG_LIBS}
 )
 
