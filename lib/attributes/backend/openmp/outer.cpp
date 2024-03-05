@@ -1,7 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/backend/openmp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 

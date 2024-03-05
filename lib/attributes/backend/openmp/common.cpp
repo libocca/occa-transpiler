@@ -1,5 +1,4 @@
 #include "attributes/backend/openmp/common.h"
-#include "core/transpilation_encoded_names.h"
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
