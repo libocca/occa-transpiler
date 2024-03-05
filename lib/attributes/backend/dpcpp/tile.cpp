@@ -6,8 +6,8 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "core/sema/okl_sema_ctx.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
 namespace {
@@ -207,13 +207,11 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo.value().metadata.var.type
-                 << ", name: " << loopInfo.value().metadata.var.name
-                 << ", initValue: " << loopInfo.value().metadata.range.start
-                 << "), Cond(rhsExpr: " << loopInfo.value().metadata.range.end
-                 << "), Inc(rhsInc: " << loopInfo.value().metadata.inc.val
-                 << ", isUnary: " << loopInfo.value().metadata.isUnary() << ")\n";
+    const auto& md = loopInfo->metadata;
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init(" << "type: " << toString(md.type)
+                 << ", name: " << md.var.name << ", initValue: " << md.range.start
+                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
+                 << ", isUnary: " << md.isUnary() << ")\n";
 #endif
 
     int openedScopeCounter = 0;
@@ -222,6 +220,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
+
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::DPCPP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleTileAttribute));

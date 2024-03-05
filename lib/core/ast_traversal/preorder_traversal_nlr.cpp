@@ -1,7 +1,6 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/sema/okl_sema_ctx.h"
-#include "core/transpilation.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Attr.h>
@@ -69,8 +68,7 @@ bool traverseExpr(TraversalType& traversal,
                   ExprType* expr,
                   AstProcessorManager& procMng,
                   SessionStage& stage,
-                  OklSemaCtx& sema,
-                  Transpilations& transpilations) {
+                  OklSemaCtx& sema) {
     if (expr == nullptr) {
         return true;
     }
@@ -85,10 +83,6 @@ bool traverseExpr(TraversalType& traversal,
         return false;
     }
 
-    if (!isEmpty(result.value())) {
-        transpilations.emplace_back(std::move(result.value()));
-    }
-
     // dispatch the next node
     if (!dispatchTraverseFunc(traversal, expr)) {
         stage.pushError(Error{.ec = std::error_code(), .desc = "trasverse is stopped"});
@@ -99,10 +93,6 @@ bool traverseExpr(TraversalType& traversal,
     if (!result) {
         stage.pushError(std::move(result.error()));
         return false;
-    }
-
-    if (!isEmpty(result.value())) {
-        transpilations.emplace_back(std::move(result.value()));
     }
 
     return true;
@@ -116,27 +106,21 @@ PreorderNlrTraversal::PreorderNlrTraversal(AstProcessorManager& procMng, Session
       _sema(_stage.tryEmplaceUserCtx<OklSemaCtx>()) {}
 
 bool PreorderNlrTraversal::TraverseDecl(clang::Decl* decl) {
-    return traverseExpr(*this, decl, _procMng, _stage, _sema, _trasnpilations);
+    return traverseExpr(*this, decl, _procMng, _stage, _sema);
 }
 
 bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
-    return traverseExpr(*this, stmt, _procMng, _stage, _sema, _trasnpilations);
+    return traverseExpr(*this, stmt, _procMng, _stage, _sema);
 }
 
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translationUnitDecl) {
-    return traverseExpr(*this, translationUnitDecl, _procMng, _stage, _sema, _trasnpilations);
+    return traverseExpr(*this, translationUnitDecl, _procMng, _stage, _sema);
 }
 
 tl::expected<std::string, std::error_code> PreorderNlrTraversal::applyAstProccessor(
     clang::TranslationUnitDecl* translationUnitDecl) {
     if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-        return tl::make_unexpected(std::error_code());
-    }
-
-    auto ok = applyTranspilations(_trasnpilations, _stage.getRewriter());
-    // auto ok = applyTranspilations(_trasnpilations, _stage);
-    if (!ok) {
         return tl::make_unexpected(std::error_code());
     }
 

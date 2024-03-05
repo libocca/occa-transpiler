@@ -86,13 +86,11 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo.value().metadata.var.type
-                 << ", name: " << loopInfo.value().metadata.var.name
-                 << ", initValue: " << loopInfo.value().metadata.range.start
-                 << "), Cond(rhsExpr: " << loopInfo.value().metadata.range.end
-                 << "), Inc(rhsInc: " << loopInfo.value().metadata.inc.val
-                 << ", isUnary: " << loopInfo.value().metadata.isUnary() << ")\n";
+    const auto& md = loopInfo->metadata;
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init(" << "type: " << toString(md.type)
+                 << ", name: " << md.var.name << ", initValue: " << md.range.start
+                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
+                 << ", isUnary: " << md.isUnary() << ")\n";
 #endif
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }

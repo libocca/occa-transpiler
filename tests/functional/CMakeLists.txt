@@ -2,6 +2,7 @@ CPMAddPackage(
   googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG v1.13.0
+  OPTIONS "INSTALL_GTEST OFF" "INSTALL_GMOCK OFF"
 )
 
 CPMAddPackage(

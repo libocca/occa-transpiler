@@ -4,8 +4,6 @@
 #include "attributes/frontend/params/dim.h"
 #include "attributes/utils/parser.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 
@@ -24,10 +22,8 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
     llvm::outs() << "handle @dim decl: "
                  << getSourceText(decl.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
 
-    // Just remove attribute
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), "dim", 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, getAttrFullSourceRange(a), "")
-        .build();
+    s.getRewriter().RemoveText(getAttrFullSourceRange(a));
+    return {};
 }
 
 // Given variable, returns dim order (0, 1, .. n) if no @dimOrder, or parses @dimOrder if present
@@ -195,11 +191,9 @@ HandleResult handleDimStmtAttribute(const clang::Attr& a,
     ExprVec dimVarArgs(expressions.value().begin() + 1, expressions.value().end());
     auto indexCalculation = buildIndexCalculation(dimVarArgs, params, dimOrder.value(), stage);
 
-    return TranspilationBuilder(stage.getCompiler().getSourceManager(), "dim", 1)
-        .addReplacement(OKL_DIM_ACCESS,
-                        stmt.getSourceRange(),
-                        util::fmt("{}[{}]", dimVarNameStr, indexCalculation).value())
-        .build();
+    stage.getRewriter().ReplaceText(stmt.getSourceRange(),
+                                    util::fmt("{}[{}]", dimVarNameStr, indexCalculation).value());
+    return {};
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

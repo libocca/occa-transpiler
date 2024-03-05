@@ -20,32 +20,6 @@ using namespace oklt;
 
 ///////////////////// handlers entry points ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-HandleResult runPreValidationSemaDecl(const Attr* attr,
-                                      const Decl& decl,
-                                      OklSemaCtx& sema,
-                                      SessionStage& stage) {
-    switch (decl.getKind()) {
-        case Decl::Kind::ParmVar:
-            return preValidateOklKernelParam(cast<ParmVarDecl>(decl), sema, stage);
-        default:
-            return runDefaultPreActionDecl(attr, decl, sema, stage);
-    }
-    return {};
-}
-
-HandleResult runPostValidationSemaDecl(const Attr* attr,
-                                       const Decl& decl,
-                                       OklSemaCtx& sema,
-                                       SessionStage& stage) {
-    switch (decl.getKind()) {
-        case Decl::Kind::ParmVar:
-            return postValidateOklKernelParam(cast<ParmVarDecl>(decl), sema, stage);
-        default:
-            return runDefaultPostActionDecl(attr, decl, sema, stage);
-    }
-    return {};
-}
-
 HandleResult runPreValidationSemaStmt(const Attr* attr,
                                       const Stmt& stmt,
                                       OklSemaCtx& sema,
@@ -84,7 +58,7 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
     // default decl/stmt sema handlers
     auto ok = mng.registerDefaultHandle(
         {AstProcessorType::OKL_WITH_SEMA},
-        DeclHandle{.preAction = runPreValidationSemaDecl, .postAction = runPostValidationSemaDecl});
+        DeclHandle{.preAction = runDefaultPreActionDecl, .postAction = runDefaultPostActionDecl});
     assert(ok);
 
     ok = mng.registerDefaultHandle(
@@ -97,13 +71,6 @@ __attribute__((constructor)) void registerAstNodeHanlder() {
         {AstProcessorType::OKL_WITH_SEMA, KERNEL_ATTR_NAME},
         DeclHandle{.preAction = makeSpecificSemaHandle(preValidateOklKernel),
                    .postAction = makeSpecificSemaHandle(postValidateOklKernel)});
-    assert(ok);
-
-    // sema for OKL kernel parametets
-    ok = mng.registerSpecificNodeHandle(
-        {AstProcessorType::OKL_WITH_SEMA, RESTRICT_ATTR_NAME},
-        DeclHandle{.preAction = makeSpecificSemaHandle(preValidateOklKernelAttrArg),
-                   .postAction = makeSpecificSemaHandle(postValidateOklKernelAttrArg)});
     assert(ok);
 
     // all OKL attributed loop stmt

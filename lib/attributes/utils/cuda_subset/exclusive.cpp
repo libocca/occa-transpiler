@@ -1,6 +1,4 @@
 #include "core/attribute_manager/result.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -15,9 +13,7 @@ HandleResult handleExclusiveAttribute(const clang::Attr& attr,
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
-    return TranspilationBuilder(
-               stage.getCompiler().getSourceManager(), attr.getNormalizedFullName(), 1)
-        .addReplacement(OKL_EXCLUSIVE, getAttrFullSourceRange(attr), "")
-        .build();
+    stage.getRewriter().RemoveText(getAttrFullSourceRange(attr));
+    return {};
 }
 }  // namespace oklt::cuda_subset

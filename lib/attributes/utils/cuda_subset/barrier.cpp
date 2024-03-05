@@ -1,8 +1,6 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/Stmt.h>
 #include "attributes/utils/cuda_subset/handle.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "pipeline/stages/transpiler/error_codes.h"
@@ -26,9 +24,8 @@ oklt::HandleResult handleBarrierAttribute(const clang::Attr& attr,
         replacement = "__syncwarp()";
     }
     auto range = getAttrFullSourceRange(attr);
-    return TranspilationBuilder(
-               stage.getCompiler().getSourceManager(), attr.getNormalizedFullName(), 1)
-        .addReplacement(OKL_BARRIER, range.getBegin(), range.getEnd(), replacement)
-        .build();
+    stage.getRewriter().ReplaceText(range, replacement);
+
+    return {};
 }
 }  // namespace oklt::cuda_subset
