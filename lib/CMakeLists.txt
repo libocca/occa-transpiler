@@ -218,8 +218,8 @@ target_include_directories(occa-transpiler
 target_link_libraries(occa-transpiler
     PUBLIC
         $<BUILD_INTERFACE:tl::expected>
-        $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>
     PRIVATE
+        $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>
         ${CLANG_LIBS}
 )
 
