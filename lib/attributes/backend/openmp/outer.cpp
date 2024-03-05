@@ -36,26 +36,25 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
 
-    auto trans =
-        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
+    auto& rewriter = s.getRewriter();
 
     auto parent = loopInfo->getAttributedParent();
 
     SourceRange attrRange = getAttrFullSourceRange(a);
-    trans.addReplacement(OKL_TRANSPILED_ATTR, attrRange, (!parent ? prefixText : ""));
+    rewriter.ReplaceText(attrRange, (!parent ? prefixText : ""));
 
     // process `@exclusive` that are within current loop.
-    if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, trans);
+    if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, rewriter);
         !procExclusive.has_value()) {
         return procExclusive;
     }
 
     // process `@shared` that are within current loop.
-    if (auto procShared = openmp::postHandleShared(*loopInfo, trans); !procShared.has_value()) {
+    if (auto procShared = openmp::postHandleShared(*loopInfo, rewriter); !procShared.has_value()) {
         return procShared;
     }
 
-    return trans.build();
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {

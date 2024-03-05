@@ -1,7 +1,5 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -16,24 +14,20 @@ HandleResult handleOPENMPAtomicAttribute(const Attr& a, const Stmt& stmt, Sessio
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
+    auto& rewriter = s.getRewriter();
 
-    SourceRange attr_range = getAttrFullSourceRange(a);
+    SourceRange attrRange = getAttrFullSourceRange(a);
     if (isa<Expr>(stmt)) {
-        return TranspilationBuilder(
-                   s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-            .addReplacement(OKL_TRANSPILED_ATTR, attr_range, prefixExprText)
-            .build();
+        rewriter.ReplaceText(attrRange, prefixExprText);
+        return {};
     }
     if (isa<CompoundStmt>(stmt)) {
-        return TranspilationBuilder(
-                   s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-            .addReplacement(OKL_TRANSPILED_ATTR, attr_range, prefixCompoundText)
-            .build();
+        rewriter.ReplaceText(attrRange, prefixCompoundText);
+        return {};
     }
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, attr_range, "")
-        .build();
+    rewriter.RemoveText(attrRange);
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {

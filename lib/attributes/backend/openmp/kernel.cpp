@@ -1,7 +1,5 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -16,12 +14,11 @@ HandleResult handleOPENMPKernelAttribute(const Attr& a, const FunctionDecl& decl
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
 
-    auto trans = TranspilationBuilder(
-        s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1 + decl.param_size());
+    auto& rewriter = s.getRewriter();
 
     // Add 'extern "C"'
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    trans.addReplacement(OKL_TRANSPILED_ATTR, attr_range, externC);
+    SourceRange attrRange = getAttrFullSourceRange(a);
+    rewriter.ReplaceText(attrRange, externC);
 
     // Convert ann non-pointer params to references
     auto& ctx = s.getCompiler().getASTContext();
@@ -33,11 +30,11 @@ HandleResult handleOPENMPKernelAttribute(const Attr& a, const FunctionDecl& decl
         auto t = param->getType();
         if (!t->isPointerType()) {
             auto locRange = param->DeclaratorDecl::getSourceRange();
-            trans.addReplacement(OKL_TRANSPILED_ARG, locRange.getEnd(), " &");
+            rewriter.InsertTextAfter(locRange.getEnd(), " &");
         }
     }
 
-    return trans.build();
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPKernelHandler() {

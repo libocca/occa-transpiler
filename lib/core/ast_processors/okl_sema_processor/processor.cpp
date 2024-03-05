@@ -1,4 +1,3 @@
-#include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_processors/default_actions.h"

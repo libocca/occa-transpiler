@@ -1,8 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -30,9 +28,9 @@ HandleResult handleOPENMPSharedAttribute(const Attr& a, const Decl& decl, Sessio
     loopInfo->vars.shared.emplace_back(std::ref(decl));
 
     SourceRange attr_range = getAttrFullSourceRange(a);
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_TRANSPILED_ATTR, attr_range, "")
-        .build();
+    s.getRewriter().RemoveText(attr_range);
+
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {

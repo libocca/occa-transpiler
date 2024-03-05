@@ -2,8 +2,6 @@
 #include "attributes/frontend/params/loop.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -31,11 +29,10 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
-    auto trans =
-        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
+    auto& rewriter = s.getRewriter();
 
     SourceRange attrRange = getAttrFullSourceRange(a);
-    trans.addReplacement(OKL_TRANSPILED_ATTR, attrRange, "");
+    rewriter.RemoveText(attrRange);
 
     // Top most `@inner` loop
     auto parent = loopInfo->getAttributedParent();
@@ -47,7 +44,7 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
         }
 
         if (outerParent && !outerParent->vars.exclusive.empty()) {
-            trans.addReplacement(OKL_LOOP_EPILOGUE, stmt.getBeginLoc(), exclusiveNullText);
+            rewriter.InsertTextBefore(stmt.getBeginLoc(), exclusiveNullText);
         }
     }
 
@@ -63,11 +60,11 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
-            trans.addReplacement(OKL_LOOP_EPILOGUE, incLoc, exclusiveIncText);
+            rewriter.InsertTextBefore(incLoc, exclusiveIncText);
         }
     }
 
-    return trans.build();
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {

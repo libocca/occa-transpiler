@@ -1,12 +1,13 @@
 #include "attributes/backend/openmp/common.h"
-#include "attributes/frontend/params/loop.h"
 #include "core/transpilation_encoded_names.h"
+
+#include <clang/Rewrite/Core/Rewriter.h>
 
 namespace oklt::openmp {
 using namespace oklt;
 using namespace clang;
 
-HandleResult postHandleExclusive(OklLoopInfo& loopInfo, TranspilationBuilder& trans) {
+HandleResult postHandleExclusive(OklLoopInfo& loopInfo, Rewriter& rewriter) {
     if (loopInfo.vars.exclusive.empty()) {
         return {};
     }
@@ -25,18 +26,18 @@ HandleResult postHandleExclusive(OklLoopInfo& loopInfo, TranspilationBuilder& tr
     for (auto& v : loopInfo.vars.exclusive) {
         auto& decl = v.get();
         auto nameLoc = decl.getLocation().getLocWithOffset(decl.getName().size());
-        trans.addReplacement(OKL_TRANSPILED_ATTR, nameLoc, varSuffix);
+        rewriter.InsertTextAfter(nameLoc, varSuffix);
         if (decl.hasInit()) {
             auto expr = decl.getInit();
-            trans.addReplacement(OKL_TRANSPILED_ATTR, expr->getBeginLoc(), "{");
-            trans.addReplacement(OKL_TRANSPILED_ATTR, decl.getEndLoc().getLocWithOffset(1), "}");
+            rewriter.InsertTextBefore(expr->getBeginLoc(), "{");
+            rewriter.InsertTextAfter(decl.getEndLoc().getLocWithOffset(1), "}");
         }
     }
 
     return {};
 }
 
-HandleResult postHandleShared(OklLoopInfo& loopInfo, TranspilationBuilder& trans) {
+HandleResult postHandleShared(OklLoopInfo& loopInfo, Rewriter& rewriter) {
     if (loopInfo.vars.shared.empty())
         return {};
 

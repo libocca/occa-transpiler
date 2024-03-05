@@ -1,7 +1,5 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -15,9 +13,8 @@ HandleResult handleOPENMPBarrierAttribute(const Attr& a, const NullStmt& stmt, S
 #endif
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_BARRIER, range, "")
-        .build();
+    s.getRewriter().RemoveText(range);
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPBarrierHandler() {

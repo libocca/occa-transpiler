@@ -1,8 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -32,21 +30,20 @@ HandleResult handleOPENMPExclusiveDeclAttribute(const Attr& a,
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
 
-    auto trans =
-        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
+    auto& rewriter = s.getRewriter();
 
     SourceRange attrRange = getAttrFullSourceRange(a);
-    trans.addReplacement(OKL_TRANSPILED_ATTR, attrRange, "");
+    rewriter.RemoveText(attrRange);
 
     if (loopInfo->vars.exclusive.empty()) {
         auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
-        trans.addReplacement(OKL_TRANSPILED_ATTR, indexLoc, outerLoopText);
+        rewriter.InsertTextAfter(indexLoc, outerLoopText);
     }
 
     // Process later when processing ForStmt
     loopInfo->vars.exclusive.emplace_back(std::ref(decl));
 
-    return trans.build();
+    return {};
 }
 
 HandleResult handleOPENMPExclusiveExprAttribute(const Attr& a,
@@ -63,9 +60,9 @@ HandleResult handleOPENMPExclusiveExprAttribute(const Attr& a,
     }
 
     auto loc = expr.getLocation().getLocWithOffset(expr.getNameInfo().getAsString().size());
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
-        .addReplacement(OKL_EXCLUSIVE_OP, loc, exlusiveExprText)
-        .build();
+    s.getRewriter().InsertTextAfter(loc, exlusiveExprText);
+
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {

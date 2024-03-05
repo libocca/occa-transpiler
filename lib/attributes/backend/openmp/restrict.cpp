@@ -1,7 +1,5 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/transpilation.h"
-#include "core/transpilation_encoded_names.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -17,11 +15,12 @@ HandleResult handleOPENMPRestrictAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
+    auto& rewriter = s.getRewriter();
 
-    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 2)
-        .addReplacement(OKL_TRANSPILED_ARG, getAttrFullSourceRange(a), "")
-        .addReplacement(OKL_TRANSPILED_ARG, decl.getLocation(), restrictText)
-        .build();
+    rewriter.RemoveText(getAttrFullSourceRange(a));
+    rewriter.InsertTextBefore(decl.getLocation(), restrictText);
+
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPRestrictHandler() {

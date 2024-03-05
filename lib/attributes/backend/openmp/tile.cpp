@@ -149,8 +149,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
                  << ", isUnary: " << loopInfo.metadata.isUnary() << ")\n";
 #endif
 
-    auto trans =
-        TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1);
+    auto& rewriter = s.getRewriter();
 
     auto parent = loopInfo->getAttributedParent();
 
@@ -189,8 +188,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
         prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt);
     }
 
-    trans.addReplacement(OKL_LOOP_PROLOGUE,
-                         SourceRange{getAttrFullSourceRange(a).getBegin(), stmt.getRParenLoc()},
+    rewriter.ReplaceText(SourceRange{getAttrFullSourceRange(a).getBegin(), stmt.getRParenLoc()},
                          prefixCode);
 
     // Bottom most `@inner` loop
@@ -204,27 +202,28 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
-            trans.addReplacement(OKL_LOOP_EPILOGUE, incLoc, exclusiveIncText);
+            rewriter.InsertTextBefore(incLoc, exclusiveIncText);
         }
     }
 
     std::string suffixCode = getScopesCloseStr(parenCnt);
-    trans.addReplacement(OKL_LOOP_EPILOGUE, stmt.getEndLoc(), suffixCode);
+    rewriter.InsertTextAfter(stmt.getEndLoc(), suffixCode);
 
     if (loopInfo->metadata.type == LoopMetaType::Outer) {
         // process `@exclusive` that are within current loop.
-        if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, trans);
+        if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, rewriter);
             !procExclusive.has_value()) {
             return procExclusive;
         }
 
         // process `@shared` that are within current loop.
-        if (auto procShared = openmp::postHandleShared(*loopInfo, trans); !procShared.has_value()) {
+        if (auto procShared = openmp::postHandleShared(*loopInfo, rewriter);
+            !procShared.has_value()) {
             return procShared;
         }
     }
 
-    return trans.build();
+    return {};
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
