@@ -40,7 +40,15 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
     // Top most `@inner` loop
     auto parent = loopInfo->getAttributedParent();
     if (parent && parent->metadata.isOuter()) {
-        trans.addReplacement(OKL_LOOP_EPILOGUE, stmt.getBeginLoc(), exclusiveNullText);
+        // Get `@outer` attributed loop
+        auto outerParent = parent;
+        while (outerParent && !outerParent->metadata.isOuter()) {
+            outerParent = outerParent->parent;
+        }
+
+        if (outerParent && !outerParent->vars.exclusive.empty()) {
+            trans.addReplacement(OKL_LOOP_EPILOGUE, stmt.getBeginLoc(), exclusiveNullText);
+        }
     }
 
     // Bottom most `@inner` loop

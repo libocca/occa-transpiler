@@ -100,8 +100,8 @@ extern "C" void addVectors6(const int& entries, const float* a, const float* b, 
 #pragma omp parallel for
     for (int _occa_tiled_i = 0; _occa_tiled_i < entries; _occa_tiled_i += (4 * 1)) {
         for (int i = _occa_tiled_i; i < (_occa_tiled_i + 4); i += 1) {
-            for (int _occa_tiled_j = 0; _occa_tiled_j < entries; _occa_tiled_j += 4) {
-                if (i < entries) {
+            if (i < entries) {
+                for (int _occa_tiled_j = 0; _occa_tiled_j < entries; _occa_tiled_j += 4) {
                     for (int j = _occa_tiled_j; j < (_occa_tiled_j + 4); ++j) {
                         if (j < entries) {
                             ab[i] = add(a[i], b[j]);

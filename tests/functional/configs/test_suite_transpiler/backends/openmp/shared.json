@@ -14,7 +14,7 @@
     "action": "normalize_and_transpile",
     "action_config": {
       "backend": "openmp",
-      "source": "transpiler/backends/cuda/openmp/shared_struct_types.cpp",
+      "source": "transpiler/backends/openmp/shared/shared_struct_types.cpp",
       "includes": [],
       "defs": [],
       "launcher": ""

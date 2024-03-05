@@ -22,9 +22,15 @@ HandleResult postHandleExclusive(OklLoopInfo& loopInfo, TranspilationBuilder& tr
     }
     std::string varSuffix = "[" + std::to_string(sz) + "]";
 
-    for (auto& var : loopInfo.vars.exclusive) {
-        auto loc = var.get().getLocation().getLocWithOffset(var.get().getName().size());
-        trans.addReplacement(OKL_TRANSPILED_ATTR, loc, varSuffix);
+    for (auto& v : loopInfo.vars.exclusive) {
+        auto& decl = v.get();
+        auto nameLoc = decl.getLocation().getLocWithOffset(decl.getName().size());
+        trans.addReplacement(OKL_TRANSPILED_ATTR, nameLoc, varSuffix);
+        if (decl.hasInit()) {
+            auto expr = decl.getInit();
+            trans.addReplacement(OKL_TRANSPILED_ATTR, expr->getBeginLoc(), "{");
+            trans.addReplacement(OKL_TRANSPILED_ATTR, decl.getEndLoc().getLocWithOffset(1), "}");
+        }
     }
 
     return {};

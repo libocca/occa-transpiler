@@ -8,7 +8,8 @@ using namespace oklt::tests;
 
 int main(int argc, char* argv[]) {
     auto currentWorkingDirectory = fs::current_path();
-    auto defaultSuit = currentWorkingDirectory / fs::path("configs/test_suite_normalize/");
+    auto defaultSuit =
+        currentWorkingDirectory / fs::path("configs/test_suite_transpiler/backends/openmp/");
     auto defaultData = currentWorkingDirectory / fs::path("data");
 
     argparse::ArgumentParser program("occa-transpiler-tests");
