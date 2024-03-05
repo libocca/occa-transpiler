@@ -84,8 +84,8 @@ tl::expected<ExprVec, Error> validateDim(const RecoveryExpr& rec,
         return tl::make_unexpected(Error{{}, missing_dim_err});
     }
 
-    ExprVec recoveryExpressions(subExpr.begin(), subExpr.end());
-    auto n_args = recoveryExpressions.size() - 1;  // First element - dim variable
+    ExprVec expressions(subExpr.begin(), subExpr.end());
+    auto n_args = expressions.size() - 1;  // First element - dim variable
 
     if (n_args < n_dims) {
         return tl::make_unexpected(Error{{}, missing_dim_err});
@@ -93,7 +93,38 @@ tl::expected<ExprVec, Error> validateDim(const RecoveryExpr& rec,
     if (n_args > n_dims) {
         return tl::make_unexpected(Error{{}, too_many_dim_err});
     }
-    return recoveryExpressions;
+    return expressions;
+}
+
+tl::expected<ExprVec, Error> validateDim(const CallExpr& expr,
+                                         const AttributedDim& params,
+                                         SessionStage& s) {
+    auto& ctx = s.getCompiler().getASTContext();
+    auto n_dims = params.dim.size();
+
+    auto missing_dim_err = util::fmt("Missing dimensions, expected {} argument(s)", n_dims).value();
+    auto too_many_dim_err =
+        util::fmt("Too many dimensions, expected {} argument(s)", n_dims).value();
+
+    auto args = expr.getArgs();
+    if (expr.getNumArgs() == 0 || args == nullptr) {
+        return tl::make_unexpected(Error{{}, missing_dim_err});
+    }
+
+    ExprVec expressions;
+    expressions.push_back(expr.getCallee());
+    for (size_t i = 0; i < expr.getNumArgs(); ++i) {
+        expressions.push_back(args[i]);
+    }
+    auto n_args = expressions.size() - 1;  // First element - dim variable
+
+    if (n_args < n_dims) {
+        return tl::make_unexpected(Error{{}, missing_dim_err});
+    }
+    if (n_args > n_dims) {
+        return tl::make_unexpected(Error{{}, too_many_dim_err});
+    }
+    return expressions;
 }
 
 // TODO: maybe recursion would look better?
@@ -120,12 +151,12 @@ std::string buildIndexCalculation(const ExprVec& dimVarArgs,
 }
 
 HandleResult handleDimStmtAttribute(const clang::Attr& a,
-                                    const clang::RecoveryExpr& rec,
+                                    const clang::Stmt& stmt,
                                     const AttributedDim* params,
                                     SessionStage& stage) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle @dim stmt: "
-                 << getSourceText(rec.getSourceRange(), stage.getCompiler().getASTContext())
+                 << getSourceText(stmt.getSourceRange(), stage.getCompiler().getASTContext())
                  << " with params: ";
     for (const auto& dim : params->dim) {
         llvm::outs() << dim << ", ";
@@ -135,12 +166,21 @@ HandleResult handleDimStmtAttribute(const clang::Attr& a,
 
     auto& ctx = stage.getCompiler().getASTContext();
 
-    auto recoveryExpressions = validateDim(rec, *params, stage);
-    if (!recoveryExpressions) {
-        return tl::make_unexpected(recoveryExpressions.error());
+    auto expressions = [&]() -> tl::expected<ExprVec, Error> {
+        // Dispatch statement
+        if (isa<RecoveryExpr>(stmt)) {
+            return validateDim(*dyn_cast<RecoveryExpr>(&stmt), *params, stage);
+        }
+        if (isa<CallExpr>(stmt)) {
+            return validateDim(*dyn_cast<CallExpr>(&stmt), *params, stage);
+        }
+        return tl::make_unexpected(Error{{}, "Incorrect statement type for [@dim]"});
+    }();
+    if (!expressions) {
+        return tl::make_unexpected(expressions.error());
     }
 
-    auto* dimVarExpr = recoveryExpressions.value()[0];
+    auto* dimVarExpr = expressions.value()[0];
     auto* dimVarDeclExpr = dyn_cast_or_null<DeclRefExpr>(dimVarExpr);
     if (!dimVarDeclExpr) {
         return tl::make_unexpected(Error{{}, "Failed to cast [@dim] variable Expr to DeclRefExpr"});
@@ -152,12 +192,12 @@ HandleResult handleDimStmtAttribute(const clang::Attr& a,
     }
 
     auto dimVarNameStr = getSourceText(*dimVarExpr, ctx);
-    ExprVec dimVarArgs(recoveryExpressions.value().begin() + 1, recoveryExpressions.value().end());
+    ExprVec dimVarArgs(expressions.value().begin() + 1, expressions.value().end());
     auto indexCalculation = buildIndexCalculation(dimVarArgs, params, dimOrder.value(), stage);
 
     return TranspilationBuilder(stage.getCompiler().getSourceManager(), "dim", 1)
         .addReplacement(OKL_DIM_ACCESS,
-                        rec.getSourceRange(),
+                        stmt.getSourceRange(),
                         util::fmt("{}[{}]", dimVarNameStr, indexCalculation).value())
         .build();
 }
