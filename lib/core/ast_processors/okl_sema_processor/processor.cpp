@@ -3,6 +3,7 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_processors/default_actions.h"
 
+#include "core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h"
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 #include "core/ast_processors/okl_sema_processor/handlers/recovery_expr.h"
@@ -24,6 +25,8 @@ HandleResult runPreValidationSemaStmt(const Attr* attr,
                                       OklSemaCtx& sema,
                                       SessionStage& stage) {
     switch (stmt.getStmtClass()) {
+        case Stmt::DeclRefExprClass:
+            return preValidateDeclRefExpr(cast<DeclRefExpr>(stmt), sema, stage);
         case Stmt::RecoveryExprClass:
             return preValidateRecoveryExpr(cast<RecoveryExpr>(stmt), sema, stage);
         default:
@@ -37,6 +40,8 @@ HandleResult runPostValidationSemaStmt(const Attr* attr,
                                        OklSemaCtx& sema,
                                        SessionStage& stage) {
     switch (stmt.getStmtClass()) {
+        case Stmt::DeclRefExprClass:
+            return postValidateDeclRefExpr(cast<DeclRefExpr>(stmt), sema, stage);
         case Stmt::RecoveryExprClass:
             return postValidateRecoveryExpr(cast<RecoveryExpr>(stmt), sema, stage);
         default:

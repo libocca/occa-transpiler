@@ -11,8 +11,11 @@ using namespace oklt;
 using namespace clang;
 
 const std::string outerLoopText = "\nint _occa_exclusive_index;";
+const std::string exlusiveExprText = "[_occa_exclusive_index]";
 
-HandleResult handleOPENMPExclusiveAttribute(const Attr& a, const VarDecl& decl, SessionStage& s) {
+HandleResult handleOPENMPExclusiveDeclAttribute(const Attr& a,
+                                                const VarDecl& decl,
+                                                SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
 #endif
@@ -46,10 +49,32 @@ HandleResult handleOPENMPExclusiveAttribute(const Attr& a, const VarDecl& decl, 
     return trans.build();
 }
 
+HandleResult handleOPENMPExclusiveExprAttribute(const Attr& a,
+                                                const DeclRefExpr& expr,
+                                                SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
+#endif
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto loopInfo = sema.getLoopInfo();
+    if (!loopInfo) {
+        return tl::make_unexpected(
+            Error{{}, "@exclusive: failed to fetch loop meta data from sema"});
+    }
+
+    auto loc = expr.getLocation().getLocWithOffset(expr.getNameInfo().getAsString().size());
+    return TranspilationBuilder(s.getCompiler().getSourceManager(), a.getNormalizedFullName(), 1)
+        .addReplacement(OKL_EXCLUSIVE_OP, loc, exlusiveExprText)
+        .build();
+}
+
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(handleOPENMPExclusiveAttribute));
+        makeSpecificAttrHandle(handleOPENMPExclusiveExprAttribute));
+    ok &= oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME},
+        makeSpecificAttrHandle(handleOPENMPExclusiveDeclAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME

@@ -131,6 +131,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_processors/okl_sema_processor/handlers/loop.cpp
     core/ast_processors/okl_sema_processor/handlers/recovery_expr.h
     core/ast_processors/okl_sema_processor/handlers/recovery_expr.cpp
+        core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h
+        core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.cpp
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
