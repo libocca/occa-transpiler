@@ -8,23 +8,18 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
-#include <clang/AST/AST.h>
 #include <clang/AST/Attr.h>
 
-#define OKL_SEMA_DEBUG
-namespace {
-using namespace oklt;
-using namespace clang;
-}  // namespace
-
 namespace oklt {
+using namespace clang;
+
 HandleResult preValidateRecoveryExpr(const RecoveryExpr& expr,
                                      OklSemaCtx& sema,
                                      SessionStage& stage) {
     return {};
 }
 
-HandleResult postValidateRecoveryExpr(const clang::RecoveryExpr& expr,
+HandleResult postValidateRecoveryExpr(const RecoveryExpr& expr,
                                       OklSemaCtx& sema,
                                       SessionStage& stage) {
     auto subExpr = expr.subExpressions();
@@ -32,7 +27,7 @@ HandleResult postValidateRecoveryExpr(const clang::RecoveryExpr& expr,
         return {};
     }
 
-    auto declRefExpr = dyn_cast<DeclRefExpr>(subExpr[0]);
+    auto declRefExpr = llvm::dyn_cast<DeclRefExpr>(subExpr[0]);
     if (!declRefExpr) {
         return {};
     }

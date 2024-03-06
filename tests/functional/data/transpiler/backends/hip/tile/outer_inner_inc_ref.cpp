@@ -81,7 +81,7 @@ extern "C" __global__ void _occa_addVectors5_0(const int entries,
                                                const float* a,
                                                const float* b,
                                                float* ab) {
-    int _occa_tiled_i = (((entries - 12 + 4))) + (((4) * (entries / 16 + 1)) * blockIdx.x);
+    int _occa_tiled_i = ((entries - 12 + 4)) + (((4) * (entries / 16 + 1)) * blockIdx.x);
     {
         int i = _occa_tiled_i + (((entries / 16 + 1)) * threadIdx.x);
         if (i < (entries + 16)) {
@@ -130,11 +130,11 @@ extern "C" __global__ void _occa_addVectors8_0(const int entries,
                                                const float* b,
                                                float* ab) {
     int _occa_tiled_i =
-        (((entries - 12 + static_cast<int>(*a)))) + (((4) * (entries / 16 + 1)) * blockIdx.x);
+        ((entries - 12 + static_cast<int>(*a))) + (((4) * (entries / 16 + 1)) * blockIdx.x);
     {
         int i = _occa_tiled_i + (((entries / 16 + 1)) * threadIdx.x);
         if (i < (entries + 16)) {
-            unsigned long long _occa_tiled_j = (((entries - 12 + static_cast<int>(*a)))) +
+            unsigned long long _occa_tiled_j = ((entries - 12 + static_cast<int>(*a))) +
                                                (((4) * (entries / 16 + 1)) * threadIdx.y);
             {
                 unsigned long long j = _occa_tiled_j + (((entries / 16 + 1)) * threadIdx.z);

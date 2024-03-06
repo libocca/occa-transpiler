@@ -82,7 +82,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(loopInfo.value(), params, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

@@ -91,13 +91,6 @@ struct LoopMetaData {
 
         return ret;
     };
-    [[nodiscard]] std::string getRangeSizeStr() const {
-        if (IsInc()) {
-            return range.end + " - " + range.start;
-        } else {
-            return range.start + " - " + range.end;
-        };
-    };
     [[nodiscard]] bool isUnary() const {
         if (!inc.val.empty()) {
             return false;
@@ -105,7 +98,23 @@ struct LoopMetaData {
         // should by unnecessary check, but just in case
         return (inc.op.uo == UnOp::PreInc) || (inc.op.uo == UnOp::PostInc) ||
                (inc.op.uo == UnOp::PreDec) || (inc.op.uo == UnOp::PostDec);
-    }
+    };
+
+    [[nodiscard]] std::string getRangeSizeStr() const {
+        if (IsInc()) {
+            return range.end + " - " + range.start;
+        } else {
+            return range.start + " - " + range.end;
+        };
+    };
+
+    [[nodiscard]] bool isOuter() const {
+        return type == LoopMetaType::Outer || type == LoopMetaType::OuterInner;
+    };
+    [[nodiscard]] bool isInner() const {
+        return type == LoopMetaType::Inner || type == LoopMetaType::OuterInner;
+    };
+    [[nodiscard]] bool isRegular() const { return type == LoopMetaType::Regular; };
 };
 
 struct KernelInfo {

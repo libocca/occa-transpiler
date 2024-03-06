@@ -36,7 +36,6 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/tile.cpp
 
     # Backends common
-
     attributes/utils/parser.h
     attributes/utils/parser.cpp
     attributes/utils/parser_impl.hpp
@@ -104,6 +103,18 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/common.cpp
     attributes/backend/dpcpp/common.h
 
+    # OPENMP
+    attributes/backend/openmp/kernel.cpp
+    attributes/backend/openmp/outer.cpp
+    attributes/backend/openmp/inner.cpp
+    attributes/backend/openmp/tile.cpp
+    attributes/backend/openmp/restrict.cpp
+    attributes/backend/openmp/shared.cpp
+    attributes/backend/openmp/exclusive.cpp
+    attributes/backend/openmp/atomic.cpp
+    attributes/backend/openmp/barrier.cpp
+    attributes/backend/openmp/common.cpp
+
     # sugar attribute
     attributes/backend/common/dim.cpp
 
@@ -120,6 +131,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_processors/okl_sema_processor/handlers/loop.cpp
     core/ast_processors/okl_sema_processor/handlers/recovery_expr.h
     core/ast_processors/okl_sema_processor/handlers/recovery_expr.cpp
+    core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h
+    core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.cpp
 
     core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
@@ -179,7 +192,7 @@ CPMAddPackage(expected
     GITHUB_REPOSITORY
     TartanLlama/expected
     GIT_TAG v1.1.0
-    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF" 
+    OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json

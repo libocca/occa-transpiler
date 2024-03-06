@@ -215,7 +215,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
 #endif
 
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(loopInfo.value(), params, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
