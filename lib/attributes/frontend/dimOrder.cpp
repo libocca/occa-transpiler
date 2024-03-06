@@ -85,6 +85,7 @@ struct DimOrderAttribute : public ParsedAttrInfo {
 
         auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
+        // TODO: second time, @dimOrder is not overwritten
         // Apply Attr to Type
         // ParmVarDecl, VarDecl, FieldDecl, etc.
         if (auto val = dyn_cast<ValueDecl>(decl)) {
