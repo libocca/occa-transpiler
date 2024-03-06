@@ -24,9 +24,10 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode =
-        inner_outer::buildInnerOuterLoopIdxLine(loopInfo.value(), *params, openedScopeCounter);
+    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
+        loopInfo.value(), *params, openedScopeCounter, true);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+    suffixCode += "__syncthreads();";
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";
