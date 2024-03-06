@@ -9,7 +9,7 @@ HandleResult handleCUDAExclusiveExprAttribute(const clang::Attr& a,
                                               const clang::DeclRefExpr& expr,
                                               SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
     return {};
 }

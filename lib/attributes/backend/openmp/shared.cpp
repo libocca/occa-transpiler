@@ -10,7 +10,7 @@ using namespace clang;
 
 HandleResult handleOPENMPSharedAttribute(const Attr& a, const Decl& decl, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
