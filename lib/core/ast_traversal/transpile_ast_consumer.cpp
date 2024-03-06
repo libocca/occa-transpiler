@@ -1,9 +1,7 @@
 #include "core/ast_traversal/transpile_ast_consumer.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_traversal/preorder_traversal_nlr.h"
-#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
-#include "core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 using namespace clang;
@@ -19,8 +17,6 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
     if (!result) {
         return;
     }
-
-    _stage.getSession().output.kernel.sourceCode = std::move(result.value());
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {

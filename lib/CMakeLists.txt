@@ -121,17 +121,11 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
-    core/ast_processors/default_actions.cpp
-
-    core/ast_processors/okl_dummy_processor/processor.cpp
-
     core/ast_processors/okl_sema_processor/processor.cpp
     core/ast_processors/okl_sema_processor/handlers/function.h
     core/ast_processors/okl_sema_processor/handlers/function.cpp
     core/ast_processors/okl_sema_processor/handlers/loop.h
     core/ast_processors/okl_sema_processor/handlers/loop.cpp
-    core/ast_processors/okl_sema_processor/handlers/recovery_expr.h
-    core/ast_processors/okl_sema_processor/handlers/recovery_expr.cpp
     core/ast_processors/okl_sema_processor/handlers/call_expr.h
     core/ast_processors/okl_sema_processor/handlers/call_expr.cpp
     core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h

@@ -1,6 +1,5 @@
 #include <oklt/core/kernel_metadata.h>
 
-#include "core/ast_processors/default_actions.h"
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -21,23 +20,18 @@ HandleResult preValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    auto result = sema.validateOklForLoopOnPreTraverse(attr, stmt, &params.value());
-    if (!result) {
-        return tl::make_unexpected(std::move(result.error()));
+    auto ok = sema.validateOklForLoopOnPreTraverse(attr, stmt, &params.value());
+    if (!ok) {
+        return tl::make_unexpected(std::move(ok.error()));
     }
 
-    return {};
+    return ok;
 }
 
 HandleResult postValidateOklForLoop(const Attr& attr,
                                     const clang::ForStmt& stmt,
                                     OklSemaCtx& sema,
                                     SessionStage& stage) {
-    auto result = runDefaultPostActionStmt(&attr, stmt, sema, stage);
-    if (!result) {
-        return result;
-    }
-
     auto params = stage.getAttrManager().parseAttr(attr, stage);
     if (!params) {
         return tl::make_unexpected(std::move(params.error()));
@@ -49,7 +43,7 @@ HandleResult postValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(ok.error()));
     }
 
-    return result;
+    return ok;
 }
 
 }  // namespace oklt

@@ -40,10 +40,10 @@ struct OklKernelInfo {
 };
 
 struct OklSemaCtx {
-    struct ParsingKernelInfo : public OklKernelInfo {
-        explicit ParsingKernelInfo(const clang::FunctionDecl& d,
-                                   std::vector<std::string>&& args,
-                                   KernelInfo* info = nullptr)
+    struct ParsedKernelInfo : public OklKernelInfo {
+        explicit ParsedKernelInfo(const clang::FunctionDecl& d,
+                                  std::vector<std::string>&& args,
+                                  KernelInfo* info = nullptr)
             : OklKernelInfo(d),
               argStrs(args),
               kernInfo(info){};
@@ -59,8 +59,9 @@ struct OklSemaCtx {
     OklSemaCtx() = default;
 
     // method to make/get/reset context of parsing OKL kernel
-    ParsingKernelInfo* startParsingOklKernel(const clang::FunctionDecl&);
-    [[nodiscard]] ParsingKernelInfo* getParsingKernelInfo();
+    bool startParsingOklKernel(const clang::FunctionDecl&);
+    [[nodiscard]] ParsedKernelInfo* getParsingKernelInfo();
+    void setParsedKernelInfo(ParsedKernelInfo*);
     void stopParsingKernelInfo();
 
     [[nodiscard]] bool isParsingOklKernel() const;
@@ -88,7 +89,8 @@ struct OklSemaCtx {
     [[nodiscard]] const ProgramMetaData& getProgramMetaData() const;
 
    private:
-    std::optional<ParsingKernelInfo> _parsingKernInfo;
+    ParsedKernelInfo* _parsingKernInfo = nullptr;
+    std::list<ParsedKernelInfo> _parsedKernelList;
     ProgramMetaData _programMetaData;
 };
 }  // namespace oklt
