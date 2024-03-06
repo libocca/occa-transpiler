@@ -48,7 +48,8 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    return res;
+    ++openedScopeCounter;
+    return "{" + res;
 }
 
 std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
