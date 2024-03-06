@@ -13,7 +13,7 @@ HandleResult handleOPENMPRestrictAttribute(const clang::Attr& a,
                                            const clang::VarDecl& decl,
                                            SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
     auto& rewriter = s.getRewriter();
 

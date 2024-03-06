@@ -140,12 +140,12 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
     }
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo.metadata.var.type
-                 << ", name: " << loopInfo.metadata.var.name
-                 << ", initValue: " << loopInfo.metadata.range.start
-                 << "), Cond(rhsExpr: " << loopInfo.metadata.range.end
-                 << "), Inc(rhsInc: " << loopInfo.metadata.inc.val
-                 << ", isUnary: " << loopInfo.metadata.isUnary() << ")\n";
+                 << "type: " << loopInfo->metadata.var.type
+                 << ", name: " << loopInfo->metadata.var.name
+                 << ", initValue: " << loopInfo->metadata.range.start
+                 << "), Cond(rhsExpr: " << loopInfo->metadata.range.end
+                 << "), Inc(rhsInc: " << loopInfo->metadata.inc.val
+                 << ", isUnary: " << loopInfo->metadata.isUnary() << ")\n";
 #endif
 
     auto& rewriter = s.getRewriter();

@@ -11,7 +11,7 @@ const std::string externC = "extern \"C\"";
 
 HandleResult handleOPENMPKernelAttribute(const Attr& a, const FunctionDecl& decl, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
+    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
     auto& rewriter = s.getRewriter();
