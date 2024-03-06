@@ -79,8 +79,10 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
         // Apply Attr to VarDecl
         if (auto val = dyn_cast<VarDecl>(decl)) {
             QualType origType = val->getType();
+            QualType modifiedType = sema.Context.getTypeOfType(origType, TypeOfKind::Qualified);
+
             QualType newType =
-                sema.Context.getAttributedType(attr::AnnotateType, origType, origType);
+                sema.Context.getAttributedType(attr::AnnotateType, modifiedType, origType);
             val->setType(newType);
 
             attrTypeMap.add(newType, ctxAttr);

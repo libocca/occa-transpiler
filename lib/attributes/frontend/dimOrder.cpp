@@ -85,13 +85,22 @@ struct DimOrderAttribute : public ParsedAttrInfo {
 
         auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
+        /*
+         * QualType getPipeType(QualType T, bool ReadOnly) const
+         * QualType getAddrSpaceQualType(QualType T, LangAS AddressSpace) const
+         * QualType getObjCGCQualType(QualType T, Qualifiers::GC gcAttr) const
+         *
+         */
+
         // TODO: second time, @dimOrder is not overwritten
         // Apply Attr to Type
         // ParmVarDecl, VarDecl, FieldDecl, etc.
         if (auto val = dyn_cast<ValueDecl>(decl)) {
             QualType origType = val->getType();
+            QualType modifiedType = sema.Context.getTypeOfType(origType, TypeOfKind::Qualified);
+
             QualType newType =
-                sema.Context.getAttributedType(attr::AnnotateType, origType, origType);
+                sema.Context.getAttributedType(attr::AnnotateType, modifiedType, origType);
             val->setType(newType);
 
             attrTypeMap.add(newType, ctxAttr);
