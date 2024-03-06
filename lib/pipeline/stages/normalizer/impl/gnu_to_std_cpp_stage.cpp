@@ -242,6 +242,18 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
 
     auto input_file = std::move(input.gnuCppSrc);
     GnuToStdCppStageOutput output = {.session = input.session};
+
+    auto& sessionInput = input.session->input;
+    for (const auto& define : sessionInput.defines) {
+        std::string def = "-D" + define;
+        args.push_back(std::move(def));
+    }
+
+    for (const auto& includePath : sessionInput.inlcudeDirectories) {
+        std::string incPath = "-I" + includePath.string();
+        args.push_back(std::move(incPath));
+    }
+
     auto ok = tooling::runToolOnCodeWithArgs(
         std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
         input_file,
