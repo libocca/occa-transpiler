@@ -20,6 +20,16 @@ struct OklLoopInfo {
 
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
+
+    // TODO: Maybe make it via `Extendable` class ?
+    struct {
+        std::list<std::reference_wrapper<const clang::Decl>> shared = {};
+        std::list<std::reference_wrapper<const clang::VarDecl>> exclusive = {};
+    } vars;
+
+    OklLoopInfo* getAttributedParent();
+    OklLoopInfo* getFirstAttributedChild();
+    std::optional<size_t> getSize();
 };
 
 struct OklKernelInfo {
@@ -57,7 +67,8 @@ struct OklSemaCtx {
     [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const;
     [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
-    [[nodiscard]] std::optional<OklLoopInfo> getLoopInfo(const clang::ForStmt& forStmt) const;
+    [[nodiscard]] OklLoopInfo* getLoopInfo(const clang::ForStmt& forStmt) const;
+    [[nodiscard]] OklLoopInfo* getLoopInfo();
 
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
                                                                             const clang::ForStmt&,

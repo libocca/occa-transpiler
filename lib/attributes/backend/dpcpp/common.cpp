@@ -46,6 +46,10 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    return res;
+    if (loop.type == AttributedLoopType::Outer) {
+        return res;
+    }
+    ++openedScopeCounter;
+    return "{" + res;
 }
 }  // namespace oklt::dpcpp

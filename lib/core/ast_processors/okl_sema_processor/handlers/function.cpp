@@ -8,14 +8,9 @@
 
 #include <clang/AST/AST.h>
 
-#define OKL_SEMA_DEBUG
-
-namespace {
-using namespace clang;
-using namespace oklt;
-}  // namespace
-
 namespace oklt {
+using namespace clang;
+
 HandleResult preValidateOklKernel(const Attr& attr,
                                   const FunctionDecl& fd,
                                   OklSemaCtx& sema,

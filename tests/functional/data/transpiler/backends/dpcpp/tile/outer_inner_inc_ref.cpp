@@ -117,7 +117,7 @@ extern "C" void _occa_addVectors5_0(sycl::queue* queue_,
     queue_->submit([&](sycl::handler& handler_) {
         handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
             int _occa_tiled_i =
-                (((entries - 12 + 4))) + (((4) * (entries / 16 + 1)) * item_.get_group(2));
+                ((entries - 12 + 4)) + (((4) * (entries / 16 + 1)) * item_.get_group(2));
             {
                 int i = _occa_tiled_i + (((entries / 16 + 1)) * item.get_local_id(2));
                 if (i < (entries + 16)) {
@@ -183,13 +183,13 @@ extern "C" void _occa_addVectors8_0(sycl::queue* queue_,
                                     float* ab) {
     queue_->submit([&](sycl::handler& handler_) {
         handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-            int _occa_tiled_i = (((entries - 12 + static_cast<int>(*a)))) +
+            int _occa_tiled_i = ((entries - 12 + static_cast<int>(*a))) +
                                 (((4) * (entries / 16 + 1)) * item_.get_group(2));
             {
                 int i = _occa_tiled_i + (((entries / 16 + 1)) * item.get_local_id(2));
                 if (i < (entries + 16)) {
                     unsigned long long _occa_tiled_j =
-                        (((entries - 12 + static_cast<int>(*a)))) +
+                        ((entries - 12 + static_cast<int>(*a))) +
                         (((4) * (entries / 16 + 1)) * item.get_local_id(1));
                     {
                         unsigned long long j =

@@ -92,7 +92,9 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
 
         auto child_count = std::distance(start->children().begin(), start->children().end());
         if (child_count > 0 && !node->getInit()->isEvaluatable(ctx)) {
-            ret.range.start = "(" + ret.range.start + ")";
+            if (ret.range.start.front() != '(' && ret.range.start.back() != ')') {
+                ret.range.start = "(" + ret.range.start + ")";
+            }
         }
     }
 
@@ -137,7 +139,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         if (!end) {
             // TODO: add error code
             return tl::make_unexpected(
-                Error{std::error_code(), "loop parse: cond wihout init var"});
+                Error{std::error_code(), "loop parse: cond without init var"});
         }
     }
 

@@ -156,6 +156,9 @@ HandleResult handleDimStmtAttribute(const clang::Attr& a,
                                     const clang::Stmt& stmt,
                                     const AttributedDim* params,
                                     SessionStage& stage) {
+    if (!isa<RecoveryExpr, CallExpr>(stmt)) {
+        return {};
+    }
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle @dim stmt: "
                  << getSourceText(stmt.getSourceRange(), stage.getCompiler().getASTContext())

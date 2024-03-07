@@ -1,4 +1,3 @@
-#include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_processors/default_actions.h"
@@ -7,6 +6,7 @@
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 #include "core/ast_processors/okl_sema_processor/handlers/recovery_expr.h"
 #include "core/ast_processors/okl_sema_processor/handlers/call_expr.h"
+#include "core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h"
 
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -25,6 +25,8 @@ HandleResult runPreValidationSemaStmt(const Attr* attr,
                                       OklSemaCtx& sema,
                                       SessionStage& stage) {
     switch (stmt.getStmtClass()) {
+        case Stmt::DeclRefExprClass:
+            return preValidateDeclRefExpr(cast<DeclRefExpr>(stmt), sema, stage);
         case Stmt::RecoveryExprClass:
             return preValidateRecoveryExpr(cast<RecoveryExpr>(stmt), sema, stage);
         case Stmt::CallExprClass:
@@ -40,6 +42,8 @@ HandleResult runPostValidationSemaStmt(const Attr* attr,
                                        OklSemaCtx& sema,
                                        SessionStage& stage) {
     switch (stmt.getStmtClass()) {
+        case Stmt::DeclRefExprClass:
+            return postValidateDeclRefExpr(cast<DeclRefExpr>(stmt), sema, stage);
         case Stmt::RecoveryExprClass:
             return postValidateRecoveryExpr(cast<RecoveryExpr>(stmt), sema, stage);
         case Stmt::CallExprClass:

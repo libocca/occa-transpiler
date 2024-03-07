@@ -48,7 +48,8 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    return res;
+    ++openedScopeCounter;
+    return "{" + res;
 }
 
 std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
@@ -215,7 +216,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
 #endif
 
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(loopInfo.value(), params, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);

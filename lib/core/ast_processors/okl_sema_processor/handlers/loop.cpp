@@ -9,13 +9,9 @@
 #include <clang/AST/AST.h>
 #include <clang/AST/Attr.h>
 
-#define OKL_SEMA_DEBUG
-namespace {
-using namespace oklt;
-using namespace clang;
-}  // namespace
-
 namespace oklt {
+using namespace clang;
+
 HandleResult preValidateOklForLoop(const Attr& attr,
                                    const ForStmt& stmt,
                                    OklSemaCtx& sema,

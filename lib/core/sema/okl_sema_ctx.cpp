@@ -1,4 +1,3 @@
-#include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 
 #include "core/sema/okl_sema_ctx.h"
@@ -9,17 +8,11 @@
 #include <oklt/util/string_utils.h>
 
 #include <clang/AST/Attr.h>
+#include <deque>
 
 namespace {
 using namespace clang;
 using namespace oklt;
-
-DatatypeCategory toDatatypeCategory(const QualType& qt) {
-    if (qt->isBuiltinType()) {
-        return DatatypeCategory::BUILTIN;
-    }
-    return DatatypeCategory::CUSTOM;
-}
 
 LoopMetaType getLoopType(const std::any* param) {
     if (!param) {
@@ -89,6 +82,58 @@ bool isLegalTopLoopLevel(LoopMetaType loopType) {
 }  // namespace
 
 namespace oklt {
+
+OklLoopInfo* OklLoopInfo::getAttributedParent() {
+    auto ret = parent;
+    while (ret && ret->metadata.isRegular()) {
+        ret = ret->parent;
+    }
+    return ret;
+}
+
+OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
+    std::deque<OklLoopInfo*> elements = {};
+    for (auto& v : children) {
+        elements.push_back(&v);
+    }
+
+    while (!elements.empty()) {
+        auto el = elements.front();
+        elements.pop_front();
+        if (!el->metadata.isRegular())
+            return el;
+
+        for (auto& v : el->children) {
+            elements.push_back(&v);
+        }
+    }
+
+    return nullptr;
+}
+
+std::optional<size_t> OklLoopInfo::getSize() {
+    if (metadata.isRegular()) {
+        if (children.empty()) {
+            return std::nullopt;
+        }
+    } else if (metadata.range.size == 0) {
+        return std::nullopt;
+    }
+
+    auto sz = size_t{1};
+    sz = std::max(metadata.range.size, sz);
+
+    auto ret = sz;
+    for (auto& child : children) {
+        auto v = child.getSize();
+        if (!v.has_value()) {
+            return std::nullopt;
+        }
+        ret = std::max(sz * v.value(), ret);
+    }
+    return ret;
+}
+
 OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
     if (_parsingKernInfo.has_value()) {
         return nullptr;
@@ -132,18 +177,31 @@ bool OklSemaCtx::isDeclInLexicalTraversal(const Decl& decl) const {
            std::addressof(kernelInfo.decl.get());
 }
 
-std::optional<OklLoopInfo> OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
+OklLoopInfo* OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
     if (!_parsingKernInfo) {
-        return std::nullopt;
+        return nullptr;
     }
     auto& kernelInfo = _parsingKernInfo.value();
 
     auto it = kernelInfo.loopMap.find(&forStmt);
     if (it == kernelInfo.loopMap.end() || !it->second) {
-        return std::nullopt;
+        return nullptr;
     }
 
-    return *it->second;
+    return it->second;
+}
+
+[[nodiscard]] OklLoopInfo* OklSemaCtx::getLoopInfo() {
+    if (!_parsingKernInfo) {
+        return nullptr;
+    }
+
+    auto& kernelInfo = _parsingKernInfo.value();
+    if (kernelInfo.currentLoop) {
+        return kernelInfo.currentLoop;
+    }
+
+    return nullptr;
 }
 
 tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,
