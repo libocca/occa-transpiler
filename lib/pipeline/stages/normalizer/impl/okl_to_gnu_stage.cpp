@@ -200,6 +200,17 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
 
     auto input_file = std::move(input.oklCppSrc);
 
+    auto& sessionInput = input.session->input;
+    for (const auto& define : sessionInput.defines) {
+        std::string def = "-D" + define;
+        args.push_back(std::move(def));
+    }
+
+    for (const auto& includePath : sessionInput.inlcudeDirectories) {
+        std::string incPath = "-I" + includePath.string();
+        args.push_back(std::move(incPath));
+    }
+
     OklToGnuStageOutput output = {.session = input.session};
     auto ok = tooling::runToolOnCodeWithArgs(
         std::make_unique<OklToGnuAttributeNormalizerAction>(input, output),

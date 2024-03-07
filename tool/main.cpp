@@ -32,6 +32,14 @@ int main(int argc, char* argv[]) {
     normalize_command.add_description("convert OKL 1.0 to OKL 2.0 attributes C++ pure syntax");
     normalize_command.add_argument("-i", "--input").required().help("input file OKL 1.0");
     normalize_command.add_argument("-o", "--output").default_value("").help("optional output file");
+    normalize_command.add_argument("-D", "--define")
+        .default_value<std::vector<std::string>>({})
+        .append()
+        .help("Specify user preprocessor definitions");
+    normalize_command.add_argument("-I", "--include")
+        .default_value<std::vector<std::string>>({})
+        .append()
+        .help("Specify user include directories");
 
     argparse::ArgumentParser transpile_command("transpile");
     transpile_command.add_description("transpile OKL to targeted backend");
@@ -45,6 +53,14 @@ int main(int argc, char* argv[]) {
         .default_value(false)
         .implicit_value(true)
         .help("should normalize before transpiling");
+    transpile_command.add_argument("-D", "--define")
+        .default_value<std::vector<std::string>>({})
+        .append()
+        .help("Specify user preprocessor definitions");
+    transpile_command.add_argument("-I", "--include")
+        .default_value<std::vector<std::filesystem::path>>({})
+        .append()
+        .help("Specify user include directories");
     transpile_command.add_argument("-o", "--output")
         .default_value("")
         .help("optional transpilation output file");
@@ -74,8 +90,15 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
 
-            auto result = oklt::normalize({.backend = oklt::TargetBackend::CUDA,
-                                           .sourceCode = std::move(input_source.value())});
+            auto defines = normalize_command.get<std::vector<std::string>>("-D");
+            auto includes = normalize_command.get<std::vector<std::filesystem::path>>("-I");
+
+            auto result = oklt::normalize({
+                .backend = oklt::TargetBackend::CUDA,
+                .sourceCode = std::move(input_source.value()),
+                .inlcudeDirectories = std::move(includes),
+                .defines = std::move(defines),
+            });
             if (!result) {
                 std::cout << "Normalization errors: " << std::endl;
                 for (const auto& error : result.error()) {
@@ -99,6 +122,9 @@ int main(int argc, char* argv[]) {
                 transpilation_output = build_transpilation_output_filename(source_path);
             }
 
+            auto defines = transpile_command.get<std::vector<std::string>>("-D");
+            auto includes = transpile_command.get<std::vector<std::filesystem::path>>("-I");
+
             auto normalization_output = std::filesystem::path(transpile_command.get("-n"));
             if (normalization_output.empty()) {
                 normalization_output = build_normalization_output_filename(source_path);
@@ -118,8 +144,8 @@ int main(int argc, char* argv[]) {
                                   .astProcType = procType,
                                   .sourceCode = sourceCode,
                                   .sourcePath = source_path,
-                                  .inlcudeDirectories = {},
-                                  .defines = {}};
+                                  .inlcudeDirectories = std::move(includes),
+                                  .defines = std::move(defines)};
 
             oklt::UserResult result = [](auto&& input, auto need_normalize) {
                 if (need_normalize) {

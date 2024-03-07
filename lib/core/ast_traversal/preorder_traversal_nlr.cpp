@@ -40,7 +40,10 @@ const Attr* getFirstAttr(const ArrayType& attrs) {
 template <typename ExprType>
 const Attr* tryGetAttr(ExprType& expr) {
     if constexpr (std::is_base_of_v<Decl, ExprType>) {
-        return getFirstAttr(expr.getAttrs());
+        if (expr.hasAttrs()) {
+            return getFirstAttr(expr.getAttrs());
+        }
+        return nullptr;
     }
     if constexpr (std::is_base_of_v<Stmt, ExprType>) {
         if (expr.getStmtClass() != Stmt::AttributedStmtClass) {

@@ -20,9 +20,20 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     auto& input = session->input;
 
     Twine tool_name = "okl-transpiler";
-    std::string rawFileName = input.sourcePath.filename().string();
+    // INFO: hot fix for *.okl extention
+    std::string rawFileName = input.sourcePath.filename().stem().string() + ".cpp";
     Twine file_name(rawFileName);
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
+
+    for (const auto& define : input.defines) {
+        std::string def = "-D" + define;
+        args.push_back(std::move(def));
+    }
+
+    for (const auto& includePath : input.inlcudeDirectories) {
+        std::string incPath = "-I" + includePath.string();
+        args.push_back(std::move(incPath));
+    }
 
     Twine code(input.sourceCode);
 
