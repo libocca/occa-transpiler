@@ -89,8 +89,10 @@ struct DimOrderAttribute : public ParsedAttrInfo {
         // ParmVarDecl, VarDecl, FieldDecl, etc.
         if (auto val = dyn_cast<ValueDecl>(decl)) {
             QualType origType = val->getType();
+            QualType modifiedType = sema.Context.getTypeOfType(origType, TypeOfKind::Qualified);
+
             QualType newType =
-                sema.Context.getAttributedType(attr::AnnotateType, origType, origType);
+                sema.Context.getAttributedType(attr::AnnotateType, modifiedType, origType);
             val->setType(newType);
 
             attrTypeMap.add(newType, ctxAttr);
@@ -131,12 +133,12 @@ ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
                 Error{{}, "[@dimOrder] expects expects positive integer index"});
         }
 
-        auto it = ret.idx.find(idx.value());
+        auto it = std::find(ret.idx.begin(), ret.idx.end(), idx.value());
         if (it != ret.idx.end()) {
             return tl::make_unexpected(Error{{}, "[@dimOrder] Duplicate index"});
         }
 
-        ret.idx.insert(idx.value());
+        ret.idx.push_back(idx.value());
     }
 
     return ret;

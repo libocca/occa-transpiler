@@ -117,6 +117,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     # sugar attribute
     attributes/backend/common/dim.cpp
+    # attributes/backend/common/dim_order.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
@@ -131,6 +132,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_processors/okl_sema_processor/handlers/loop.cpp
     core/ast_processors/okl_sema_processor/handlers/recovery_expr.h
     core/ast_processors/okl_sema_processor/handlers/recovery_expr.cpp
+    core/ast_processors/okl_sema_processor/handlers/call_expr.h
+    core/ast_processors/okl_sema_processor/handlers/call_expr.cpp
     core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h
     core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.cpp
 

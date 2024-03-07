@@ -52,7 +52,7 @@ install(
 
 install(
     TARGETS occa-tool
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR}) 
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(
     DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/oklt
@@ -69,4 +69,3 @@ configure_file(cmake/oklt-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/oklt-confi
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/oklt-config.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/oklt)
-

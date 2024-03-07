@@ -13,4 +13,3 @@ target_link_libraries(occa-example
         PRIVATE
         occa::occa-transpiler
 )
-

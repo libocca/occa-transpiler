@@ -90,8 +90,10 @@ struct DimAttribute : public ParsedAttrInfo {
         // ParmVarDecl, VarDecl, FieldDecl, etc.
         if (auto val = dyn_cast<ValueDecl>(decl)) {
             QualType origType = val->getType();
+            QualType modifiedType = sema.Context.getTypeOfType(origType, TypeOfKind::Qualified);
+
             QualType newType =
-                sema.Context.getAttributedType(attr::AnnotateType, origType, origType);
+                sema.Context.getAttributedType(attr::AnnotateType, modifiedType, origType);
             val->setType(newType);
 
             attrTypeMap.add(newType, ctxAttr);
