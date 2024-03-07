@@ -15,6 +15,7 @@ using namespace clang;
 
 struct TranspilationNode {
     OklSemaCtx::ParsedKernelInfo* ki;
+    OklLoopInfo* li;
     const clang::Attr* attr;
     clang::DynTypedNode node;
 };
@@ -60,8 +61,25 @@ int getNodeType(const Stmt& s) {
     return s.getStmtClass();
 }
 
+std::string getNodeName(const Decl& d) {
+    return d.getDeclKindName();
+}
+
+std::string getNodeName(const Stmt& s) {
+    return s.getStmtClassName();
+}
+
 tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Decl& decl, SessionStage& stage) {
     return stage.getAttrManager().checkAttrs(decl, stage);
+}
+
+tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::DeclRefExpr& expr,
+                                                                  SessionStage& stage) {
+    auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
+    auto& ctx = stage.getCompiler().getASTContext();
+    auto attrs = attrTypeMap.get(ctx, expr.getType());
+
+    return std::set<const Attr*>(attrs.begin(), attrs.end());
 }
 
 tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::RecoveryExpr& expr,
@@ -76,11 +94,7 @@ tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::
         return {};
     }
 
-    auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
-    auto& ctx = stage.getCompiler().getASTContext();
-    auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
-
-    return std::set<const Attr*>(attrs.begin(), attrs.end());
+    return tryGetDeclRefExprAttrs(*declRefExpr, stage);
 }
 
 tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::CallExpr& expr,
@@ -91,7 +105,6 @@ tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::Call
     }
 
     // Otherwise, we should try to call dim handler
-
     auto* args = expr.getArgs();
     if (expr.getNumArgs() == 0 || args == nullptr) {
         return {};
@@ -107,11 +120,7 @@ tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::Call
         return {};
     }
 
-    auto& ctx = stage.getCompiler().getASTContext();
-    auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
-    auto attrs = attrTypeMap.get(ctx, declRefExpr->getType());
-
-    return std::set<const Attr*>(attrs.begin(), attrs.end());
+    return tryGetDeclRefExprAttrs(*declRefExpr, stage);
 }
 
 tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Stmt& stmt, SessionStage& stage) {
@@ -120,6 +129,8 @@ tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Stmt& stmt, Sessio
             return tryGetRecoveryExprAttrs(cast<RecoveryExpr>(stmt), stage);
         case Stmt::CallExprClass:
             return tryGetCallExprAttrs(cast<CallExpr>(stmt), stage);
+        case Stmt::DeclRefExprClass:
+            return tryGetDeclRefExprAttrs(cast<DeclRefExpr>(stmt), stage);
         default:
             return stage.getAttrManager().checkAttrs(stmt, stage);
     }
@@ -131,7 +142,7 @@ template <typename TraversalType, typename NodeType>
 HandleResult runFromRootToLeaves(TraversalType& traversal,
                                  AstProcessorManager& procMng,
                                  AstProcessorType procType,
-                                 std::set<const Attr*> attrs,
+                                 const std::set<const Attr*>& attrs,
                                  NodeType& node,
                                  OklSemaCtx& sema,
                                  SessionStage& stage) {
@@ -153,12 +164,13 @@ template <typename TraversalType, typename NodeType>
 HandleResult runFromLeavesToRoot(TraversalType& traversal,
                                  AstProcessorManager& procMng,
                                  AstProcessorType procType,
-                                 std::set<const Attr*> attrs,
+                                 const std::set<const Attr*>& attrs,
                                  NodeType& node,
                                  OklSemaCtx& sema,
                                  SessionStage& stage) {
     auto& transpilationAccumulator = stage.tryEmplaceUserCtx<TranspilationNodes>();
     auto* ki = sema.getParsingKernelInfo();
+    auto* cl = sema.getLoopInfo();
 
     // non attributed node
     if (attrs.empty()) {
@@ -167,8 +179,9 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
             return result;
         }
         if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
-            transpilationAccumulator.push_back(
-                TranspilationNode{.ki = ki, .attr = nullptr, .node = DynTypedNode::create(node)});
+            auto nodeName = getNodeName(node);
+            transpilationAccumulator.push_back(TranspilationNode{
+                .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
         }
     }
 
@@ -178,8 +191,9 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
         if (!result) {
             return result;
         }
-        transpilationAccumulator.push_back(
-            TranspilationNode{.ki = ki, .attr = attr, .node = DynTypedNode::create(node)});
+        auto nodeName = attr->getNormalizedFullName();
+        transpilationAccumulator.push_back(TranspilationNode{
+            .ki = ki, .li = cl, .attr = attr, .node = DynTypedNode::create(node)});
     }
 
     return {};
@@ -279,8 +293,9 @@ tl::expected<std::string, Error> generateTranspiledKernel(SessionStage& stage) {
     const auto& transpilationNodes = stage.tryEmplaceUserCtx<TranspilationNodes>();
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     for (const auto& t : transpilationNodes) {
-        // set appropriate parsed KernelInfo as active for current node type
+        // set appropriate parsed KernelInfo and LoopInfo as active for current node
         sema.setParsedKernelInfo(t.ki);
+        sema.setLoopInfo(t.li);
         auto result = applyTranspilationToNode(t.attr, t.node, stage);
         if (!result) {
             return tl::make_unexpected(result.error());

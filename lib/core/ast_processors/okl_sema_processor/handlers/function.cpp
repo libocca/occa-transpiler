@@ -16,7 +16,7 @@ HandleResult preValidateOklKernel(const Attr& attr,
                                   SessionStage& stage) {
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
-        //  make approptiate error code
+        //  make appropriate error code
         return tl::make_unexpected(
             Error{.ec = std::error_code(), .desc = "nested OKL kernels are illegal"});
     }

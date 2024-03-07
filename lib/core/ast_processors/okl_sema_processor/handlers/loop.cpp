@@ -39,7 +39,7 @@ HandleResult postValidateOklForLoop(const Attr& attr,
 
     auto ok = sema.validateOklForLoopOnPostTraverse(attr, stmt, &params.value());
     if (!ok) {
-        //  make approptiate error code
+        // make appropriate error code
         return tl::make_unexpected(std::move(ok.error()));
     }
 

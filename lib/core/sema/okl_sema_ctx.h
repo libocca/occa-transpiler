@@ -70,6 +70,7 @@ struct OklSemaCtx {
 
     [[nodiscard]] OklLoopInfo* getLoopInfo(const clang::ForStmt& forStmt) const;
     [[nodiscard]] OklLoopInfo* getLoopInfo();
+    void setLoopInfo(OklLoopInfo* loopInfo);
 
     [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
                                                                             const clang::ForStmt&,

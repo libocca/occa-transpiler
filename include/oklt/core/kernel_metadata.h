@@ -139,7 +139,7 @@ struct ProgramMetaData {
     std::string hash;
     std::vector<KernelInfo> kernels;
     std::optional<PropertyInfo> props = std::nullopt;
-    KernelInfo& addKernelInfo(std::string name, size_t numArg, size_t numKern) {
+    KernelInfo& addKernelInfo(std::string name, size_t numArg) {
         // create new slot
         // there is no way to pass args nicely for POD
         kernels.emplace_back();
@@ -148,7 +148,6 @@ struct ProgramMetaData {
         auto& kiPtr = kernels.back();
         kiPtr.name = std::move(name);
         kiPtr.args.resize(numArg);
-        kiPtr.childrens.resize(numKern);
 
         return kiPtr;
     }

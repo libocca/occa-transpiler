@@ -148,9 +148,17 @@ bool OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
     }
 
     // create slot for kernel info in list
-    auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size(), 1);
+    auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size());
     auto kiParams = std::vector<std::string>(fd.param_size());
     _parsingKernInfo = &_parsedKernelList.emplace_back(fd, std::move(kiParams), kiPtr);
+
+    // Set function parameters
+    for (auto param : fd.parameters()) {
+        if (param) {
+            setKernelArgInfo(*param);
+            setTranspiledArgStr(*param);
+        }
+    }
 
     return true;
 }
@@ -207,25 +215,33 @@ OklLoopInfo* OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
     return _parsingKernInfo->currentLoop;
 }
 
+void OklSemaCtx::setLoopInfo(OklLoopInfo* loopInfo) {
+    if (!_parsingKernInfo) {
+        return;
+    }
+
+    auto it = std::find_if(_parsingKernInfo->loopMap.begin(),
+                           _parsingKernInfo->loopMap.end(),
+                           [loopInfo](const auto& v) { return v.second == loopInfo; });
+    if (it != _parsingKernInfo->loopMap.end()) {
+        _parsingKernInfo->currentLoop = loopInfo;
+    }
+}
+
 tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,
                                                                       const clang::ForStmt& stmt,
                                                                       const std::any* params) {
     assert(_parsingKernInfo);
-
     auto loopType = getLoopType(params);
-    //    if (loopType == LoopMetaType::Regular) {
-    //        return {};
-    //    }
 
     if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopType)) {
         return tl::make_unexpected(Error{
             .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer] for-loop"});
     }
 
-    auto& children = _parsingKernInfo->currentLoop ? _parsingKernInfo->currentLoop->children
-                                                   : _parsingKernInfo->children;
-    auto parentType = _parsingKernInfo->currentLoop ? _parsingKernInfo->currentLoop->metadata.type
-                                                    : LoopMetaType::Regular;
+    auto currentLoop = _parsingKernInfo->currentLoop;
+    auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
+    auto parentType = currentLoop ? currentLoop->metadata.type : LoopMetaType::Regular;
 
     if (!isLegalLoopLevel(loopType, parentType)) {
         return tl::make_unexpected(
