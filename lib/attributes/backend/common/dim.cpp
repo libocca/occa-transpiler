@@ -39,26 +39,33 @@ tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
     auto attrs = attrTypeMap.get(ctx, var->getType());
     for (const auto* attr : attrs) {
         auto name = attr->getNormalizedFullName();
-        if (name == DIMORDER_ATTR_NAME) {
-            auto dimOrderParams = stage.getAttrManager().parseAttr(*attr, stage);
-            if (!dimOrderParams) {
-                return tl::make_unexpected(dimOrderParams.error());
-            }
-            dimOrder = std::any_cast<AttributedDimOrder>(dimOrderParams.value()).idx;
-            break;
+        if (name != DIMORDER_ATTR_NAME) {
+            continue;
         }
+
+        auto dimOrderParams = stage.getAttrManager().parseAttr(*attr, stage);
+        if (!dimOrderParams) {
+            return tl::make_unexpected(dimOrderParams.error());
+        }
+        auto* attributedDimOrder = std::any_cast<AttributedDimOrder>(&(dimOrderParams.value()));
+        if (!attributedDimOrder) {
+            return tl::make_unexpected(
+                Error{{}, "Failed to cast @dimOrder parameters to AttributedDimOrder"});
+        }
+        dimOrder = attributedDimOrder->idx;
+        break;
     }
     if (dimOrder.size() != params->dim.size()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] wrong number of arguments"});
     }
 
     // Verify if dimensions are correct
-    auto n_dims = params->dim.size();
+    auto nDims = params->dim.size();
     for (const auto& dim : dimOrder) {
-        if (dim >= n_dims) {
+        if (dim >= nDims) {
             return tl::make_unexpected(Error{
                 {},
-                util::fmt("[@dimOrder] Dimensions must be in range [0, {}]", n_dims - 1).value()});
+                util::fmt("[@dimOrder] Dimensions must be in range [0, {}]", nDims - 1).value()});
         }
     }
     return dimOrder;
@@ -69,25 +76,24 @@ tl::expected<ExprVec, Error> validateDim(const RecoveryExpr& rec,
                                          const AttributedDim& params,
                                          SessionStage& s) {
     auto& ctx = s.getCompiler().getASTContext();
-    auto n_dims = params.dim.size();
+    auto nDims = params.dim.size();
 
-    auto missing_dim_err = util::fmt("Missing dimensions, expected {} argument(s)", n_dims).value();
-    auto too_many_dim_err =
-        util::fmt("Too many dimensions, expected {} argument(s)", n_dims).value();
+    auto missingDimErr = util::fmt("Missing dimensions, expected {} argument(s)", nDims).value();
+    auto tooManyDimErr = util::fmt("Too many dimensions, expected {} argument(s)", nDims).value();
 
     auto subExpr = rec.subExpressions();
     if (subExpr.size() <= 1) {
-        return tl::make_unexpected(Error{{}, missing_dim_err});
+        return tl::make_unexpected(Error{{}, missingDimErr});
     }
 
     ExprVec expressions(subExpr.begin(), subExpr.end());
-    auto n_args = expressions.size() - 1;  // First element - dim variable
+    auto nArgs = expressions.size() - 1;  // First element - dim variable
 
-    if (n_args < n_dims) {
-        return tl::make_unexpected(Error{{}, missing_dim_err});
+    if (nArgs < nDims) {
+        return tl::make_unexpected(Error{{}, missingDimErr});
     }
-    if (n_args > n_dims) {
-        return tl::make_unexpected(Error{{}, too_many_dim_err});
+    if (nArgs > nDims) {
+        return tl::make_unexpected(Error{{}, tooManyDimErr});
     }
     return expressions;
 }
@@ -96,15 +102,14 @@ tl::expected<ExprVec, Error> validateDim(const CallExpr& expr,
                                          const AttributedDim& params,
                                          SessionStage& s) {
     auto& ctx = s.getCompiler().getASTContext();
-    auto n_dims = params.dim.size();
+    auto nDims = params.dim.size();
 
-    auto missing_dim_err = util::fmt("Missing dimensions, expected {} argument(s)", n_dims).value();
-    auto too_many_dim_err =
-        util::fmt("Too many dimensions, expected {} argument(s)", n_dims).value();
+    auto missingDimErr = util::fmt("Missing dimensions, expected {} argument(s)", nDims).value();
+    auto tooManyDimErr = util::fmt("Too many dimensions, expected {} argument(s)", nDims).value();
 
     auto args = expr.getArgs();
     if (expr.getNumArgs() == 0 || args == nullptr) {
-        return tl::make_unexpected(Error{{}, missing_dim_err});
+        return tl::make_unexpected(Error{{}, missingDimErr});
     }
 
     ExprVec expressions;
@@ -112,13 +117,13 @@ tl::expected<ExprVec, Error> validateDim(const CallExpr& expr,
     for (size_t i = 0; i < expr.getNumArgs(); ++i) {
         expressions.push_back(args[i]);
     }
-    auto n_args = expressions.size() - 1;  // First element - dim variable
+    auto nArgs = expressions.size() - 1;  // First element - dim variable
 
-    if (n_args < n_dims) {
-        return tl::make_unexpected(Error{{}, missing_dim_err});
+    if (nArgs < nDims) {
+        return tl::make_unexpected(Error{{}, missingDimErr});
     }
-    if (n_args > n_dims) {
-        return tl::make_unexpected(Error{{}, too_many_dim_err});
+    if (nArgs > nDims) {
+        return tl::make_unexpected(Error{{}, tooManyDimErr});
     }
     return expressions;
 }
@@ -130,18 +135,18 @@ std::string buildIndexCalculation(const ExprVec& dimVarArgs,
                                   SessionStage& stage) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto& rewriter = stage.getRewriter();
-    int n_dims = params->dim.size();
+    int nDims = params->dim.size();
     std::string indexCalculation;
     // Open brackets
-    for (int dim = 0; dim < n_dims - 1; ++dim) {
+    for (int dim = 0; dim < nDims - 1; ++dim) {
         auto idx = dimOrder[dim];
         auto dimVarArgStr = rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
         indexCalculation += util::fmt("{} + ({} * (", dimVarArgStr, params->dim[idx]).value();
     }
-    auto idx = dimOrder[n_dims - 1];
+    auto idx = dimOrder[nDims - 1];
     indexCalculation += rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
     // Close brackets
-    for (int i = 0; i < 2 * (n_dims - 1); ++i) {
+    for (int i = 0; i < 2 * (nDims - 1); ++i) {
         indexCalculation += ")";
     }
     return indexCalculation;

@@ -4,7 +4,6 @@
 #include "attributes/utils/parser.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/utils/attributes.h"
-#include "core/utils/range_to_string.h"
 
 #include <numeric>
 
@@ -17,10 +16,11 @@ using DimOrder = std::vector<size_t>;
 HandleResult handleDimOrderDeclAttribute(const clang::Attr& a,
                                          const clang::Decl& decl,
                                          SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle @dimOrder decl: "
                  << getSourceText(decl.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
-
-    s.getRewriter().RemoveText(getAttrFullSourceRange(a));
+#endif
+    removeAttribute(a, s);
     return {};
 }
 

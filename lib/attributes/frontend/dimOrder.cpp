@@ -85,13 +85,6 @@ struct DimOrderAttribute : public ParsedAttrInfo {
 
         auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
-        /*
-         * QualType getPipeType(QualType T, bool ReadOnly) const
-         * QualType getAddrSpaceQualType(QualType T, LangAS AddressSpace) const
-         * QualType getObjCGCQualType(QualType T, Qualifiers::GC gcAttr) const
-         *
-         */
-
         // Apply Attr to Type
         // ParmVarDecl, VarDecl, FieldDecl, etc.
         if (auto val = dyn_cast<ValueDecl>(decl)) {
