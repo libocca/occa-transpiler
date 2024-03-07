@@ -24,8 +24,8 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        loopInfo.value(), *params, openedScopeCounter, true);
+    auto prefixCode =
+        inner_outer::buildInnerOuterLoopIdxLine(*loopInfo, *params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     suffixCode += "__syncthreads();";
 

@@ -60,7 +60,8 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    return res;
+    ++openedScopeCounter;
+    return "{" + res;
 }
 
 std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
@@ -163,8 +164,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
 namespace inner_outer {
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
-                                       int& openedScopeCounter,
-                                       bool isInner) {
+                                       int& openedScopeCounter) {
     static_cast<void>(openedScopeCounter);
     auto idx = getIdxVariable(loop);
     auto& meta = forLoop.metadata;
@@ -185,11 +185,11 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    if (isInner) {
-        ++openedScopeCounter;
-        res = "{" + res;
+    if (loop.type == AttributedLoopType::Outer) {
+        return res;
     }
-    return res;
+    ++openedScopeCounter;
+    return "{" + res;
 }
 
 }  // namespace inner_outer

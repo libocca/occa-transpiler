@@ -54,7 +54,6 @@ namespace inner_outer {
 //                      or: int i = start +- (inc * blockIdx.x);
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
-                                       int& openedScopeCounter,
-                                       bool isInner = false);
+                                       int& openedScopeCounter);
 }  // namespace inner_outer
 }  // namespace oklt::cuda_subset
