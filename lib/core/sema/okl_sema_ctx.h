@@ -60,25 +60,24 @@ struct OklSemaCtx {
 
     // method to make/get/reset context of parsing OKL kernel
     bool startParsingOklKernel(const clang::FunctionDecl&);
+    void stopParsingKernelInfo();
     [[nodiscard]] ParsedKernelInfo* getParsingKernelInfo();
     void setParsedKernelInfo(ParsedKernelInfo*);
-    void stopParsingKernelInfo();
 
     [[nodiscard]] bool isParsingOklKernel() const;
     [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const;
     [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
+    [[nodiscard]] tl::expected<void, Error> startParsingAttributedForLoop(
+        const clang::Attr& attr,
+        const clang::ForStmt& stmt,
+        const std::any* params);
+    [[nodiscard]] tl::expected<void, Error> stopParsingAttributedForLoop(const clang::Attr& attr,
+                                                                         const clang::ForStmt& stmt,
+                                                                         const std::any* params);
     [[nodiscard]] OklLoopInfo* getLoopInfo(const clang::ForStmt& forStmt) const;
     [[nodiscard]] OklLoopInfo* getLoopInfo();
     void setLoopInfo(OklLoopInfo* loopInfo);
-
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
-                                                                            const clang::ForStmt&,
-                                                                            const std::any* params);
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(
-        const clang::Attr&,
-        const clang::ForStmt&,
-        const std::any* params);
 
     void setKernelArgInfo(const clang::ParmVarDecl& parm);
     void setTranspiledArgStr(const clang::ParmVarDecl& parm,

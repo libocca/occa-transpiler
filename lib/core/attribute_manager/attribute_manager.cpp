@@ -141,7 +141,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
 
         auto [_, isNew] = collectedAttrs.insert(attr);
         if (!isNew) {
-            // TODO convenient OCCA community to specify such case as forbidden
+            // TODO convince OCCA community to specify such case as forbidden
             llvm::errs() << decl.getBeginLoc().printToString(
                                 decl.getASTContext().getSourceManager())
                          << " multi declaration of attribute: " << name
@@ -181,7 +181,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const St
 
         auto [_, isNew] = collectedAttrs.insert(attr);
         if (!isNew) {
-            // TODO convenient OCCA community to specify such case as forbidden
+            // TODO convince OCCA community to specify such case as forbidden
             llvm::errs() << stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager())
                          << " multi declaration of attribute: " << name
                          << " for stmt: " << stmt.getStmtClassName() << '\n';

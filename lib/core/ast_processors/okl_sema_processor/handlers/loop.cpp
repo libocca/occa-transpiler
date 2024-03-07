@@ -20,7 +20,7 @@ HandleResult preValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    auto ok = sema.validateOklForLoopOnPreTraverse(attr, stmt, &params.value());
+    auto ok = sema.startParsingAttributedForLoop(attr, stmt, &params.value());
     if (!ok) {
         return tl::make_unexpected(std::move(ok.error()));
     }
@@ -37,7 +37,7 @@ HandleResult postValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    auto ok = sema.validateOklForLoopOnPostTraverse(attr, stmt, &params.value());
+    auto ok = sema.stopParsingAttributedForLoop(attr, stmt, &params.value());
     if (!ok) {
         // make appropriate error code
         return tl::make_unexpected(std::move(ok.error()));

@@ -61,14 +61,6 @@ int getNodeType(const Stmt& s) {
     return s.getStmtClass();
 }
 
-std::string getNodeName(const Decl& d) {
-    return d.getDeclKindName();
-}
-
-std::string getNodeName(const Stmt& s) {
-    return s.getStmtClassName();
-}
-
 tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Decl& decl, SessionStage& stage) {
     return stage.getAttrManager().checkAttrs(decl, stage);
 }
@@ -179,7 +171,6 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
             return result;
         }
         if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
-            auto nodeName = getNodeName(node);
             transpilationAccumulator.push_back(TranspilationNode{
                 .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
         }
@@ -191,7 +182,6 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
         if (!result) {
             return result;
         }
-        auto nodeName = attr->getNormalizedFullName();
         transpilationAccumulator.push_back(TranspilationNode{
             .ki = ki, .li = cl, .attr = attr, .node = DynTypedNode::create(node)});
     }
@@ -227,7 +217,7 @@ bool traverseNode(TraversalType& traversal,
 
     // dispatch the next node
     if (!dispatchTraverseFunc(traversal, node)) {
-        stage.pushError(Error{.ec = std::error_code(), .desc = "trasverse is stopped"});
+        stage.pushError(Error{.ec = std::error_code(), .desc = "traverse is stopped"});
         return false;
     }
 
@@ -328,7 +318,7 @@ bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     return traverseNode(*this, translationUnitDecl, _procMng, _stage);
 }
 
-tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProccessor(
+tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     clang::TranslationUnitDecl* translationUnitDecl) {
     // traverse AST and generate sema ctx
     if (!TraverseTranslationUnitDecl(translationUnitDecl)) {

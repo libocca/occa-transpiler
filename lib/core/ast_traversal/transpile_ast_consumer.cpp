@@ -13,7 +13,7 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
     TranslationUnitDecl* tu = context.getTranslationUnitDecl();
 
     auto result =
-        PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProccessor(tu);
+        PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProcessor(tu);
     if (!result) {
         return;
     }

@@ -15,13 +15,6 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-DatatypeCategory toDatatypeCategory(const QualType& qt) {
-    if (qt->isBuiltinType()) {
-        return DatatypeCategory::BUILTIN;
-    }
-    return DatatypeCategory::CUSTOM;
-}
-
 LoopMetaType getLoopType(const std::any* param) {
     if (!param) {
         return LoopMetaType::Regular;
@@ -152,7 +145,7 @@ bool OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
     auto kiParams = std::vector<std::string>(fd.param_size());
     _parsingKernInfo = &_parsedKernelList.emplace_back(fd, std::move(kiParams), kiPtr);
 
-    // Set function parameters
+    // Set kernel info parameters
     for (auto param : fd.parameters()) {
         if (param) {
             setKernelArgInfo(*param);
@@ -183,11 +176,13 @@ bool OklSemaCtx::isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const 
     if (!_parsingKernInfo) {
         return false;
     }
+
     return std::addressof(_parsingKernInfo->decl.get()) == std::addressof(fd);
 }
 
 bool OklSemaCtx::isDeclInLexicalTraversal(const Decl& decl) const {
     if (!_parsingKernInfo) {
+        return false;
     }
 
     return cast<FunctionDecl>(decl.getParentFunctionOrMethod()) ==
@@ -228,9 +223,9 @@ void OklSemaCtx::setLoopInfo(OklLoopInfo* loopInfo) {
     }
 }
 
-tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,
-                                                                      const clang::ForStmt& stmt,
-                                                                      const std::any* params) {
+tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang::Attr& attr,
+                                                                    const clang::ForStmt& stmt,
+                                                                    const std::any* params) {
     assert(_parsingKernInfo);
     auto loopType = getLoopType(params);
 
@@ -261,9 +256,9 @@ tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clan
         });
 }
 
-tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPostTraverse(const clang::Attr& attr,
-                                                                       const clang::ForStmt& stmt,
-                                                                       const std::any* params) {
+tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::Attr& attr,
+                                                                   const clang::ForStmt& stmt,
+                                                                   const std::any* params) {
     assert(_parsingKernInfo);
 
     auto loopType = getLoopType(params);
