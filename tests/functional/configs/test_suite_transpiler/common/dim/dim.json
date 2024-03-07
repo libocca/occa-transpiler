@@ -2,7 +2,7 @@
     {
         "action": "normalize_and_transpile",
         "action_config": {
-            "backend": "hip",
+            "backend": "cuda",
             "source": "transpiler/common/dim/dim.cpp",
             "includes": [],
             "defs": [],
