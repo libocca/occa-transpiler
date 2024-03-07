@@ -21,15 +21,9 @@ struct OklLoopInfo {
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
 
-    // TODO: Maybe make it via `Extendable` class ?
-    struct {
-        std::list<std::reference_wrapper<const clang::Decl>> shared = {};
-        std::list<std::reference_wrapper<const clang::VarDecl>> exclusive = {};
-    } vars;
-
     OklLoopInfo* getAttributedParent();
     OklLoopInfo* getFirstAttributedChild();
-    std::optional<size_t> getSize();
+    std::optional<size_t> getSize() const;
 };
 
 struct OklKernelInfo {

@@ -12,8 +12,11 @@ HandleResult handleOPENMPBarrierAttribute(const Attr& a, const NullStmt& stmt, S
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
+    auto opts = Rewriter::RewriteOptions();
+    opts.RemoveLineIfEmpty = true;
+
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());
-    s.getRewriter().RemoveText(range);
+    s.getRewriter().RemoveText(range, opts);
     return {};
 }
 
