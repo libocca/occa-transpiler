@@ -24,6 +24,12 @@ HandleResult handleOPENMPSharedAttribute(const Attr& a, const Decl& decl, Sessio
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
+    auto child = loopInfo->getFirstAttributedChild();
+    if (!child || child->metadata.type != LoopMetaType::Inner) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+    }
+
     // Process later when processing ForStmt
     loopInfo->vars.shared.emplace_back(std::ref(decl));
 

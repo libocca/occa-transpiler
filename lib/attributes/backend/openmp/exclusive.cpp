@@ -43,6 +43,27 @@ HandleResult handleOPENMPExclusiveDeclAttribute(const Attr& a,
     // Process later when processing ForStmt
     loopInfo->vars.exclusive.emplace_back(std::ref(decl));
 
+    // Find max size of inner loops
+    size_t sz = 0;
+    for (auto child : loopInfo->children) {
+        auto v = child.getSize();
+        if (!v.has_value()) {
+            sz = 1024;
+            break;
+        }
+        sz = std::max(v.value(), sz);
+    }
+    std::string varSuffix = "[" + std::to_string(sz) + "]";
+
+    // Add size and wrap initialization.
+    auto nameLoc = decl.getLocation().getLocWithOffset(decl.getName().size());
+    rewriter.InsertTextAfter(nameLoc, varSuffix);
+    if (decl.hasInit()) {
+        auto expr = decl.getInit();
+        rewriter.InsertTextBefore(expr->getBeginLoc(), "{");
+        rewriter.InsertTextAfter(decl.getEndLoc().getLocWithOffset(1), "}");
+    }
+
     return {};
 }
 

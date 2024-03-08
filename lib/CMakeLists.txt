@@ -113,9 +113,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/openmp/exclusive.cpp
     attributes/backend/openmp/atomic.cpp
     attributes/backend/openmp/barrier.cpp
-    attributes/backend/openmp/common.cpp
 
-    # sugar attribute
+        # sugar attribute
     attributes/backend/common/dim.cpp
     # attributes/backend/common/dim_order.cpp
 

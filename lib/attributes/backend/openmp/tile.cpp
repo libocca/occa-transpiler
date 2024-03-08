@@ -1,12 +1,15 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/attribute_names.h"
-#include "attributes/backend/openmp/common.h"
 #include "attributes/utils/code_gen.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
+
+#include <clang/Rewrite/Core/Rewriter.h>
 
 namespace {
 using namespace oklt;
@@ -207,20 +210,6 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     std::string suffixCode = getScopesCloseStr(parenCnt);
     rewriter.InsertTextAfter(stmt.getEndLoc(), suffixCode);
-
-    if (loopInfo->metadata.type == LoopMetaType::Outer) {
-        // process `@exclusive` that are within current loop.
-        if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, rewriter);
-            !procExclusive.has_value()) {
-            return procExclusive;
-        }
-
-        // process `@shared` that are within current loop.
-        if (auto procShared = openmp::postHandleShared(*loopInfo, rewriter);
-            !procShared.has_value()) {
-            return procShared;
-        }
-    }
 
     return {};
 }
