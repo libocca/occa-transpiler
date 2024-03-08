@@ -2,9 +2,9 @@
 
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 namespace oklt {
 using namespace clang;
@@ -107,73 +107,87 @@ ParseResult AttributeManager::parseAttr(const Attr& attr,
     return EmptyParams{};
 }
 
-tl::expected<const Attr*, Error> AttributeManager::checkAttrs(const AttrVec& attrs,
-                                                              const Decl& decl,
-                                                              SessionStage& stage) {
-    std::vector<const Attr*> collectedAttrs;
-    collectedAttrs.reserve(attrs.size());
-    for (const auto attr : attrs) {
-        if (!attr)
+tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const Decl& decl,
+                                                                        SessionStage& stage) {
+    if (!decl.hasAttrs()) {
+        return {};
+    }
+
+    const auto& attrs = decl.getAttrs();
+    std::set<const Attr*> collectedAttrs;
+
+    // in case of multiple same attribute take the last one
+    for (auto it = attrs.rbegin(); it != attrs.rend(); ++it) {
+        const auto& attr = *it;
+
+        if (!attr) {
             continue;
+        }
+
+        if (!isOklAttribute(*attr)) {
+            continue;
+        }
 
         auto name = attr->getNormalizedFullName();
-        if (_commonAttrs.hasAttrHandler(name)) {
-            collectedAttrs.push_back(attr);
-            continue;
+        if (!_commonAttrs.hasAttrHandler(name) && !_backendAttrs.hasAttrHandler(stage, name)) {
+            // TODO report diag error
+            llvm::errs() << decl.getBeginLoc().printToString(
+                                decl.getASTContext().getSourceManager())
+                         << " attribute: " << name << " for decl: " << decl.getDeclKindName()
+                         << " does not have registered handler \n";
+
+            return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
         }
-        if (_backendAttrs.hasAttrHandler(stage, name)) {
-            collectedAttrs.push_back(attr);
-            continue;
+
+        auto [_, isNew] = collectedAttrs.insert(attr);
+        if (!isNew) {
+            // TODO convince OCCA community to specify such case as forbidden
+            llvm::errs() << decl.getBeginLoc().printToString(
+                                decl.getASTContext().getSourceManager())
+                         << " multi declaration of attribute: " << name
+                         << " for decl: " << decl.getDeclKindName() << '\n';
         }
     }
 
-    // INFO: there are no OKL attributes at all
-    //       might need better solution for this
-    if (collectedAttrs.empty()) {
-        return {nullptr};
-    }
-
-    if (collectedAttrs.size() > 1) {
-        return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "multiple attr"});
-    }
-
-    const Attr* attr = collectedAttrs.front();
-
-    return attr;
+    return collectedAttrs;
 }
 
-tl::expected<const Attr*, Error> AttributeManager::checkAttrs(const ArrayRef<const Attr*>& attrs,
-                                                              const Stmt& decl,
-                                                              SessionStage& stage) {
-    std::vector<const Attr*> collectedAttrs;
-    collectedAttrs.reserve(attrs.size());
+tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const Stmt& stmt,
+                                                                        SessionStage& stage) {
+    if (stmt.getStmtClass() != Stmt::AttributedStmtClass) {
+        return {};
+    }
+
+    const auto& attrs = cast<AttributedStmt>(stmt).getAttrs();
+    std::set<const Attr*> collectedAttrs;
     for (const auto attr : attrs) {
-        if (!attr)
+        if (!attr) {
             continue;
+        }
+
+        if (!isOklAttribute(*attr)) {
+            continue;
+        }
 
         auto name = attr->getNormalizedFullName();
-        if (_commonAttrs.hasAttrHandler(name)) {
-            collectedAttrs.push_back(attr);
-            continue;
+        if (!_commonAttrs.hasAttrHandler(name) && !_backendAttrs.hasAttrHandler(stage, name)) {
+            // TODO report diag error
+            llvm::errs() << stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager())
+                         << " attribute: " << name << " for stmt: " << stmt.getStmtClassName()
+                         << " does not have registered handler \n";
+
+            return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
         }
-        if (_backendAttrs.hasAttrHandler(stage, name)) {
-            collectedAttrs.push_back(attr);
-            continue;
+
+        auto [_, isNew] = collectedAttrs.insert(attr);
+        if (!isNew) {
+            // TODO convince OCCA community to specify such case as forbidden
+            llvm::errs() << stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager())
+                         << " multi declaration of attribute: " << name
+                         << " for stmt: " << stmt.getStmtClassName() << '\n';
         }
     }
 
-    // INFO: there are no OKL attributes at all
-    //       might need better solution for this
-    if (collectedAttrs.empty()) {
-        return nullptr;
-    }
-
-    if (collectedAttrs.size() > 1) {
-        return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "multiple attr"});
-    }
-
-    const Attr* attr = collectedAttrs.front();
-
-    return attr;
+    return collectedAttrs;
 }
 }  // namespace oklt

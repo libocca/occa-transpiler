@@ -27,11 +27,6 @@ void removeAttr(Rewriter& rewriter, const Attr& attr) {
     rewriter.RemoveText(arange);
 }
 
-const char* OKL_PREFIX = "okl_";
-bool hasAttrOklPrefix(const Attr& attr) {
-    return attr.getAttrName()->getName().startswith(OKL_PREFIX);
-}
-
 std::string getArgAsStr(const SuppressAttr& attr) {
     auto str = attr.diagnosticIdentifiers_begin()->data();
     return str != nullptr ? str : "";
@@ -65,15 +60,15 @@ template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
     assert(lastProccesedAttr);
     for (auto* attr : e.getAttrs()) {
-        if ((*lastProccesedAttr) && ((*lastProccesedAttr)->getLoc() == attr->getLoc())) {
-            continue;
-        }
-
         if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
             continue;
         }
 
-        if (!hasAttrOklPrefix(*attr)) {
+        if (!oklt::isOklAttribute(*attr)) {
+            continue;
+        }
+
+        if ((*lastProccesedAttr) && ((*lastProccesedAttr)->getLoc() == attr->getLoc())) {
             continue;
         }
 

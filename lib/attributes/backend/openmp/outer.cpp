@@ -1,8 +1,6 @@
-#include "attributes/attribute_names.h"
 #include "attributes/backend/openmp/common.h"
-#include "attributes/frontend/params/loop.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
+
+#include <clang/Rewrite/Core/Rewriter.h>
 
 namespace {
 using namespace oklt;
@@ -41,17 +39,6 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
 
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.ReplaceText(attrRange, (!parent ? prefixText : ""));
-
-    // process `@exclusive` that are within current loop.
-    if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, rewriter);
-        !procExclusive.has_value()) {
-        return procExclusive;
-    }
-
-    // process `@shared` that are within current loop.
-    if (auto procShared = openmp::postHandleShared(*loopInfo, rewriter); !procShared.has_value()) {
-        return procShared;
-    }
 
     return {};
 }

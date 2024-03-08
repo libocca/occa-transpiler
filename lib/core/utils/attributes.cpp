@@ -14,9 +14,11 @@ bool removeAttribute(const clang::Attr& attr, SessionStage& stage) {
     return true;
 }
 
+const std::string OKL_GNU_PREFIX = "okl_";
+const std::string OKL_CXX_PREFIX = "okl::";
+
 constexpr SourceLocation::IntTy CXX11_ATTR_PREFIX_LEN = std::char_traits<char>::length("[[");
 constexpr SourceLocation::IntTy CXX11_ATTR_SUFFIX_LEN = std::char_traits<char>::length("]]");
-
 constexpr SourceLocation::IntTy GNU_ATTR_PREFIX_LEN =
     std::char_traits<char>::length("__attribute__((");
 constexpr SourceLocation::IntTy GNU_ATTR_SUFFIX_LEN = std::char_traits<char>::length("))");
@@ -35,6 +37,14 @@ SourceRange getAttrFullSourceRange(const Attr& attr) {
     }
 
     return arange;
+}
+
+bool isOklAttribute(const clang::Attr& attr) {
+    if (!isa<AnnotateAttr, AnnotateTypeAttr, SuppressAttr>(attr)) {
+        return false;
+    }
+    return StringRef(attr.getNormalizedFullName()).starts_with(OKL_GNU_PREFIX) ||
+           StringRef(attr.getNormalizedFullName()).starts_with(OKL_CXX_PREFIX);
 }
 
 }  // namespace oklt

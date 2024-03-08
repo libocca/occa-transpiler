@@ -9,10 +9,10 @@
 #include "core/attribute_manager/result.h"
 
 #include <clang/Sema/ParsedAttr.h>
-#include <any>
 #include <tl/expected.hpp>
 
-#include <string>
+#include <any>
+#include <set>
 #include <type_traits>
 
 namespace oklt {
@@ -55,6 +55,10 @@ class AttributeManager {
     ParseResult parseAttr(const clang::Attr& attr, SessionStage& stage);
     ParseResult parseAttr(const clang::Attr& attr, OKLParsedAttr& params, SessionStage& stage);
 
+    bool hasImplicitHandler(TargetBackend backend, int nodeType) {
+        return _implicitHandlers.hasHandler({backend, nodeType});
+    }
+
     HandleResult handleAttr(const clang::Attr& attr,
                             const clang::Decl& decl,
                             const std::any* params,
@@ -67,13 +71,10 @@ class AttributeManager {
     HandleResult handleNode(const clang::Decl& decl, SessionStage& stage);
     HandleResult handleNode(const clang::Stmt& stmt, SessionStage& stage);
 
-    tl::expected<const clang::Attr*, Error> checkAttrs(const clang::AttrVec& attrs,
-                                                       const clang::Decl& decl,
-                                                       SessionStage& stage);
-    tl::expected<const clang::Attr*, Error> checkAttrs(
-        const clang::ArrayRef<const clang::Attr*>& attrs,
-        const clang::Stmt& decl,
-        SessionStage& stage);
+    tl::expected<std::set<const clang::Attr*>, Error> checkAttrs(const clang::Decl& decl,
+                                                                 SessionStage& stage);
+    tl::expected<std::set<const clang::Attr*>, Error> checkAttrs(const clang::Stmt& stmt,
+                                                                 SessionStage& stage);
 
    private:
     // INFO: here should not be the same named attributes in both

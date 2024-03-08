@@ -17,12 +17,11 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
     bool TraverseStmt(clang::Stmt* stmt);
     bool TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl);
 
-    tl::expected<std::string, Error> applyAstProccessor(clang::TranslationUnitDecl*);
+    tl::expected<std::string, Error> applyAstProcessor(clang::TranslationUnitDecl*);
 
    private:
     AstProcessorManager& _procMng;
     SessionStage& _stage;
-    OklSemaCtx& _sema;
 };
 
 }  // namespace oklt

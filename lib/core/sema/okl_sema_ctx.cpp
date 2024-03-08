@@ -1,3 +1,4 @@
+#include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 
 #include "core/sema/okl_sema_ctx.h"
@@ -45,7 +46,7 @@ LoopMetaType getLoopType(const std::any* param) {
 tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
                                                  const clang::Attr& attr,
                                                  LoopMetaType loopType,
-                                                 OklSemaCtx::ParsingKernelInfo& kernelInfo) {
+                                                 OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     assert(kernelInfo.kernInfo);
 
     auto parsedLoopMeta = parseForStmt(stmt, kernelInfo.decl.get().getASTContext());
@@ -85,7 +86,7 @@ namespace oklt {
 
 OklLoopInfo* OklLoopInfo::getAttributedParent() {
     auto ret = parent;
-    while (ret && ret->metadata.isRegular()) {
+    while (ret && ret->isRegular()) {
         ret = ret->parent;
     }
     return ret;
@@ -100,7 +101,7 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
     while (!elements.empty()) {
         auto el = elements.front();
         elements.pop_front();
-        if (!el->metadata.isRegular())
+        if (!el->isRegular())
             return el;
 
         for (auto& v : el->children) {
@@ -112,7 +113,7 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
 }
 
 std::optional<size_t> OklLoopInfo::getSize() {
-    if (metadata.isRegular()) {
+    if (isRegular()) {
         if (children.empty()) {
             return std::nullopt;
         }
@@ -134,57 +135,67 @@ std::optional<size_t> OklLoopInfo::getSize() {
     return ret;
 }
 
-OklSemaCtx::ParsingKernelInfo* OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
-    if (_parsingKernInfo.has_value()) {
-        return nullptr;
+bool OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
+    if (_parsingKernInfo) {
+        return false;
     }
 
-    auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size(), 1);
+    // create slot for kernel info in list
+    auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size());
     auto kiParams = std::vector<std::string>(fd.param_size());
-    _parsingKernInfo.emplace(fd, std::move(kiParams), kiPtr);
+    _parsingKernInfo = &_parsedKernelList.emplace_back(fd, std::move(kiParams), kiPtr);
 
-    return &_parsingKernInfo.value();
+    // Set kernel info parameters
+    for (auto param : fd.parameters()) {
+        if (param) {
+            setKernelArgInfo(*param);
+            setTranspiledArgStr(*param);
+        }
+    }
+
+    return true;
 }
 
-OklSemaCtx::ParsingKernelInfo* OklSemaCtx::getParsingKernelInfo() {
-    return _parsingKernInfo ? &_parsingKernInfo.value() : nullptr;
+OklSemaCtx::ParsedKernelInfo* OklSemaCtx::getParsingKernelInfo() {
+    return _parsingKernInfo;
+}
+
+void OklSemaCtx::setParsedKernelInfo(ParsedKernelInfo* ki) {
+    _parsingKernInfo = ki;
 }
 
 void OklSemaCtx::stopParsingKernelInfo() {
-    _parsingKernInfo.reset();
+    _parsingKernInfo = nullptr;
 }
 
 bool OklSemaCtx::isParsingOklKernel() const {
-    return _parsingKernInfo.has_value();
+    return _parsingKernInfo;
 }
 
 bool OklSemaCtx::isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const {
     if (!_parsingKernInfo) {
         return false;
     }
-    auto& kernelInfo = _parsingKernInfo.value();
 
-    return std::addressof(kernelInfo.decl.get()) == std::addressof(fd);
+    return std::addressof(_parsingKernInfo->decl.get()) == std::addressof(fd);
 }
 
 bool OklSemaCtx::isDeclInLexicalTraversal(const Decl& decl) const {
-    if (!_parsingKernInfo.has_value()) {
+    if (!_parsingKernInfo) {
         return false;
     }
-    auto& kernelInfo = _parsingKernInfo.value();
 
     return cast<FunctionDecl>(decl.getParentFunctionOrMethod()) ==
-           std::addressof(kernelInfo.decl.get());
+           std::addressof(_parsingKernInfo->decl.get());
 }
 
 OklLoopInfo* OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
     if (!_parsingKernInfo) {
         return nullptr;
     }
-    auto& kernelInfo = _parsingKernInfo.value();
 
-    auto it = kernelInfo.loopMap.find(&forStmt);
-    if (it == kernelInfo.loopMap.end() || !it->second) {
+    auto it = _parsingKernInfo->loopMap.find(&forStmt);
+    if (it == _parsingKernInfo->loopMap.end() || !it->second) {
         return nullptr;
     }
 
@@ -196,35 +207,36 @@ OklLoopInfo* OklSemaCtx::getLoopInfo(const clang::ForStmt& forStmt) const {
         return nullptr;
     }
 
-    auto& kernelInfo = _parsingKernInfo.value();
-    if (kernelInfo.currentLoop) {
-        return kernelInfo.currentLoop;
-    }
-
-    return nullptr;
+    return _parsingKernInfo->currentLoop;
 }
 
-tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clang::Attr& attr,
-                                                                      const clang::ForStmt& stmt,
-                                                                      const std::any* params) {
+void OklSemaCtx::setLoopInfo(OklLoopInfo* loopInfo) {
+    if (!_parsingKernInfo) {
+        return;
+    }
+
+    auto it = std::find_if(_parsingKernInfo->loopMap.begin(),
+                           _parsingKernInfo->loopMap.end(),
+                           [loopInfo](const auto& v) { return v.second == loopInfo; });
+    if (it != _parsingKernInfo->loopMap.end()) {
+        _parsingKernInfo->currentLoop = loopInfo;
+    }
+}
+
+tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang::Attr& attr,
+                                                                    const clang::ForStmt& stmt,
+                                                                    const std::any* params) {
     assert(_parsingKernInfo);
-
     auto loopType = getLoopType(params);
-    //    if (loopType == LoopMetaType::Regular) {
-    //        return {};
-    //    }
 
-    auto& kernelInfo = _parsingKernInfo.value();
-
-    if (!kernelInfo.currentLoop && !isLegalTopLoopLevel(loopType)) {
+    if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopType)) {
         return tl::make_unexpected(Error{
             .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer] for-loop"});
     }
 
-    auto& children =
-        kernelInfo.currentLoop ? kernelInfo.currentLoop->children : kernelInfo.children;
-    auto parentType =
-        kernelInfo.currentLoop ? kernelInfo.currentLoop->metadata.type : LoopMetaType::Regular;
+    auto currentLoop = _parsingKernInfo->currentLoop;
+    auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
+    auto parentType = currentLoop ? currentLoop->metadata.type : LoopMetaType::Regular;
 
     if (!isLegalLoopLevel(loopType, parentType)) {
         return tl::make_unexpected(
@@ -232,21 +244,21 @@ tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPreTraverse(const clan
                   .desc = "Cannot have [@inner] loop outside of an [@outer] loop"});
     }
 
-    return makeOklLoopInfo(stmt, attr, loopType, kernelInfo)
-        .and_then([&children, &kernelInfo](auto&& loopInfo) -> tl::expected<void, Error> {
+    return makeOklLoopInfo(stmt, attr, loopType, *_parsingKernInfo)
+        .and_then([&children, this](auto&& loopInfo) -> tl::expected<void, Error> {
             children.emplace_back(loopInfo);
 
             auto& child = children.back();
-            child.parent = kernelInfo.currentLoop;
-            kernelInfo.currentLoop = &child;
-            kernelInfo.loopMap.emplace(&child.stmt, &child);
+            child.parent = _parsingKernInfo->currentLoop;
+            _parsingKernInfo->currentLoop = &child;
+            _parsingKernInfo->loopMap.emplace(&child.stmt, &child);
             return {};
         });
 }
 
-tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPostTraverse(const clang::Attr& attr,
-                                                                       const clang::ForStmt& stmt,
-                                                                       const std::any* params) {
+tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::Attr& attr,
+                                                                   const clang::ForStmt& stmt,
+                                                                   const std::any* params) {
     assert(_parsingKernInfo);
 
     auto loopType = getLoopType(params);
@@ -259,39 +271,38 @@ tl::expected<void, Error> OklSemaCtx::validateOklForLoopOnPostTraverse(const cla
         return {};
     }
 
-    auto& kernelInfo = _parsingKernInfo.value();
-    kernelInfo.currentLoop = loopInfo->parent;
+    _parsingKernInfo->currentLoop = loopInfo->parent;
 
     return {};
 }
 
 void OklSemaCtx::setKernelArgInfo(const ParmVarDecl& parm) {
-    assert(_parsingKernInfo.has_value());
+    assert(_parsingKernInfo);
     auto result = toOklArgInfo(parm);
     if (!result) {
         llvm::errs() << "failed to convert parm var decl to okl data type\n";
         return;
     }
 
-    auto* ki = _parsingKernInfo.value().kernInfo;
+    auto* ki = _parsingKernInfo->kernInfo;
     ki->args[parm.getFunctionScopeIndex()] = std::move(result.value());
 }
 
 void OklSemaCtx::setTranspiledArgStr(const ParmVarDecl& parm, std::string_view transpiledArgStr) {
-    assert(_parsingKernInfo.has_value());
+    assert(_parsingKernInfo);
     if (!transpiledArgStr.empty()) {
-        auto& pki = _parsingKernInfo.value();
+        auto& pki = *_parsingKernInfo;
         pki.argStrs[parm.getFunctionScopeIndex()] = std::string(transpiledArgStr);
     }
 
-    auto& pki = _parsingKernInfo.value();
+    auto& pki = *_parsingKernInfo;
     pki.argStrs[parm.getFunctionScopeIndex()] =
         parm.getType().getAsString() + " " + parm.getNameAsString();
 }
 
 void OklSemaCtx::setKernelTranspiledAttrStr(std::string attrStr) {
-    assert(_parsingKernInfo.has_value());
-    _parsingKernInfo.value().transpiledFuncAttrStr = std::move(attrStr);
+    assert(_parsingKernInfo);
+    _parsingKernInfo->transpiledFuncAttrStr = std::move(attrStr);
 }
 
 ProgramMetaData& OklSemaCtx::getProgramMetaData() {
