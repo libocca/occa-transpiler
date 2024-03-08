@@ -114,7 +114,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/openmp/atomic.cpp
     attributes/backend/openmp/barrier.cpp
 
-        # sugar attribute
+    # sugar attribute
     attributes/backend/common/dim.cpp
     # attributes/backend/common/dim_order.cpp
 
@@ -126,7 +126,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_processors/okl_sema_processor/handlers/loop.h
     core/ast_processors/okl_sema_processor/handlers/loop.cpp
 
-        core/ast_traversal/transpile_ast_consumer.cpp
+    core/ast_traversal/transpile_ast_consumer.cpp
     core/ast_traversal/transpile_frontend_action.cpp
     core/ast_traversal/preorder_traversal_nlr.cpp
 
