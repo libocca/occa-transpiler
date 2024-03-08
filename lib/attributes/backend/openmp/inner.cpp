@@ -34,6 +34,36 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.RemoveText(attrRange);
 
+    // Top most `@inner` loop
+    auto parent = loopInfo->getAttributedParent();
+    if (parent && parent->metadata.isOuter()) {
+        // Get `@outer` attributed loop
+        auto outerParent = parent;
+        while (outerParent && !outerParent->metadata.isOuter()) {
+            outerParent = outerParent->parent;
+        }
+
+        if (outerParent && !outerParent->vars.exclusive.empty()) {
+            rewriter.InsertTextBefore(stmt.getBeginLoc(), exclusiveNullText);
+        }
+    }
+
+    // Bottom most `@inner` loop
+    if (loopInfo->children.empty()) {
+        // Get `@outer` attributed loop
+        auto outerParent = parent;
+        while (outerParent && !outerParent->metadata.isOuter()) {
+            outerParent = outerParent->parent;
+        }
+
+        if (outerParent && !outerParent->vars.exclusive.empty()) {
+            auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
+            SourceLocation incLoc =
+                compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
+            rewriter.InsertTextBefore(incLoc, exclusiveIncText);
+        }
+    }
+
     return {};
 }
 

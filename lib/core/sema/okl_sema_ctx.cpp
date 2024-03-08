@@ -112,7 +112,7 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
     return nullptr;
 }
 
-std::optional<size_t> OklLoopInfo::getSize() const {
+std::optional<size_t> OklLoopInfo::getSize() {
     if (metadata.isRegular()) {
         if (children.empty()) {
             return std::nullopt;

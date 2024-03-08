@@ -1,17 +1,22 @@
 #include "attributes/attribute_names.h"
+#include "attributes/backend/openmp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
-
-#include <clang/Rewrite/Core/Rewriter.h>
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
 const std::string prefixText = "#pragma omp parallel for\n";
+
+std::string getScopesCloseStr(size_t& parenCnt) {
+    std::string ret;
+    while (parenCnt--) {
+        ret += "}\n";
+    }
+    return ret;
+}
 
 HandleResult handleOPENMPOuterAttribute(const Attr& a,
                                         const ForStmt& stmt,
@@ -31,15 +36,21 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
     }
 
     auto& rewriter = s.getRewriter();
-    auto opts = Rewriter::RewriteOptions();
-    opts.RemoveLineIfEmpty = true;
-
-    auto attrRange = getAttrFullSourceRange(a);
-    rewriter.RemoveText(attrRange, opts);
 
     auto parent = loopInfo->getAttributedParent();
-    if (!parent) {
-        rewriter.InsertText(attrRange.getBegin(), prefixText, false, true);
+
+    SourceRange attrRange = getAttrFullSourceRange(a);
+    rewriter.ReplaceText(attrRange, (!parent ? prefixText : ""));
+
+    // process `@exclusive` that are within current loop.
+    if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, rewriter);
+        !procExclusive.has_value()) {
+        return procExclusive;
+    }
+
+    // process `@shared` that are within current loop.
+    if (auto procShared = openmp::postHandleShared(*loopInfo, rewriter); !procShared.has_value()) {
+        return procShared;
     }
 
     return {};
