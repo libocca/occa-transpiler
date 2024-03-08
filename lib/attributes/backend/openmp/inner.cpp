@@ -32,10 +32,10 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
 
     // Top most `@inner` loop
     auto parent = loopInfo->getAttributedParent();
-    if (parent && parent->metadata.isOuter()) {
+    if (parent && parent->hasOuter()) {
         // Get `@outer` attributed loop
         auto outerParent = parent;
-        while (outerParent && !outerParent->metadata.isOuter()) {
+        while (outerParent && !outerParent->hasOuter()) {
             outerParent = outerParent->parent;
         }
 
@@ -48,7 +48,7 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
     if (loopInfo->children.empty()) {
         // Get `@outer` attributed loop
         auto outerParent = parent;
-        while (outerParent && !outerParent->metadata.isOuter()) {
+        while (outerParent && !outerParent->hasOuter()) {
             outerParent = outerParent->parent;
         }
 

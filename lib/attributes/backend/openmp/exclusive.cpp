@@ -21,13 +21,13 @@ HandleResult handleOPENMPExclusiveDeclAttribute(const Attr& a,
     }
 
     auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
-    if (!compStmt || loopInfo->metadata.type != LoopMetaType::Outer) {
+    if (!compStmt || !loopInfo->isOuter()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
 
     auto child = loopInfo->getFirstAttributedChild();
-    if (!child || child->metadata.type != LoopMetaType::Inner) {
+    if (!child || !child->isInner()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }

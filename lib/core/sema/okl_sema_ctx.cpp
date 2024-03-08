@@ -86,7 +86,7 @@ namespace oklt {
 
 OklLoopInfo* OklLoopInfo::getAttributedParent() {
     auto ret = parent;
-    while (ret && ret->metadata.isRegular()) {
+    while (ret && ret->isRegular()) {
         ret = ret->parent;
     }
     return ret;
@@ -101,7 +101,7 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
     while (!elements.empty()) {
         auto el = elements.front();
         elements.pop_front();
-        if (!el->metadata.isRegular())
+        if (!el->isRegular())
             return el;
 
         for (auto& v : el->children) {
@@ -113,7 +113,7 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild() {
 }
 
 std::optional<size_t> OklLoopInfo::getSize() {
-    if (metadata.isRegular()) {
+    if (isRegular()) {
         if (children.empty()) {
             return std::nullopt;
         }

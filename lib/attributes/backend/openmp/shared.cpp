@@ -15,13 +15,13 @@ HandleResult handleOPENMPSharedAttribute(const Attr& a, const Decl& decl, Sessio
         return tl::make_unexpected(Error{{}, "@shared: failed to fetch loop meta data from sema"});
     }
 
-    if (loopInfo->metadata.type != LoopMetaType::Outer) {
+    if (!loopInfo->isOuter()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
     auto child = loopInfo->getFirstAttributedChild();
-    if (!child || child->metadata.type != LoopMetaType::Inner) {
+    if (!child || !child->isInner()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }

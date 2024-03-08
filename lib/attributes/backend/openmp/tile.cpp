@@ -155,13 +155,13 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
     std::string prefixCode;
 
     // Top level `@outer` loop
-    if (!parent && loopInfo->metadata.isOuter()) {
+    if (!parent && loopInfo->hasOuter()) {
         prefixCode += prefixText;
     }
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && parent->metadata.isOuter() && loopInfo->metadata.type == LoopMetaType::Inner) {
+    if (parent && parent->hasOuter() && loopInfo->isInner()) {
         auto& loopInfoEx = backendCtx.getLoopInfo(parent);
         if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
@@ -173,7 +173,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && loopInfo->metadata.type == LoopMetaType::OuterInner) {
+    if (parent && loopInfo->isOuterInner()) {
         auto& loopInfoEx = backendCtx.getLoopInfo(parent);
         if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
@@ -193,7 +193,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
-        while (parent && !parent->metadata.isOuter()) {
+        while (parent && !parent->hasOuter()) {
             parent = parent->parent;
         }
 

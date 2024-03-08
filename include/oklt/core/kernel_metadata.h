@@ -107,14 +107,6 @@ struct LoopMetaData {
             return range.start + " - " + range.end;
         };
     };
-
-    [[nodiscard]] bool isOuter() const {
-        return type == LoopMetaType::Outer || type == LoopMetaType::OuterInner;
-    };
-    [[nodiscard]] bool isInner() const {
-        return type == LoopMetaType::Inner || type == LoopMetaType::OuterInner;
-    };
-    [[nodiscard]] bool isRegular() const { return type == LoopMetaType::Regular; };
 };
 
 struct KernelInfo {

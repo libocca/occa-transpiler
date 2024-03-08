@@ -24,6 +24,13 @@ struct OklLoopInfo {
     OklLoopInfo* getAttributedParent();
     OklLoopInfo* getFirstAttributedChild();
     std::optional<size_t> getSize();
+
+    [[nodiscard]] bool isOuter() const { return metadata.type == LoopMetaType::Outer; };
+    [[nodiscard]] bool isInner() const { return metadata.type == LoopMetaType::Inner; };
+    [[nodiscard]] bool isOuterInner() const { return metadata.type == LoopMetaType::OuterInner; };
+    [[nodiscard]] bool hasOuter() const { return isOuter() || isOuterInner(); };
+    [[nodiscard]] bool hasInner() const { return isInner() || isOuterInner(); };
+    [[nodiscard]] bool isRegular() const { return metadata.type == LoopMetaType::Regular; };
 };
 
 struct OklKernelInfo {
