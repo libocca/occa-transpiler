@@ -49,9 +49,6 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   const std::string& funcQualifier) {
     // INFO: Check if function is not attributed with OKL attribute
     auto& am = s.getAttrManager();
-    if ((decl.hasAttrs()) && (am.checkAttrs(decl.getAttrs(), decl, s))) {
-        return {};
-    }
 
     auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";

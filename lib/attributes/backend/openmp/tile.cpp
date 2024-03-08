@@ -1,12 +1,10 @@
-#include "attributes/frontend/params/tile.h"
-#include "attributes/attribute_names.h"
 #include "attributes/backend/openmp/common.h"
 #include "attributes/utils/code_gen.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
 
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
+
+#include <clang/Rewrite/Core/Rewriter.h>
 
 namespace {
 using namespace oklt;
@@ -148,6 +146,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
                  << ", isUnary: " << loopInfo->metadata.isUnary() << ")\n";
 #endif
 
+    auto& backendCtx = openmp::getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
     auto parent = loopInfo->getAttributedParent();
@@ -156,14 +155,15 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
     std::string prefixCode;
 
     // Top level `@outer` loop
-    if (!parent && loopInfo->metadata.isOuter()) {
+    if (!parent && loopInfo->hasOuter()) {
         prefixCode += prefixText;
     }
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && parent->metadata.isOuter() && loopInfo->metadata.type == LoopMetaType::Inner) {
-        if (!parent->vars.exclusive.empty()) {
+    if (parent && parent->hasOuter() && loopInfo->isInner()) {
+        auto& loopInfoEx = backendCtx.getLoopInfo(parent);
+        if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
@@ -173,8 +173,9 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && loopInfo->metadata.type == LoopMetaType::OuterInner) {
-        if (!parent->vars.exclusive.empty()) {
+    if (parent && loopInfo->isOuterInner()) {
+        auto& loopInfoEx = backendCtx.getLoopInfo(parent);
+        if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
@@ -192,12 +193,11 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
-        auto outerParent = loopInfo;
-        while (parent && !parent->metadata.isOuter()) {
+        while (parent && !parent->hasOuter()) {
             parent = parent->parent;
         }
 
-        if (parent && !parent->vars.exclusive.empty()) {
+        if (parent && !backendCtx.getLoopInfo(parent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
@@ -207,20 +207,6 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     std::string suffixCode = getScopesCloseStr(parenCnt);
     rewriter.InsertTextAfter(stmt.getEndLoc(), suffixCode);
-
-    if (loopInfo->metadata.type == LoopMetaType::Outer) {
-        // process `@exclusive` that are within current loop.
-        if (auto procExclusive = openmp::postHandleExclusive(*loopInfo, rewriter);
-            !procExclusive.has_value()) {
-            return procExclusive;
-        }
-
-        // process `@shared` that are within current loop.
-        if (auto procShared = openmp::postHandleShared(*loopInfo, rewriter);
-            !procShared.has_value()) {
-            return procShared;
-        }
-    }
 
     return {};
 }

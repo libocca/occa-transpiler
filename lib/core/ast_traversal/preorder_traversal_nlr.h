@@ -8,6 +8,7 @@ namespace oklt {
 class SessionStage;
 class AstProcessorManager;
 struct OklSemaCtx;
+struct Error;
 
 class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraversal> {
    public:
@@ -16,12 +17,12 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
     bool TraverseStmt(clang::Stmt* stmt);
     bool TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl);
 
-    tl::expected<std::string, std::error_code> applyAstProccessor(clang::TranslationUnitDecl*);
+    tl::expected<std::string, Error> applyAstProcessor(
+        clang::TranslationUnitDecl* translationUnitDecl);
 
    private:
     AstProcessorManager& _procMng;
     SessionStage& _stage;
-    OklSemaCtx& _sema;
 };
 
 }  // namespace oklt

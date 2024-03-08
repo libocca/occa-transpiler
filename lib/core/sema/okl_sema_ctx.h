@@ -21,15 +21,16 @@ struct OklLoopInfo {
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
 
-    // TODO: Maybe make it via `Extendable` class ?
-    struct {
-        std::list<std::reference_wrapper<const clang::Decl>> shared = {};
-        std::list<std::reference_wrapper<const clang::VarDecl>> exclusive = {};
-    } vars;
-
     OklLoopInfo* getAttributedParent();
     OklLoopInfo* getFirstAttributedChild();
     std::optional<size_t> getSize();
+
+    [[nodiscard]] bool isOuter() const { return metadata.type == LoopMetaType::Outer; };
+    [[nodiscard]] bool isInner() const { return metadata.type == LoopMetaType::Inner; };
+    [[nodiscard]] bool isOuterInner() const { return metadata.type == LoopMetaType::OuterInner; };
+    [[nodiscard]] bool hasOuter() const { return isOuter() || isOuterInner(); };
+    [[nodiscard]] bool hasInner() const { return isInner() || isOuterInner(); };
+    [[nodiscard]] bool isRegular() const { return metadata.type == LoopMetaType::Regular; };
 };
 
 struct OklKernelInfo {
@@ -40,10 +41,10 @@ struct OklKernelInfo {
 };
 
 struct OklSemaCtx {
-    struct ParsingKernelInfo : public OklKernelInfo {
-        explicit ParsingKernelInfo(const clang::FunctionDecl& d,
-                                   std::vector<std::string>&& args,
-                                   KernelInfo* info = nullptr)
+    struct ParsedKernelInfo : public OklKernelInfo {
+        explicit ParsedKernelInfo(const clang::FunctionDecl& d,
+                                  std::vector<std::string>&& args,
+                                  KernelInfo* info = nullptr)
             : OklKernelInfo(d),
               argStrs(args),
               kernInfo(info){};
@@ -59,24 +60,25 @@ struct OklSemaCtx {
     OklSemaCtx() = default;
 
     // method to make/get/reset context of parsing OKL kernel
-    ParsingKernelInfo* startParsingOklKernel(const clang::FunctionDecl&);
-    [[nodiscard]] ParsingKernelInfo* getParsingKernelInfo();
+    bool startParsingOklKernel(const clang::FunctionDecl&);
     void stopParsingKernelInfo();
+    [[nodiscard]] ParsedKernelInfo* getParsingKernelInfo();
+    void setParsedKernelInfo(ParsedKernelInfo*);
 
     [[nodiscard]] bool isParsingOklKernel() const;
     [[nodiscard]] bool isCurrentParsingOklKernel(const clang::FunctionDecl& fd) const;
     [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
+    [[nodiscard]] tl::expected<void, Error> startParsingAttributedForLoop(
+        const clang::Attr& attr,
+        const clang::ForStmt& stmt,
+        const std::any* params);
+    [[nodiscard]] tl::expected<void, Error> stopParsingAttributedForLoop(const clang::Attr& attr,
+                                                                         const clang::ForStmt& stmt,
+                                                                         const std::any* params);
     [[nodiscard]] OklLoopInfo* getLoopInfo(const clang::ForStmt& forStmt) const;
     [[nodiscard]] OklLoopInfo* getLoopInfo();
-
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPreTraverse(const clang::Attr&,
-                                                                            const clang::ForStmt&,
-                                                                            const std::any* params);
-    [[nodiscard]] tl::expected<void, Error> validateOklForLoopOnPostTraverse(
-        const clang::Attr&,
-        const clang::ForStmt&,
-        const std::any* params);
+    void setLoopInfo(OklLoopInfo* loopInfo);
 
     void setKernelArgInfo(const clang::ParmVarDecl& parm);
     void setTranspiledArgStr(const clang::ParmVarDecl& parm,
@@ -88,7 +90,8 @@ struct OklSemaCtx {
     [[nodiscard]] const ProgramMetaData& getProgramMetaData() const;
 
    private:
-    std::optional<ParsingKernelInfo> _parsingKernInfo;
+    ParsedKernelInfo* _parsingKernInfo = nullptr;
+    std::list<ParsedKernelInfo> _parsedKernelList;
     ProgramMetaData _programMetaData;
 };
 }  // namespace oklt

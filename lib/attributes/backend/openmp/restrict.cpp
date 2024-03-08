@@ -1,7 +1,4 @@
-#include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
+#include "attributes/backend/openmp/common.h"
 
 namespace {
 using namespace oklt;
