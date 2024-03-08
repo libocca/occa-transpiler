@@ -17,10 +17,16 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
     auto result =
         PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProccessor(tu);
     if (!result) {
+        _stage.pushError(result.error());
         return;
     }
 
     _stage.getSession().output.kernel.sourceCode = std::move(result.value());
+    for (const auto& f : _stage.getAllRewriterResults()) {
+        llvm::outs() << "transS overlayFs file: " << f.first << "\n"
+                     << "source:\n"
+                     << f.second << '\n';
+    }
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {

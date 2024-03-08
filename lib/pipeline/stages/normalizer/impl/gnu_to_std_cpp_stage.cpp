@@ -206,16 +206,37 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
         }
         auto consumer = std::make_unique<GnuToCppAttrNormalizerConsumer>(*_stage);
         compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
+
         return std::move(consumer);
     }
 
-    void EndSourceFileAction() override {
-        if (!_stage) {
-            _stage->pushError(std::error_code(), "where is my stage???");
-            return;
+    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
+        if (compiler.hasFileManager()) {
+            llvm::IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> overlayFs(
+                new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem()));
+            llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> inMemoryFs(
+                new llvm::vfs::InMemoryFileSystem);
+            overlayFs->pushOverlay(inMemoryFs);
+
+            for (const auto& f : _input.allGnuCppSrcs) {
+                inMemoryFs->addFile(f.first, 0, llvm::MemoryBuffer::getMemBuffer(f.second));
+            }
+
+            compiler.getFileManager().setVirtualFileSystem(overlayFs);
         }
 
-        _output.stdCppSrc = _stage->getRewriterResult();
+        return true;
+    }
+
+    void EndSourceFileAction() override {
+        _output.stdCppSrc = _stage->getRewriterResultOfMainFile();
+        _output.allStdCppSrcs = _stage->getAllRewriterResults();
+        for (const auto& s : _input.allGnuCppSrcs) {
+            auto it = _output.allStdCppSrcs.find(s.first);
+            if (it == _output.allStdCppSrcs.end()) {
+                _output.allStdCppSrcs.insert(s);
+            }
+        }
     }
 
    private:
@@ -237,7 +258,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
     }
 
     Twine tool_name = "okl-transpiler-normalization-to-cxx";
-    Twine file_name("gnu-kernel-to-cxx.cpp");
+    Twine file_name("main_kernel.cpp");
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.gnuCppSrc);

@@ -21,4 +21,25 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
     return std::move(astConsumer);
 }
 
+bool TranspileFrontendAction::PrepareToExecuteAction(CompilerInstance& compiler) {
+    if (compiler.hasFileManager()) {
+        llvm::IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> overlayFs(
+            new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem()));
+        llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> inMemoryFs(
+            new llvm::vfs::InMemoryFileSystem);
+        overlayFs->pushOverlay(inMemoryFs);
+
+        for (const auto& f : _session.input.sourceCodes) {
+            llvm::outs() << "transS overlayFs file: " << f.first << "\n"
+                         << "source:\n"
+                         << f.second << '\n';
+            inMemoryFs->addFile(f.first, 0, llvm::MemoryBuffer::getMemBuffer(f.second));
+        }
+
+        compiler.getFileManager().setVirtualFileSystem(overlayFs);
+    }
+
+    return true;
+}
+
 }  // namespace oklt

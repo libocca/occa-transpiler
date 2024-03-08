@@ -26,13 +26,34 @@ AttributeManager& SessionStage::getAttrManager() {
     return AttributeManager::instance();
 }
 
-std::string SessionStage::getRewriterResult() {
+std::string SessionStage::getRewriterResultOfMainFile() {
     auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
     if (!rewriteBuf || rewriteBuf->size() == 0) {
         return "";
     }
 
     return std::string{rewriteBuf->begin(), rewriteBuf->end()};
+}
+
+std::map<std::string, std::string> SessionStage::getAllRewriterResults() {
+    std::map<std::string, std::string> allChangedFiles;
+    for (auto it = _rewriter.buffer_begin(); it != _rewriter.buffer_end(); ++it) {
+        std::string fileName =
+            _compiler.getSourceManager().getFileEntryForID(it->first)->getName().data();
+        allChangedFiles[fileName] = [](const auto& buf) -> std::string {
+            if (buf.size() == 0) {
+                return "";
+            }
+
+            return std::string{buf.begin(), buf.end()};
+        }(it->second);
+
+        llvm::outs() << "overlayFs file: " << fileName << "\n"
+                     << "source:\n"
+                     << allChangedFiles.at(fileName) << '\n';
+    }
+
+    return allChangedFiles;
 }
 
 TargetBackend SessionStage::getBackend() const {

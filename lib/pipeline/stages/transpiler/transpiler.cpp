@@ -21,7 +21,7 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
 
     Twine tool_name = "okl-transpiler";
     // INFO: hot fix for *.okl extention
-    std::string rawFileName = input.sourcePath.filename().stem().string() + ".cpp";
+    std::string rawFileName = "main_kernel.cpp";
     Twine file_name(rawFileName);
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 

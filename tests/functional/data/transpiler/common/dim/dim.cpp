@@ -73,7 +73,6 @@ typedef Coord* mat8_s @dim(8);
     }
 }
 
-
 float get1() {
     return 1;
 }
@@ -82,7 +81,7 @@ float get1() {
 @kernel void test_kernel_7(const int entries, float* a, float* b, float* ab, mat89_s mat) {
     for (int i = 0; i < entries; i += 1; @outer(0)) {
         for (int j = 0; j < entries; j += 1; @inner(0)) {
-            mat(i, j + get1() + (i*j / get1())) = a[i] + b[j] + mat(i + 12, mat(j, get1()));
+            mat(i, j + get1() + (i * j / get1())) = a[i] + b[j] + mat(i + 12, mat(j, get1()));
         }
     }
 }

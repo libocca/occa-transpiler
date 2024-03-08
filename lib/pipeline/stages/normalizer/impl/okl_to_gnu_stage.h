@@ -12,6 +12,7 @@ namespace oklt {
 
 struct OklToGnuStageOutput {
     std::string gnuCppSrc;
+    std::map<std::string, std::string> allGnuCppSrcs;
     std::list<OklAttrMarker> gnuMarkers;
     std::list<OklAttrMarker> recoveryMarkers;
     SharedTranspilerSession session;

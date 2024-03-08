@@ -121,12 +121,12 @@ bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     return traverseExpr(*this, translationUnitDecl, _procMng, _stage, _sema);
 }
 
-tl::expected<std::string, std::error_code> PreorderNlrTraversal::applyAstProccessor(
+tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProccessor(
     clang::TranslationUnitDecl* translationUnitDecl) {
     if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-        return tl::make_unexpected(std::error_code());
+        return tl::make_unexpected(Error{{}, "AST trasrse failed"});
     }
 
-    return _stage.getRewriterResult();
+    return _stage.getRewriterResultOfMainFile();
 }
 }  // namespace oklt

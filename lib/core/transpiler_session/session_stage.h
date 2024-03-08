@@ -30,7 +30,8 @@ class SessionStage {
     clang::CompilerInstance& getCompiler();
 
     clang::Rewriter& getRewriter();
-    std::string getRewriterResult();
+    std::string getRewriterResultOfMainFile();
+    std::map<std::string, std::string> getAllRewriterResults();
 
     [[nodiscard]] TargetBackend getBackend() const;
     [[nodiscard]] AstProcessorType getAstProccesorType() const;

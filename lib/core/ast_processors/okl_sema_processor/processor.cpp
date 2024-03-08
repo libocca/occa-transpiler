@@ -2,11 +2,11 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_processors/default_actions.h"
 
+#include "core/ast_processors/okl_sema_processor/handlers/call_expr.h"
+#include "core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h"
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 #include "core/ast_processors/okl_sema_processor/handlers/recovery_expr.h"
-#include "core/ast_processors/okl_sema_processor/handlers/call_expr.h"
-#include "core/ast_processors/okl_sema_processor/handlers/decl_ref_expr.h"
 
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"

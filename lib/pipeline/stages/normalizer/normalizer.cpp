@@ -20,6 +20,7 @@ OklToGnuStageInput toOkltoGnuInput(SharedTranspilerSession session) {
 
 GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
     return {.gnuCppSrc = std::move(output.gnuCppSrc),
+            .allGnuCppSrcs = std::move(output.allGnuCppSrcs),
             .gnuMarkers = std::move(output.gnuMarkers),
             .recoveryMarkers = std::move(output.recoveryMarkers),
             .session = output.session};
@@ -28,9 +29,11 @@ GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
 TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
     // copy to output as final result of normalization stage
     output.session->output.normalized.sourceCode = output.stdCppSrc;
+    output.session->output.normalized.sourceCodes = output.allStdCppSrcs;
 
     // pass output as the input for this next stage
     output.session->input.sourceCode = std::move(output.stdCppSrc);
+    output.session->input.sourceCodes = std::move(output.allStdCppSrcs);
     return output.session;
 }
 
