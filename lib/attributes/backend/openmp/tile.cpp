@@ -1,10 +1,5 @@
-#include "attributes/frontend/params/tile.h"
-#include "attributes/attribute_names.h"
+#include "attributes/backend/openmp/common.h"
 #include "attributes/utils/code_gen.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
 
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
@@ -151,6 +146,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
                  << ", isUnary: " << loopInfo->metadata.isUnary() << ")\n";
 #endif
 
+    auto& backendCtx = openmp::getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
     auto parent = loopInfo->getAttributedParent();
@@ -166,7 +162,8 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && parent->metadata.isOuter() && loopInfo->metadata.type == LoopMetaType::Inner) {
-        if (!parent->vars.exclusive.empty()) {
+        auto& loopInfoEx = backendCtx.getLoopInfo(parent);
+        if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
@@ -177,7 +174,8 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && loopInfo->metadata.type == LoopMetaType::OuterInner) {
-        if (!parent->vars.exclusive.empty()) {
+        auto& loopInfoEx = backendCtx.getLoopInfo(parent);
+        if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
@@ -195,12 +193,11 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
-        auto outerParent = loopInfo;
         while (parent && !parent->metadata.isOuter()) {
             parent = parent->parent;
         }
 
-        if (parent && !parent->vars.exclusive.empty()) {
+        if (parent && !backendCtx.getLoopInfo(parent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();

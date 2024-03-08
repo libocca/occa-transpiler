@@ -1,8 +1,4 @@
-#include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
+#include "attributes/backend/openmp/common.h"
 
 namespace {
 using namespace oklt;
@@ -30,18 +26,25 @@ HandleResult handleOPENMPExclusiveDeclAttribute(const Attr& a,
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
 
+    auto child = loopInfo->getFirstAttributedChild();
+    if (!child || child->metadata.type != LoopMetaType::Inner) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+    }
+
+    auto& loopInfoEx = openmp::getBackendCtxFromStage(s).getLoopInfo(loopInfo);
     auto& rewriter = s.getRewriter();
 
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.RemoveText(attrRange);
 
-    if (loopInfo->vars.exclusive.empty()) {
+    if (loopInfoEx.exclusive.empty()) {
         auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
         rewriter.InsertTextAfter(indexLoc, outerLoopText);
     }
 
     // Process later when processing ForStmt
-    loopInfo->vars.exclusive.emplace_back(std::ref(decl));
+    loopInfoEx.exclusive.emplace_back(std::ref(decl));
 
     // Find max size of inner loops
     size_t sz = 0;

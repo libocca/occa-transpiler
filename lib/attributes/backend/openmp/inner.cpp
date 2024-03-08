@@ -1,9 +1,4 @@
-#include "attributes/attribute_names.h"
-#include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
+#include "attributes/backend/openmp/common.h"
 
 namespace {
 using namespace oklt;
@@ -29,6 +24,7 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
+    auto& backendCtx = openmp::getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
     SourceRange attrRange = getAttrFullSourceRange(a);
@@ -43,7 +39,7 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
             outerParent = outerParent->parent;
         }
 
-        if (outerParent && !outerParent->vars.exclusive.empty()) {
+        if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
             rewriter.InsertTextBefore(stmt.getBeginLoc(), exclusiveNullText);
         }
     }
@@ -56,7 +52,7 @@ HandleResult handleOPNMPInnerAttribute(const Attr& a,
             outerParent = outerParent->parent;
         }
 
-        if (outerParent && !outerParent->vars.exclusive.empty()) {
+        if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
