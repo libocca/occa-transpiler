@@ -3,6 +3,8 @@
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "core/vfs/overlay_fs.h"
+
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
 
@@ -207,31 +209,21 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
 
     bool PrepareToExecuteAction(CompilerInstance& compiler) override {
         if (compiler.hasFileManager()) {
-            llvm::IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> overlayFs(
-                new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem()));
-            llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> inMemoryFs(
-                new llvm::vfs::InMemoryFileSystem);
-            overlayFs->pushOverlay(inMemoryFs);
-
-            for (const auto& f : _input.allGnuCppSrcs) {
-                inMemoryFs->addFile(f.first, 0, llvm::MemoryBuffer::getMemBuffer(f.second));
-            }
-
+            auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
+                                           _input.gnuCppIncs);
             compiler.getFileManager().setVirtualFileSystem(overlayFs);
+            _output.stdCppIncs = std::move(_input.gnuCppIncs);
         }
 
         return true;
     }
 
     void EndSourceFileAction() override {
-        _output.stdCppSrc = _stage->getRewriterResultOfMainFile();
-        _output.allStdCppSrcs = _stage->getAllRewriterResults();
-        for (const auto& s : _input.allGnuCppSrcs) {
-            auto it = _output.allStdCppSrcs.find(s.first);
-            if (it == _output.allStdCppSrcs.end()) {
-                _output.allStdCppSrcs.insert(s);
-            }
-        }
+        _output.stdCppSrc = _stage->getRewriterResultForMainFile();
+
+        auto normalizedHeaders = _stage->getRewriterResultForHeaders();
+        normalizedHeaders.fileMap.merge(_output.stdCppIncs.fileMap);
+        _output.stdCppIncs = std::move(normalizedHeaders);
     }
 
    private:

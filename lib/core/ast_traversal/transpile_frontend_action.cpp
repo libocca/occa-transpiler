@@ -2,6 +2,7 @@
 #include "core/ast_traversal/transpile_ast_consumer.h"
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/vfs/overlay_fs.h"
 
 #include <memory>
 
@@ -23,19 +24,8 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
 
 bool TranspileFrontendAction::PrepareToExecuteAction(CompilerInstance& compiler) {
     if (compiler.hasFileManager()) {
-        llvm::IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> overlayFs(
-            new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem()));
-        llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> inMemoryFs(
-            new llvm::vfs::InMemoryFileSystem);
-        overlayFs->pushOverlay(inMemoryFs);
-
-        for (const auto& f : _session.input.sourceCodes) {
-            llvm::outs() << "transS overlayFs file: " << f.first << "\n"
-                         << "source:\n"
-                         << f.second << '\n';
-            inMemoryFs->addFile(f.first, 0, llvm::MemoryBuffer::getMemBuffer(f.second));
-        }
-
+        auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
+                                       _session.normalizedHeaders);
         compiler.getFileManager().setVirtualFileSystem(overlayFs);
     }
 

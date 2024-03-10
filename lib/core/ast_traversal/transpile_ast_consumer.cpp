@@ -21,7 +21,7 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
     }
 
     _stage.getSession().output.kernel.sourceCode = std::move(result.value());
-    for (const auto& f : _stage.getAllRewriterResults()) {
+    for (const auto& f : _stage.getRewriterResultForHeaders().fileMap) {
         llvm::outs() << "transS overlayFs file: " << f.first << "\n"
                      << "source:\n"
                      << f.second << '\n';

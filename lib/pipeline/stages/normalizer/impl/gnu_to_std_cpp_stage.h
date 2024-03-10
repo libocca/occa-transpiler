@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/transpiler_session.h"
 #include "pipeline/stages/normalizer/impl/okl_attr_marker.h"
 
@@ -11,13 +12,13 @@ namespace oklt {
 
 struct GnuToStdCppStageOutput {
     std::string stdCppSrc;
-    std::map<std::string, std::string> allStdCppSrcs;
+    TransformedHeaders stdCppIncs;
     SharedTranspilerSession session;
 };
 
 struct GnuToStdCppStageInput {
     std::string gnuCppSrc;
-    std::map<std::string, std::string> allGnuCppSrcs;
+    TransformedHeaders gnuCppIncs;
     std::list<OklAttrMarker> gnuMarkers;
     std::list<OklAttrMarker> recoveryMarkers;
     SharedTranspilerSession session;

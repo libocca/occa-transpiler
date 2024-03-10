@@ -292,7 +292,7 @@ tl::expected<std::string, Error> generateTranspiledKernel(SessionStage& stage) {
         }
     }
 
-    return stage.getRewriterResultOfMainFile();
+    return stage.getRewriterResultForMainFile();
 }
 }  // namespace
 namespace oklt {
@@ -336,6 +336,6 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     //  if not serial/opnemp
     // 3. generate launcher and metadata
 
-    return _stage.getRewriterResultOfMainFile();
+    return _stage.getRewriterResultForMainFile();
 }
-}
+}  // namespace oklt

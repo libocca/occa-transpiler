@@ -26,7 +26,7 @@ AttributeManager& SessionStage::getAttrManager() {
     return AttributeManager::instance();
 }
 
-std::string SessionStage::getRewriterResultOfMainFile() {
+std::string SessionStage::getRewriterResultForMainFile() {
     auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
     if (!rewriteBuf || rewriteBuf->size() == 0) {
         return "";
@@ -35,25 +35,27 @@ std::string SessionStage::getRewriterResultOfMainFile() {
     return std::string{rewriteBuf->begin(), rewriteBuf->end()};
 }
 
-std::map<std::string, std::string> SessionStage::getAllRewriterResults() {
-    std::map<std::string, std::string> allChangedFiles;
+TransformedHeaders SessionStage::getRewriterResultForHeaders() {
+    TransformedHeaders headers;
+    auto mainFID = _compiler.getSourceManager().getMainFileID();
     for (auto it = _rewriter.buffer_begin(); it != _rewriter.buffer_end(); ++it) {
+        // skip main source file
+        if (it->first == mainFID) {
+            continue;
+        }
+
         std::string fileName =
             _compiler.getSourceManager().getFileEntryForID(it->first)->getName().data();
-        allChangedFiles[fileName] = [](const auto& buf) -> std::string {
-            if (buf.size() == 0) {
-                return "";
-            }
-
+        headers.fileMap[fileName] = [](const auto& buf) -> std::string {
             return std::string{buf.begin(), buf.end()};
         }(it->second);
 
-        llvm::outs() << "overlayFs file: " << fileName << "\n"
+        llvm::outs() << "transformed file: " << fileName << "\n"
                      << "source:\n"
-                     << allChangedFiles.at(fileName) << '\n';
+                     << headers.fileMap.at(fileName) << '\n';
     }
 
-    return allChangedFiles;
+    return headers;
 }
 
 TargetBackend SessionStage::getBackend() const {

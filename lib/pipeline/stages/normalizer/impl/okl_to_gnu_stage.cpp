@@ -167,8 +167,8 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
             return false;
         }
 
-        _output.gnuCppSrc = stage.getRewriterResultOfMainFile();
-        _output.allGnuCppSrcs = stage.getAllRewriterResults();
+        _output.gnuCppSrc = stage.getRewriterResultForMainFile();
+        _output.gnuCppIncs = stage.getRewriterResultForHeaders();
 
         pp.EndSourceFile();
 
