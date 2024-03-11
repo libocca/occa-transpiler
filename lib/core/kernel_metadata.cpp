@@ -68,11 +68,12 @@ void to_json(json& j, const DataType& dt) {
 
 void from_json(const json& j, DataType& dt) {
     auto dtCategory = j.at("type").get<std::string>();
-    j.at("name").get_to(dt.name);
     if (dtCategory == "builtin") {
         dt.type = DatatypeCategory::BUILTIN;
+        j.at("name").get_to(dt.name);
     } else {
         dt.type = DatatypeCategory::CUSTOM;
+        dt.name = "none";
         j.at("bytes").get_to(dt.bytes);
     }
 }
