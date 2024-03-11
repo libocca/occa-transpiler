@@ -51,35 +51,35 @@ void from_json(const json& j, KernelInfo& kernelMeta) {
     j.at("name").get_to(kernelMeta.name);
 }
 
-void to_json(json& j, const ProgramMetaData& kernelInfo) {
-    if (kernelInfo.props.has_value()) {
+void to_json(json& j, const ProgramMetaData& programMeta) {
+    if (programMeta.props.has_value()) {
         j = json{
             {"dependencies", json::object()},  // INFO: always empty object, can't define the type
-            {"hash", kernelInfo.hash},
-            {"metadata", kernelInfo.kernels},
-            {"props", kernelInfo.props.value()}};
+            {"hash", programMeta.hash},
+            {"metadata", programMeta.kernels},
+            {"props", programMeta.props.value()}};
     } else {
         j = json{
             {"dependencies", json::object()},  // INFO: always empty object, can't define the type
-            {"hash", kernelInfo.hash},
-            {"metadata", kernelInfo.kernels},
+            {"hash", programMeta.hash},
+            {"metadata", programMeta.kernels},
             {"props", json::object()}};
     }
 }
 
-void from_json(const json& j, ProgramMetaData& kernelInfo) {
-    kernelInfo.dependencies = std::nullopt;
+void from_json(const json& j, ProgramMetaData& programMeta) {
+    programMeta.dependencies = std::nullopt;
     const auto& value = j.at("props");
     if (value.is_object() && !value.empty()) {
-        j.at("hash").get_to(kernelInfo.hash);
-        j.at("metadata").get_to(kernelInfo.kernels);
+        j.at("hash").get_to(programMeta.hash);
+        j.at("metadata").get_to(programMeta.kernels);
         PropertyInfo prop;
         value.get_to(prop);
-        kernelInfo.props = prop;
+        programMeta.props = prop;
     } else {
-        j.at("hash").get_to(kernelInfo.hash);
-        j.at("metadata").get_to(kernelInfo.kernels);
-        kernelInfo.props = std::nullopt;
+        j.at("hash").get_to(programMeta.hash);
+        j.at("metadata").get_to(programMeta.kernels);
+        programMeta.props = std::nullopt;
     }
 }
 }  // namespace oklt

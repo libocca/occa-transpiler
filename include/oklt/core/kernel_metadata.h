@@ -167,7 +167,7 @@ void to_json(nlohmann::json& json, const KernelInfo& kernelMeta);
 void from_json(const nlohmann::json& json, KernelInfo& kernelMeta);
 
 // INFO: using optional to be able to have empty json object
-void to_json(nlohmann::json& json, const ProgramMetaData& kernelInfo);
-void from_json(const nlohmann::json& json, ProgramMetaData& kernelInfo);
+void to_json(nlohmann::json& json, const ProgramMetaData& programMeta);
+void from_json(const nlohmann::json& json, ProgramMetaData& programMeta);
 
 }  // namespace oklt

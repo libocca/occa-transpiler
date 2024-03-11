@@ -127,6 +127,12 @@ tl::expected<std::string, std::error_code> PreorderNlrTraversal::applyAstProcces
         return tl::make_unexpected(std::error_code());
     }
 
+    auto& session = _stage.getSession();
+    auto programMeta = _sema.getProgramMetaData();
+    nlohmann::json build_metadata;
+    to_json(build_metadata, programMeta);
+    llvm::outs() << "Program metadata: " << nlohmann::to_string(build_metadata) << "\n";
+
     return _stage.getRewriterResult();
 }
 }  // namespace oklt
