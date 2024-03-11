@@ -12,24 +12,33 @@ using namespace clang;
 SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
     : _session(session),
       _compiler(compiler),
-      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()) {}
+      _backend(session.input.backend),
+      _astProcType(session.input.astProcType),
+      _rewriter(std::make_unique<clang::Rewriter>(_compiler.getSourceManager(),
+                                                  _compiler.getLangOpts())) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
     return _compiler;
 }
 
 clang::Rewriter& SessionStage::getRewriter() {
-    return _rewriter;
+    return *_rewriter.get();
 }
 
 AttributeManager& SessionStage::getAttrManager() {
     return AttributeManager::instance();
 }
 
+bool SessionStage::setLauncherMode() {
+    _rewriter =
+        std::make_unique<clang::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
+    _backend = TargetBackend::_LAUNCHER;
+}
+
 std::string SessionStage::getRewriterResultForMainFile() {
     const auto& sm = _compiler.getSourceManager();
     auto mainFID = sm.getMainFileID();
-    auto* rewriteBuf = _rewriter.getRewriteBufferFor(mainFID);
+    auto* rewriteBuf = _rewriter->getRewriteBufferFor(mainFID);
     if (!rewriteBuf || rewriteBuf->size() == 0) {
         return sm.getBufferData(mainFID).data();
     }
@@ -57,11 +66,11 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
 }
 
 TargetBackend SessionStage::getBackend() const {
-    return _session.input.backend;
+    return _backend;
 }
 
 AstProcessorType SessionStage::getAstProccesorType() const {
-    return _session.input.astProcType;
+    return _astProcType;
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {

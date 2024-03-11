@@ -39,6 +39,8 @@ class SessionStage {
     [[nodiscard]] AstProcessorType getAstProccesorType() const;
     static AttributeManager& getAttrManager();
 
+    [[nodiscard]] bool setLauncherMode();
+
     void pushDiagnosticMessage(clang::StoredDiagnostic& message);
     void pushError(std::error_code ec, std::string desc);
     void pushError(const Error& err);
@@ -70,9 +72,11 @@ class SessionStage {
 
    protected:
     TranspilerSession& _session;
+    TargetBackend _backend;
+    AstProcessorType _astProcType;
 
     clang::CompilerInstance& _compiler;
-    clang::Rewriter _rewriter;
+    std::unique_ptr<clang::Rewriter> _rewriter;
 
     // XXX discuss key
     std::map<std::string, std::any> _userCtxMap;

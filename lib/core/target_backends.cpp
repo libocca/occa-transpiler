@@ -12,6 +12,7 @@ tl::expected<TargetBackend, std::string> backendFromString(const std::string& ty
         {"cuda", TargetBackend::CUDA},
         {"hip", TargetBackend::HIP},
         {"dpcpp", TargetBackend::DPCPP},
+        //        {"launcher", TargetBackend::_LAUNCHER},
     };
 
     auto it = BACKENDS_MAP.find(util::toLower(type));
@@ -33,7 +34,31 @@ std::string backendToString(TargetBackend backend) {
             return std::string{"hip"};
         case TargetBackend::DPCPP:
             return std::string{"dpcpp"};
+            //        case TargetBackend::_LAUNCHER:
+            //            return std::string{"launcher"};
     }
     return {};
 }
+
+bool isHostCategory(TargetBackend backend) {
+    switch (backend) {
+        case TargetBackend::SERIAL:
+        case TargetBackend::OPENMP:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool isDeviceCategory(TargetBackend backend) {
+    switch (backend) {
+        case TargetBackend::CUDA:
+        case TargetBackend::HIP:
+        case TargetBackend::DPCPP:
+            return true;
+        default:
+            return false;
+    }
+}
+
 }  // namespace oklt
