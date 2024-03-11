@@ -12,7 +12,7 @@ using json = nlohmann::json;
 void to_json(json& j, const DatatypeCategory& cat) {
     switch (cat) {
         case DatatypeCategory::BUILTIN:
-            j = "builtint";
+            j = "builtin";
             break;
         case DatatypeCategory::CUSTOM:
             j = "custom";
@@ -29,7 +29,7 @@ void to_json(json& j, const DatatypeCategory& cat) {
 }
 
 void from_json(const json& j, DatatypeCategory& cat) {
-    if (j == "builtint") {
+    if (j == "builtin") {
         cat = DatatypeCategory::BUILTIN;
     }
     if (j == "custom") {

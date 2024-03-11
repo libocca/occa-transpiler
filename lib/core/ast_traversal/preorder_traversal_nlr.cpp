@@ -326,7 +326,6 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
         return tl::make_unexpected(Error{{}, "error during AST traversing"});
     }
 
-    /* temp */
     auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto programMeta = sema.getProgramMetaData();
     nlohmann::json kernel_metadata;
@@ -338,7 +337,7 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     llvm::outs() << "Program metadata: " << serialized_kernel_metadata << "\n";
     util::writeFileAsStr("metadata.json", serialized_kernel_metadata);
 #endif
-    /* temp */
+
     // 1. generate transpiled kernel
     auto transpiledKernelResult = generateTranspiledKernel(_stage);
     if (!transpiledKernelResult) {
