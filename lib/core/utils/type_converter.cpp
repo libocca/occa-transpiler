@@ -49,13 +49,15 @@ tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const VarDecl& var) {
 
     auto qt = var.getType();
     bool is_const = qt.isConstQualified();
+    bool is_ptr = false;
     if (isPointer(var)) {
+        is_ptr = true;
         is_const = isConstPointer(var) || isPointerToConst(var);
     }
     ArgumentInfo res{.is_const = is_const,
                      .dtype = toOklDataType(var).value(),
                      .name = var.getNameAsString(),
-                     .is_ptr = qt->isPointerType()};
+                     .is_ptr = is_ptr};
     return res;
 }
 

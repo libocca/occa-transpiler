@@ -50,7 +50,12 @@ tl::expected<DataType, std::error_code> toOklDataType(const DeclType& var) {
     }
     if (type == DatatypeCategory::STRUCT) {
         res.name = "";  // unset name for struct data type
-        auto* structDecl = var.getType().getTypePtr()->getAsCXXRecordDecl();
+        auto* typePtr =  var.getType().getTypePtr();
+        const auto* structDecl = typePtr->getAsCXXRecordDecl();
+        if (typePtr->isPointerType()) {
+            structDecl = typePtr->getPointeeCXXRecordDecl();
+        }
+
         for (const auto* field : structDecl->fields()) {
             auto n = field->getNameAsString();
             auto fieldDataType = toOklStructFieldInfo(*field);
