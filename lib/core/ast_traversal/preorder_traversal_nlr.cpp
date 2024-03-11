@@ -1,11 +1,11 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
+#include <oklt/util/io_helper.h>
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
-#include <oklt/util/io_helper.h>
 
 #include <clang/AST/ASTTypeTraits.h>
 #include <clang/AST/Attr.h>
@@ -326,14 +326,18 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
         return tl::make_unexpected(Error{{}, "error during AST traversing"});
     }
 
-    // TODO: remove temporary code below
     /* temp */
     auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto programMeta = sema.getProgramMetaData();
-    nlohmann::json build_metadata;
-    to_json(build_metadata, programMeta);
-    llvm::outs() << "Program metadata: " << build_metadata.dump(2) << "\n";
-    util::writeFileAsStr("metadata.json", build_metadata.dump(2));
+    nlohmann::json kernel_metadata;
+    to_json(kernel_metadata, programMeta);
+    auto serialized_kernel_metadata = kernel_metadata.dump(2);
+    _stage.getSession().output.kernel.metadataJson = serialized_kernel_metadata;
+
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Program metadata: " << serialized_kernel_metadata << "\n";
+    util::writeFileAsStr("metadata.json", serialized_kernel_metadata);
+#endif
     /* temp */
     // 1. generate transpiled kernel
     auto transpiledKernelResult = generateTranspiledKernel(_stage);

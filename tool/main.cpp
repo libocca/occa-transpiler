@@ -123,7 +123,10 @@ int main(int argc, char* argv[]) {
             }
 
             auto defines = transpile_command.get<std::vector<std::string>>("-D");
-            auto includesStr = transpile_command.get<std::vector<std::string>>("-I");
+            std::vector<std::string> includesStr;
+            if (transpile_command.is_used("-I")) {
+                includesStr = transpile_command.get<std::vector<std::string>>("-I");
+            }
             std::vector<std::filesystem::path> includes;
             for (const auto& includeStr : includesStr) {
                 includes.push_back(includeStr);

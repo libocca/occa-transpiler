@@ -104,15 +104,13 @@ void to_json(json& j, const ProgramMetaData& programMeta) {
     if (programMeta.props.has_value()) {
         j = json{
             {"dependencies", json::object()},  // INFO: always empty object, can't define the type
-            {"hash", programMeta.hash},
             {"metadata", programMeta.kernels},
-            {"props", programMeta.props.value()}};
+        };
     } else {
         j = json{
             {"dependencies", json::object()},  // INFO: always empty object, can't define the type
-            {"hash", programMeta.hash},
             {"metadata", programMeta.kernels},
-            {"props", json::object()}};
+        };
     }
 }
 
