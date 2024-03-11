@@ -155,17 +155,17 @@ HandleResult handleTileAttribute(const Attr& a,
 
     auto parent = loopInfo->getAttributedParent();
 
-    size_t parenCnt = 0;
-    std::string prefixCode;
-
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && parent->hasOuter() && loopInfo->isInner()) {
         auto& loopInfoEx = backendCtx.getLoopInfo(parent);
         if (!loopInfoEx.exclusive.empty()) {
-            prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
+            s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
         }
     }
+
+    size_t parenCnt = 0;
+    std::string prefixCode;
 
     // First loop. usually `@outer`
     prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt);
