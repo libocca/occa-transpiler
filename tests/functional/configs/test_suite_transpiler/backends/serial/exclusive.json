@@ -1,0 +1,13 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/exclusive/exclusive_builtin.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/exclusive/exclusive_builtin_ref.cpp"
+  }
+]
