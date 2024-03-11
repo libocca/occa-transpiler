@@ -5,6 +5,7 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
+#include <oklt/util/io_helper.h>
 
 #include <clang/AST/ASTTypeTraits.h>
 #include <clang/AST/Attr.h>
@@ -325,11 +326,15 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
         return tl::make_unexpected(Error{{}, "error during AST traversing"});
     }
 
+    // TODO: remove temporary code below
+    /* temp */
     auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto programMeta = sema.getProgramMetaData();
     nlohmann::json build_metadata;
     to_json(build_metadata, programMeta);
-    llvm::outs() << "Program metadata: " << nlohmann::to_string(build_metadata) << "\n";
+    llvm::outs() << "Program metadata: " << build_metadata.dump(2) << "\n";
+    util::writeFileAsStr("metadata.json", build_metadata.dump(2));
+    /* temp */
     // 1. generate transpiled kernel
     auto transpiledKernelResult = generateTranspiledKernel(_stage);
     if (!transpiledKernelResult) {

@@ -8,22 +8,71 @@
 
 namespace oklt {
 using json = nlohmann::json;
+
+void to_json(json& j, const DatatypeCategory& cat) {
+    switch (cat) {
+        case DatatypeCategory::BUILTIN:
+            j = "builtint";
+            break;
+        case DatatypeCategory::CUSTOM:
+            j = "custom";
+            break;
+        case DatatypeCategory::STRUCT:
+            j = "struct";
+            break;
+        case DatatypeCategory::TUPLE:
+            j = "tuple";
+            break;
+        default:
+            j = "";
+    }
+}
+
+void from_json(const json& j, DatatypeCategory& cat) {
+    if (j == "builtint") {
+        cat = DatatypeCategory::BUILTIN;
+    }
+    if (j == "custom") {
+        cat = DatatypeCategory::CUSTOM;
+    }
+    if (j == "struct") {
+        cat = DatatypeCategory::STRUCT;
+    }
+    if (j == "tuple") {
+        cat = DatatypeCategory::TUPLE;
+    }
+}
+
+void to_json(json& j, const StructFieldInfo& dt) {
+    j = json{{"name", dt.name}, {"dtype", dt.dtype}};
+}
+
+void from_json(const json& j, StructFieldInfo& dt) {
+    dt.name = j.at("name").get<std::string>();
+    dt.dtype = j.at("dtype").get<DataType>();
+}
+
 void to_json(json& j, const DataType& dt) {
     if (dt.type == DatatypeCategory::BUILTIN) {
-        j = json{{"name", dt.name}, {"type", "builtin"}};
-    } else {
-        j = json{{"name", "none"}, {"type", "custom"}, {"bytes", dt.bytes}};
+        j = json{{"type", dt.type}, {"name", dt.name}};
+    } else if (dt.type == DatatypeCategory::STRUCT) {
+        j = json{{"type", dt.type}, {"fields", dt.fields}};
+    } else if (dt.type == DatatypeCategory::TUPLE) {
+        j = json{{"type", dt.type},
+                 {"size", dt.tupleSize},
+                 {"dtype", json{{"name", dt.name}, {"type", dt.tupleElementType}}}};
+    } else {  // custom
+        j = json{{"type", dt.type}, {"bytes", dt.bytes}, {"name", "none"}};
     }
 }
 
 void from_json(const json& j, DataType& dt) {
     auto dtCategory = j.at("type").get<std::string>();
+    j.at("name").get_to(dt.name);
     if (dtCategory == "builtin") {
         dt.type = DatatypeCategory::BUILTIN;
-        j.at("name").get_to(dt.name);
     } else {
         dt.type = DatatypeCategory::CUSTOM;
-        dt.name = "none";
         j.at("bytes").get_to(dt.bytes);
     }
 }

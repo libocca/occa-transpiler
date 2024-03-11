@@ -12,6 +12,8 @@ namespace oklt {
 enum struct DatatypeCategory {
     BUILTIN,
     CUSTOM,
+    STRUCT,
+    TUPLE,
 };
 
 //// map TaskState values to JSON as strings
@@ -21,10 +23,25 @@ enum struct DatatypeCategory {
 //   {DatatypeCategory::CUSTOM, "custom"},
 // });
 
+struct StructFieldInfo;
+
 struct DataType {
     std::string name;
     DatatypeCategory type;
-    int bytes;
+    int bytes = 0;                        // used only for custom
+    std::vector<StructFieldInfo> fields;  // used only for structs
+    int64_t tupleSize = -1;                   // used only for tuples
+    DatatypeCategory tupleElementType;    // used only fot tuples
+};
+
+struct TupleInfo {
+    int size;
+    DatatypeCategory type;
+};
+
+struct StructFieldInfo {
+    DataType dtype;
+    std::string name;
 };
 
 struct ArgumentInfo {
