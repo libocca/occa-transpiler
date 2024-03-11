@@ -1,8 +1,4 @@
-#include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
+#include "attributes/backend/openmp/common.h"
 
 namespace {
 using namespace oklt;
@@ -19,13 +15,21 @@ HandleResult handleOPENMPSharedAttribute(const Attr& a, const Decl& decl, Sessio
         return tl::make_unexpected(Error{{}, "@shared: failed to fetch loop meta data from sema"});
     }
 
-    if (loopInfo->metadata.type != LoopMetaType::Outer) {
+    if (!loopInfo->isOuter()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
+    auto child = loopInfo->getFirstAttributedChild();
+    if (!child || !child->isInner()) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+    }
+
+    auto& loopInfoEx = openmp::getBackendCtxFromStage(s).getLoopInfo(loopInfo);
+
     // Process later when processing ForStmt
-    loopInfo->vars.shared.emplace_back(std::ref(decl));
+    loopInfoEx.shared.emplace_back(std::ref(decl));
 
     SourceRange attr_range = getAttrFullSourceRange(a);
     s.getRewriter().RemoveText(attr_range);

@@ -1,8 +1,4 @@
-#include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/attributes.h"
+#include "attributes/backend/openmp/common.h"
 
 namespace {
 using namespace oklt;
@@ -25,23 +21,51 @@ HandleResult handleOPENMPExclusiveDeclAttribute(const Attr& a,
     }
 
     auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
-    if (!compStmt || loopInfo->metadata.type != LoopMetaType::Outer) {
+    if (!compStmt || !loopInfo->isOuter()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
 
+    auto child = loopInfo->getFirstAttributedChild();
+    if (!child || !child->isInner()) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+    }
+
+    auto& loopInfoEx = openmp::getBackendCtxFromStage(s).getLoopInfo(loopInfo);
     auto& rewriter = s.getRewriter();
 
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.RemoveText(attrRange);
 
-    if (loopInfo->vars.exclusive.empty()) {
+    if (loopInfoEx.exclusive.empty()) {
         auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
         rewriter.InsertTextAfter(indexLoc, outerLoopText);
     }
 
     // Process later when processing ForStmt
-    loopInfo->vars.exclusive.emplace_back(std::ref(decl));
+    loopInfoEx.exclusive.emplace_back(std::ref(decl));
+
+    // Find max size of inner loops
+    size_t sz = 0;
+    for (auto child : loopInfo->children) {
+        auto v = child.getSize();
+        if (!v.has_value()) {
+            sz = 1024;
+            break;
+        }
+        sz = std::max(v.value(), sz);
+    }
+    std::string varSuffix = "[" + std::to_string(sz) + "]";
+
+    // Add size and wrap initialization.
+    auto nameLoc = decl.getLocation().getLocWithOffset(decl.getName().size());
+    rewriter.InsertTextAfter(nameLoc, varSuffix);
+    if (decl.hasInit()) {
+        auto expr = decl.getInit();
+        rewriter.InsertTextBefore(expr->getBeginLoc(), "{");
+        rewriter.InsertTextAfter(decl.getEndLoc().getLocWithOffset(1), "}");
+    }
 
     return {};
 }

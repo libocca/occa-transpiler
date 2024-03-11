@@ -107,14 +107,6 @@ struct LoopMetaData {
             return range.start + " - " + range.end;
         };
     };
-
-    [[nodiscard]] bool isOuter() const {
-        return type == LoopMetaType::Outer || type == LoopMetaType::OuterInner;
-    };
-    [[nodiscard]] bool isInner() const {
-        return type == LoopMetaType::Inner || type == LoopMetaType::OuterInner;
-    };
-    [[nodiscard]] bool isRegular() const { return type == LoopMetaType::Regular; };
 };
 
 struct KernelInfo {
@@ -139,7 +131,7 @@ struct ProgramMetaData {
     std::string hash;
     std::vector<KernelInfo> kernels;
     std::optional<PropertyInfo> props = std::nullopt;
-    KernelInfo& addKernelInfo(std::string name, size_t numArg, size_t numKern) {
+    KernelInfo& addKernelInfo(std::string name, size_t numArg) {
         // create new slot
         // there is no way to pass args nicely for POD
         kernels.emplace_back();
@@ -148,7 +140,6 @@ struct ProgramMetaData {
         auto& kiPtr = kernels.back();
         kiPtr.name = std::move(name);
         kiPtr.args.resize(numArg);
-        kiPtr.childrens.resize(numKern);
 
         return kiPtr;
     }
