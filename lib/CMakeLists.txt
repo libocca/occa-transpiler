@@ -101,27 +101,27 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/common.cpp
     attributes/backend/dpcpp/common.h
 
-        # Serial subset
-        attributes/utils/serial_subset/empty.cpp
-        attributes/utils/serial_subset/kernel.cpp
-        attributes/utils/serial_subset/restrict.cpp
-        attributes/utils/serial_subset/shared.cpp
-        attributes/utils/serial_subset/exclusive.cpp
-        attributes/utils/serial_subset/tile.cpp
-        attributes/utils/serial_subset/inner.cpp
-        attributes/utils/serial_subset/outer.cpp
-        attributes/utils/serial_subset/handle.h
+    # Serial subset
+    attributes/utils/serial_subset/empty.cpp
+    attributes/utils/serial_subset/kernel.cpp
+    attributes/utils/serial_subset/restrict.cpp
+    attributes/utils/serial_subset/shared.cpp
+    attributes/utils/serial_subset/exclusive.cpp
+    attributes/utils/serial_subset/tile.cpp
+    attributes/utils/serial_subset/inner.cpp
+    attributes/utils/serial_subset/outer.cpp
+    attributes/utils/serial_subset/handle.h
 
-        # Serial
-        attributes/backend/serial/kernel.cpp
-        attributes/backend/serial/outer.cpp
-        attributes/backend/serial/inner.cpp
-        attributes/backend/serial/tile.cpp
-        attributes/backend/serial/restrict.cpp
-        attributes/backend/serial/shared.cpp
-        attributes/backend/serial/exclusive.cpp
-        attributes/backend/serial/atomic.cpp
-        attributes/backend/serial/barrier.cpp
+    # Serial
+    attributes/backend/serial/kernel.cpp
+    attributes/backend/serial/outer.cpp
+    attributes/backend/serial/inner.cpp
+    attributes/backend/serial/tile.cpp
+    attributes/backend/serial/restrict.cpp
+    attributes/backend/serial/shared.cpp
+    attributes/backend/serial/exclusive.cpp
+    attributes/backend/serial/atomic.cpp
+    attributes/backend/serial/barrier.cpp
 
     # OPENMP
     attributes/backend/openmp/kernel.cpp
