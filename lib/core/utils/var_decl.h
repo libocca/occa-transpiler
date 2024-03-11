@@ -7,33 +7,39 @@ class VarDecl;
 }
 
 namespace oklt {
-template<typename DeclType>
+template <typename DeclType>
 bool isConstantSizeArray(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     return var.getType().getTypePtr()->isConstantArrayType();
 }
 
-template<typename DeclType>
+template <typename DeclType>
 bool isPointer(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     return var.getType()->isPointerType();
 }
 
-template<typename DeclType>
+template <typename DeclType>
 bool isPointerToConst(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     return isPointer(var) && var.getType()->getPointeeType().isLocalConstQualified();
 }
 
-template<typename DeclType>
+template <typename DeclType>
 bool isConstPointer(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     return isPointer(var) && var.getType().isLocalConstQualified();
 }
 
-template<typename DeclType>
+template <typename DeclType>
 bool isConstPointerToConst(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     return isPointerToConst(var) && isConstPointer(var);
 }
 
-template<typename DeclType>
+template <typename DeclType>
 bool isGlobalConstVariable(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     // Should be global variable
     if (var.isLocalVarDecl() && !var.hasGlobalStorage()) {
         return false;

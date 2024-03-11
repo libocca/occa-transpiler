@@ -21,6 +21,7 @@ DatatypeCategory toOklDatatypeCategory(const clang::QualType&);
 
 template <typename DeclType>
 tl::expected<DataType, std::error_code> toOklDataType(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     // templated arg is abstract
     if (var.isTemplated()) {
         return tl::make_unexpected(std::error_code());
@@ -49,11 +50,13 @@ tl::expected<DataType, std::error_code> toOklDataType(const DeclType& var) {
         res.bytes = static_cast<int>(var.getASTContext().getTypeSize(qt));
     }
     if (type == DatatypeCategory::STRUCT) {
-        res.name = "";  // unset name for struct data type
-        auto* typePtr =  var.getType().getTypePtr();
+        auto* typePtr = var.getType().getTypePtr();
         const auto* structDecl = typePtr->getAsCXXRecordDecl();
         if (typePtr->isPointerType()) {
             structDecl = typePtr->getPointeeCXXRecordDecl();
+        }
+        if (!structDecl) {
+            return tl::make_unexpected(std::error_code());
         }
 
         for (const auto* field : structDecl->fields()) {
@@ -69,7 +72,7 @@ tl::expected<DataType, std::error_code> toOklDataType(const DeclType& var) {
         res.tupleElementType = toOklDatatypeCategory(baseType);
         auto arraySize =
             clang::dyn_cast_or_null<clang::ConstantArrayType>(unqualifiedType)->getSize();
-        if (arraySize.isIntN(sizeof(int64_t) * 8)) {   // Check if APInt fits within the range of int
+        if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of int
             res.tupleSize = arraySize.getSExtValue();  // Convert APInt to int
         } else {
             // APInt value too large to fit into int64_t
