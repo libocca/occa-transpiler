@@ -1,13 +1,9 @@
 #pragma once
+#include <oklt/core/kernel_metadata.h>
+
 #include <clang/AST/Attr.h>
 
 namespace oklt {
-
-enum class AttributedLoopType {
-    Regular,
-    Inner,
-    Outer,
-};
 
 enum class DimType {
     X = 0,

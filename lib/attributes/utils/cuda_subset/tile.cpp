@@ -71,11 +71,11 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
 }
 
 tl::expected<void, Error> updateParamsDim(AttributedLoop& attrLoop, OklLoopInfo* loopInfo) {
-    auto [metaLoopType, loopName] = [&]() -> std::pair<LoopMetaType, std::string> {
+    auto [metaLoopType, loopName] = [&]() -> std::pair<AttributedLoopType, std::string> {
         if (attrLoop.type == AttributedLoopType::Inner) {
-            return {LoopMetaType::Inner, "@inner"};
+            return {AttributedLoopType::Inner, "@inner"};
         }
-        return {LoopMetaType::Outer, "@outer"};
+        return {AttributedLoopType::Outer, "@outer"};
     }();
     if (attrLoop.dim == DimType::Auto && attrLoop.type != AttributedLoopType::Regular) {
         auto height = loopInfo->getHeightSameType(metaLoopType);
@@ -112,9 +112,9 @@ HandleResult handleTileAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     const auto& md = loopInfo->metadata;
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << toString(md.type) << ", name: " << md.var.name
-                 << ", initValue: " << md.range.start << "), Cond(rhsExpr: " << md.range.end
-                 << "), Inc(rhsInc: " << md.inc.val << ", isUnary: " << md.isUnary() << ")\n";
+                 << ", name: " << md.var.name << ", initValue: " << md.range.start
+                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
+                 << ", isUnary: " << md.isUnary() << ")\n";
 #endif
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }

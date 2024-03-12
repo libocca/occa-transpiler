@@ -3,6 +3,7 @@
 #include <clang/AST/AST.h>
 
 #include <optional>
+#include "attributes/frontend/params/loop.h"
 
 namespace oklt {
 
@@ -22,17 +23,23 @@ struct OklLoopInfo {
     /* Distance to the for loop tree leave */
     size_t getHeight();
     /* Distance to the for loop tree leave, ignoring loops of other types */
-    size_t getHeightSameType();
-    size_t getHeightSameType(const LoopMetaType&);
+    size_t getHeightSameType(const AttributedLoopType&);
 
     std::optional<size_t> getSize();
 
-    [[nodiscard]] bool isOuter() const { return metadata.type == LoopMetaType::Outer; };
-    [[nodiscard]] bool isInner() const { return metadata.type == LoopMetaType::Inner; };
-    [[nodiscard]] bool isOuterInner() const { return metadata.type == LoopMetaType::OuterInner; };
-    [[nodiscard]] bool hasOuter() const { return isOuter() || isOuterInner(); };
-    [[nodiscard]] bool hasInner() const { return isInner() || isOuterInner(); };
-    [[nodiscard]] bool isRegular() const { return metadata.type == LoopMetaType::Regular; };
+    [[nodiscard]] bool isOuter() const;
+    [[nodiscard]] bool isInner() const;
+    [[nodiscard]] bool isTiled() const;
+
+    [[nodiscard]] bool isOuterInner() const;
+    [[nodiscard]] bool isInnerInner() const;
+    [[nodiscard]] bool isOuterOuter() const;
+    [[nodiscard]] bool isOuterRegular() const;
+    [[nodiscard]] bool isInnerRegular() const;
+    [[nodiscard]] bool isRegular() const;
+
+    [[nodiscard]] bool hasOuter() const;
+    [[nodiscard]] bool hasInner() const;
 };
 
 struct OklKernelInfo {

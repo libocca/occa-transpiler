@@ -1,5 +1,6 @@
 #include <oklt/util/string_utils.h>
 
+#include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 
@@ -26,7 +27,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
 
     AttributedLoop finaledParams = *params;
     if (params->dim == DimType::Auto) {
-        auto height = loopInfo->getHeightSameType();
+        auto height = loopInfo->getHeightSameType(AttributedLoopType::Outer);
         if (height > 2) {
             return tl::make_unexpected(Error{{}, "More than 3 nested [@outer] loops"});
         }

@@ -209,7 +209,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     }
 #ifdef TRANSPILER_DEBUG_LOG
     const auto& md = loopInfo->metadata;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init(" << "type: " << toString(md.type)
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
                  << ", name: " << md.var.name << ", initValue: " << md.range.start
                  << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
                  << ", isUnary: " << md.isUnary() << ")\n";

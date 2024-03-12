@@ -46,16 +46,19 @@ struct ArgumentInfo {
     bool is_ptr;
 };
 
-enum class LoopMetaType { Regular, Outer, Inner, OuterInner };
-inline std::string toString(LoopMetaType lmd) {
+enum class AttributedLoopType {
+    Regular,
+    Inner,
+    Outer,
+};
+
+inline std::string toString(AttributedLoopType lmd) {
     switch (lmd) {
-        case LoopMetaType::Regular:
+        case AttributedLoopType::Regular:
             return "regular";
-        case LoopMetaType::OuterInner:
-            return "outer_inner";
-        case LoopMetaType::Outer:
+        case AttributedLoopType::Outer:
             return "outer";
-        case LoopMetaType::Inner:
+        case AttributedLoopType::Inner:
             return "inner";
     }
     return "<uknown>";
@@ -66,8 +69,10 @@ enum class BinOp { Eq, Le, Lt, Gt, Ge, AddAssign, RemoveAssign, Other };
 
 enum class UnOp { PreInc, PostInc, PreDec, PostDec, Other };
 
+using AttributedLoopTypes = std::vector<AttributedLoopType>;
 struct LoopMetaData {
-    LoopMetaType type = LoopMetaType::Regular;
+    // LoopMetaType type = LoopMetaType::Regular;
+    AttributedLoopTypes type = {AttributedLoopType::Regular};
     std::list<LoopMetaData> childrens;
 
     struct {

@@ -29,7 +29,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
 
     AttributedLoop finaledParams = *params;
     if (params->dim == DimType::Auto) {
-        auto height = loopInfo->getHeightSameType();
+        auto height = loopInfo->getHeightSameType(AttributedLoopType::Inner);
         if (height > 2) {
             return tl::make_unexpected(Error{{}, "More than 3 nested [@inner] loops"});
         }
