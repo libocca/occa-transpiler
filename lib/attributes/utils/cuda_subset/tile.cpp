@@ -1,6 +1,7 @@
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
 
+#include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
@@ -8,6 +9,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
+#include "tl/expected.hpp"
 
 #include <clang/AST/Decl.h>
 
@@ -68,6 +70,25 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
     return res;
 }
 
+tl::expected<void, Error> updateParamsDim(AttributedLoop& attrLoop, OklLoopInfo* loopInfo) {
+    auto [metaLoopType, loopName] = [&]() -> std::pair<LoopMetaType, std::string> {
+        if (attrLoop.type == AttributedLoopType::Inner) {
+            return {LoopMetaType::Inner, "@inner"};
+        }
+        return {LoopMetaType::Outer, "@outer"};
+    }();
+    if (attrLoop.dim == DimType::Auto && attrLoop.type != AttributedLoopType::Regular) {
+        auto height = loopInfo->getHeightSameType(metaLoopType);
+        if (height > 2) {
+            return tl::make_unexpected(
+                Error{{}, util::fmt("More than 3 nested [{}] loops", loopName).value()});
+        }
+        attrLoop.dim = static_cast<DimType>(height);
+    }
+
+    return {};
+}
+
 }  // namespace
 
 HandleResult handleTileAttribute(const clang::Attr& a,
@@ -81,16 +102,19 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
+    auto finalizedParams = *params;
+    updateParamsDim(finalizedParams.firstLoop, loopInfo);
+    updateParamsDim(finalizedParams.secondLoop, loopInfo);
     int openedScopeCounter = 0;
     auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG
     const auto& md = loopInfo->metadata;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init(" << "type: " << toString(md.type)
-                 << ", name: " << md.var.name << ", initValue: " << md.range.start
-                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
-                 << ", isUnary: " << md.isUnary() << ")\n";
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
+                 << "type: " << toString(md.type) << ", name: " << md.var.name
+                 << ", initValue: " << md.range.start << "), Cond(rhsExpr: " << md.range.end
+                 << "), Inc(rhsInc: " << md.inc.val << ", isUnary: " << md.isUnary() << ")\n";
 #endif
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }

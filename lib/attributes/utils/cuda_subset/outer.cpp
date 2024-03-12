@@ -24,9 +24,18 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
             .ec = std::error_code(), .desc = "@outer: failed to fetch loop meta data from sema"});
     }
 
+    AttributedLoop finaledParams = *params;
+    if (params->dim == DimType::Auto) {
+        auto height = loopInfo->getHeightSameType();
+        if (height > 2) {
+            return tl::make_unexpected(Error{{}, "More than 3 nested [@outer] loops"});
+        }
+        finaledParams.dim = static_cast<DimType>(height);
+    }
+
     int openedScopeCounter = 0;
     auto prefixCode =
-        inner_outer::buildInnerOuterLoopIdxLine(*loopInfo, *params, openedScopeCounter);
+        inner_outer::buildInnerOuterLoopIdxLine(*loopInfo, finaledParams, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

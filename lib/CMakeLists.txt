@@ -131,6 +131,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_traversal/preorder_traversal_nlr.cpp
 
     core/sema/okl_sema_ctx.cpp
+    core/sema/okl_sema_ctx.h
+    core/sema/okl_sema_info.cpp
+    core/sema/okl_sema_info.h
 
     core/diag/diag_consumer.cpp
 
