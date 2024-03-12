@@ -6,14 +6,14 @@
 #include "core/transpiler_session/session_stage.h"
 
 namespace oklt::cuda_subset {
-std::string dimToStr(const DimType& dim) {
-    static std::map<DimType, std::string> mapping{
-        {DimType::X, "x"}, {DimType::Y, "y"}, {DimType::Z, "z"}};
+std::string dimToStr(const Axis& dim) {
+    static std::map<Axis, std::string> mapping{
+        {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
     return mapping[dim];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.dim);
+    auto strDim = dimToStr(loop.axis);
     switch (loop.type) {
         case (LoopType::Inner):
             return util::fmt("threadIdx.{}", strDim).value();

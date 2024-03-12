@@ -36,10 +36,8 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
             {{LoopType::Inner, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
             {{LoopType::Regular, LoopOrder::First}, tile::buildRegularLoopIdxLineFirst},
-            {{LoopType::Inner, LoopOrder::Second},
-             tile::buildInnerOuterLoopIdxLineSecond},
-            {{LoopType::Outer, LoopOrder::Second},
-             tile::buildInnerOuterLoopIdxLineSecond},
+            {{LoopType::Inner, LoopOrder::Second}, tile::buildInnerOuterLoopIdxLineSecond},
+            {{LoopType::Outer, LoopOrder::Second}, tile::buildInnerOuterLoopIdxLineSecond},
             {{LoopType::Regular, LoopOrder::Second}, tile::buildRegularLoopIdxLineSecond},
         };
     auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
@@ -84,7 +82,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = tileParamsHandleAutoDims(*params, *loopInfo);
+    auto updatedParams = tileParamsHandleAutoAxes(*params, *loopInfo);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }

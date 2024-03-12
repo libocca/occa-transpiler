@@ -5,7 +5,7 @@
 
 namespace oklt {
 
-enum class DimType {
+enum class Axis {
     X = 0,
     Y = 1,
     Z = 2,
@@ -14,7 +14,7 @@ enum class DimType {
 
 struct AttributedLoop {
     LoopType type = LoopType::Regular;
-    DimType dim = DimType::Auto;
+    Axis axis = Axis::Auto;
 };
 
 }  // namespace oklt

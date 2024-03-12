@@ -25,8 +25,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams =
-        innerOuterParamsHandleAutoDims(*params, *loopInfo, LoopType::Outer);
+    auto updatedParams = innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Outer);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }

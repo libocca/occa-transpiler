@@ -6,7 +6,7 @@
 #include <tl/expected.hpp>
 
 namespace oklt {
-tl::expected<AttributedLoop, Error> innerOuterParamsHandleAutoDims(
+tl::expected<AttributedLoop, Error> innerOuterParamsHandleAutoAxes(
     const AttributedLoop& params,
     OklLoopInfo& loopInfo,
     const LoopType& loopType,

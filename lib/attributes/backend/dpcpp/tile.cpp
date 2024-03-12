@@ -209,7 +209,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = tileParamsHandleAutoDims(*params, *loopInfo);
+    auto updatedParams = tileParamsHandleAutoAxes(*params, *loopInfo);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }

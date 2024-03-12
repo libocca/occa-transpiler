@@ -7,12 +7,12 @@
 
 namespace oklt {
 namespace {
-tl::expected<TileParams, Error> updateParamsDim(TileParams& params,
-                                                OklLoopInfo& loopInfo,
-                                                bool isFirst,
-                                                size_t heightLimit) {
+tl::expected<TileParams, Error> updateParamsAxis(TileParams& params,
+                                                 OklLoopInfo& loopInfo,
+                                                 bool isFirst,
+                                                 size_t heightLimit) {
     AttributedLoop& attrLoop = isFirst ? params.firstLoop : params.secondLoop;
-    if (attrLoop.dim != DimType::Auto || attrLoop.type == LoopType::Regular) {
+    if (attrLoop.axis != Axis::Auto || attrLoop.type == LoopType::Regular) {
         return params;
     }
     auto [metaLoopType, loopName] = [&]() -> std::pair<LoopType, std::string> {
@@ -30,17 +30,17 @@ tl::expected<TileParams, Error> updateParamsDim(TileParams& params,
         return tl::make_unexpected(Error{
             {}, util::fmt("More than {} nested [{}] loops", heightLimit + 1, loopName).value()});
     }
-    attrLoop.dim = static_cast<DimType>(height);
+    attrLoop.axis = static_cast<Axis>(height);
     return params;
 }
 }  // namespace
 
-tl::expected<TileParams, Error> tileParamsHandleAutoDims(const TileParams& params,
+tl::expected<TileParams, Error> tileParamsHandleAutoAxes(const TileParams& params,
                                                          OklLoopInfo& loopInfo,
                                                          size_t heightLimit) {
     TileParams res = params;
-    return updateParamsDim(res, loopInfo, true, heightLimit).and_then([&](auto params) {
-        return updateParamsDim(res, loopInfo, false, heightLimit);
+    return updateParamsAxis(res, loopInfo, true, heightLimit).and_then([&](auto params) {
+        return updateParamsAxis(res, loopInfo, false, heightLimit);
     });
 }
 }  // namespace oklt
