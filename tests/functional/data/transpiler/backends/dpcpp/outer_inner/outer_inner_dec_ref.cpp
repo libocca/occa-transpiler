@@ -85,12 +85,12 @@ extern "C" void _occa_addVectors4_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = (entries - 1) - item_.get_group(2);
+      int i = (entries - 1) - item_.get_group(1);
       {
         int j = (entries - 1) - item_.get_group(2);
         {
           {
-            int k = (entries - 1) - item.get_local_id(2);
+            int k = (entries - 1) - item.get_local_id(1);
             {
               {
                 int ii = (entries - 1) - item.get_local_id(2);
@@ -138,12 +138,12 @@ extern "C" void _occa_addVectors6_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = (entries - 1) - item_.get_group(2);
+      int i = (entries - 1) - item_.get_group(1);
       {
         int j = (entries - 1) - item_.get_group(2);
         {
           {
-            int k = (entries - 1) - item.get_local_id(2);
+            int k = (entries - 1) - item.get_local_id(1);
             {
               {
                 int ii = (entries - 1) - item.get_local_id(2);
