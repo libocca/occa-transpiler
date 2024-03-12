@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     transpile_command.add_argument("-b", "--backend")
         .required()
         //.choices("cuda", "openmp")
-        .help("backends: {cuda, hip, dpcpp, openmp}");
+        .help("backends: {serial, openmp, cuda, hip, dpcpp}");
     transpile_command.add_argument("-i", "--input").required().help("input file");
     transpile_command.add_argument("--normalize")
         .flag()
