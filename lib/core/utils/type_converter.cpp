@@ -4,32 +4,9 @@
 #include <clang/AST/AST.h>
 
 namespace oklt {
-tl::expected<DataType, std::error_code> toOklDataType(const clang::VarDecl& var) {
-    // templated arg is abstract
-    if (var.isTemplated()) {
-        return tl::make_unexpected(std::error_code());
-    }
+using namespace clang;
 
-    auto qt = var.getType();
-    return DataType{.name = qt.getAsString(),
-                    .type = toOklDatatypeCategory(qt),
-                    .bytes = static_cast<int>(var.getASTContext().getTypeSize(qt))};
-}
-
-tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const clang::VarDecl& var) {
-    // templated arg is abstract
-    if (var.isTemplated()) {
-        return tl::make_unexpected(std::error_code());
-    }
-
-    auto qt = var.getType();
-    return ArgumentInfo{.is_const = qt.isConstQualified(),
-                        .dtype = toOklDataType(var).value(),
-                        .name = var.getNameAsString(),
-                        .is_ptr = qt->isPointerType()};
-}
-
-DatatypeCategory toOklDatatypeCategory(const clang::QualType& qt) {
+inline DatatypeCategory toOklDatatypeCategory(const clang::QualType& qt) {
     auto qt_ = [](const clang::QualType qt) {
         if (qt->isPointerType()) {
             return qt->getPointeeType();
@@ -40,7 +17,48 @@ DatatypeCategory toOklDatatypeCategory(const clang::QualType& qt) {
     if (qt_->isBuiltinType()) {
         return DatatypeCategory::BUILTIN;
     }
+    if (qt_->isStructureType()) {
+        return DatatypeCategory::STRUCT;
+    }
+    if (qt_->isConstantArrayType()) {
+        return DatatypeCategory::TUPLE;
+    }
     return DatatypeCategory::CUSTOM;
+}
+
+tl::expected<StructFieldInfo, std::error_code> toOklStructFieldInfo(const clang::FieldDecl& var) {
+    if (var.isTemplated()) {
+        return tl::make_unexpected(std::error_code());
+    }
+
+    auto qt = var.getType();
+    bool is_const = qt.isConstQualified();
+    if (isPointer(var)) {
+        is_const = isConstPointer(var) || isPointerToConst(var);
+    }
+    StructFieldInfo res{.dtype = toOklDataType(var).value(), .name = var.getNameAsString()};
+    return res;
+}
+
+tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const VarDecl& var) {
+    // inline tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const clang::VarDecl& var) {
+    // templated arg is abstract
+    if (var.isTemplated()) {
+        return tl::make_unexpected(std::error_code());
+    }
+
+    auto qt = var.getType();
+    bool is_const = qt.isConstQualified();
+    bool is_ptr = false;
+    if (isPointer(var)) {
+        is_ptr = true;
+        is_const = isConstPointer(var) || isPointerToConst(var);
+    }
+    ArgumentInfo res{.is_const = is_const,
+                     .dtype = toOklDataType(var).value(),
+                     .name = var.getNameAsString(),
+                     .is_ptr = is_ptr};
+    return res;
 }
 
 }  // namespace oklt

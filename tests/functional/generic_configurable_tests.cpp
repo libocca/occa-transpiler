@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 using namespace oklt::tests;
 
 enum struct Action { NORMALIZER, TRANSPILER, NORMALIZE_AND_TRANSPILE };
+enum struct Compare { SOURCE, METADATA };
 
 tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
     static const std::map<std::string, Action> actions = {
@@ -31,6 +32,18 @@ tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
         return it->second;
     }
     return tl::unexpected<std::string>("Unknown action is used");
+}
+
+tl::expected<Compare, std::string> buildCompareFrom(const std::string& v) {
+    static const std::map<std::string, Compare> actions = {
+        {"source", Compare::SOURCE},
+        {"metadata", Compare::METADATA},
+    };
+    auto it = actions.find(oklt::util::toLower(v));
+    if (it != actions.cend()) {
+        return it->second;
+    }
+    return tl::unexpected<std::string>("Unknown compare is used");
 }
 
 struct NormalizeActionConfig {
@@ -92,6 +105,17 @@ TEST_P(GenericTest, OCCATests) {
         if (!expectedAction) {
             EXPECT_TRUE(false) << "Wrong action type" << std::endl;
         }
+
+        Compare cmp = Compare::SOURCE;
+        it = testCase.find("compare");
+        if (it != testCase.end()) {
+            auto expectedCmp = buildCompareFrom(it->get<std::string>());
+            if (!expectedCmp) {
+                EXPECT_TRUE(false) << "Wrong compare type" << std::endl;
+            }
+            cmp = expectedCmp.value();
+        }
+
         auto referencePath = testCase["reference"].get<std::filesystem::path>();
         referencePath = dataDir / referencePath;
 
@@ -110,11 +134,16 @@ TEST_P(GenericTest, OCCATests) {
                 }
 
                 std::ifstream referenceFile(referencePath);
-                std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
-                std::string formatedReference = oklt::format(referenceSource);
-                std::string normalizedSource =
-                    oklt::format(normalizeResult.value().normalized.sourceCode);
-                EXPECT_EQ(formatedReference, normalizedSource);
+                std::string reference{std::istreambuf_iterator<char>(referenceFile), {}};
+                if (cmp == Compare::SOURCE) {
+                    std::string formatedReference = oklt::format(reference);
+                    std::string normalizedSource =
+                        oklt::format(normalizeResult.value().normalized.sourceCode);
+                    EXPECT_EQ(formatedReference, normalizedSource);
+                } else {
+                    EXPECT_EQ(reference, normalizeResult.value().normalized.metadataJson);
+                }
+
             } break;
             case Action::TRANSPILER: {
                 auto actionConfig = testCase.find("action_config");
@@ -135,11 +164,15 @@ TEST_P(GenericTest, OCCATests) {
                 }
 
                 std::ifstream referenceFile(referencePath);
-                std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
-                std::string formatedReference = oklt::format(referenceSource);
-                std::string transpiledSource =
-                    oklt::format(transpileResult.value().kernel.sourceCode);
-                EXPECT_EQ(formatedReference, transpiledSource);
+                std::string reference{std::istreambuf_iterator<char>(referenceFile), {}};
+                if (cmp == Compare::SOURCE) {
+                    std::string formatedReference = oklt::format(reference);
+                    std::string transpiledSource =
+                        oklt::format(transpileResult.value().kernel.sourceCode);
+                    EXPECT_EQ(formatedReference, transpiledSource);
+                } else {
+                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson);
+                }
             } break;
             case Action::NORMALIZE_AND_TRANSPILE: {
                 auto actionConfig = testCase.find("action_config");
@@ -160,11 +193,15 @@ TEST_P(GenericTest, OCCATests) {
                 }
 
                 std::ifstream referenceFile(referencePath);
-                std::string referenceSource{std::istreambuf_iterator<char>(referenceFile), {}};
-                std::string formatedReference = oklt::format(referenceSource);
-                std::string transpiledSource =
-                    oklt::format(transpileResult.value().kernel.sourceCode);
-                EXPECT_EQ(formatedReference, transpiledSource);
+                std::string reference{std::istreambuf_iterator<char>(referenceFile), {}};
+                if (cmp == Compare::SOURCE) {
+                    std::string formatedReference = oklt::format(reference);
+                    std::string transpiledSource =
+                        oklt::format(transpileResult.value().kernel.sourceCode);
+                    EXPECT_EQ(formatedReference, transpiledSource);
+                } else {
+                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson);
+                }
             } break;
         }
     }
