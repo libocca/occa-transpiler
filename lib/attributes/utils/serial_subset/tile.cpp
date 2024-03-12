@@ -148,6 +148,8 @@ HandleResult handleTileAttribute(const Attr& a,
                  << ", isUnary: " << loopInfo->metadata.isUnary() << ")\n";
 #endif
 
+    removeAttribute(a, s);
+
     auto& backendCtx = getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
@@ -194,11 +196,9 @@ HandleResult handleTileAttribute(const Attr& a,
 
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
-        while (parent && !parent->hasOuter()) {
-            parent = parent->parent;
-        }
-
-        if (parent && !backendCtx.getLoopInfo(parent).exclusive.empty()) {
+        auto outerParent =
+            loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.hasOuter(); });
+        if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();

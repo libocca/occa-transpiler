@@ -18,7 +18,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.ReplaceText(attrRange, externC);
 
-    // Convert ann non-pointer params to references
+    // Convert a non-pointer params to references
     auto& ctx = s.getCompiler().getASTContext();
     for (const auto param : decl.parameters()) {
         if (!param || !param->getType().getTypePtrOrNull()) {

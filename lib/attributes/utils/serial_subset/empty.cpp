@@ -12,8 +12,7 @@ HandleResult handleEmptyStmtAttribute(const Attr& a,
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    s.getRewriter().RemoveText(attrRange);
+    removeAttribute(a, s);
     return {};
 }
 
@@ -25,8 +24,7 @@ HandleResult handleEmptyDeclAttribute(const Attr& a,
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    s.getRewriter().RemoveText(attrRange);
+    removeAttribute(a, s);
     return {};
 }
 

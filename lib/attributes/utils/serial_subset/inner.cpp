@@ -28,19 +28,11 @@ HandleResult handleInnerAttribute(const Attr& a,
     auto& backendCtx = getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    rewriter.RemoveText(attrRange);
+    removeAttribute(a, s);
 
     // Top most `@inner` loop
-    auto parent = loopInfo->getAttributedParent();
-    if (parent && parent->hasOuter()) {
-        // Get `@outer` attributed loop
-        auto outerParent = parent;
-        while (outerParent && !outerParent->hasOuter()) {
-            outerParent = outerParent->parent;
-        }
-
-        if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
+    if (auto parent = loopInfo->getAttributedParent(); parent->hasOuter()) {
+        if (!backendCtx.getLoopInfo(parent).exclusive.empty()) {
             rewriter.InsertTextBefore(stmt.getBeginLoc(), exclusiveNullText);
         }
     }
@@ -48,12 +40,8 @@ HandleResult handleInnerAttribute(const Attr& a,
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
         // Get `@outer` attributed loop
-        auto outerParent = parent;
-        while (outerParent && !outerParent->hasOuter()) {
-            outerParent = outerParent->parent;
-        }
-
-        if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
+        auto parent = loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.hasOuter(); });
+        if (parent && !backendCtx.getLoopInfo(parent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
