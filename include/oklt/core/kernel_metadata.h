@@ -129,7 +129,6 @@ struct LoopMetaData {
 struct KernelInfo {
     std::string name;
     std::vector<ArgumentInfo> args;
-    std::list<LoopMetaData> childrens;
 };
 
 struct DependeciesInfo {};

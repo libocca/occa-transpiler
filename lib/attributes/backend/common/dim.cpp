@@ -19,8 +19,10 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
                                     const clang::Decl& decl,
                                     const AttributedDim* params,
                                     SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle @dim decl: "
                  << getSourceText(decl.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
+#endif
 
     s.getRewriter().RemoveText(getAttrFullSourceRange(a));
     return {};

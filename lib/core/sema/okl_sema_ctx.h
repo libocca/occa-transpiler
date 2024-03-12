@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/sema/okl_sema_info.h"
+#include "oklt/core/kernel_metadata.h"
 
 #include <clang/AST/AST.h>
 
@@ -19,6 +20,7 @@ struct OklSemaCtx {
               argStrs(args),
               kernInfo(info){};
         KernelInfo* kernInfo{nullptr};
+        std::list<LoopMetaData> highestLevelLoops;
 
         std::string transpiledFuncAttrStr = {};
         std::vector<std::string> argStrs = {};
