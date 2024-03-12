@@ -13,11 +13,9 @@ HandleResult handleRestrictAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
-    auto& rewriter = s.getRewriter();
 
-    rewriter.RemoveText(getAttrFullSourceRange(a));
-    rewriter.InsertTextBefore(decl.getLocation(), restrictText);
-
+    removeAttribute(a, s);
+    s.getRewriter().InsertTextBefore(decl.getLocation(), restrictText);
     return {};
 }
 

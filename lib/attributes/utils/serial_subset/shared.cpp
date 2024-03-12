@@ -30,9 +30,7 @@ HandleResult handleSharedAttribute(const Attr& a, const Decl& decl, SessionStage
     // Process later when processing ForStmt
     loopInfoEx.shared.emplace_back(std::ref(decl));
 
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    s.getRewriter().RemoveText(attr_range);
-
+    removeAttribute(a, s);
     return {};
 }
 

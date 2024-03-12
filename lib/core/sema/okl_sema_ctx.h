@@ -23,6 +23,9 @@ struct OklLoopInfo {
 
     OklLoopInfo* getAttributedParent();
     OklLoopInfo* getFirstAttributedChild();
+    OklLoopInfo* getAttributedParent(std::function<bool(OklLoopInfo&)> f);
+    OklLoopInfo* getFirstAttributedChild(std::function<bool(OklLoopInfo&)> f);
+
     std::optional<size_t> getSize();
 
     [[nodiscard]] bool isOuter() const { return metadata.type == LoopMetaType::Outer; };

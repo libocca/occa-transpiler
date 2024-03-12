@@ -20,9 +20,7 @@ HandleResult handleOuterAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
 
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    s.getRewriter().RemoveText(attrRange);
-
+    removeAttribute(a, s);
     return {};
 }
 
