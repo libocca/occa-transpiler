@@ -39,18 +39,15 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     assert(kernelInfo.kernInfo);
 
-    auto parsedLoopMeta = parseForStmt(stmt, kernelInfo.decl.get().getASTContext());
-    if (!parsedLoopMeta) {
-        return tl::make_unexpected(std::move(parsedLoopMeta.error()));
+    auto parsedLoopInfo = parseForStmt(attr, stmt, kernelInfo.decl.get().getASTContext());
+    if (!parsedLoopInfo) {
+        return parsedLoopInfo;
     }
 
-    auto& metaList = kernelInfo.currentLoop ? kernelInfo.currentLoop->metadata.childrens
+    auto& metaList = kernelInfo.currentLoop ? kernelInfo.currentLoop->children
                                             : kernelInfo.highestLevelLoops;
-    metaList.emplace_back(std::move(parsedLoopMeta.value()));
-
-    auto ret = OklLoopInfo{.attr = attr, .stmt = stmt, .metadata = metaList.back()};
-    ret.metadata.type = loopType;
-    return ret;
+    metaList.emplace_back(std::move(parsedLoopInfo.value()));
+    return metaList.back();
 }
 
 // check if loop types inside one loop are legal. firstType/lastType - first and alst non regular
@@ -218,7 +215,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
     auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
     AttributedLoopTypes parentType{LoopType::Regular};
     if (currentLoop) {
-        parentType = currentLoop->metadata.type;
+        parentType = currentLoop->type;
     }
 
     if (!isLegalLoopLevel(loopType, parentType)) {

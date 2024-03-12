@@ -50,11 +50,10 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
     if (!params->check) {
         return "";
     }
-    auto& meta = forLoop.metadata;
-    auto cmpStr = getCondCompStr(meta.condition.op);
+    auto cmpStr = getCondCompStr(forLoop.condition.op);
 
     // TODO: parse cmp operator
-    auto res = util::fmt("if ({} {} {})", meta.var.name, cmpStr, meta.range.end).value();
+    auto res = util::fmt("if ({} {} {})", forLoop.var.name, cmpStr, forLoop.range.end).value();
     return res;
 }
 
@@ -91,7 +90,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    const auto& md = loopInfo->metadata;
+    const auto& md = *loopInfo;
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
                  << ", name: " << md.var.name << ", initValue: " << md.range.start
                  << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val

@@ -4,20 +4,19 @@
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
-
+///////////////////////////////////////////////
 [[nodiscard]] bool OklLoopInfo::is(const LoopType& loopType) const {
-    return metadata.type.size() == 1 && metadata.type.front() == loopType;
+    return type.size() == 1 && type.front() == loopType;
 };
 [[nodiscard]] bool OklLoopInfo::is(const LoopType& loopType1, const LoopType& loopType2) const {
-    return metadata.type.size() == 2 && metadata.type[0] == loopType1 &&
-           metadata.type[1] == loopType2;
+    return type.size() == 2 && type[0] == loopType1 && type[1] == loopType2;
 };
 
 [[nodiscard]] bool OklLoopInfo::isTiled() const {
-    return metadata.type.size() == 2;
+    return type.size() == 2;
 };
 [[nodiscard]] bool OklLoopInfo::has(const LoopType& loopType) const {
-    for (auto& currLoopType : metadata.type) {
+    for (auto& currLoopType : type) {
         if (currLoopType == loopType) {
             return true;
         }
@@ -25,7 +24,7 @@ namespace oklt {
     return false;
 };
 [[nodiscard]] bool OklLoopInfo::isRegular() const {
-    for (auto& loopType : metadata.type) {
+    for (auto& loopType : type) {
         if (loopType != LoopType::Regular) {
             return false;
         }
@@ -94,12 +93,12 @@ std::optional<size_t> OklLoopInfo::getSize() {
         if (children.empty()) {
             return std::nullopt;
         }
-    } else if (metadata.range.size == 0) {
+    } else if (range.size == 0) {
         return std::nullopt;
     }
 
     auto sz = size_t{1};
-    sz = std::max(metadata.range.size, sz);
+    sz = std::max(range.size, sz);
 
     auto ret = sz;
     for (auto& child : children) {
@@ -113,21 +112,21 @@ std::optional<size_t> OklLoopInfo::getSize() {
 }
 
 size_t OklLoopInfo::getHeight() {
-    OklLoopInfo* currLoop = this;
+    auto* currLoop = this;
     int h = 0;
     while (!currLoop->children.empty()) {
         currLoop = currLoop->getFirstAttributedChild();
-        h += currLoop->metadata.type.size();
+        h += currLoop->type.size();
     }
     return h;
 }
 
 size_t OklLoopInfo::getHeightSameType(const LoopType& type) {
-    OklLoopInfo* currLoop = this;
+    auto* currLoop = this;
     int h = 0;
     while (!currLoop->children.empty()) {
         currLoop = currLoop->getFirstAttributedChild();
-        for (auto& loopType : currLoop->metadata.type) {
+        for (auto& loopType : currLoop->type) {
             if (loopType == type) {
                 ++h;
             }

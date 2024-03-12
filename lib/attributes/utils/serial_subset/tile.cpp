@@ -14,8 +14,7 @@ const std::string exclusiveNullText = "_occa_exclusive_index = 0;\n";
 const std::string exclusiveIncText = "++_occa_exclusive_index;\n";
 
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
-    auto& meta = forLoop.metadata;
-    return "_occa_tiled_" + meta.var.name;
+    return "_occa_tiled_" + forLoop.var.name;
 }
 
 std::string getScopesCloseStr(size_t& parenCnt) {
@@ -27,27 +26,26 @@ std::string getScopesCloseStr(size_t& parenCnt) {
 }
 
 std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
-                                 const OklLoopInfo& loopInfo,
+                                 const OklLoopInfo& forLoop,
                                  [[maybe_unused]] const TileParams* params,
                                  size_t& parenCnt) {
-    auto tiledVar = getTiledVariableName(loopInfo);
-    auto& meta = loopInfo.metadata;
-    auto assignUpdate = meta.IsInc() ? "+=" : "-=";
-    auto cmpOpStr = getCondCompStr(meta.condition.op);
+    auto tiledVar = getTiledVariableName(forLoop);
+    auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
+    auto cmpOpStr = getCondCompStr(forLoop.condition.op);
     auto incValStr = params->tileSize;
-    if (!meta.inc.val.empty()) {
-        incValStr = util::fmt("({} * {})", params->tileSize, meta.inc.val).value();
+    if (!forLoop.inc.val.empty()) {
+        incValStr = util::fmt("({} * {})", params->tileSize, forLoop.inc.val).value();
     }
 
     // Do not include `for` statement as it's already present.
     //"for ({} {} = {}; {} {} {}; {} {} {})",
     auto ret = util::fmt(" ({} {} = {}; {} {} {}; {} {} {})",
-                         meta.var.type,
+                         forLoop.var.type,
                          tiledVar,
-                         meta.range.start,
+                         forLoop.range.start,
                          tiledVar,
                          cmpOpStr,
-                         meta.range.end,
+                         forLoop.range.end,
                          tiledVar,
                          assignUpdate,
                          incValStr)
@@ -60,22 +58,21 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
 }
 
 std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
-                                  const OklLoopInfo& loopInfo,
+                                  const OklLoopInfo& forLoop,
                                   [[maybe_unused]] const TileParams* params,
                                   size_t& parenCnt) {
-    auto tiledVar = getTiledVariableName(loopInfo);
-    auto& meta = loopInfo.metadata;
-    auto op = meta.IsInc() ? "+" : "-";
-    auto cmp = meta.IsInc() ? "<" : ">";
+    auto tiledVar = getTiledVariableName(forLoop);
+    auto op = forLoop.IsInc() ? "+" : "-";
+    auto cmp = forLoop.IsInc() ? "<" : ">";
 
     std::string ret;
-    if (meta.isUnary()) {
-        auto unaryStr = getUnaryStr(meta.inc.op.uo, meta.var.name);
+    if (forLoop.isUnary()) {
+        auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.var.name);
         ret = util::fmt("for ({} {} = {}; {} {} ({} {} {}); {})",
-                        meta.var.type,
-                        meta.var.name,
+                        forLoop.var.type,
+                        forLoop.var.name,
                         tiledVar,
-                        meta.var.name,
+                        forLoop.var.name,
                         cmp,
                         tiledVar,
                         op,
@@ -83,19 +80,19 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
                         unaryStr)
                   .value();
     } else {
-        auto assignUpdate = meta.IsInc() ? "+=" : "-=";
+        auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
         ret = util::fmt("for ({} {} = {}; {} {} ({} {} {}); {} {} {})",
-                        meta.var.type,
-                        meta.var.name,
+                        forLoop.var.type,
+                        forLoop.var.name,
                         tiledVar,
-                        meta.var.name,
+                        forLoop.var.name,
                         cmp,
                         tiledVar,
                         op,
                         params->tileSize,
-                        meta.var.name,
+                        forLoop.var.name,
                         assignUpdate,
-                        meta.inc.val)
+                        forLoop.inc.val)
                   .value();
     }
 
@@ -108,13 +105,12 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
 }
 
 std::string buildCheckString([[maybe_unused]] const ForStmt& stmt,
-                             const OklLoopInfo& loopInfo,
+                             const OklLoopInfo& forLoop,
                              [[maybe_unused]] const TileParams* params,
                              size_t& parenCnt) {
-    auto& meta = loopInfo.metadata;
-    auto cmpStr = getCondCompStr(meta.condition.op);
+    auto cmpStr = getCondCompStr(forLoop.condition.op);
 
-    auto ret = util::fmt("if ({} {} {})", meta.var.name, cmpStr, meta.range.end).value();
+    auto ret = util::fmt("if ({} {} {})", forLoop.var.name, cmpStr, forLoop.range.end).value();
 
     if (!isa<CompoundStmt>(stmt.getBody())) {
         ++parenCnt;
@@ -141,12 +137,11 @@ HandleResult handleTileAttribute(const Attr& a,
     }
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo->metadata.var.type
-                 << ", name: " << loopInfo->metadata.var.name
-                 << ", initValue: " << loopInfo->metadata.range.start
-                 << "), Cond(rhsExpr: " << loopInfo->metadata.range.end
-                 << "), Inc(rhsInc: " << loopInfo->metadata.inc.val
-                 << ", isUnary: " << loopInfo->metadata.isUnary() << ")\n";
+                 << "type: " << loopInfo->var.type << ", name: " << loopInfo->var.name
+                 << ", initValue: " << loopInfo->range.start
+                 << "), Cond(rhsExpr: " << loopInfo->range.end
+                 << "), Inc(rhsInc: " << loopInfo->inc.val << ", isUnary: " << loopInfo->isUnary()
+                 << ")\n";
 #endif
 
     removeAttribute(a, s);

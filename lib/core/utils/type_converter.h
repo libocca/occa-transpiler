@@ -13,7 +13,6 @@ struct ASTContext;
 
 namespace oklt {
 struct Error;
-struct LoopMetaData;
 
 tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const clang::VarDecl&);
 tl::expected<StructFieldInfo, std::error_code> toOklStructFieldInfo(const clang::FieldDecl&);

@@ -11,10 +11,14 @@ namespace oklt {
 struct KernelInfo;
 
 using AttributedLoopTypes = std::vector<LoopType>;
-struct LoopMetaData {
-    // LoopMetaType type = LoopMetaType::Regular;
+
+struct OklLoopInfo {
+    const clang::Attr& attr;
+    const clang::ForStmt& stmt;
     AttributedLoopTypes type = {LoopType::Regular};
-    std::list<LoopMetaData> childrens;
+
+    OklLoopInfo* parent = nullptr;
+    std::list<OklLoopInfo> children = {};
 
     struct {
         std::string type;
@@ -65,15 +69,6 @@ struct LoopMetaData {
             return range.start + " - " + range.end;
         };
     };
-};
-
-struct OklLoopInfo {
-    const clang::Attr& attr;
-    const clang::ForStmt& stmt;
-    LoopMetaData& metadata;
-
-    OklLoopInfo* parent = nullptr;
-    std::list<OklLoopInfo> children = {};
 
     OklLoopInfo* getAttributedParent();
     OklLoopInfo* getAttributedParent(std::function<bool(OklLoopInfo&)> f);

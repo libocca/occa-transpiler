@@ -20,7 +20,7 @@ struct OklSemaCtx {
               argStrs(args),
               kernInfo(info){};
         KernelInfo* kernInfo{nullptr};
-        std::list<LoopMetaData> highestLevelLoops;
+        std::list<OklLoopInfo> highestLevelLoops;
 
         std::string transpiledFuncAttrStr = {};
         std::vector<std::string> argStrs = {};

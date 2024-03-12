@@ -2,7 +2,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <list>
 #include <optional>
 #include <string>
 #include <vector>

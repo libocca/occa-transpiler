@@ -63,8 +63,13 @@ bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
     return true;
 };
 
-tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext& ctx) {
-    LoopMetaData ret;
+}  // namespace
+
+namespace oklt {
+tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
+                                              const clang::ForStmt& s,
+                                              clang::ASTContext& ctx) {
+    OklLoopInfo ret{.attr = a, .stmt = s};
     const Expr *start, *end = nullptr;
 
     auto policy = ctx.getPrintingPolicy();
@@ -175,12 +180,5 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
     }
 
     return ret;
-}
-
-}  // namespace
-
-namespace oklt {
-tl::expected<LoopMetaData, Error> parseForStmt(const ForStmt& s, ASTContext& ctx) {
-    return parseForStmtImpl(s, ctx);
 }
 }  // namespace oklt
