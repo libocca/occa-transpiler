@@ -1,3 +1,5 @@
+#pragma once
+
 #include <oklt/core/kernel_metadata.h>
 
 #include <clang/AST/AST.h>

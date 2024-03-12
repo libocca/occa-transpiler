@@ -3,11 +3,13 @@
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "attributes/utils/inner_outer_utils.h"
 
 #include "clang/AST/Stmt.h"
 #include "core/attribute_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
+#include "oklt/core/kernel_metadata.h"
 #include "tl/expected.hpp"
 
 #include <clang/AST/Decl.h>
@@ -27,18 +29,15 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
             Error{std::error_code(), "@inner: failed to fetch loop meta data from sema"});
     }
 
-    AttributedLoop finaledParams = *params;
-    if (params->dim == DimType::Auto) {
-        auto height = loopInfo->getHeightSameType(AttributedLoopType::Inner);
-        if (height > 2) {
-            return tl::make_unexpected(Error{{}, "More than 3 nested [@inner] loops"});
-        }
-        finaledParams.dim = static_cast<DimType>(height);
+    auto updatedParams =
+        innerOuterParamsHandleAutoDims(*params, *loopInfo, AttributedLoopType::Inner);
+    if (!updatedParams) {
+        return tl::make_unexpected(updatedParams.error());
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode =
-        inner_outer::buildInnerOuterLoopIdxLine(*loopInfo, finaledParams, openedScopeCounter);
+    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
+        *loopInfo, updatedParams.value(), openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     // suffixCode += "__syncthreads();";
 

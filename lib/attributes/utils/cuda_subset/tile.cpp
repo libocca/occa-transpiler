@@ -5,6 +5,7 @@
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "attributes/utils/tile_utils.h"
 
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -70,29 +71,6 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
     return res;
 }
 
-tl::expected<void, Error> updateParamsDim(AttributedLoop& attrLoop, OklLoopInfo* loopInfo, bool is_first) {
-    auto [metaLoopType, loopName] = [&]() -> std::pair<AttributedLoopType, std::string> {
-        if (attrLoop.type == AttributedLoopType::Inner) {
-            return {AttributedLoopType::Inner, "@inner"};
-        }
-        return {AttributedLoopType::Outer, "@outer"};
-    }();
-    if (attrLoop.dim == DimType::Auto && attrLoop.type != AttributedLoopType::Regular) {
-        auto height = loopInfo->getHeightSameType(metaLoopType);
-        // Case of @outer @outer or @inner @inner
-        if (is_first && loopInfo->metadata.type[1] == metaLoopType) {
-            ++height;
-        }
-        if (height > 2) {
-            return tl::make_unexpected(
-                Error{{}, util::fmt("More than 3 nested [{}] loops", loopName).value()});
-        }
-        attrLoop.dim = static_cast<DimType>(height);
-    }
-
-    return {};
-}
-
 }  // namespace
 
 HandleResult handleTileAttribute(const clang::Attr& a,
@@ -106,11 +84,12 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto finalizedParams = *params;
-    updateParamsDim(finalizedParams.firstLoop, loopInfo, true);
-    updateParamsDim(finalizedParams.secondLoop, loopInfo, false);
+    auto updatedParams = tileParamsHandleAutoDims(*params, *loopInfo);
+    if (!updatedParams) {
+        return tl::make_unexpected(updatedParams.error());
+    }
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(*loopInfo, &finalizedParams, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, &updatedParams.value(), openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

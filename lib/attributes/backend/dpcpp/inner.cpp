@@ -2,6 +2,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
+#include "attributes/utils/inner_outer_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 
@@ -24,8 +25,15 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
+    auto updatedParams =
+        innerOuterParamsHandleAutoDims(*params, *loopInfo, AttributedLoopType::Inner);
+    if (!updatedParams) {
+        return tl::make_unexpected(updatedParams.error());
+    }
+
     int openedScopeCounter = 0;
-    auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(*loopInfo, *params, openedScopeCounter);
+    auto prefixCode =
+        dpcpp::buildInnerOuterLoopIdxLine(*loopInfo, updatedParams.value(), openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

@@ -6,6 +6,7 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "attributes/utils/tile_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -207,6 +208,16 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
+
+    auto updatedParams = tileParamsHandleAutoDims(*params, *loopInfo);
+    if (!updatedParams) {
+        return tl::make_unexpected(updatedParams.error());
+    }
+
+    int openedScopeCounter = 0;
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, &updatedParams.value(), openedScopeCounter);
+    auto suffixCode = buildCloseScopes(openedScopeCounter);
+
 #ifdef TRANSPILER_DEBUG_LOG
     const auto& md = loopInfo->metadata;
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
@@ -214,10 +225,6 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                  << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
                  << ", isUnary: " << md.isUnary() << ")\n";
 #endif
-
-    int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
-    auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
