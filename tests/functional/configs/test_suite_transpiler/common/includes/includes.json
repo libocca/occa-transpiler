@@ -1,0 +1,14 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/includes",
+            "includes": ["data/transpiler/common/includes"],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": ""
+    }
+]
+
