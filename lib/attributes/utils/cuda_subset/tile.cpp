@@ -70,7 +70,7 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
     return res;
 }
 
-tl::expected<void, Error> updateParamsDim(AttributedLoop& attrLoop, OklLoopInfo* loopInfo) {
+tl::expected<void, Error> updateParamsDim(AttributedLoop& attrLoop, OklLoopInfo* loopInfo, bool is_first) {
     auto [metaLoopType, loopName] = [&]() -> std::pair<AttributedLoopType, std::string> {
         if (attrLoop.type == AttributedLoopType::Inner) {
             return {AttributedLoopType::Inner, "@inner"};
@@ -79,6 +79,10 @@ tl::expected<void, Error> updateParamsDim(AttributedLoop& attrLoop, OklLoopInfo*
     }();
     if (attrLoop.dim == DimType::Auto && attrLoop.type != AttributedLoopType::Regular) {
         auto height = loopInfo->getHeightSameType(metaLoopType);
+        // Case of @outer @outer or @inner @inner
+        if (is_first && loopInfo->metadata.type[1] == metaLoopType) {
+            ++height;
+        }
         if (height > 2) {
             return tl::make_unexpected(
                 Error{{}, util::fmt("More than 3 nested [{}] loops", loopName).value()});
@@ -103,10 +107,10 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     }
 
     auto finalizedParams = *params;
-    updateParamsDim(finalizedParams.firstLoop, loopInfo);
-    updateParamsDim(finalizedParams.secondLoop, loopInfo);
+    updateParamsDim(finalizedParams.firstLoop, loopInfo, true);
+    updateParamsDim(finalizedParams.secondLoop, loopInfo, false);
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, &finalizedParams, openedScopeCounter);
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG
