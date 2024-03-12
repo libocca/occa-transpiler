@@ -18,7 +18,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
 
     // Top level `@outer` loop
     auto parent = loopInfo->getAttributedParent();
-    if (!parent && loopInfo->hasOuter()) {
+    if (!parent && loopInfo->has(LoopType::Outer)) {
         s.getRewriter().InsertText(stmt.getBeginLoc(), prefixText, false, true);
     }
 

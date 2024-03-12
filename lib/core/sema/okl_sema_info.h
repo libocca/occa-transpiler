@@ -26,23 +26,15 @@ struct OklLoopInfo {
     /* Distance to the for loop tree leave */
     size_t getHeight();
     /* Distance to the for loop tree leave, ignoring loops of other types */
-    size_t getHeightSameType(const AttributedLoopType&);
+    size_t getHeightSameType(const LoopType&);
 
     std::optional<size_t> getSize();
 
-    [[nodiscard]] bool isOuter() const;
-    [[nodiscard]] bool isInner() const;
+    [[nodiscard]] bool is(const LoopType&) const;
+    [[nodiscard]] bool is(const LoopType&, const LoopType&) const;
+    [[nodiscard]] bool has(const LoopType&) const;
     [[nodiscard]] bool isTiled() const;
-
-    [[nodiscard]] bool isOuterInner() const;
-    [[nodiscard]] bool isInnerInner() const;
-    [[nodiscard]] bool isOuterOuter() const;
-    [[nodiscard]] bool isOuterRegular() const;
-    [[nodiscard]] bool isInnerRegular() const;
     [[nodiscard]] bool isRegular() const;
-
-    [[nodiscard]] bool hasOuter() const;
-    [[nodiscard]] bool hasInner() const;
 };
 
 struct OklKernelInfo {

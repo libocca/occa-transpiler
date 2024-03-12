@@ -15,9 +15,9 @@ std::string dimToStr(const DimType& dim) {
 std::string getIdxVariable(const AttributedLoop& loop) {
     auto strDim = dimToStr(loop.dim);
     switch (loop.type) {
-        case (AttributedLoopType::Inner):
+        case (LoopType::Inner):
             return util::fmt("item.get_local_id({})", strDim).value();
-        case (AttributedLoopType::Outer):
+        case (LoopType::Outer):
             return util::fmt("item_.get_group({})", strDim).value();
         default:  // Incorrect case
             return "";
@@ -46,7 +46,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    if (loop.type == AttributedLoopType::Outer) {
+    if (loop.type == LoopType::Outer) {
         return res;
     }
     ++openedScopeCounter;

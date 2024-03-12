@@ -17,7 +17,7 @@ using namespace oklt;
 
 AttributedLoopTypes getLoopType(const std::any* param) {
     if (!param) {
-        return {AttributedLoopType::Regular};
+        return {LoopType::Regular};
     }
 
     AttributedLoopTypes res{};
@@ -27,7 +27,7 @@ AttributedLoopTypes getLoopType(const std::any* param) {
         res.push_back(tile.secondLoop.type);
     } else if (param->type() == typeid(AttributedLoop)) {
         auto loop = std::any_cast<AttributedLoop>(*param);
-        res.push_back(AttributedLoopType{loop.type});
+        res.push_back(LoopType{loop.type});
     }
 
     return res;
@@ -56,33 +56,33 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
 // check if loop types inside one loop are legal. firstType/lastType - first and alst non regular
 // loop type
 bool isLegalLoopLevel(AttributedLoopTypes loopTypes,
-                      AttributedLoopType& firstType,
-                      AttributedLoopType& lastType) {
-    lastType = AttributedLoopType::Regular;
-    firstType = AttributedLoopType::Regular;
+                      LoopType& firstType,
+                      LoopType& lastType) {
+    lastType = LoopType::Regular;
+    firstType = LoopType::Regular;
     for (auto& loopType : loopTypes) {
-        if (loopType != AttributedLoopType::Regular && firstType == AttributedLoopType::Regular) {
+        if (loopType != LoopType::Regular && firstType == LoopType::Regular) {
             firstType = loopType;
         }
-        if (loopType == AttributedLoopType::Inner) {
-            lastType = AttributedLoopType::Inner;
-        } else if (loopType == AttributedLoopType::Outer) {
-            if (lastType == AttributedLoopType::Inner) {
+        if (loopType == LoopType::Inner) {
+            lastType = LoopType::Inner;
+        } else if (loopType == LoopType::Outer) {
+            if (lastType == LoopType::Inner) {
                 // inner -> outer inside parent type
                 return false;
             }
-            lastType = AttributedLoopType::Outer;
+            lastType = LoopType::Outer;
         }
     }
     return true;
 }
 
 bool isLegalLoopLevel(AttributedLoopTypes childTypes,
-                      AttributedLoopTypes parentTypes = {AttributedLoopType::Regular}) {
-    AttributedLoopType firstParentType = AttributedLoopType::Regular,
-                       lastParentType = AttributedLoopType::Regular;
-    AttributedLoopType firstChildType = AttributedLoopType::Regular,
-                       lastChildType = AttributedLoopType::Regular;
+                      AttributedLoopTypes parentTypes = {LoopType::Regular}) {
+    LoopType firstParentType = LoopType::Regular,
+                       lastParentType = LoopType::Regular;
+    LoopType firstChildType = LoopType::Regular,
+                       lastChildType = LoopType::Regular;
     if (!isLegalLoopLevel(parentTypes, firstParentType, lastParentType)) {
         return false;
     }
@@ -94,13 +94,13 @@ bool isLegalLoopLevel(AttributedLoopTypes childTypes,
         return true;
     }
 
-    if (firstChildType == AttributedLoopType::Regular ||
-        lastParentType == AttributedLoopType::Regular) {
+    if (firstChildType == LoopType::Regular ||
+        lastParentType == LoopType::Regular) {
         return true;
     }
 
-    if (lastParentType == AttributedLoopType::Outer &&
-        firstChildType == AttributedLoopType::Inner) {
+    if (lastParentType == LoopType::Outer &&
+        firstChildType == LoopType::Inner) {
         return true;
     }
 
@@ -108,7 +108,7 @@ bool isLegalLoopLevel(AttributedLoopTypes childTypes,
 }
 
 bool isLegalTopLoopLevel(AttributedLoopTypes loopType) {
-    return loopType.front() == AttributedLoopType::Outer;
+    return loopType.front() == LoopType::Outer;
 }
 
 }  // namespace
@@ -216,7 +216,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
 
     auto currentLoop = _parsingKernInfo->currentLoop;
     auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
-    AttributedLoopTypes parentType{AttributedLoopType::Regular};
+    AttributedLoopTypes parentType{LoopType::Regular};
     if (currentLoop) {
         parentType = currentLoop->metadata.type;
     }
@@ -245,7 +245,7 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
     assert(_parsingKernInfo);
 
     auto loopType = getLoopType(params);
-    if (loopType.front() == AttributedLoopType::Regular) {
+    if (loopType.front() == LoopType::Regular) {
         return {};
     }
 

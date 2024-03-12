@@ -9,6 +9,6 @@ namespace oklt {
 tl::expected<AttributedLoop, Error> innerOuterParamsHandleAutoDims(
     const AttributedLoop& params,
     OklLoopInfo& loopInfo,
-    const AttributedLoopType& loopType,
+    const LoopType& loopType,
     size_t heightLimit = 2);
 }  // namespace oklt

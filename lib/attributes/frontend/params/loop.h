@@ -13,7 +13,7 @@ enum class DimType {
 };
 
 struct AttributedLoop {
-    AttributedLoopType type = AttributedLoopType::Regular;
+    LoopType type = LoopType::Regular;
     DimType dim = DimType::Auto;
 };
 

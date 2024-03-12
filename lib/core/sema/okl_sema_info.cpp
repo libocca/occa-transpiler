@@ -1,57 +1,24 @@
-#include "core/sema//okl_sema_info.h"
+#include "core/sema/okl_sema_info.h"
 
 #include <deque>
-#include "attributes/frontend/params/loop.h"
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
 
-[[nodiscard]] bool OklLoopInfo::isOuter() const {
-    return metadata.type.size() == 1 && metadata.type.front() == AttributedLoopType::Outer;
+[[nodiscard]] bool OklLoopInfo::is(const LoopType& loopType) const {
+    return metadata.type.size() == 1 && metadata.type.front() == loopType;
 };
-[[nodiscard]] bool OklLoopInfo::isInner() const {
-    return metadata.type.size() == 1 && metadata.type.front() == AttributedLoopType::Inner;
-};
-
-[[nodiscard]] bool OklLoopInfo::isOuterInner() const {
-    return isTiled() && metadata.type[0] == AttributedLoopType::Outer &&
-           metadata.type[1] == AttributedLoopType::Inner;
-};
-
-[[nodiscard]] bool OklLoopInfo::isInnerInner() const {
-    return isTiled() && metadata.type[0] == AttributedLoopType::Inner &&
-           metadata.type[1] == AttributedLoopType::Inner;
-};
-
-[[nodiscard]] bool OklLoopInfo::isOuterOuter() const {
-    return isTiled() && metadata.type[0] == AttributedLoopType::Outer &&
-           metadata.type[1] == AttributedLoopType::Outer;
-};
-
-[[nodiscard]] bool OklLoopInfo::isOuterRegular() const {
-    return isTiled() && metadata.type[0] == AttributedLoopType::Outer &&
-           metadata.type[1] == AttributedLoopType::Regular;
-};
-
-[[nodiscard]] bool OklLoopInfo::isInnerRegular() const {
-    return isTiled() && metadata.type[0] == AttributedLoopType::Inner &&
-           metadata.type[1] == AttributedLoopType::Regular;
+[[nodiscard]] bool OklLoopInfo::is(const LoopType& loopType1, const LoopType& loopType2) const {
+    return metadata.type.size() == 2 && metadata.type[0] == loopType1 &&
+           metadata.type[1] == loopType2;
 };
 
 [[nodiscard]] bool OklLoopInfo::isTiled() const {
     return metadata.type.size() == 2;
 };
-[[nodiscard]] bool OklLoopInfo::hasOuter() const {
-    for (auto& loopType : metadata.type) {
-        if (loopType == AttributedLoopType::Outer) {
-            return true;
-        }
-    }
-    return false;
-};
-[[nodiscard]] bool OklLoopInfo::hasInner() const {
-    for (auto& loopType : metadata.type) {
-        if (loopType == AttributedLoopType::Inner) {
+[[nodiscard]] bool OklLoopInfo::has(const LoopType& loopType) const {
+    for (auto& currLoopType : metadata.type) {
+        if (currLoopType == loopType) {
             return true;
         }
     }
@@ -59,7 +26,7 @@ namespace oklt {
 };
 [[nodiscard]] bool OklLoopInfo::isRegular() const {
     for (auto& loopType : metadata.type) {
-        if (loopType != AttributedLoopType::Regular) {
+        if (loopType != LoopType::Regular) {
             return false;
         }
     }
@@ -155,7 +122,7 @@ size_t OklLoopInfo::getHeight() {
     return h;
 }
 
-size_t OklLoopInfo::getHeightSameType(const AttributedLoopType& type) {
+size_t OklLoopInfo::getHeightSameType(const LoopType& type) {
     OklLoopInfo* currLoop = this;
     int h = 0;
     while (!currLoop->children.empty()) {

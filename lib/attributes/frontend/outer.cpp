@@ -63,7 +63,7 @@ ParseResult parseOuterAttrParams(const clang::Attr& attr,
     }
 
     AttributedLoop ret{
-        .type = AttributedLoopType::Outer,
+        .type = LoopType::Outer,
         .dim = DimType::Auto,
     };
 

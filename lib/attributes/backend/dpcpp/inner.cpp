@@ -26,7 +26,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     }
 
     auto updatedParams =
-        innerOuterParamsHandleAutoDims(*params, *loopInfo, AttributedLoopType::Inner);
+        innerOuterParamsHandleAutoDims(*params, *loopInfo, LoopType::Inner);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }

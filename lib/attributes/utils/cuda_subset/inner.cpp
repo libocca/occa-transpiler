@@ -1,3 +1,4 @@
+#include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
 
 #include "attributes/frontend/params/loop.h"
@@ -8,11 +9,10 @@
 #include "core/attribute_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
-#include "oklt/core/kernel_metadata.h"
 #include "tl/expected.hpp"
 
 #include <clang/AST/Decl.h>
-#include "clang/AST/Stmt.h"
+#include <clang/AST/Stmt.h>
 
 namespace oklt::cuda_subset {
 using namespace clang;
@@ -30,7 +30,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     }
 
     auto updatedParams =
-        innerOuterParamsHandleAutoDims(*params, *loopInfo, AttributedLoopType::Inner);
+        innerOuterParamsHandleAutoDims(*params, *loopInfo, LoopType::Inner);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }

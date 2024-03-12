@@ -29,18 +29,18 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const LoopOrder& ord,
                              int& openedScopeCounter) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    static std::map<std::tuple<AttributedLoopType, LoopOrder>,
+    static std::map<std::tuple<LoopType, LoopOrder>,
                     std::function<std::string(
                         const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&)>>
         mapping{
-            {{AttributedLoopType::Inner, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
-            {{AttributedLoopType::Outer, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
-            {{AttributedLoopType::Regular, LoopOrder::First}, tile::buildRegularLoopIdxLineFirst},
-            {{AttributedLoopType::Inner, LoopOrder::Second},
+            {{LoopType::Inner, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
+            {{LoopType::Outer, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
+            {{LoopType::Regular, LoopOrder::First}, tile::buildRegularLoopIdxLineFirst},
+            {{LoopType::Inner, LoopOrder::Second},
              tile::buildInnerOuterLoopIdxLineSecond},
-            {{AttributedLoopType::Outer, LoopOrder::Second},
+            {{LoopType::Outer, LoopOrder::Second},
              tile::buildInnerOuterLoopIdxLineSecond},
-            {{AttributedLoopType::Regular, LoopOrder::Second}, tile::buildRegularLoopIdxLineSecond},
+            {{LoopType::Regular, LoopOrder::Second}, tile::buildRegularLoopIdxLineSecond},
         };
     auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
     return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);

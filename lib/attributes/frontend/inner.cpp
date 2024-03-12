@@ -63,7 +63,7 @@ ParseResult parseInnerAttrParams(const clang::Attr& attr,
     }
 
     AttributedLoop ret{
-        .type = AttributedLoopType::Inner,
+        .type = LoopType::Inner,
         .dim = DimType::Auto,
     };
 

@@ -12,14 +12,14 @@ tl::expected<TileParams, Error> updateParamsDim(TileParams& params,
                                                 bool isFirst,
                                                 size_t heightLimit) {
     AttributedLoop& attrLoop = isFirst ? params.firstLoop : params.secondLoop;
-    if (attrLoop.dim != DimType::Auto || attrLoop.type == AttributedLoopType::Regular) {
+    if (attrLoop.dim != DimType::Auto || attrLoop.type == LoopType::Regular) {
         return params;
     }
-    auto [metaLoopType, loopName] = [&]() -> std::pair<AttributedLoopType, std::string> {
-        if (attrLoop.type == AttributedLoopType::Inner) {
-            return {AttributedLoopType::Inner, "@inner"};
+    auto [metaLoopType, loopName] = [&]() -> std::pair<LoopType, std::string> {
+        if (attrLoop.type == LoopType::Inner) {
+            return {LoopType::Inner, "@inner"};
         }
-        return {AttributedLoopType::Outer, "@outer"};
+        return {LoopType::Outer, "@outer"};
     }();
     auto height = loopInfo.getHeightSameType(metaLoopType);
     // Case of @outer @outer or @inner @inner
