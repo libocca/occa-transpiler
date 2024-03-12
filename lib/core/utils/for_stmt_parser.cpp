@@ -1,5 +1,5 @@
 #include <oklt/core/error.h>
-#include <oklt/core/kernel_metadata.h>
+#include "core/sema/okl_sema_info.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ParentMapContext.h>
