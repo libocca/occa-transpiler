@@ -38,6 +38,7 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
         incValStr = util::fmt("({} * {})", params->tileSize, meta.inc.val).value();
     }
 
+    // Do not include `for` statement as it's already present.
     //"for ({} {} = {}; {} {} {}; {} {} {})",
     auto ret = util::fmt(" ({} {} = {}; {} {} {}; {} {} {})",
                          meta.var.type,
@@ -187,6 +188,8 @@ HandleResult handleTileAttribute(const Attr& a,
         prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt);
     }
 
+    // Replace `for` statement body from LParent to RParen.
+    // It is done to avoid replacing the already modified body with insertions before/after.
     rewriter.ReplaceText(SourceRange{stmt.getLParenLoc(), stmt.getRParenLoc()}, prefixCode);
 
     // Bottom most `@inner` loop
