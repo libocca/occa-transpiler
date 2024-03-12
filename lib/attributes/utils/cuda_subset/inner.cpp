@@ -5,7 +5,6 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/inner_outer_utils.h"
 
-#include "clang/AST/Stmt.h"
 #include "core/attribute_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -13,6 +12,7 @@
 #include "tl/expected.hpp"
 
 #include <clang/AST/Decl.h>
+#include "clang/AST/Stmt.h"
 
 namespace oklt::cuda_subset {
 using namespace clang;

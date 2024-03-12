@@ -1,46 +1,28 @@
 #include "attributes/backend/openmp/common.h"
 
-#include <clang/Rewrite/Core/Rewriter.h>
-
 namespace {
 using namespace oklt;
 using namespace clang;
 
 const std::string prefixText = "#pragma omp parallel for\n";
 
-std::string getScopesCloseStr(size_t& parenCnt) {
-    std::string ret;
-    while (parenCnt--) {
-        ret += "}\n";
-    }
-    return ret;
-}
-
 HandleResult handleOPENMPOuterAttribute(const Attr& a,
                                         const ForStmt& stmt,
                                         const AttributedLoop* params,
                                         SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
-    if (!params) {
-        return tl::make_unexpected(Error{std::error_code(), "@outer params nullptr"});
-    }
-
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
-        return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
+        return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto& rewriter = s.getRewriter();
-
+    // Top level `@outer` loop
     auto parent = loopInfo->getAttributedParent();
+    if (!parent && loopInfo->hasOuter()) {
+        s.getRewriter().InsertText(stmt.getBeginLoc(), prefixText, false, true);
+    }
 
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    rewriter.ReplaceText(attrRange, (!parent ? prefixText : ""));
-
-    return {};
+    return serial_subset::handleOuterAttribute(a, stmt, params, s);
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {

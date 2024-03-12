@@ -4,27 +4,32 @@ from enum import Enum
 
 
 class Backend(Enum):
-    DPCPP = 0
+    SERIAL = 0
     OPENMP = 1
     CUDA = 2
     HIP = 3
+    DPCPP = 4
 
     def from_str(s: str) -> "Backend":
         s = s.lower()
-        if s == "dpcpp":
-            return Backend.DPCPP
+        if s == "seerial":
+            return Backend.SERIAL
         if s == "openmp":
             return Backend.OPENMP
+        if s == "dpcpp":
+            return Backend.DPCPP
         if s == "cuda":
             return Backend.CUDA
         if s == "hip":
             return Backend.HIP
 
     def to_str(self) -> str:
-        if self == Backend.DPCPP:
-            return "dpcpp"
+        if self == Backend.SERIAL:
+            return "serial"
         if self == Backend.OPENMP:
             return "openmp"
+        if self == Backend.DPCPP:
+            return "dpcpp"
         if self == Backend.CUDA:
             return "cuda"
         if self == Backend.HIP:
@@ -52,7 +57,7 @@ if __name__ == "__main__":
         "--data", "-d", type=str, required=True, help="Test data directory path"
     )
     parser.add_argument(
-        "--backend", "-b", type=str, required=True, help="dpcppp/openmp/cuda/hip"
+        "--backend", "-b", type=str, required=True, help="serial/openmp/cuda/hip/dpcppp"
     )
     args = parser.parse_args()
 

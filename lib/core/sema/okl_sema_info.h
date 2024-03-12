@@ -19,7 +19,9 @@ struct OklLoopInfo {
     std::list<OklLoopInfo> children = {};
 
     OklLoopInfo* getAttributedParent();
+    OklLoopInfo* getAttributedParent(std::function<bool(OklLoopInfo&)> f);
     OklLoopInfo* getFirstAttributedChild();
+    OklLoopInfo* getFirstAttributedChild(std::function<bool(OklLoopInfo&)> f);
 
     /* Distance to the for loop tree leave */
     size_t getHeight();
