@@ -1,3 +1,5 @@
+#include <oklt/util/io_helper.h>
+
 #include "core/transpiler_session/kernel_generator.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -109,6 +111,8 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     invocation->getPreprocessorOutputOpts().RewriteIncludes = true;
     invocation->getPreprocessorOutputOpts().ShowLineMarkers = false;
     invocation->getPreprocessorOutputOpts().ShowIncludeDirectives = false;
+    invocation->getFrontendOpts().OutputFile = "Preprocessed";
+    invocation->getFrontendOpts().UseTemporary = 1;
 
     invocation->getHeaderSearchOpts() = stage.getCompiler().getHeaderSearchOpts();
 
@@ -133,17 +137,17 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     //     lately addional option could be introduced to dump output into FS and then
     //     read/modified/move/delete
     //
-    StdCapture cap;
-    cap.BeginCapture();
+    //StdCapture cap;
+    //cap.BeginCapture();
     if (!ExecuteCompilerInvocation(&compiler)) {
         return tl::make_unexpected(
             Error{{}, "failed to make preprocessing okl_kernel.cpp: " /*+ cap.GetCapture()*/});
     }
-    cap.EndCapture();
+    //cap.EndCapture();
 
-    auto preprocessedAndFused = cap.GetCapture();
+    auto preprocessedAndFused = util::readFileAsStr(compiler.getInvocation().getFrontendOpts().OutputFile);
 
-    return preprocessedAndFused;
+    return preprocessedAndFused.value();
 }
 
 std::string restoreSystemAndBackendHeaders(std::string& input, const HeaderDepsInfo& deps) {

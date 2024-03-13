@@ -7,6 +7,7 @@
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/Analysis/MacroExpansionContext.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
@@ -41,6 +42,7 @@ void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, R
     // remove OKL specific attribute in source code
     SourceLocation attrLocStart(tokens[attr.tok_indecies.front()].getLocation());
     SourceLocation attrLocEnd(tokens[attr.tok_indecies.back()].getLastLoc());
+    const auto& sm = rewriter.getSourceMgr();
     SourceRange attrSrcRange(attrLocStart, attrLocEnd);
     rewriter.RemoveText(attrSrcRange);
 }
@@ -103,26 +105,111 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     return true;
 }
 
+const char OKL_ATTR_MARKER = '@';
+std::string expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
+    auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
+    ctx->registerForPreprocessor(pp);
+
+    pp.EnterMainSourceFile();
+    const auto& sm = pp.getSourceManager();
+    auto& rewriter = stage.getRewriter();
+
+    std::list<Token> oklMacroList;
+    while (true) {
+        Token tok{};
+        pp.Lex(tok);
+
+        if (tok.is(tok::eof)) {
+            break;
+        }
+
+        if (!Lexer::isAtStartOfMacroExpansion(
+                tok.getLocation(), pp.getSourceManager(), pp.getLangOpts())) {
+            continue;
+        }
+
+        oklMacroList.emplace_back(tok);
+    }
+
+    for (const auto& tok : oklMacroList) {
+        auto expansionLoc = sm.getExpansionLoc(tok.getLocation());
+        auto expanded = ctx->getExpandedText(expansionLoc);
+        if (!expanded) {
+            llvm::outs() << "no expanded macro under: " << expansionLoc.printToString(sm) << '\n';
+            continue;
+        }
+
+        if (!expanded->contains(OKL_ATTR_MARKER)) {
+            continue;
+        }
+
+        auto orginal = ctx->getOriginalText(expansionLoc);
+        if (!orginal) {
+            llvm::outs() << "no original macro under: " << expansionLoc.printToString(sm) << '\n';
+            continue;
+        }
+
+        llvm::outs() << "replace " << orginal.value() << " by " << expanded.value() << '\n';
+        rewriter.ReplaceText(expansionLoc, orginal->size(), expanded.value());
+    }
+
+    pp.EndSourceFile();
+    return stage.getRewriterResultForMainFile();
+}
+
 std::vector<Token> fetchTokens(Preprocessor& pp) {
     std::vector<Token> tokens;
     while (true) {
         Token tok{};
         pp.Lex(tok);
-        if (tok.is(tok::eof))
+
+        if (tok.is(tok::eof)) {
             break;
+        }
+
         if (tok.is(tok::unknown)) {
             // Check for '@' symbol
             auto spelling = pp.getSpelling(tok);
-            if (spelling.empty() || spelling[0] != '@') {
+            if (spelling.empty() || spelling[0] != OKL_ATTR_MARKER) {
                 break;
             }
             tok.setKind(tok::at);
         }
+
         tokens.push_back(tok);
     }
 
     return tokens;
 }
+
+struct MacroWithOklInliner : public clang::ASTFrontendAction {
+    explicit MacroWithOklInliner(OklToGnuStageInput& input, OklToGnuStageOutput& output)
+        : _input(input),
+          _output(output),
+          _session(*input.session) {
+        (void)_input;
+    }
+
+   protected:
+    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
+                                                          llvm::StringRef in_file) override {
+        return nullptr;
+    }
+
+    bool BeginSourceFileAction(CompilerInstance& compiler) override {
+        auto& pp = compiler.getPreprocessor();
+
+        SessionStage stage{_session, compiler};
+        _output.gnuCppSrc = expandAndInlineMacroWithOkl(pp, stage);
+
+        return false;
+    }
+
+   private:
+    OklToGnuStageInput& _input;
+    OklToGnuStageOutput& _output;
+    TranspilerSession& _session;
+};
 
 struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
     explicit OklToGnuAttributeNormalizerAction(OklToGnuStageInput& input,
@@ -142,8 +229,8 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
     bool BeginSourceFileAction(CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
         pp.EnterMainSourceFile();
-
         auto tokens = fetchTokens(pp);
+
         if (tokens.empty()) {
             _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING,
                                "no tokens in source?");
@@ -213,13 +300,27 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     }
 
     OklToGnuStageOutput output = {.session = input.session};
-    auto ok = tooling::runToolOnCodeWithArgs(
+    auto ok = tooling::runToolOnCodeWithArgs(std::make_unique<MacroWithOklInliner>(input, output),
+                                             input_file,
+                                             args,
+                                             file_name,
+                                             tool_name);
+
+    if (!ok) {
+        return tl::make_unexpected(std::move(output.session->getErrors()));
+    }
+
+#ifdef NORMALIZER_DEBUG_LOG
+    llvm::outs() << "stage 0.5 inlined macros with OKL cpp source:\n\n" << output.gnuCppSrc << '\n';
+#endif
+
+    input_file = std::move(output.gnuCppSrc);
+    ok = tooling::runToolOnCodeWithArgs(
         std::make_unique<OklToGnuAttributeNormalizerAction>(input, output),
         input_file,
         args,
         file_name,
         tool_name);
-
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
     }
