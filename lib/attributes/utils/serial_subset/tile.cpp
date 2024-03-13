@@ -1,5 +1,6 @@
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/serial_subset/common.h"
+#include "oklt/core/kernel_metadata.h"
 
 #include <oklt/util/string_utils.h>
 
@@ -160,7 +161,7 @@ HandleResult handleTileAttribute(const Attr& a,
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && parent->hasOuter() && loopInfo->isInner()) {
+    if (parent && parent->has(LoopType::Outer) && loopInfo->is(LoopType::Inner)) {
         auto& loopInfoEx = backendCtx.getLoopInfo(parent);
         if (!loopInfoEx.exclusive.empty()) {
             s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
@@ -175,7 +176,7 @@ HandleResult handleTileAttribute(const Attr& a,
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && loopInfo->isOuterInner()) {
+    if (parent && loopInfo->is(LoopType::Outer, LoopType::Inner)) {
         auto& loopInfoEx = backendCtx.getLoopInfo(parent);
         if (!loopInfoEx.exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
@@ -197,7 +198,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
         auto outerParent =
-            loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.hasOuter(); });
+            loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.has(LoopType::Outer); });
         if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =

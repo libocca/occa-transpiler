@@ -43,6 +43,10 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/code_gen.cpp
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
+    attributes/utils/tile_utils.cpp
+    attributes/utils/tile_utils.h
+    attributes/utils/inner_outer_utils.cpp
+    attributes/utils/inner_outer_utils.h
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
@@ -151,6 +155,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/ast_traversal/preorder_traversal_nlr.cpp
 
     core/sema/okl_sema_ctx.cpp
+    core/sema/okl_sema_ctx.h
+    core/sema/okl_sema_info.cpp
+    core/sema/okl_sema_info.h
 
     core/diag/diag_consumer.cpp
 

@@ -63,15 +63,15 @@ ParseResult parseOuterAttrParams(const clang::Attr& attr,
     }
 
     AttributedLoop ret{
-        .type = AttributedLoopType::Outer,
-        .dim = DimType::X,
+        .type = LoopType::Outer,
+        .axis = Axis::Auto,
     };
 
     if (auto dimSize = data.get<int>(0); dimSize.has_value()) {
         if (dimSize.value() < 0 || dimSize.value() > 2) {
             return tl::make_unexpected(Error{{}, "[@outer] argument must be 0, 1, or 2"});
         }
-        ret.dim = static_cast<DimType>(dimSize.value());
+        ret.axis = static_cast<Axis>(dimSize.value());
     }
 
     return ret;

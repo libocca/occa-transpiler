@@ -31,7 +31,7 @@ HandleResult handleInnerAttribute(const Attr& a,
     removeAttribute(a, s);
 
     // Top most `@inner` loop
-    if (auto parent = loopInfo->getAttributedParent(); parent->hasOuter()) {
+    if (auto parent = loopInfo->getAttributedParent(); parent->has(LoopType::Outer)) {
         if (!backendCtx.getLoopInfo(parent).exclusive.empty()) {
             rewriter.InsertTextBefore(stmt.getBeginLoc(), exclusiveNullText);
         }
@@ -40,7 +40,7 @@ HandleResult handleInnerAttribute(const Attr& a,
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
         // Get `@outer` attributed loop
-        auto parent = loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.hasOuter(); });
+        auto parent = loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.has(LoopType::Outer); });
         if (parent && !backendCtx.getLoopInfo(parent).exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =

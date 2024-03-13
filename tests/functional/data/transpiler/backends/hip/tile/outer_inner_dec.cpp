@@ -76,3 +76,17 @@ float add(float a, float b) {
         }
     }
 }
+
+// Outer -> inner ==> inner -> inner (nested) + complex range + check true + automatic dim
+// claculation
+@kernel void addVectors9(const int entries, const float* a, const float* b, float* ab) {
+    for (int i = (entries + 16); i >= (entries - 12 + static_cast<int>(*a));
+         i -= (entries / 16 + 1);
+         @tile(4, @outer, @inner, check = true)) {
+        for (unsigned long long j = (entries + 16); j >= (entries - 12 + static_cast<int>(*a));
+             j -= (entries / 16 + 1);
+             @tile(4, @inner, @inner, check = true)) {
+            ab[i] = add(a[i], b[j]);
+        }
+    }
+}
