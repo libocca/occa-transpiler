@@ -2,18 +2,16 @@
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
 
 namespace oklt::cuda_subset {
-std::string dimToStr(const Axis& dim) {
+std::string axisToStr(const Axis& dim) {
     static std::map<Axis, std::string> mapping{
         {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
     return mapping[dim];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.axis);
+    auto strDim = axisToStr(loop.axis);
     switch (loop.type) {
         case (LoopType::Inner):
             return util::fmt("threadIdx.{}", strDim).value();

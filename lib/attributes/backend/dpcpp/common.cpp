@@ -4,7 +4,7 @@
 
 namespace oklt::dpcpp {
 
-std::string dimToStr(const Axis& dim) {
+std::string axisToStr(const Axis& dim) {
     // TODO: Verify that this is a correct mapping from original OKL transpiler developera
     //      (intuitively should be x->0, y->1, z->2)
     static std::map<Axis, std::string> mapping{
@@ -13,7 +13,7 @@ std::string dimToStr(const Axis& dim) {
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.axis);
+    auto strDim = axisToStr(loop.axis);
     switch (loop.type) {
         case (LoopType::Inner):
             return util::fmt("item.get_local_id({})", strDim).value();
