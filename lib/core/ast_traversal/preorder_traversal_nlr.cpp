@@ -245,6 +245,21 @@ tl::expected<std::string, Error> generateLauncher(SessionStage& stage) {
     return stage.getRewriterResult();
 }
 
+tl::expected<std::string, Error> generateLauncherMetaData(SessionStage& stage) {
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    auto programMeta = sema.getProgramMetaData();
+    nlohmann::json launcher_metadata;
+    to_json(launcher_metadata, programMeta);
+    auto launcherMetaData = launcher_metadata.dump(2);
+
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Program metadata: " << launcherMetaData << "\n";
+    util::writeFileAsStr("launcher_metadata.json", launcherMetaData);
+#endif
+
+    return launcherMetaData;
+}
+
 }  // namespace
 namespace oklt {
 
@@ -290,17 +305,26 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     }
     _stage.getSession().output.kernel.metadataJson = std::move(kernelMetaData.value());
 
-
-    if (!isHostCategory(_stage.getBackend())) {
-        _stage.setLauncherMode();
-        auto launcherResult = generateLauncher(_stage);
-        if (!transpiledKernelResult) {
-            return tl::make_unexpected(transpiledKernelResult.error());
-        }
-        _stage.getSession().output.launcher.sourceCode = std::move(launcherResult.value());
-
-        // 3. generate launcher and metadata
+    // If we are working with Host target, skip generating launcher.
+    if (isHostCategory(_stage.getBackend())) {
+        return {};
     }
+
+    _stage.setLauncherMode();
+
+    // 3. generate launcher
+    auto launcherResult = generateLauncher(_stage);
+    if (!transpiledKernelResult) {
+        return tl::make_unexpected(transpiledKernelResult.error());
+    }
+    _stage.getSession().output.launcher.sourceCode = std::move(launcherResult.value());
+
+    // 4. generate launcher metadata
+    auto launcherMetaData = generateLauncherMetaData(_stage);
+    if (!launcherMetaData) {
+        return tl::make_unexpected(launcherMetaData.error());
+    }
+    _stage.getSession().output.launcher.metadataJson = std::move(launcherMetaData.value());
 
     return std::move(transpiledKernelResult.value());
 }
