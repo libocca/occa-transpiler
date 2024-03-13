@@ -20,6 +20,7 @@ std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     auto& meta = forLoop.metadata;
     return "_occa_tiled_" + meta.var.name;
 }
+
 // TODO: Replace with ArgumentInfo::toString()
 std::string getFunctionDeclParamsStr(const FunctionDecl& decl) {
     std::stringstream out;
