@@ -146,37 +146,46 @@ std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, siz
     std::list<LoopMetaData> inner = {};
     for (auto child : loops) {
         auto& metadata = child->metadata;
+        if (metadata.type.empty()) {
+            continue;
+        }
 
         // NOTE: Tile is a special case
-        if (child->attr.getNormalizedFullName() == TILE_ATTR_NAME) {
+        if (child->isTiled()) {
             auto& am = s.getAttrManager();
             auto params = std::any_cast<TileParams>(am.parseAttr(child->attr, s).value());
 
             auto [firstMeta, secondMeta] = splitTileAttr(*child, params.tileSize);
-            if (params.firstLoop.type == AttributedLoopType::Outer) {
-                outer.push_back(firstMeta);
-            } else if (params.firstLoop.type == AttributedLoopType::Inner) {
-                inner.push_back(firstMeta);
+            //  if (metadata.type.size() > 0)
+            {
+                auto loopType = metadata.type.front();
+                if (loopType == LoopType::Outer) {
+                    outer.push_back(firstMeta);
+                } else if (loopType == LoopType::Inner) {
+                    inner.push_back(firstMeta);
+                }
             }
 
-            if (params.secondLoop.type == AttributedLoopType::Outer) {
-                outer.push_back(secondMeta);
-            } else if (params.secondLoop.type == AttributedLoopType::Inner) {
-                inner.push_back(secondMeta);
+            if (metadata.type.size() > 1) {
+                auto loopType = metadata.type[1];
+                if (loopType == LoopType::Outer) {
+                    outer.push_back(secondMeta);
+                } else if (loopType == LoopType::Inner) {
+                    inner.push_back(secondMeta);
+                }
             }
 
             continue;
         }
 
-        switch (metadata.type) {
-            case LoopMetaType::Outer:
-                outer.push_back(metadata);
-                break;
-            case LoopMetaType::Inner:
-                inner.push_back(metadata);
-                break;
-            default:
-                break;
+        if (child->is(LoopType::Outer)) {
+            outer.push_back(metadata);
+            continue;
+        }
+
+        if (child->is(LoopType::Inner)) {
+            inner.push_back(metadata);
+            continue;
         }
     }
 
@@ -304,5 +313,7 @@ __attribute__((constructor)) void registerLauncherHandler() {
 
     REG_ATTR_HANDLE(RESTRICT_ATTR_NAME,
                     makeSpecificAttrHandle(serial_subset::handleRestrictAttribute));
+
+#undef REG_ATTR_HANDLE
 }
 }  // namespace
