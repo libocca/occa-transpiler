@@ -80,11 +80,12 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
     }
 
     for (auto& child : loopInfo.children) {
-        if (!child.isRegular()) {
-            out.push_back(&child);
-        }
         if (!child.children.empty()) {
             collectLoops(child, out);
+            continue;
+        }
+        if (!child.isRegular()) {
+            out.push_back(&child);
         }
     }
 }
@@ -198,8 +199,8 @@ std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, siz
     {
         auto n = outer.size();
         for (auto& loop : outer) {
-            out << getLoopInfoStr(loop, n, true);
             --n;
+            out << getLoopInfoStr(loop, n, true);
         }
     }
 
@@ -207,8 +208,8 @@ std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, siz
     {
         auto n = inner.size();
         for (auto& loop : inner) {
-            out << getLoopInfoStr(loop, n, false);
             --n;
+            out << getLoopInfoStr(loop, n, false);
         }
     }
 
