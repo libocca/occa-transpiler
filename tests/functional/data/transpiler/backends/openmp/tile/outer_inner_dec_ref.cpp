@@ -68,7 +68,7 @@ extern "C" void addVectors4(const int& entries, const float* a, const float* b, 
 // Outer -> inner, complex range
 extern "C" void addVectors5(const int& entries, const float* a, const float* b, float* ab) {
 #pragma omp parallel for
-    for (int _occa_tiled_i = (entries + 16); _occa_tiled_i >= (entries - 12 + 4);
+    for (int _occa_tiled_i = ((entries + 16)); _occa_tiled_i >= (entries - 12 + 4);
          _occa_tiled_i -= (4 * (entries / 16 + 1))) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= (entries / 16 + 1)) {
             if (i >= (entries - 12 + 4)) {
@@ -112,11 +112,12 @@ extern "C" void addVectors7(const int& entries, const float* a, const float* b, 
 // Outer -> inner ==> inner -> inner (nested) + complex range + check true
 extern "C" void addVectors8(const int& entries, const float* a, const float* b, float* ab) {
 #pragma omp parallel for
-    for (int _occa_tiled_i = (entries + 16); _occa_tiled_i >= (entries - 12 + static_cast<int>(*a));
+    for (int _occa_tiled_i = ((entries + 16));
+         _occa_tiled_i >= (entries - 12 + static_cast<int>(*a));
          _occa_tiled_i -= (4 * (entries / 16 + 1))) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= (entries / 16 + 1)) {
             if (i >= (entries - 12 + static_cast<int>(*a))) {
-                for (unsigned long long _occa_tiled_j = (entries + 16);
+                for (unsigned long long _occa_tiled_j = ((entries + 16));
                      _occa_tiled_j >= (entries - 12 + static_cast<int>(*a));
                      _occa_tiled_j -= (4 * (entries / 16 + 1))) {
                     for (unsigned long long j = _occa_tiled_j; j > (_occa_tiled_j - 4);

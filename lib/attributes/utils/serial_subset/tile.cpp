@@ -1,5 +1,6 @@
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/serial_subset/common.h"
+#include "core/utils/range_to_string.h"
 #include "oklt/core/kernel_metadata.h"
 
 #include <oklt/util/string_utils.h>
@@ -28,24 +29,28 @@ std::string getScopesCloseStr(size_t& parenCnt) {
 std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
                                  const OklLoopInfo& forLoop,
                                  [[maybe_unused]] const TileParams* params,
-                                 size_t& parenCnt) {
+                                 size_t& parenCnt,
+                                 clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
     auto incValStr = params->tileSize;
     if (!forLoop.inc.val.empty()) {
-        incValStr = util::fmt("({} * {})", params->tileSize, forLoop.inc.val).value();
+        incValStr =
+            util::fmt(
+                "({} * {})", params->tileSize, getLatestSourceText(forLoop.inc.val_, rewriter))
+                .value();
     }
 
     // Do not include `for` statement as it's already present.
     //"for ({} {} = {}; {} {} {}; {} {} {})",
-    auto ret = util::fmt(" ({} {} = {}; {} {} {}; {} {} {})",
+    auto ret = util::fmt(" ({} {} = ({}); {} {} {}; {} {} {})",
                          forLoop.var.typeName,
                          tiledVar,
-                         forLoop.range.start,
+                         getLatestSourceText(forLoop.range.start_, rewriter),
                          tiledVar,
                          cmpOpStr,
-                         forLoop.range.end,
+                         getLatestSourceText(forLoop.range.end_, rewriter),
                          tiledVar,
                          assignUpdate,
                          incValStr)
@@ -60,7 +65,8 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
 std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
                                   const OklLoopInfo& forLoop,
                                   [[maybe_unused]] const TileParams* params,
-                                  size_t& parenCnt) {
+                                  size_t& parenCnt,
+                                  clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
@@ -92,7 +98,7 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
                         params->tileSize,
                         forLoop.var.name,
                         assignUpdate,
-                        forLoop.inc.val)
+                        getLatestSourceText(forLoop.inc.val_, rewriter))
                   .value();
     }
 
@@ -107,10 +113,15 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
 std::string buildCheckString([[maybe_unused]] const ForStmt& stmt,
                              const OklLoopInfo& forLoop,
                              [[maybe_unused]] const TileParams* params,
-                             size_t& parenCnt) {
+                             size_t& parenCnt,
+                             clang::Rewriter& rewriter) {
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
-    auto ret = util::fmt("if ({} {} {})", forLoop.var.name, cmpStr, forLoop.range.end).value();
+    auto ret = util::fmt("if ({} {} {})",
+                         forLoop.var.name,
+                         cmpStr,
+                         getLatestSourceText(forLoop.range.end_, rewriter))
+                   .value();
 
     if (!isa<CompoundStmt>(stmt.getBody())) {
         ++parenCnt;
@@ -167,7 +178,7 @@ HandleResult handleTileAttribute(const Attr& a,
     std::string prefixCode;
 
     // First loop. usually `@outer`
-    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt);
+    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
@@ -179,11 +190,11 @@ HandleResult handleTileAttribute(const Attr& a,
     }
 
     // Second loop. usually `@inner`
-    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt);
+    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
 
     // Check code
     if (params->check) {
-        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt);
+        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
     }
 
     // Replace `for` statement body from LParent to RParen.

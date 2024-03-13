@@ -1,6 +1,8 @@
 #include "attributes/backend/dpcpp/common.h"
 #include <oklt/util/string_utils.h>
+#include "clang/Rewrite/Core/Rewriter.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/utils/range_to_string.h"
 
 namespace oklt::dpcpp {
 
@@ -25,7 +27,8 @@ std::string getIdxVariable(const AttributedLoop& loop) {
 }
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
-                                       int& openedScopeCounter) {
+                                       int& openedScopeCounter,
+                                       clang::Rewriter& rewriter) {
     static_cast<void>(openedScopeCounter);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -35,7 +38,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = {} {} {};",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
-                                  forLoop.range.start,
+                                  getLatestSourceText(forLoop.range.start_, rewriter),
                                   op,
                                   idx)
                             .value());
@@ -43,9 +46,9 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
-                                  forLoop.range.start,
+                                  getLatestSourceText(forLoop.range.start_, rewriter),
                                   op,
-                                  forLoop.inc.val,
+                                  getLatestSourceText(forLoop.inc.val_, rewriter),
                                   idx)
                             .value());
     }

@@ -7,8 +7,8 @@
 
 #include <oklt/util/string_utils.h>
 
-#include "clang/Basic/DiagnosticSema.h"
-#include "clang/Sema/Sema.h"
+#include <clang/Basic/DiagnosticSema.h>
+#include <clang/Sema/Sema.h>
 
 namespace {
 

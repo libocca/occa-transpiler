@@ -1,7 +1,7 @@
 #include <oklt/util/format.h>
 
-#include "clang/Format/Format.h"
-#include "clang/Tooling/Core/Replacement.h"
+#include <clang/Format/Format.h>
+#include <clang/Tooling/Core/Replacement.h>
 
 #include <vector>
 

@@ -2,7 +2,7 @@
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "clang/Rewrite/Core/Rewriter.h"
+#include <clang/Rewrite/Core/Rewriter.h>
 #include "core/sema/okl_sema_info.h"
 #include "core/utils/range_to_string.h"
 
@@ -172,7 +172,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        res = std::move(util::fmt("{} {} = {} {} {};",
+        res = std::move(util::fmt("{} {} = ({}) {} {};",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   getLatestSourceText(forLoop.range.start_, rewriter),
@@ -180,7 +180,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     } else {
-        res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   getLatestSourceText(forLoop.range.start_, rewriter),

@@ -7,7 +7,6 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/tile_utils.h"
 
-#include "clang/Rewrite/Core/Rewriter.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -18,6 +17,7 @@
 
 #include <functional>
 
+#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/AST/Decl.h>
 
 #include <functional>

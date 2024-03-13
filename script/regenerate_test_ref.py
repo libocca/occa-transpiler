@@ -12,7 +12,7 @@ class Backend(Enum):
 
     def from_str(s: str) -> "Backend":
         s = s.lower()
-        if s == "seerial":
+        if s == "serial":
             return Backend.SERIAL
         if s == "openmp":
             return Backend.OPENMP

@@ -2,6 +2,11 @@
 
 #include <string>
 
+
+namespace clang {
+class Rewriter;
+}
+
 namespace oklt {
 struct OklLoopInfo;
 }
@@ -11,5 +16,6 @@ std::string axisToStr(const Axis& axis);
 std::string getIdxVariable(const AttributedLoop& loop);
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
-                                       int& openedScopeCounter);
+                                       int& openedScopeCounter,
+                                       clang::Rewriter& rewriter);
 }  // namespace oklt::dpcpp

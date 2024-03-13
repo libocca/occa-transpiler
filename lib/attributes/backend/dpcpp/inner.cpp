@@ -31,8 +31,8 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     }
 
     int openedScopeCounter = 0;
-    auto prefixCode =
-        dpcpp::buildInnerOuterLoopIdxLine(*loopInfo, updatedParams.value(), openedScopeCounter);
+    auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(
+        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

@@ -9,12 +9,12 @@ extern "C" __global__ void _occa_addVectors_0(const int N,
                                               const float* a,
                                               const float* b,
                                               float* ab) {
-    int i = 0 + ((4) * blockIdx.x);
+    int i = (0) + (() * blockIdx.x);
     {
         __shared__ float s_b[BLOCK_SIZE];
         const float* g_a = a;
         {
-            int j = 0 + threadIdx.x;
+            int j = (0) + threadIdx.x;
             {
                 s_b[j] = b[i + j];
                 __syncthreads();

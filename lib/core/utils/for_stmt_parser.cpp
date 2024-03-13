@@ -1,5 +1,6 @@
 #include <oklt/core/error.h>
 #include "core/sema/okl_sema_info.h"
+#include "core/utils/range_to_string.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ParentMapContext.h>
@@ -34,18 +35,6 @@ UnOp toOkl(UnaryOperatorKind uok) {
     return it != clang2okl.end() ? it->second : UnOp::Other;
 }
 
-std::string prettyPrint(const Stmt* S, const PrintingPolicy& policy) {
-    std::string ret;
-    if (!S) {
-        return ret;
-    }
-
-    llvm::raw_string_ostream os(ret);
-    S->printPretty(os, nullptr, policy);
-
-    return ret;
-};
-
 bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
     unsigned BitsInSizeT = ctx.getTypeSize(ctx.getSizeType());
 
@@ -72,7 +61,6 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
     OklLoopInfo ret{.attr = a, .stmt = s};
     const Expr *start, *end = nullptr;
 
-    auto policy = ctx.getPrintingPolicy();
     if (isa<DeclStmt>(s.getInit())) {
         auto d = dyn_cast<DeclStmt>(s.getInit());
         if (!d->isSingleDecl()) {
@@ -94,7 +82,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
             start = rsh->getSubExpr();
         }
-        ret.range.start = prettyPrint(start, policy);
+        ret.range.start = getSourceText(*start, ctx);
         ret.range.start_ = start;
 
         auto child_count = std::distance(start->children().begin(), start->children().end());
@@ -125,7 +113,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             auto decl = dyn_cast_or_null<DeclRefExpr>(lsh->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getRHS();
-                ret.range.end = prettyPrint(end, policy);
+                ret.range.end = getSourceText(*end, ctx);
             }
         };
 
@@ -138,7 +126,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getLHS();
-                ret.range.end = prettyPrint(end, policy);
+                ret.range.end = getSourceText(*end, ctx);
                 ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
             }
         }
@@ -148,6 +136,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             return tl::make_unexpected(
                 Error{std::error_code(), "loop parse: cond without init var"});
         }
+        ret.range.end_ = end;
     }
 
     // Increment
@@ -164,7 +153,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         }
 
         ret.inc.op.bo = toOkl(node->getOpcode());
-        ret.inc.val = prettyPrint(node->getRHS(), policy);
+        ret.inc.val = getSourceText(*node->getRHS(), ctx);
         ret.inc.val_ = node->getRHS();
     }
 

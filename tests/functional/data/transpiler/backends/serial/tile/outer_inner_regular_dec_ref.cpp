@@ -9,7 +9,7 @@ extern "C" void addVectors0(const int& entries, const float* a, const float* b, 
     for (int _occa_tiled_i = (entries - 1); _occa_tiled_i >= 0; _occa_tiled_i -= (4 * 1)) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= 1) {
             if (i >= 0) {
-                for (int _occa_tiled_j = entries; _occa_tiled_j > 0; _occa_tiled_j -= 4) {
+                for (int _occa_tiled_j = (entries); _occa_tiled_j > 0; _occa_tiled_j -= 4) {
                     for (int j = _occa_tiled_j; j > (_occa_tiled_j - 4); --j) {
                         if (j > 0) {
                             ab[i] = add(a[i], b[j - 1]);
@@ -26,7 +26,7 @@ extern "C" void addVectors2(const int& entries, const float* a, const float* b, 
     for (int _occa_tiled_i = (entries - 1); _occa_tiled_i >= 0; _occa_tiled_i -= (4 * 1)) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= 1) {
             if (i >= 0) {
-                for (int _occa_tiled_j = entries; _occa_tiled_j > 0; _occa_tiled_j -= 4) {
+                for (int _occa_tiled_j = (entries); _occa_tiled_j > 0; _occa_tiled_j -= 4) {
                     for (int j = _occa_tiled_j; j > (_occa_tiled_j - 4); --j) {
                         if (j > 0) {
                             ab[i] = add(a[i], b[j - 1]);
@@ -43,7 +43,7 @@ extern "C" void addVectors3(const int& entries, const float* a, const float* b, 
     for (int _occa_tiled_i = (entries - 1); _occa_tiled_i >= 0; _occa_tiled_i -= (4 * 1)) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= 1) {
             if (i >= 0) {
-                for (int _occa_tiled_j = entries; _occa_tiled_j > 0; _occa_tiled_j -= 4) {
+                for (int _occa_tiled_j = (entries); _occa_tiled_j > 0; _occa_tiled_j -= 4) {
                     for (int j = _occa_tiled_j; j > (_occa_tiled_j - 4); --j) {
                         if (j > 0) {
                             ab[i] = add(a[i], b[j - 1]);
@@ -60,7 +60,7 @@ extern "C" void addVectors4(const int& entries, const float* a, const float* b, 
     for (int _occa_tiled_i = (entries - 1); _occa_tiled_i >= 0; _occa_tiled_i -= (4 * 1)) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= 1) {
             if (i >= 0) {
-                for (int _occa_tiled_j = entries; _occa_tiled_j > 0; _occa_tiled_j -= 4) {
+                for (int _occa_tiled_j = (entries); _occa_tiled_j > 0; _occa_tiled_j -= 4) {
                     for (int j = _occa_tiled_j; j > (_occa_tiled_j - 4); --j) {
                         if (j > 0) {
                             ab[i] = add(a[i], b[j - 1]);
@@ -77,7 +77,7 @@ extern "C" void addVectors5(const int& entries, const float* a, const float* b, 
     for (int _occa_tiled_i = (entries - 1); _occa_tiled_i >= 0; _occa_tiled_i -= (4 * 1)) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= 1) {
             if (i >= 0) {
-                for (int _occa_tiled_j = entries; _occa_tiled_j > 0; _occa_tiled_j -= 4) {
+                for (int _occa_tiled_j = (entries); _occa_tiled_j > 0; _occa_tiled_j -= 4) {
                     for (int j = _occa_tiled_j; j > (_occa_tiled_j - 4); --j) {
                         if (j > 0) {
                             ab[i] = add(a[i], b[j - 1]);
@@ -94,7 +94,7 @@ extern "C" void addVectors6(const int& entries, const float* a, const float* b, 
     for (int _occa_tiled_i = (entries - 1); _occa_tiled_i >= 0; _occa_tiled_i -= (4 * 1)) {
         for (int i = _occa_tiled_i; i > (_occa_tiled_i - 4); i -= 1) {
             if (i >= 0) {
-                for (int _occa_tiled_j = entries; _occa_tiled_j > 0; _occa_tiled_j -= 4) {
+                for (int _occa_tiled_j = (entries); _occa_tiled_j > 0; _occa_tiled_j -= 4) {
                     for (int j = _occa_tiled_j; j > (_occa_tiled_j - 4); --j) {
                         if (j > 0) {
                             ab[i] = add(a[i], b[j - 1]);
