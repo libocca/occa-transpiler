@@ -88,7 +88,7 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
             continue;
         }
 #ifdef OKL_SEMA_DEBUG_LOG
-        llvm::outs() << "remove system include " << dep.searchPath << dep.relativePath
+        llvm::outs() << "remove system include " << dep.relativePath << " "
                      << dep.fileName << " \n";
 #endif
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});

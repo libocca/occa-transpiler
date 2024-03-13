@@ -1,10 +1,4 @@
 #include <cuda_runtime.h>
-#if 0 /* expanded by -frewrite-includes */
-#include "utils.h"
-#endif /* expanded by -frewrite-includes */
-#if 0  /* expanded by -frewrite-includes */
-#pragma once
-#endif /* expanded by -frewrite-includes */
 
 struct Data {
     float* __restrict__ Data::data;
@@ -12,7 +6,6 @@ struct Data {
 };
 
 __constant__ int SIZE = 128;
-
 __device__ float add(float a, float b);
 
 __device__ float add2(float a, float b) {
