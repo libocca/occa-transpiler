@@ -61,7 +61,7 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
     auto res = util::fmt("if ({} {} {})",
                          forLoop.var.name,
                          cmpStr,
-                         getLatestSourceText(forLoop.range.end_, rewriter))
+                         getLatestSourceText(forLoop.range.end, rewriter))
                    .value();
     return res;
 }

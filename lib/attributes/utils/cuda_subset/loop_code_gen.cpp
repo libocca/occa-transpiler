@@ -44,7 +44,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
                                   forLoop.var.typeName,
                                   tiledVar,
-                                  getLatestSourceText(forLoop.range.start_, rewriter),
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
                                   params->tileSize,
                                   idx)
@@ -53,10 +53,10 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});",
                                   forLoop.var.typeName,
                                   tiledVar,
-                                  getLatestSourceText(forLoop.range.start_, rewriter),
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
                                   params->tileSize,
-                                  getLatestSourceText(forLoop.inc.val_, rewriter),
+                                  getLatestSourceText(forLoop.inc.val, rewriter),
                                   idx)
                             .value());
     }
@@ -85,7 +85,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                   forLoop.var.name,
                                   tiledVar,
                                   op,
-                                  getLatestSourceText(forLoop.inc.val_, rewriter),
+                                  getLatestSourceText(forLoop.inc.val, rewriter),
                                   idx)
                             .value());
     }
@@ -105,10 +105,10 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
     auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
                          forLoop.var.typeName,
                          tiledVar,
-                         getLatestSourceText(forLoop.range.start_, rewriter),
+                         getLatestSourceText(forLoop.range.start, rewriter),
                          tiledVar,
                          cmpOpStr,
-                         getLatestSourceText(forLoop.range.end_, rewriter),
+                         getLatestSourceText(forLoop.range.end, rewriter),
                          tiledVar,
                          assignUpdate,
                          params->tileSize)
@@ -154,7 +154,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                         params->tileSize,
                         forLoop.var.name,
                         assignUpdate,
-                        getLatestSourceText(forLoop.inc.val_, rewriter))
+                        getLatestSourceText(forLoop.inc.val, rewriter))
                   .value();
     }
     return res;
@@ -175,7 +175,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = ({}) {} {};",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
-                                  getLatestSourceText(forLoop.range.start_, rewriter),
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
                                   idx)
                             .value());
@@ -183,9 +183,9 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
-                                  getLatestSourceText(forLoop.range.start_, rewriter),
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
-                                  getLatestSourceText(forLoop.inc.val_, rewriter),
+                                  getLatestSourceText(forLoop.inc.val, rewriter),
                                   idx)
                             .value());
     }

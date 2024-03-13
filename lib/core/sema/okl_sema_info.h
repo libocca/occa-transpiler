@@ -29,10 +29,8 @@ struct OklLoopInfo {
         const clang::VarDecl* varDecl;
     } var;
     struct {
-        std::string start;
-        std::string end;
-        const clang::Expr* start_;
-        const clang::Expr* end_;
+        const clang::Expr* start;
+        const clang::Expr* end;
         size_t size = 0;
     } range;
     struct {
@@ -40,8 +38,7 @@ struct OklLoopInfo {
         BinOp op = BinOp::Eq;
     } condition;
     struct {
-        std::string val;
-        const clang::Expr* val_;
+        const clang::Expr* val;
         union {
             UnOp uo;
             BinOp bo;
@@ -50,7 +47,7 @@ struct OklLoopInfo {
 
     [[nodiscard]] bool IsInc() const {
         bool ret = false;
-        if (inc.val.empty()) {
+        if (!inc.val) {
             ret = (inc.op.uo == UnOp::PreInc || inc.op.uo == UnOp::PostInc);
         } else {
             ret = (inc.op.bo == BinOp::AddAssign);
@@ -61,20 +58,12 @@ struct OklLoopInfo {
         return ret;
     };
     [[nodiscard]] bool isUnary() const {
-        if (!inc.val.empty()) {
+        if (inc.val) {
             return false;
         }
         // should by unnecessary check, but just in case
         return (inc.op.uo == UnOp::PreInc) || (inc.op.uo == UnOp::PostInc) ||
                (inc.op.uo == UnOp::PreDec) || (inc.op.uo == UnOp::PostDec);
-    };
-
-    [[nodiscard]] std::string getRangeSizeStr() const {
-        if (IsInc()) {
-            return range.end + " - " + range.start;
-        } else {
-            return range.start + " - " + range.end;
-        };
     };
 
     OklLoopInfo* getAttributedParent();

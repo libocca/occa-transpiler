@@ -35,10 +35,10 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
     auto incValStr = params->tileSize;
-    if (!forLoop.inc.val.empty()) {
+    if (forLoop.inc.val) {
         incValStr =
             util::fmt(
-                "({} * {})", params->tileSize, getLatestSourceText(forLoop.inc.val_, rewriter))
+                "({} * {})", params->tileSize, getLatestSourceText(forLoop.inc.val, rewriter))
                 .value();
     }
 
@@ -47,10 +47,10 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
     auto ret = util::fmt(" ({} {} = ({}); {} {} {}; {} {} {})",
                          forLoop.var.typeName,
                          tiledVar,
-                         getLatestSourceText(forLoop.range.start_, rewriter),
+                         getLatestSourceText(forLoop.range.start, rewriter),
                          tiledVar,
                          cmpOpStr,
-                         getLatestSourceText(forLoop.range.end_, rewriter),
+                         getLatestSourceText(forLoop.range.end, rewriter),
                          tiledVar,
                          assignUpdate,
                          incValStr)
@@ -98,7 +98,7 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
                         params->tileSize,
                         forLoop.var.name,
                         assignUpdate,
-                        getLatestSourceText(forLoop.inc.val_, rewriter))
+                        getLatestSourceText(forLoop.inc.val, rewriter))
                   .value();
     }
 
@@ -120,7 +120,7 @@ std::string buildCheckString([[maybe_unused]] const ForStmt& stmt,
     auto ret = util::fmt("if ({} {} {})",
                          forLoop.var.name,
                          cmpStr,
-                         getLatestSourceText(forLoop.range.end_, rewriter))
+                         getLatestSourceText(forLoop.range.end, rewriter))
                    .value();
 
     if (!isa<CompoundStmt>(stmt.getBody())) {

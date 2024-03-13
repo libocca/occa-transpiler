@@ -38,7 +38,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = {} {} {};",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
-                                  getLatestSourceText(forLoop.range.start_, rewriter),
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
                                   idx)
                             .value());
@@ -46,9 +46,9 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
-                                  getLatestSourceText(forLoop.range.start_, rewriter),
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
-                                  getLatestSourceText(forLoop.inc.val_, rewriter),
+                                  getLatestSourceText(forLoop.inc.val, rewriter),
                                   idx)
                             .value());
     }

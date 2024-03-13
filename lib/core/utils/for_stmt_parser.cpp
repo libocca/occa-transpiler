@@ -82,15 +82,9 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
             start = rsh->getSubExpr();
         }
-        ret.range.start = getSourceText(*start, ctx);
-        ret.range.start_ = start;
+        ret.range.start = start;
 
         auto child_count = std::distance(start->children().begin(), start->children().end());
-        if (child_count > 0 && !node->getInit()->isEvaluatable(ctx)) {
-            if (ret.range.start.front() != '(' && ret.range.start.back() != ')') {
-                ret.range.start = "(" + ret.range.start + ")";
-            }
-        }
     }
 
     // Condition
@@ -113,7 +107,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             auto decl = dyn_cast_or_null<DeclRefExpr>(lsh->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getRHS();
-                ret.range.end = getSourceText(*end, ctx);
+                ret.range.end = end;
             }
         };
 
@@ -126,7 +120,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getLHS();
-                ret.range.end = getSourceText(*end, ctx);
+                ret.range.end = end;
                 ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
             }
         }
@@ -136,7 +130,6 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             return tl::make_unexpected(
                 Error{std::error_code(), "loop parse: cond without init var"});
         }
-        ret.range.end_ = end;
     }
 
     // Increment
@@ -153,8 +146,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         }
 
         ret.inc.op.bo = toOkl(node->getOpcode());
-        ret.inc.val = getSourceText(*node->getRHS(), ctx);
-        ret.inc.val_ = node->getRHS();
+        ret.inc.val = node->getRHS();
     }
 
     ret.range.size = 0;
