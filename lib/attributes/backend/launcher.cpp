@@ -7,6 +7,8 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
+#define OKL_LAUNCHER_RECURSIVE
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -74,11 +76,11 @@ std::string getLoopInfoStr(const LoopMetaData& loop, size_t n, bool isOuter) {
     return out.str();
 }
 
+#ifdef OKL_LAUNCHER_RECURSIVE
 void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
     if (!loopInfo.isRegular()) {
         out.push_back(&loopInfo);
     }
-
     for (auto& child : loopInfo.children) {
         if (!child.children.empty()) {
             collectLoops(child, out);
@@ -89,6 +91,21 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
         }
     }
 }
+#else
+void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
+    if (!loopInfo.isRegular()) {
+        out.push_back(&loopInfo);
+    }
+    if (!loopInfo.children.empty()) {
+        auto& child = loopInfo.children.front();
+        if (!child.children.empty()) {
+            collectLoops(child, out);
+        } else if (!child.isRegular()) {
+            out.push_back(&child);
+        }
+    }
+}
+#endif
 
 std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, std::string& tileSize) {
     auto sz = util::parseStrTo<size_t>(tileSize);
