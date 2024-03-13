@@ -5,18 +5,19 @@
 #include "core/sema/okl_sema_info.h"
 
 namespace oklt::cuda_subset {
-std::string dimToStr(const Axis& dim) {
-    static std::map<Axis, std::string> mapping{{Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
-    return mapping[dim];
+std::string axisToStr(const Axis& axis) {
+    static std::map<Axis, std::string> mapping{
+        {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
+    return mapping[axis];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.axis);
+    auto strAxis = axisToStr(loop.axis);
     switch (loop.type) {
         case (LoopType::Inner):
-            return util::fmt("threadIdx.{}", strDim).value();
+            return util::fmt("threadIdx.{}", strAxis).value();
         case (LoopType::Outer):
-            return util::fmt("blockIdx.{}", strDim).value();
+            return util::fmt("blockIdx.{}", strAxis).value();
         default:  // Incorrect case
             return "";
     }
