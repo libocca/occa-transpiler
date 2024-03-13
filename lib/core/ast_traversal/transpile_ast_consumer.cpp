@@ -15,6 +15,7 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
     auto result =
         PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProcessor(tu);
     if (!result) {
+        _stage.pushError(result.error());
         return;
     }
 }

@@ -1,4 +1,5 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
+#include <llvm-17/llvm/Support/raw_ostream.h>
 #include <oklt/util/io_helper.h>
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/attribute_manager/attribute_manager.h"

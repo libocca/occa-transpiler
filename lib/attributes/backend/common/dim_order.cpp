@@ -1,11 +1,11 @@
 #include <core/attribute_manager/attributed_type_map.h>
 #include "attributes/attribute_names.h"
-#include "attributes/frontend/params/dim.h"
 #include "attributes/utils/parser.h"
+#include "clang/AST/Expr.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
-
-#include <numeric>
+#include "core/utils/range_to_string.h"
 
 namespace {
 using namespace oklt;
@@ -24,11 +24,26 @@ HandleResult handleDimOrderDeclAttribute(const clang::Attr& a,
     return {};
 }
 
+HandleResult handleDimOrderStmtAttribute(const clang::Attr& a, const clang::Stmt& stmt, SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "handle @dimOrder stmt: "
+                 << getSourceText(stmt.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
+#endif
+    s.pushWarning("Called empty stmt [@dimOrder] handler");
+    return {};
+}
+
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
         DIMORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderDeclAttribute));
     if (!ok) {
         llvm::errs() << "failed to register " << DIMORDER_ATTR_NAME << " attribute decl handler\n";
+    }
+
+    ok = oklt::AttributeManager::instance().registerCommonHandler(
+        DIMORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderStmtAttribute));
+    if (!ok) {
+        llvm::errs() << "failed to register " << DIMORDER_ATTR_NAME << " attribute stmt handler\n";
     }
 }
 }  // namespace

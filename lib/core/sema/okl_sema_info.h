@@ -5,6 +5,9 @@
 #include <clang/AST/AST.h>
 
 #include <optional>
+#include "clang/AST/Decl.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/Type.h"
 
 namespace oklt {
 
@@ -23,18 +26,23 @@ struct OklLoopInfo {
     struct {
         std::string type;
         std::string name;
+        const clang::VarDecl* varDecl;
     } var;
     struct {
         std::string start;
         std::string end;
+        const clang::Expr* start_;
+        const clang::Expr* end_;
         size_t size = 0;
     } range;
     struct {
         std::string cmp;
+        const clang::BinaryOperator* cmp_;
         BinOp op = BinOp::Eq;
     } condition;
     struct {
         std::string val;
+        const clang::Expr* val_;
         union {
             UnOp uo;
             BinOp bo;

@@ -87,6 +87,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         }
 
         ret.var.name = node->getDeclName().getAsString();
+        ret.var.varDecl = node;
         ret.var.type = node->getType().getAsString();
 
         start = node->getInit();
@@ -94,6 +95,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             start = rsh->getSubExpr();
         }
         ret.range.start = prettyPrint(start, policy);
+        ret.range.start_ = start;
 
         auto child_count = std::distance(start->children().begin(), start->children().end());
         if (child_count > 0 && !node->getInit()->isEvaluatable(ctx)) {
@@ -113,6 +115,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
 
         ret.condition.op = toOkl(node->getOpcode());
         ret.condition.cmp = prettyPrint(node, policy);
+        ret.condition.cmp_ = node;
 
         // LSH
         auto lsh = dyn_cast_or_null<CastExpr>(node->getLHS());
@@ -163,6 +166,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
 
         ret.inc.op.bo = toOkl(node->getOpcode());
         ret.inc.val = prettyPrint(node->getRHS(), policy);
+        ret.inc.val_ = node;
     }
 
     ret.range.size = 0;

@@ -140,7 +140,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     # sugar attribute
     attributes/backend/common/dim.cpp
-    # attributes/backend/common/dim_order.cpp
+    attributes/backend/common/dim_order.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
