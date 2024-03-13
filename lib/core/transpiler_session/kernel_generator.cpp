@@ -84,11 +84,13 @@ HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionS
 void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
     auto& rewriter = stage.getRewriter();
     for (const auto& dep : deps.topLevelDeps) {
-        if (!clang::SrcMgr::isSystem(dep.fileType)) {
+        if (!SrcMgr::isSystem(dep.fileType)) {
             continue;
         }
+#ifdef OKL_SEMA_DEBUG_LOG
         llvm::outs() << "remove system include " << dep.searchPath << dep.relativePath
                      << dep.fileName << " \n";
+#endif
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});
     }
 }
@@ -106,10 +108,10 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
                                                     SessionStage& stage) {
     auto invocation = std::make_shared<CompilerInvocation>();
 
-    invocation->getPreprocessorOutputOpts().ShowCPP = true;
-    //invocation->getPreprocessorOutputOpts().RewriteIncludes = true;
-    invocation->getPreprocessorOutputOpts().ShowLineMarkers = false;
-    invocation->getPreprocessorOutputOpts().ShowIncludeDirectives = false;
+    auto& ppOutOpt = invocation->getPreprocessorOutputOpts();
+    ppOutOpt.ShowCPP = true;
+    ppOutOpt.ShowLineMarkers = false;
+    ppOutOpt.ShowIncludeDirectives = false;
 
     const std::string FUSED_KERNEL_FILENAME_BASE = "fused_inc_kernel";
     std::time_t ct = std::time(0);

@@ -4,21 +4,21 @@
 
 namespace oklt::dpcpp {
 
-std::string dimToStr(const DimType& dim) {
+std::string axisToStr(const Axis& axis) {
     // TODO: Verify that this is a correct mapping from original OKL transpiler developera
     //      (intuitively should be x->0, y->1, z->2)
-    static std::map<DimType, std::string> mapping{
-        {DimType::X, "2"}, {DimType::Y, "1"}, {DimType::Z, "0"}};
-    return mapping[dim];
+    static std::map<Axis, std::string> mapping{
+        {Axis::X, "2"}, {Axis::Y, "1"}, {Axis::Z, "0"}};
+    return mapping[axis];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.dim);
+    auto strAxis = axisToStr(loop.axis);
     switch (loop.type) {
-        case (AttributedLoopType::Inner):
-            return util::fmt("item.get_local_id({})", strDim).value();
-        case (AttributedLoopType::Outer):
-            return util::fmt("item_.get_group({})", strDim).value();
+        case (LoopType::Inner):
+            return util::fmt("item.get_local_id({})", strAxis).value();
+        case (LoopType::Outer):
+            return util::fmt("item_.get_group({})", strAxis).value();
         default:  // Incorrect case
             return "";
     }
@@ -46,7 +46,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    if (loop.type == AttributedLoopType::Outer) {
+    if (loop.type == LoopType::Outer) {
         return res;
     }
     ++openedScopeCounter;

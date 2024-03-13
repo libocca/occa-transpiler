@@ -7,7 +7,7 @@ struct OklLoopInfo;
 }
 
 namespace oklt::dpcpp {
-std::string dimToStr(const DimType& dim);
+std::string axisToStr(const Axis& axis);
 std::string getIdxVariable(const AttributedLoop& loop);
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,

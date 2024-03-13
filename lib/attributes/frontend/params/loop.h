@@ -1,15 +1,11 @@
 #pragma once
+#include <oklt/core/kernel_metadata.h>
+
 #include <clang/AST/Attr.h>
 
 namespace oklt {
 
-enum class AttributedLoopType {
-    Regular,
-    Inner,
-    Outer,
-};
-
-enum class DimType {
+enum class Axis {
     X = 0,
     Y = 1,
     Z = 2,
@@ -17,8 +13,8 @@ enum class DimType {
 };
 
 struct AttributedLoop {
-    AttributedLoopType type = AttributedLoopType::Regular;
-    DimType dim = DimType::Auto;
+    LoopType type = LoopType::Regular;
+    Axis axis = Axis::Auto;
 };
 
 }  // namespace oklt

@@ -11,7 +11,7 @@ struct OklLoopInfo;
 }
 
 namespace oklt::cuda_subset {
-std::string dimToStr(const DimType& dim);
+std::string axisToStr(const Axis& axis);
 std::string getIdxVariable(const AttributedLoop& loop);
 
 namespace tile {

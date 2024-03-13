@@ -2,23 +2,22 @@
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "core/sema/okl_sema_ctx.h"
-#include "core/transpiler_session/session_stage.h"
+#include "core/sema/okl_sema_info.h"
 
 namespace oklt::cuda_subset {
-std::string dimToStr(const DimType& dim) {
-    static std::map<DimType, std::string> mapping{
-        {DimType::X, "x"}, {DimType::Y, "y"}, {DimType::Z, "z"}};
-    return mapping[dim];
+std::string axisToStr(const Axis& axis) {
+    static std::map<Axis, std::string> mapping{
+        {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
+    return mapping[axis];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = dimToStr(loop.dim);
+    auto strAxis = axisToStr(loop.axis);
     switch (loop.type) {
-        case (AttributedLoopType::Inner):
-            return util::fmt("threadIdx.{}", strDim).value();
-        case (AttributedLoopType::Outer):
-            return util::fmt("blockIdx.{}", strDim).value();
+        case (LoopType::Inner):
+            return util::fmt("threadIdx.{}", strAxis).value();
+        case (LoopType::Outer):
+            return util::fmt("blockIdx.{}", strAxis).value();
         default:  // Incorrect case
             return "";
     }
@@ -185,7 +184,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    if (loop.type == AttributedLoopType::Outer) {
+    if (loop.type == LoopType::Outer) {
         return res;
     }
     ++openedScopeCounter;

@@ -6,6 +6,7 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "attributes/utils/tile_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -153,16 +154,16 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const LoopOrder& ord,
                              int& openedScopeCounter) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    static std::map<std::tuple<AttributedLoopType, LoopOrder>,
+    static std::map<std::tuple<LoopType, LoopOrder>,
                     std::function<std::string(
                         const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&)>>
         mapping{
-            {{AttributedLoopType::Inner, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
-            {{AttributedLoopType::Outer, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
-            {{AttributedLoopType::Regular, LoopOrder::First}, buildRegularLoopIdxLineFirst},
-            {{AttributedLoopType::Inner, LoopOrder::Second}, buildInnerOuterLoopIdxLineSecond},
-            {{AttributedLoopType::Outer, LoopOrder::Second}, buildInnerOuterLoopIdxLineSecond},
-            {{AttributedLoopType::Regular, LoopOrder::Second}, buildRegularLoopIdxLineSecond},
+            {{LoopType::Inner, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
+            {{LoopType::Outer, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
+            {{LoopType::Regular, LoopOrder::First}, buildRegularLoopIdxLineFirst},
+            {{LoopType::Inner, LoopOrder::Second}, buildInnerOuterLoopIdxLineSecond},
+            {{LoopType::Outer, LoopOrder::Second}, buildInnerOuterLoopIdxLineSecond},
+            {{LoopType::Regular, LoopOrder::Second}, buildRegularLoopIdxLineSecond},
         };
     auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
     return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);
@@ -207,17 +208,23 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
+
+    auto updatedParams = tileParamsHandleAutoAxes(*params, *loopInfo);
+    if (!updatedParams) {
+        return tl::make_unexpected(updatedParams.error());
+    }
+
+    int openedScopeCounter = 0;
+    auto prefixCode = buildPreffixTiledCode(*loopInfo, &updatedParams.value(), openedScopeCounter);
+    auto suffixCode = buildCloseScopes(openedScopeCounter);
+
 #ifdef TRANSPILER_DEBUG_LOG
     const auto& md = loopInfo->metadata;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init(" << "type: " << toString(md.type)
+    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
                  << ", name: " << md.var.name << ", initValue: " << md.range.start
                  << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
                  << ", isUnary: " << md.isUnary() << ")\n";
 #endif
-
-    int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(*loopInfo, params, openedScopeCounter);
-    auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
