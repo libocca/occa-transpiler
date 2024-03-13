@@ -44,7 +44,6 @@ void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, R
     // remove OKL specific attribute in source code
     SourceLocation attrLocStart(tokens[attr.tok_indecies.front()].getLocation());
     SourceLocation attrLocEnd(tokens[attr.tok_indecies.back()].getLastLoc());
-    const auto& sm = rewriter.getSourceMgr();
     SourceRange attrSrcRange(attrLocStart, attrLocEnd);
     rewriter.RemoveText(attrSrcRange);
 }
