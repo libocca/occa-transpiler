@@ -8,7 +8,8 @@
 
 namespace oklt::cuda_subset {
 std::string axisToStr(const Axis& axis) {
-    static std::map<Axis, std::string> mapping{{Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
+    static std::map<Axis, std::string> mapping{
+        {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
     return mapping[axis];
 }
 
