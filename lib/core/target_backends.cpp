@@ -7,6 +7,7 @@ namespace oklt {
 
 tl::expected<TargetBackend, std::string> backendFromString(const std::string& type) {
     static const std::map<std::string, TargetBackend> BACKENDS_MAP = {
+        {"serial", TargetBackend::SERIAL},
         {"openmp", TargetBackend::OPENMP},
         {"cuda", TargetBackend::CUDA},
         {"hip", TargetBackend::HIP},
@@ -22,6 +23,8 @@ tl::expected<TargetBackend, std::string> backendFromString(const std::string& ty
 
 std::string backendToString(TargetBackend backend) {
     switch (backend) {
+        case TargetBackend::SERIAL:
+            return std::string{"serial"};
         case TargetBackend::OPENMP:
             return std::string{"openmp"};
         case TargetBackend::CUDA:

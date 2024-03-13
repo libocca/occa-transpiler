@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     transpile_command.add_argument("-b", "--backend")
         .required()
         //.choices("cuda", "openmp")
-        .help("backends: {cuda, hip, dpcpp, openmp}");
+        .help("backends: {serial, openmp, cuda, hip, dpcpp}");
     transpile_command.add_argument("-i", "--input").required().help("input file");
     transpile_command.add_argument("--normalize")
         .flag()
@@ -91,8 +91,14 @@ int main(int argc, char* argv[]) {
             }
 
             auto defines = normalize_command.get<std::vector<std::string>>("-D");
-            auto includes = normalize_command.get<std::vector<std::filesystem::path>>("-I");
-
+            std::vector<std::string> includesStr;
+            if (transpile_command.is_used("-I")) {
+                includesStr = transpile_command.get<std::vector<std::string>>("-I");
+            }
+            std::vector<std::filesystem::path> includes;
+            for (const auto& includeStr : includesStr) {
+                includes.push_back(includeStr);
+            }
             auto result = oklt::normalize({
                 .backend = oklt::TargetBackend::CUDA,
                 .sourceCode = std::move(input_source.value()),
@@ -123,7 +129,14 @@ int main(int argc, char* argv[]) {
             }
 
             auto defines = transpile_command.get<std::vector<std::string>>("-D");
-            auto includes = transpile_command.get<std::vector<std::filesystem::path>>("-I");
+            std::vector<std::string> includesStr;
+            if (transpile_command.is_used("-I")) {
+                includesStr = transpile_command.get<std::vector<std::string>>("-I");
+            }
+            std::vector<std::filesystem::path> includes;
+            for (const auto& includeStr : includesStr) {
+                includes.push_back(includeStr);
+            }
 
             auto normalization_output = std::filesystem::path(transpile_command.get("-n"));
             if (normalization_output.empty()) {

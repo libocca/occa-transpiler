@@ -6,47 +6,6 @@
 namespace oklt {
 using namespace clang;
 
-bool isConstantSizeArray(const VarDecl& var) {
-    return var.getType().getTypePtr()->isConstantArrayType();
-}
-
-bool isPointer(const VarDecl& var) {
-    return var.getType()->isPointerType();
-}
-
-bool isPointerToConst(const VarDecl& var) {
-    return isPointer(var) && var.getType()->getPointeeType().isLocalConstQualified();
-}
-
-bool isConstPointer(const VarDecl& var) {
-    return isPointer(var) && var.getType().isLocalConstQualified();
-}
-
-bool isConstPointerToConst(const VarDecl& var) {
-    return isPointerToConst(var) && isConstPointer(var);
-}
-
-bool isGlobalConstVariable(const VarDecl& var) {
-    // Should be global variable
-    if (var.isLocalVarDecl() && !var.hasGlobalStorage()) {
-        return false;
-    }
-
-    // pointer to const
-    if (isPointer(var)) {
-        return isPointerToConst(var);
-    }
-
-    auto type = var.getType();
-    // Should be constant qualified
-    if (!(type.isLocalConstQualified() || type.isConstant(var.getASTContext()))) {
-        llvm::outs() << var.getDeclName().getAsString() << " is not constant\n";
-        return false;
-    }
-
-    return true;
-}
-
 std::string getNewDeclStrConstantArray(const VarDecl& var, const std::string& qualifier) {
     auto* arrDecl = dyn_cast<ConstantArrayType>(var.getType().getTypePtr());
     auto unqualifiedTypeStr = arrDecl->getElementType().getLocalUnqualifiedType().getAsString();

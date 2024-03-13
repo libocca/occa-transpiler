@@ -1,0 +1,14 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "compare": "metadata",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/kernel_metadata/kernel_metadata_1.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/kernel_metadata/kernel_metadata_1_ref.json"
+    }
+]

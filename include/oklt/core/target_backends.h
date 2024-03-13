@@ -7,6 +7,7 @@
 
 namespace oklt {
 enum struct TargetBackend : unsigned char {
+    SERIAL,
     OPENMP,
     CUDA,
     HIP,

@@ -5,6 +5,7 @@
 #include "core/attribute_manager/attributed_type_map.h"
 
 #include "core/transpiler_session/kernel_generator.h"
+#include "core/transpiler_session/kernel_metadata_generator.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
@@ -227,6 +228,8 @@ bool traverseNode(TraversalType& traversal,
     return true;
 }
 
+
+
 }  // namespace
 namespace oklt {
 
@@ -265,6 +268,11 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     }
 
     // 2. generate build json transpile
+    auto kernelMetaData = generateKernelMetaData(_stage);
+    if (!kernelMetaData) {
+        return kernelMetaData;
+    }
+    _stage.getSession().output.kernel.metadataJson = std::move(kernelMetaData.value());
     //  if not serial/opnemp
     // 3. generate launcher and metadata
 
