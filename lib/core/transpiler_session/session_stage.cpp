@@ -29,7 +29,7 @@ AttributeManager& SessionStage::getAttrManager() {
     return AttributeManager::instance();
 }
 
-bool SessionStage::setLauncherMode() {
+void SessionStage::setLauncherMode() {
     _rewriter =
         std::make_unique<clang::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
     _backend = TargetBackend::_LAUNCHER;

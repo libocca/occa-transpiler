@@ -39,7 +39,7 @@ class SessionStage {
     [[nodiscard]] AstProcessorType getAstProccesorType() const;
     static AttributeManager& getAttrManager();
 
-    [[nodiscard]] bool setLauncherMode();
+    void setLauncherMode();
 
     void pushDiagnosticMessage(clang::StoredDiagnostic& message);
     void pushError(std::error_code ec, std::string desc);
