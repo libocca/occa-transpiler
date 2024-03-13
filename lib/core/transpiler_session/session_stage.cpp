@@ -27,32 +27,30 @@ AttributeManager& SessionStage::getAttrManager() {
 }
 
 std::string SessionStage::getRewriterResultForMainFile() {
-    auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
+    const auto& sm = _compiler.getSourceManager();
+    auto mainFID = sm.getMainFileID();
+    auto* rewriteBuf = _rewriter.getRewriteBufferFor(mainFID);
     if (!rewriteBuf || rewriteBuf->size() == 0) {
-        return "";
+        return sm.getBufferData(mainFID).data();
     }
 
     return std::string{rewriteBuf->begin(), rewriteBuf->end()};
 }
 
-TransformedHeaders SessionStage::getRewriterResultForHeaders() {
-    TransformedHeaders headers;
-    auto mainFID = _compiler.getSourceManager().getMainFileID();
+TransformedFiles SessionStage::getRewriterResultForHeaders() {
+    TransformedFiles headers;
+    const auto& sm = _compiler.getSourceManager();
+    auto mainFID = sm.getMainFileID();
     for (auto it = _rewriter.buffer_begin(); it != _rewriter.buffer_end(); ++it) {
         // skip main source file
         if (it->first == mainFID) {
             continue;
         }
 
-        std::string fileName =
-            _compiler.getSourceManager().getFileEntryForID(it->first)->getName().data();
+        std::string fileName = sm.getFileEntryForID(it->first)->getName().data();
         headers.fileMap[fileName] = [](const auto& buf) -> std::string {
             return std::string{buf.begin(), buf.end()};
         }(it->second);
-
-        llvm::outs() << "transformed file: " << fileName << "\n"
-                     << "source:\n"
-                     << headers.fileMap.at(fileName) << '\n';
     }
 
     return headers;

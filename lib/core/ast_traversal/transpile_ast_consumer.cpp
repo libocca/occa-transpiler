@@ -11,21 +11,26 @@ TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage)
     : _stage(stage) {}
 
 void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
+    // get the root of parsed AST that contains main file and all headers
     TranslationUnitDecl* tu = context.getTranslationUnitDecl();
 
+    // traverse AST and apply processor sema/backend handlers to retrieve final transpiled kernel
+    // code that fused all user includes
     auto result =
         PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProcessor(tu);
+
     if (!result) {
         _stage.pushError(result.error());
         return;
     }
 
-    _stage.getSession().output.kernel.sourceCode = std::move(result.value());
-    for (const auto& f : _stage.getRewriterResultForHeaders().fileMap) {
-        llvm::outs() << "transS overlayFs file: " << f.first << "\n"
-                     << "source:\n"
-                     << f.second << '\n';
+    // no errors and empty output could mean that the source is already transpiled
+    // so use input as output and lets the next stage try to figure out
+    if (result.value().empty()) {
+        result.value() = _stage.getSession().input.sourceCode;
     }
+
+    _stage.getSession().output.kernel.sourceCode = std::move(result.value());
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {

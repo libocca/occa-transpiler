@@ -150,6 +150,9 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
+    core/transpiler_session/header_info.cpp
+    core/transpiler_session/kernel_generator.cpp
+
     core/target_backends.cpp
 
     core/utils/format.cpp
@@ -161,6 +164,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/utils/var_decl.h
     core/utils/range_to_string.h
     core/utils/range_to_string.cpp
+    core/utils/stdout_capture.h
+    core/utils/stdout_capture.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp

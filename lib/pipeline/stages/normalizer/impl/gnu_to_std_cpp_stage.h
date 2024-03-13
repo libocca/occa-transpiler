@@ -12,13 +12,13 @@ namespace oklt {
 
 struct GnuToStdCppStageOutput {
     std::string stdCppSrc;
-    TransformedHeaders stdCppIncs;
+    TransformedFiles stdCppIncs;
     SharedTranspilerSession session;
 };
 
 struct GnuToStdCppStageInput {
     std::string gnuCppSrc;
-    TransformedHeaders gnuCppIncs;
+    TransformedFiles gnuCppIncs;
     std::list<OklAttrMarker> gnuMarkers;
     std::list<OklAttrMarker> recoveryMarkers;
     SharedTranspilerSession session;

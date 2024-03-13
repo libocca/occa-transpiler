@@ -3,8 +3,8 @@
 #include <llvm/Support/VirtualFileSystem.h>
 
 namespace oklt {
-struct TransformedHeaders;
+struct TransformedFiles;
 llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> makeOverlayFs(
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem>,
-    const TransformedHeaders&);
+    const TransformedFiles&);
 }  // namespace oklt

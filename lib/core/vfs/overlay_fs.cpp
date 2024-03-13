@@ -4,7 +4,7 @@
 namespace oklt {
 llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> makeOverlayFs(
     llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> baseFs,
-    const TransformedHeaders& headers) {
+    const TransformedFiles& files) {
     llvm::IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> overlayFs(
         new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem()));
     llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> inMemoryFs(
@@ -14,10 +14,7 @@ llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> makeOverlayFs(
     overlayFs->pushOverlay(baseFs);
     overlayFs->pushOverlay(inMemoryFs);
 
-    for (const auto& f : headers.fileMap) {
-        llvm::outs() << "overlayFs add file: " << f.first << "\n"
-                     << "source:\n"
-                     << f.second << '\n';
+    for (const auto& f : files.fileMap) {
         inMemoryFs->addFile(f.first, 0, llvm::MemoryBuffer::getMemBuffer(f.second));
     }
 

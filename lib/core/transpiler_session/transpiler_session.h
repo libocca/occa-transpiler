@@ -41,8 +41,8 @@ struct TranspilerSession {
     UserInput input;
     UserOutput output;
 
-    TransformedHeaders normalizedHeaders;
-    TransformedHeaders transpiledHeaders;
+    TransformedFiles normalizedHeaders;
+    TransformedFiles transpiledHeaders;
 
    private:
     std::vector<Error> _errors;

@@ -3,12 +3,12 @@
         "action": "normalize_and_transpile",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/includes",
+            "source": "transpiler/common/includes/kernel.cpp",
             "includes": ["data/transpiler/common/includes"],
             "defs": [],
             "launcher": ""
         },
-        "reference": ""
+        "reference": "transpiler/common/includes/ref_kernel.cpp"
     }
 ]
 

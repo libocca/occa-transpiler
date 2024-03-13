@@ -212,7 +212,6 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
             auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
                                            _input.gnuCppIncs);
             compiler.getFileManager().setVirtualFileSystem(overlayFs);
-            _output.stdCppIncs = std::move(_input.gnuCppIncs);
         }
 
         return true;
@@ -220,9 +219,16 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
 
     void EndSourceFileAction() override {
         _output.stdCppSrc = _stage->getRewriterResultForMainFile();
+        // no errors and empty output could mean that the source is already normalized
+        // so use input as output and lets the next stage try to figure out
+        if (_output.stdCppSrc.empty()) {
+            _output.stdCppSrc = std::move(_input.gnuCppSrc);
+        }
 
         auto normalizedHeaders = _stage->getRewriterResultForHeaders();
-        normalizedHeaders.fileMap.merge(_output.stdCppIncs.fileMap);
+        // we need keep all headers in output even there are not modififcation by rewriter to
+        // populate affected files futher
+        normalizedHeaders.fileMap.merge(_input.gnuCppIncs.fileMap);
         _output.stdCppIncs = std::move(normalizedHeaders);
     }
 
@@ -262,21 +268,13 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
         args.push_back(std::move(incPath));
     }
 
-    auto ok = tooling::runToolOnCodeWithArgs(
-        std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
-        input_file,
-        args,
-        file_name,
-        tool_name);
-
-    if (!ok) {
+    if (!tooling::runToolOnCodeWithArgs(
+            std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
+            input_file,
+            args,
+            file_name,
+            tool_name)) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
-    }
-
-    // no errors and empty output could mean that the source is already normalized
-    // so use input as output and lets the next stage try to figure out
-    if (output.stdCppSrc.empty()) {
-        output.stdCppSrc = std::move(input_file);
     }
 
 #ifdef NORMALIZER_DEBUG_LOG

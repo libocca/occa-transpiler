@@ -33,7 +33,7 @@ class SessionStage {
 
     clang::Rewriter& getRewriter();
     std::string getRewriterResultForMainFile();
-    TransformedHeaders getRewriterResultForHeaders();
+    TransformedFiles getRewriterResultForHeaders();
 
     [[nodiscard]] TargetBackend getBackend() const;
     [[nodiscard]] AstProcessorType getAstProccesorType() const;
