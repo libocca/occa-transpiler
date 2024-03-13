@@ -47,6 +47,7 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
     auto& metaList = kernelInfo.currentLoop ? kernelInfo.currentLoop->children
                                             : kernelInfo.highestLevelLoops;
     metaList.emplace_back(std::move(parsedLoopInfo.value()));
+    metaList.back().type = loopType;
     return metaList.back();
 }
 

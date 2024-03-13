@@ -124,13 +124,14 @@ size_t OklLoopInfo::getHeight() {
 size_t OklLoopInfo::getHeightSameType(const LoopType& type) {
     auto* currLoop = this;
     int h = 0;
-    while (!currLoop->children.empty()) {
-        currLoop = currLoop->getFirstAttributedChild();
+    currLoop = currLoop->getFirstAttributedChild();
+    while (currLoop) {
         for (auto& loopType : currLoop->type) {
             if (loopType == type) {
                 ++h;
             }
         }
+        currLoop = currLoop->getFirstAttributedChild();
     }
     return h;
 }
