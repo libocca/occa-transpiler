@@ -11,9 +11,11 @@ using namespace clang::tooling;
 namespace oklt {
 std::string format(std::string_view code) {
     const std::vector<Range> ranges(1, Range(0, code.size()));
-    auto Style = format::getLLVMStyle();
+    auto style = format::getLLVMStyle();
+    style.MaxEmptyLinesToKeep = 1;
+    style.SeparateDefinitionBlocks = format::FormatStyle::SeparateDefinitionStyle::SDS_Always;
 
-    Replacements replaces = format::reformat(Style, code, ranges);
+    Replacements replaces = format::reformat(style, code, ranges);
     auto changedCode = applyAllReplacements(code, replaces);
     if (!changedCode) {
         llvm::errs() << toString(changedCode.takeError());

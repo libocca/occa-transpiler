@@ -18,6 +18,8 @@ class TranspileFrontendAction : public clang::ASTFrontendAction {
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                           llvm::StringRef in_file) override;
 
+    bool PrepareToExecuteAction(clang::CompilerInstance& compiler) override;
+
    private:
     TranspilerSession& _session;
     // INFO: it must leave longer than ASTConsumer for Diagnostic Consumer

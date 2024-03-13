@@ -1,5 +1,6 @@
 #include "attributes/utils/replace_attribute.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
 
@@ -74,7 +75,9 @@ HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
     llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
 #endif
 
-    s.getRewriter().InsertTextBefore(loc, "#include " + std::string(include) + "\n");
+    // s.getRewriter().InsertTextBefore(loc, "#include " + std::string(include) + "\n");
+    s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps.emplace_back("#include " +
+                                                                   std::string(include) + "\n");
 
     return {};
 }

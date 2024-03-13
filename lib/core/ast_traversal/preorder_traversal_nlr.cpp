@@ -1,27 +1,23 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
-#include <oklt/util/io_helper.h>
 #include "core/ast_processor_manager/ast_processor_manager.h"
+
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
-#include "core/sema/okl_sema_ctx.h"
+
+#include "core/transpiler_session/kernel_generator.h"
+#include "core/transpiler_session/kernel_metadata_generator.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
 
-#include <clang/AST/ASTTypeTraits.h>
 #include <clang/AST/Attr.h>
+#include <clang/FrontendTool/Utils.h>
+#include <clang/Lex/Preprocessor.h>
+#include <clang/Lex/PreprocessorOptions.h>
 
 namespace {
 using namespace oklt;
 using namespace clang;
-
-struct TranspilationNode {
-    OklSemaCtx::ParsedKernelInfo* ki;
-    OklLoopInfo* li;
-    const clang::Attr* attr;
-    clang::DynTypedNode node;
-};
-
-using TranspilationNodes = std::deque<TranspilationNode>;
 
 template <typename TraversalType, typename ExprType>
 bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
@@ -232,84 +228,7 @@ bool traverseNode(TraversalType& traversal,
     return true;
 }
 
-HandleResult applyTranspilationToNode(const DynTypedNode& node, SessionStage& stage) {
-    if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(node.getNodeKind())) {
-        return AttributeManager::instance().handleNode(*node.get<Decl>(), stage);
-    }
 
-    if (ASTNodeKind::getFromNodeKind<Stmt>().isBaseOf(node.getNodeKind())) {
-        return AttributeManager::instance().handleNode(*node.get<Stmt>(), stage);
-    }
-
-    return tl::make_unexpected(
-        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().data()});
-}
-
-HandleResult applyTranspilationToAttrNode(const Attr& attr,
-                                          const DynTypedNode& node,
-                                          SessionStage& stage) {
-    auto& am = stage.getAttrManager();
-    auto params = am.parseAttr(attr, stage);
-    if (!params) {
-        return tl::make_unexpected(std::move(params.error()));
-    }
-
-    if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(node.getNodeKind())) {
-        return am.handleAttr(attr, *node.get<Decl>(), &params.value(), stage);
-    }
-
-    if (ASTNodeKind::getFromNodeKind<Stmt>().isBaseOf(node.getNodeKind())) {
-        return am.handleAttr(attr, *node.get<Stmt>(), &params.value(), stage);
-    }
-
-    return tl::make_unexpected(
-        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().data()});
-}
-
-HandleResult applyTranspilationToNode(const Attr* attr,
-                                      const DynTypedNode& node,
-                                      SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " node name: " << node.getNodeKind().asStringRef()
-                 << '\n';
-#endif
-    if (!attr) {
-        return applyTranspilationToNode(node, stage);
-    }
-
-    return applyTranspilationToAttrNode(*attr, node, stage);
-}
-
-tl::expected<std::string, Error> generateTranspiledKernel(SessionStage& stage) {
-    const auto& transpilationNodes = stage.tryEmplaceUserCtx<TranspilationNodes>();
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    for (const auto& t : transpilationNodes) {
-        // set appropriate parsed KernelInfo and LoopInfo as active for current node
-        sema.setParsedKernelInfo(t.ki);
-        sema.setLoopInfo(t.li);
-        auto result = applyTranspilationToNode(t.attr, t.node, stage);
-        if (!result) {
-            return tl::make_unexpected(result.error());
-        }
-    }
-
-    return stage.getRewriterResult();
-}
-
-tl::expected<std::string, Error> generateKernelMetaData(SessionStage& stage) {
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto programMeta = sema.getProgramMetaData();
-    nlohmann::json kernel_metadata;
-    to_json(kernel_metadata, programMeta);
-    auto kernelMetaData = kernel_metadata.dump(2);
-
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Program metadata: " << kernelMetaData << "\n";
-    util::writeFileAsStr("metadata.json", kernelMetaData);
-#endif
-
-    return kernelMetaData;
-}
 
 }  // namespace
 namespace oklt {
@@ -337,7 +256,7 @@ bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
 
 tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     clang::TranslationUnitDecl* translationUnitDecl) {
-    // traverse AST and generate sema ctx
+    // traverse AST and generate sema metadata
     if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
         return tl::make_unexpected(Error{{}, "error during AST traversing"});
     }
@@ -347,7 +266,6 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     if (!transpiledKernelResult) {
         return transpiledKernelResult;
     }
-    _stage.getSession().output.kernel.sourceCode = std::move(transpiledKernelResult.value());
 
     // 2. generate build json transpile
     auto kernelMetaData = generateKernelMetaData(_stage);
@@ -358,6 +276,6 @@ tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
     //  if not serial/opnemp
     // 3. generate launcher and metadata
 
-    return _stage.getRewriterResult();
+    return std::move(transpiledKernelResult.value());
 }
 }  // namespace oklt

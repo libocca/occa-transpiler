@@ -26,13 +26,34 @@ AttributeManager& SessionStage::getAttrManager() {
     return AttributeManager::instance();
 }
 
-std::string SessionStage::getRewriterResult() {
-    auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
+std::string SessionStage::getRewriterResultForMainFile() {
+    const auto& sm = _compiler.getSourceManager();
+    auto mainFID = sm.getMainFileID();
+    auto* rewriteBuf = _rewriter.getRewriteBufferFor(mainFID);
     if (!rewriteBuf || rewriteBuf->size() == 0) {
-        return "";
+        return sm.getBufferData(mainFID).data();
     }
 
     return std::string{rewriteBuf->begin(), rewriteBuf->end()};
+}
+
+TransformedFiles SessionStage::getRewriterResultForHeaders() {
+    TransformedFiles headers;
+    const auto& sm = _compiler.getSourceManager();
+    auto mainFID = sm.getMainFileID();
+    for (auto it = _rewriter.buffer_begin(); it != _rewriter.buffer_end(); ++it) {
+        // skip main source file
+        if (it->first == mainFID) {
+            continue;
+        }
+
+        std::string fileName = sm.getFileEntryForID(it->first)->getName().data();
+        headers.fileMap[fileName] = [](const auto& buf) -> std::string {
+            return std::string{buf.begin(), buf.end()};
+        }(it->second);
+    }
+
+    return headers;
 }
 
 TargetBackend SessionStage::getBackend() const {

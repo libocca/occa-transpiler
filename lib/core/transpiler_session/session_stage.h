@@ -4,6 +4,8 @@
 #include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
+#include "core/transpiler_session/header_info.h"
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 
@@ -30,7 +32,8 @@ class SessionStage {
     clang::CompilerInstance& getCompiler();
 
     clang::Rewriter& getRewriter();
-    std::string getRewriterResult();
+    std::string getRewriterResultForMainFile();
+    TransformedFiles getRewriterResultForHeaders();
 
     [[nodiscard]] TargetBackend getBackend() const;
     [[nodiscard]] AstProcessorType getAstProccesorType() const;

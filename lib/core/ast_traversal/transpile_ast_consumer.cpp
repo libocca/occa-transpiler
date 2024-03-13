@@ -2,6 +2,7 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/ast_traversal/preorder_traversal_nlr.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/transpiler_session/transpiler_session.h"
 
 namespace oklt {
 using namespace clang;
@@ -10,13 +11,26 @@ TranspileASTConsumer::TranspileASTConsumer(SessionStage& stage)
     : _stage(stage) {}
 
 void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
+    // get the root of parsed AST that contains main file and all headers
     TranslationUnitDecl* tu = context.getTranslationUnitDecl();
 
+    // traverse AST and apply processor sema/backend handlers to retrieve final transpiled kernel
+    // code that fused all user includes
     auto result =
         PreorderNlrTraversal(AstProcessorManager::instance(), _stage).applyAstProcessor(tu);
+
     if (!result) {
+        _stage.pushError(result.error());
         return;
     }
+
+    // no errors and empty output could mean that the source is already transpiled
+    // so use input as output and lets the next stage try to figure out
+    if (result.value().empty()) {
+        result.value() = _stage.getSession().input.sourceCode;
+    }
+
+    _stage.getSession().output.kernel.sourceCode = std::move(result.value());
 }
 
 SessionStage& TranspileASTConsumer::getSessionStage() {

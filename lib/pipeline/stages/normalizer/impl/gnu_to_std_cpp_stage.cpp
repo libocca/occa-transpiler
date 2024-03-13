@@ -3,6 +3,8 @@
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "core/vfs/overlay_fs.h"
+
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
 
@@ -201,16 +203,33 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
         }
         auto consumer = std::make_unique<GnuToCppAttrNormalizerConsumer>(*_stage);
         compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
+
         return std::move(consumer);
     }
 
-    void EndSourceFileAction() override {
-        if (!_stage) {
-            _stage->pushError(std::error_code(), "where is my stage???");
-            return;
+    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
+        if (compiler.hasFileManager()) {
+            auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
+                                           _input.gnuCppIncs);
+            compiler.getFileManager().setVirtualFileSystem(overlayFs);
         }
 
-        _output.stdCppSrc = _stage->getRewriterResult();
+        return true;
+    }
+
+    void EndSourceFileAction() override {
+        _output.stdCppSrc = _stage->getRewriterResultForMainFile();
+        // no errors and empty output could mean that the source is already normalized
+        // so use input as output and lets the next stage try to figure out
+        if (_output.stdCppSrc.empty()) {
+            _output.stdCppSrc = std::move(_input.gnuCppSrc);
+        }
+
+        auto normalizedHeaders = _stage->getRewriterResultForHeaders();
+        // we need keep all headers in output even there are not modififcation by rewriter to
+        // populate affected files futher
+        normalizedHeaders.fileMap.merge(_input.gnuCppIncs.fileMap);
+        _output.stdCppIncs = std::move(normalizedHeaders);
     }
 
    private:
@@ -232,7 +251,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
     }
 
     Twine tool_name = "okl-transpiler-normalization-to-cxx";
-    Twine file_name("gnu-kernel-to-cxx.cpp");
+    Twine file_name("main_kernel.cpp");
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.gnuCppSrc);
@@ -249,21 +268,13 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
         args.push_back(std::move(incPath));
     }
 
-    auto ok = tooling::runToolOnCodeWithArgs(
-        std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
-        input_file,
-        args,
-        file_name,
-        tool_name);
-
-    if (!ok) {
+    if (!tooling::runToolOnCodeWithArgs(
+            std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
+            input_file,
+            args,
+            file_name,
+            tool_name)) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
-    }
-
-    // no errors and empty output could mean that the source is already normalized
-    // so use input as output and lets the next stage try to figure out
-    if (output.stdCppSrc.empty()) {
-        output.stdCppSrc = std::move(input_file);
     }
 
 #ifdef NORMALIZER_DEBUG_LOG
