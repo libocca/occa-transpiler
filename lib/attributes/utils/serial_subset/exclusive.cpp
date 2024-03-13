@@ -1,4 +1,5 @@
 #include "attributes/utils/serial_subset/common.h"
+#include "oklt/core/kernel_metadata.h"
 
 namespace oklt::serial_subset {
 using namespace clang;
@@ -20,13 +21,13 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
     }
 
     auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
-    if (!compStmt || !loopInfo->isOuter()) {
+    if (!compStmt || !loopInfo->is(LoopType::Outer)) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
 
     auto child = loopInfo->getFirstAttributedChild();
-    if (!child || !child->isInner()) {
+    if (!child || !child->is(LoopType::Inner)) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }

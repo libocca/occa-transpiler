@@ -65,12 +65,12 @@ extern "C" __global__ void _occa_addVectors3_0(const int entries,
 extern "C" __global__ void _occa_addVectors4_0(const int entries,
                                                const float *a, const float *b,
                                                float *ab) {
-  int i = 0 + blockIdx.x;
+  int i = 0 + blockIdx.y;
   {
     int j = 0 + blockIdx.x;
     {
       {
-        int k = 0 + threadIdx.x;
+        int k = 0 + threadIdx.y;
         {
           {
             int ii = 0 + threadIdx.x;
@@ -112,12 +112,12 @@ extern "C" __global__ void _occa_addVectors5_0(const int entries,
 extern "C" __global__ void _occa_addVectors6_0(const int entries,
                                                const float *a, const float *b,
                                                float *ab) {
-  int i = 0 + blockIdx.x;
+  int i = 0 + blockIdx.y;
   {
     int j = 0 + blockIdx.x;
     {
       {
-        int k = 0 + threadIdx.x;
+        int k = 0 + threadIdx.y;
         {
           {
             int ii = 0 + threadIdx.x;
