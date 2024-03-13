@@ -4,12 +4,12 @@
 
 namespace oklt::dpcpp {
 
-std::string axisToStr(const Axis& dim) {
+std::string axisToStr(const Axis& axis) {
     // TODO: Verify that this is a correct mapping from original OKL transpiler developera
     //      (intuitively should be x->0, y->1, z->2)
     static std::map<Axis, std::string> mapping{
         {Axis::X, "2"}, {Axis::Y, "1"}, {Axis::Z, "0"}};
-    return mapping[dim];
+    return mapping[axis];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {

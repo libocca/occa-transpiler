@@ -5,10 +5,10 @@
 #include "core/sema/okl_sema_info.h"
 
 namespace oklt::cuda_subset {
-std::string axisToStr(const Axis& dim) {
+std::string axisToStr(const Axis& axis) {
     static std::map<Axis, std::string> mapping{
         {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
-    return mapping[dim];
+    return mapping[axis];
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
