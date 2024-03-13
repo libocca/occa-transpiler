@@ -7,7 +7,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
-#define OKL_LAUNCHER_RECURSIVE
+// #define OKL_LAUNCHER_RECURSIVE
 
 namespace {
 using namespace oklt;
