@@ -263,7 +263,10 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
 #endif
 
-    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
+    //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
+    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps;
+    backendDeps.clear();
+    backendDeps.emplace_back("#include " + std::string(includeOCCA) + "\n\n");
 
     return {};
 }

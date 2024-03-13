@@ -181,11 +181,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
-    core/transpiler_session/kernel_generator.cpp
-    core/transpiler_session/kernel_metadata_generator.h
-    core/transpiler_session/kernel_metadata_generator.cpp
+        core/transpiler_session/code_generator.cpp
 
-    core/target_backends.cpp
+        core/target_backends.cpp
 
     core/utils/format.cpp
     core/utils/type_converter.cpp

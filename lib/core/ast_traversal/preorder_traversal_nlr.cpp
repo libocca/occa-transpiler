@@ -4,8 +4,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 
-#include "core/transpiler_session/kernel_generator.h"
-#include "core/transpiler_session/kernel_metadata_generator.h"
+#include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
@@ -228,44 +227,13 @@ bool traverseNode(TraversalType& traversal,
     return true;
 }
 
-
-
-tl::expected<std::string, Error> generateLauncher(SessionStage& stage) {
-    const auto& transpilationNodes = stage.tryEmplaceUserCtx<TranspilationNodes>();
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    for (const auto& t : transpilationNodes) {
-        sema.setParsedKernelInfo(t.ki);
-        sema.setLoopInfo(t.li);
-        auto result = applyTranspilationToNode(t.attr, t.node, stage);
-        if (!result) {
-            return tl::make_unexpected(result.error());
-        }
-    }
-
-    return stage.getRewriterResult();
-}
-
-tl::expected<std::string, Error> generateLauncherMetaData(SessionStage& stage) {
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto programMeta = sema.getProgramMetaData();
-    nlohmann::json launcher_metadata;
-    to_json(launcher_metadata, programMeta);
-    auto launcherMetaData = launcher_metadata.dump(2);
-
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Program metadata: " << launcherMetaData << "\n";
-    util::writeFileAsStr("launcher_metadata.json", launcherMetaData);
-#endif
-
-    return launcherMetaData;
-}
-
 }  // namespace
 namespace oklt {
 
 PreorderNlrTraversal::PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage)
     : _procMng(procMng),
-      _stage(stage) {
+      _stage(stage),
+      _tu(nullptr) {
     // create storage for lazy transpiled nodes
     _stage.tryEmplaceUserCtx<OklSemaCtx>();
     _stage.tryEmplaceUserCtx<TranspilationNodes>();
@@ -281,51 +249,41 @@ bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
 
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translationUnitDecl) {
+    auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
+    sema.Reset();
+
+    auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
+    tnodes.clear();
+
+    _tu = translationUnitDecl;
     return traverseNode(*this, translationUnitDecl, _procMng, _stage);
 }
 
-tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
+tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::applyAstProcessor(
     clang::TranslationUnitDecl* translationUnitDecl) {
-    // traverse AST and generate sema metadata
-    if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-        return tl::make_unexpected(Error{{}, "error during AST traversing"});
+    // traverse AST and generate sema metadata if required
+    if (!_tu || _tu != translationUnitDecl) {
+        if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
+            return tl::make_unexpected(Error{{}, "error during AST traversing"});
+        }
     }
 
-    // 1. generate transpiled kernel
-    auto transpiledKernelResult = generateTranspiledKernel(_stage);
-    if (!transpiledKernelResult) {
-        return transpiledKernelResult;
-    }
-    _stage.getSession().output.kernel.sourceCode = std::move(transpiledKernelResult.value());
-
-    // 2. generate build json transpile
-    auto kernelMetaData = generateKernelMetaData(_stage);
-    if (!kernelMetaData) {
-        return kernelMetaData;
-    }
-    _stage.getSession().output.kernel.metadataJson = std::move(kernelMetaData.value());
-
-    // If we are working with Host target, skip generating launcher.
-    if (isHostCategory(_stage.getBackend())) {
-        return {};
+    // 1. generate transpiled code
+    auto transpiledResult = generateTranspiledCode(_stage);
+    if (!transpiledResult) {
+        return tl::make_unexpected(transpiledResult.error());
+        ;
     }
 
-    _stage.setLauncherMode();
-
-    // 3. generate launcher
-    auto launcherResult = generateLauncher(_stage);
-    if (!transpiledKernelResult) {
-        return tl::make_unexpected(transpiledKernelResult.error());
+    // 2. generate build json
+    auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
+    if (!transpiledMetaData) {
+        return tl::make_unexpected(transpiledMetaData.error());
+        ;
+        ;
     }
-    _stage.getSession().output.launcher.sourceCode = std::move(launcherResult.value());
 
-    // 4. generate launcher metadata
-    auto launcherMetaData = generateLauncherMetaData(_stage);
-    if (!launcherMetaData) {
-        return tl::make_unexpected(launcherMetaData.error());
-    }
-    _stage.getSession().output.launcher.metadataJson = std::move(launcherMetaData.value());
-
-    return std::move(transpiledKernelResult.value());
+    return std::make_pair(std::move(transpiledResult.value()),
+                          std::move(transpiledMetaData.value()));
 }
 }  // namespace oklt

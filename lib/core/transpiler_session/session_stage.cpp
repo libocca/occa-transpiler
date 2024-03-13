@@ -50,7 +50,7 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
     TransformedFiles headers;
     const auto& sm = _compiler.getSourceManager();
     auto mainFID = sm.getMainFileID();
-    for (auto it = _rewriter.buffer_begin(); it != _rewriter.buffer_end(); ++it) {
+    for (auto it = _rewriter->buffer_begin(); it != _rewriter->buffer_end(); ++it) {
         // skip main source file
         if (it->first == mainFID) {
             continue;
