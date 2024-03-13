@@ -3,6 +3,9 @@
 #include <clang/Basic/SourceLocation.h>
 
 namespace oklt {
+
+constexpr char OKL_ATTR_MARKER = '@';
+
 struct OklAttribute {
     std::string raw;
     std::string name;

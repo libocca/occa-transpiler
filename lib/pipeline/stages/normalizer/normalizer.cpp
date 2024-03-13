@@ -1,3 +1,4 @@
+#include "impl/expand_macro_stage.h"
 #include "impl/gnu_to_std_cpp_stage.h"
 #include "impl/okl_to_gnu_stage.h"
 
@@ -11,10 +12,25 @@ using namespace clang;
 namespace {
 using namespace oklt;
 
+ExpandMacroStageInput toExpandMacroInput(SharedTranspilerSession session) {
+    return {
+        .cppSrc = std::move(session->input.sourceCode),
+        .session = session,
+    };
+}
+
 OklToGnuStageInput toOkltoGnuInput(SharedTranspilerSession session) {
     return {
         .oklCppSrc = std::move(session->input.sourceCode),
         .session = session,
+    };
+}
+
+OklToGnuStageInput toOkltoGnuInput(ExpandMacroStageOutput& output) {
+    return {
+        .oklCppSrc = std::move(output.cppSrc),
+        .oklCppIncs = std::move(output.cppIncs),
+        .session = output.session,
     };
 }
 
@@ -34,6 +50,14 @@ TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
     output.session->input.sourceCode = std::move(output.stdCppSrc);
     output.session->normalizedHeaders = std::move(output.stdCppIncs);
     return output.session;
+}
+
+ExpandMacroResult runMacroExpander(SharedTranspilerSession session) {
+    return expandMacro(toExpandMacroInput(session));
+}
+
+OklToGnuResult runOklToGnuConverter(ExpandMacroStageOutput output) {
+    return convertOklToGnuAttribute(toOkltoGnuInput(output));
 }
 
 GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
@@ -62,7 +86,8 @@ GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
 //  'for' stmt is tested against stored corner case to restore OKL attribute as C++ one.
 //
 TranspilerSessionResult applyGnuAttrBasedNormalization(SharedTranspilerSession session) {
-    return convertOklToGnuAttribute(toOkltoGnuInput(session))
+    return runMacroExpander(session)
+        .and_then(runOklToGnuConverter)
         .and_then(runGnuToStdConverter)
         .and_then(toSessionResult);
 }

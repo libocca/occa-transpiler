@@ -20,6 +20,7 @@ struct OklToGnuStageOutput {
 
 struct OklToGnuStageInput {
     std::string oklCppSrc;
+    TransformedFiles oklCppIncs;
     SharedTranspilerSession session;
 };
 

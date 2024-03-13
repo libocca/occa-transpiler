@@ -87,8 +87,7 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
         if (!clang::SrcMgr::isSystem(dep.fileType)) {
             continue;
         }
-        llvm::outs() << "remove system include " << dep.searchPath << dep.relativePath
-                     << dep.fileName << " \n";
+        llvm::outs() << "remove system include " << dep.fileName << " \n";
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});
     }
 }
