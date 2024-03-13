@@ -186,8 +186,6 @@ set (OCCA_TRANSPILER_SOURCES
     core/utils/var_decl.h
     core/utils/range_to_string.h
     core/utils/range_to_string.cpp
-    core/utils/stdout_capture.h
-    core/utils/stdout_capture.cpp
 
     util/io_helper.cpp
     util/string_utils.cpp

@@ -8,7 +8,6 @@
 
 #include "core/attribute_manager/attribute_manager.h"
 
-#include "core/utils/stdout_capture.h"
 #include "core/vfs/overlay_fs.h"
 
 #include <clang/AST/Attr.h>
@@ -108,7 +107,7 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     auto invocation = std::make_shared<CompilerInvocation>();
 
     invocation->getPreprocessorOutputOpts().ShowCPP = true;
-    invocation->getPreprocessorOutputOpts().RewriteIncludes = true;
+    //invocation->getPreprocessorOutputOpts().RewriteIncludes = true;
     invocation->getPreprocessorOutputOpts().ShowLineMarkers = false;
     invocation->getPreprocessorOutputOpts().ShowIncludeDirectives = false;
 
@@ -133,17 +132,13 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     // XXX clang PrintPreprocessedInput action currently can provide output in two ways:
     //     - print it into STDOUT
     //     - write to the file
-    //     as far as preprocessed file needs to be modified the first option could be used with help
-    //     of StdCapture class that redirection of STDOUT to string redirection should be tested in
-    //     MT env - probably needs global lock
-    //
-    //     seconf addional option could is used to dump output into FS and then
+    //     second addional option  is used to dump output into FS and then
     //     read/delete it
     //
     if (!ExecuteCompilerInvocation(&compiler)) {
         std::filesystem::remove(outputFileName);
         return tl::make_unexpected(
-            Error{{}, "failed to make preprocessing okl_kernel.cpp: " /*+ cap.GetCapture()*/});
+            Error{{}, "failed to make preprocessing okl_kernel.cpp: "});
     }
 
     auto preprocessedAndFused = util::readFileAsStr(outputFileName);
