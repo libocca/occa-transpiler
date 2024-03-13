@@ -7,9 +7,11 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/tile_utils.h"
 
+#include "clang/Rewrite/Core/Rewriter.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/range_to_string.h"
 #include "tl/expected.hpp"
 
 #include <clang/AST/Decl.h>
@@ -27,11 +29,13 @@ namespace {
 std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const TileParams* params,
                              const LoopOrder& ord,
-                             int& openedScopeCounter) {
+                             int& openedScopeCounter,
+                             clang::Rewriter& rewriter) {
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
-    static std::map<std::tuple<LoopType, LoopOrder>,
-                    std::function<std::string(
-                        const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&)>>
+    static std::map<
+        std::tuple<LoopType, LoopOrder>,
+        std::function<std::string(
+            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, clang::Rewriter&)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
@@ -41,30 +45,36 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
             {{LoopType::Regular, LoopOrder::Second}, tile::buildRegularLoopIdxLineSecond},
         };
     auto& loop = ord == LoopOrder::First ? params->firstLoop : params->secondLoop;
-    return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter);
+    return mapping[{loop.type, ord}](forLoop, loop, params, openedScopeCounter, rewriter);
 }
 
 std::string buildCheckLine(const OklLoopInfo& forLoop,
                            const TileParams* params,
-                           int& openedScopeCounter) {
+                           int& openedScopeCounter,
+                           clang::Rewriter& rewriter) {
     if (!params->check) {
         return "";
     }
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
     // TODO: parse cmp operator
-    auto res = util::fmt("if ({} {} {})", forLoop.var.name, cmpStr, forLoop.range.end).value();
+    auto res = util::fmt("if ({} {} {})",
+                         forLoop.var.name,
+                         cmpStr,
+                         getLatestSourceText(forLoop.range.end_, rewriter))
+                   .value();
     return res;
 }
 
 // TODO: add check handling
 std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
                                   const TileParams* params,
-                                  int& openedScopeCounter) {
+                                  int& openedScopeCounter,
+                                  clang::Rewriter& rewriter) {
     std::string res;
-    res += buildLoopIdxLine(forLoop, params, LoopOrder::First, openedScopeCounter);
-    res += buildLoopIdxLine(forLoop, params, LoopOrder::Second, openedScopeCounter);
-    res += buildCheckLine(forLoop, params, openedScopeCounter);
+    res += buildLoopIdxLine(forLoop, params, LoopOrder::First, openedScopeCounter, rewriter);
+    res += buildLoopIdxLine(forLoop, params, LoopOrder::Second, openedScopeCounter, rewriter);
+    res += buildCheckLine(forLoop, params, openedScopeCounter, rewriter);
     return res;
 }
 
@@ -86,7 +96,8 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(updatedParams.error());
     }
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(*loopInfo, &updatedParams.value(), openedScopeCounter);
+    auto prefixCode = buildPreffixTiledCode(
+        *loopInfo, &updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

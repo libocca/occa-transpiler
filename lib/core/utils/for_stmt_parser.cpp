@@ -88,7 +88,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
 
         ret.var.name = node->getDeclName().getAsString();
         ret.var.varDecl = node;
-        ret.var.type = node->getType().getAsString();
+        ret.var.typeName = node->getType().getAsString();
 
         start = node->getInit();
         while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
@@ -114,7 +114,6 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         }
 
         ret.condition.op = toOkl(node->getOpcode());
-        ret.condition.cmp = prettyPrint(node, policy);
         ret.condition.cmp_ = node;
 
         // LSH
@@ -166,7 +165,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
 
         ret.inc.op.bo = toOkl(node->getOpcode());
         ret.inc.val = prettyPrint(node->getRHS(), policy);
-        ret.inc.val_ = node;
+        ret.inc.val_ = node->getRHS();
     }
 
     ret.range.size = 0;

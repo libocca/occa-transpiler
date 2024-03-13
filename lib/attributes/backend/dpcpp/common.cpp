@@ -32,7 +32,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(util::fmt("{} {} = {} {} {};",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   forLoop.var.name,
                                   forLoop.range.start,
                                   op,
@@ -40,7 +40,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                             .value());
     } else {
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   forLoop.var.name,
                                   forLoop.range.start,
                                   op,

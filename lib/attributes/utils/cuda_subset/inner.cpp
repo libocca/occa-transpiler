@@ -29,15 +29,14 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
             Error{std::error_code(), "@inner: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams =
-        innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Inner);
+    auto updatedParams = innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Inner);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams.value(), openedScopeCounter);
+        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     suffixCode += "__syncthreads();";
 

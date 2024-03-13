@@ -2,12 +2,13 @@
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "clang/Rewrite/Core/Rewriter.h"
 #include "core/sema/okl_sema_info.h"
+#include "core/utils/range_to_string.h"
 
 namespace oklt::cuda_subset {
 std::string axisToStr(const Axis& axis) {
-    static std::map<Axis, std::string> mapping{
-        {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
+    static std::map<Axis, std::string> mapping{{Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
     return mapping[axis];
 }
 
@@ -31,7 +32,8 @@ std::string getTiledVariableName(const OklLoopInfo& forLoop) {
 std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
-                                             int& openedScopeCounter) {
+                                             int& openedScopeCounter,
+                                             clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -39,21 +41,21 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   tiledVar,
-                                  forLoop.range.start,
+                                  getLatestSourceText(forLoop.range.start_, rewriter),
                                   op,
                                   params->tileSize,
                                   idx)
                             .value());
     } else {
         res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   tiledVar,
-                                  forLoop.range.start,
+                                  getLatestSourceText(forLoop.range.start_, rewriter),
                                   op,
                                   params->tileSize,
-                                  forLoop.inc.val,
+                                  getLatestSourceText(forLoop.inc.val_, rewriter),
                                   idx)
                             .value());
     }
@@ -64,7 +66,8 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
 std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
-                                             int& openedScopeCounter) {
+                                             int& openedScopeCounter,
+                                             clang::Rewriter& rewriter) {
     static_cast<void>(params);
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
@@ -73,15 +76,15 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(
-            util::fmt("{} {} = {} {} {};", forLoop.var.type, forLoop.var.name, tiledVar, op, idx)
+            util::fmt("{} {} = {} {} {};", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
                 .value());
     } else {
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   forLoop.var.name,
                                   tiledVar,
                                   op,
-                                  forLoop.inc.val,
+                                  getLatestSourceText(forLoop.inc.val_, rewriter),
                                   idx)
                             .value());
     }
@@ -92,18 +95,19 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
 std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                          const AttributedLoop& regularLoop,
                                          const TileParams* params,
-                                         int& openedScopeCounter) {
+                                         int& openedScopeCounter,
+                                         clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
 
     auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
-                         forLoop.var.type,
+                         forLoop.var.typeName,
                          tiledVar,
-                         forLoop.range.start,
+                         getLatestSourceText(forLoop.range.start_, rewriter),
                          tiledVar,
                          cmpOpStr,
-                         forLoop.range.end,
+                         getLatestSourceText(forLoop.range.end_, rewriter),
                          tiledVar,
                          assignUpdate,
                          params->tileSize)
@@ -116,7 +120,8 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
 std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                           const AttributedLoop& regularLoop,
                                           const TileParams* params,
-                                          int& openedScopeCounter) {
+                                          int& openedScopeCounter,
+                                          clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
@@ -125,7 +130,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
     if (forLoop.isUnary()) {
         auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.var.name);  // ++i/i++/--i/i--
         res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {})",
-                        forLoop.var.type,
+                        forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
                         forLoop.var.name,
@@ -138,7 +143,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
     } else {
         auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
         res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {} {} {})",
-                        forLoop.var.type,
+                        forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
                         forLoop.var.name,
@@ -148,7 +153,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                         params->tileSize,
                         forLoop.var.name,
                         assignUpdate,
-                        forLoop.inc.val)
+                        getLatestSourceText(forLoop.inc.val_, rewriter))
                   .value();
     }
     return res;
@@ -158,7 +163,8 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
 namespace inner_outer {
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
-                                       int& openedScopeCounter) {
+                                       int& openedScopeCounter,
+                                       clang::Rewriter& rewriter) {
     static_cast<void>(openedScopeCounter);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -166,19 +172,19 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(util::fmt("{} {} = {} {} {};",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   forLoop.var.name,
-                                  forLoop.range.start,
+                                  getLatestSourceText(forLoop.range.start_, rewriter),
                                   op,
                                   idx)
                             .value());
     } else {
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   forLoop.var.name,
-                                  forLoop.range.start,
+                                  getLatestSourceText(forLoop.range.start_, rewriter),
                                   op,
-                                  forLoop.inc.val,
+                                  getLatestSourceText(forLoop.inc.val_, rewriter),
                                   idx)
                             .value());
     }

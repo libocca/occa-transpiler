@@ -142,11 +142,11 @@ std::string buildIndexCalculation(const ExprVec& dimVarArgs,
     // Open brackets
     for (int dim = 0; dim < nDims - 1; ++dim) {
         auto idx = dimOrder[dim];
-        auto dimVarArgStr = rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
+        auto dimVarArgStr = getLatestSourceText(*dimVarArgs[idx], rewriter);
         indexCalculation += util::fmt("{} + ({} * (", dimVarArgStr, params->dim[idx]).value();
     }
     auto idx = dimOrder[nDims - 1];
-    indexCalculation += rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
+    indexCalculation += getLatestSourceText(*dimVarArgs[idx], rewriter);
     // Close brackets
     for (int i = 0; i < 2 * (nDims - 1); ++i) {
         indexCalculation += ")";

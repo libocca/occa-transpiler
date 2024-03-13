@@ -29,7 +29,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   tiledVar,
                                   forLoop.range.start,
                                   op,
@@ -38,7 +38,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                             .value());
     } else {
         res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   tiledVar,
                                   forLoop.range.start,
                                   op,
@@ -63,11 +63,11 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(
-            util::fmt("{} {} = {} {} {};", forLoop.var.type, forLoop.var.name, tiledVar, op, idx)
+            util::fmt("{} {} = {} {} {};", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
                 .value());
     } else {
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
-                                  forLoop.var.type,
+                                  forLoop.var.typeName,
                                   forLoop.var.name,
                                   tiledVar,
                                   op,
@@ -88,7 +88,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
 
     auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
-                         forLoop.var.type,
+                         forLoop.var.typeName,
                          tiledVar,
                          forLoop.range.start,
                          tiledVar,
@@ -115,7 +115,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
     if (forLoop.isUnary()) {
         auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.var.name);  // ++i/i++/--i/i--
         res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {})",
-                        forLoop.var.type,
+                        forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
                         forLoop.var.name,
@@ -128,7 +128,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
     } else {
         auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
         res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {} {} {})",
-                        forLoop.var.type,
+                        forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
                         forLoop.var.name,

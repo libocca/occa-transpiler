@@ -40,7 +40,7 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
     // Do not include `for` statement as it's already present.
     //"for ({} {} = {}; {} {} {}; {} {} {})",
     auto ret = util::fmt(" ({} {} = {}; {} {} {}; {} {} {})",
-                         forLoop.var.type,
+                         forLoop.var.typeName,
                          tiledVar,
                          forLoop.range.start,
                          tiledVar,
@@ -69,7 +69,7 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
     if (forLoop.isUnary()) {
         auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.var.name);
         ret = util::fmt("for ({} {} = {}; {} {} ({} {} {}); {})",
-                        forLoop.var.type,
+                        forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
                         forLoop.var.name,
@@ -82,7 +82,7 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
     } else {
         auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
         ret = util::fmt("for ({} {} = {}; {} {} ({} {} {}); {} {} {})",
-                        forLoop.var.type,
+                        forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
                         forLoop.var.name,
@@ -137,7 +137,7 @@ HandleResult handleTileAttribute(const Attr& a,
     }
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo->var.type << ", name: " << loopInfo->var.name
+                 << "type: " << loopInfo->var.typeName << ", name: " << loopInfo->var.name
                  << ", initValue: " << loopInfo->range.start
                  << "), Cond(rhsExpr: " << loopInfo->range.end
                  << "), Inc(rhsInc: " << loopInfo->inc.val << ", isUnary: " << loopInfo->isUnary()

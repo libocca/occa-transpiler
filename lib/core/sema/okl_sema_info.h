@@ -24,7 +24,7 @@ struct OklLoopInfo {
     std::list<OklLoopInfo> children = {};
 
     struct {
-        std::string type;
+        std::string typeName;
         std::string name;
         const clang::VarDecl* varDecl;
     } var;
@@ -36,7 +36,6 @@ struct OklLoopInfo {
         size_t size = 0;
     } range;
     struct {
-        std::string cmp;
         const clang::BinaryOperator* cmp_;
         BinOp op = BinOp::Eq;
     } condition;

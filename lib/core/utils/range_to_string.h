@@ -18,4 +18,9 @@ template<typename NodeType>
 std::string getLatestSourceText(const NodeType& node, clang::Rewriter& rewriter) {
     return rewriter.getRewrittenText(node.getSourceRange());
 }
+
+template<typename NodeType>
+std::string getLatestSourceText(const NodeType* node, clang::Rewriter& rewriter) {
+    return rewriter.getRewrittenText(node->getSourceRange());
+}
 }  // namespace oklt
