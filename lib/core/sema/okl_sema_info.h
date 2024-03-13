@@ -24,6 +24,10 @@ struct OklLoopInfo {
     std::list<OklLoopInfo> children = {};
     std::string tileSize;
 
+    // references to shared and exclusive declared in this loop
+    std::list<std::reference_wrapper<const clang::Decl>> shared = {};
+    std::list<std::reference_wrapper<const clang::VarDecl>> exclusive = {};
+
     struct {
         std::string typeName;
         std::string name;

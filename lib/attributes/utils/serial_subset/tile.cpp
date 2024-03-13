@@ -1,5 +1,9 @@
+#include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
-#include "attributes/utils/serial_subset/common.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 #include "oklt/core/kernel_metadata.h"
 
@@ -37,8 +41,7 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
     auto incValStr = params->tileSize;
     if (forLoop.inc.val) {
         incValStr =
-            util::fmt(
-                "({} * {})", params->tileSize, getLatestSourceText(forLoop.inc.val, rewriter))
+            util::fmt("({} * {})", params->tileSize, getLatestSourceText(forLoop.inc.val, rewriter))
                 .value();
     }
 
@@ -157,7 +160,6 @@ HandleResult handleTileAttribute(const Attr& a,
 
     removeAttribute(a, s);
 
-    auto& backendCtx = getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
     SourceRange attr_range = getAttrFullSourceRange(a);
@@ -168,8 +170,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && parent->has(LoopType::Outer) && loopInfo->is(LoopType::Inner)) {
-        auto& loopInfoEx = backendCtx.getLoopInfo(parent);
-        if (!loopInfoEx.exclusive.empty()) {
+        if (!loopInfo->exclusive.empty()) {
             s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
         }
     }
@@ -183,8 +184,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && loopInfo->is(LoopType::Outer, LoopType::Inner)) {
-        auto& loopInfoEx = backendCtx.getLoopInfo(parent);
-        if (!loopInfoEx.exclusive.empty()) {
+        if (!loopInfo->exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
@@ -205,7 +205,7 @@ HandleResult handleTileAttribute(const Attr& a,
     if (loopInfo->children.empty()) {
         auto outerParent =
             loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.has(LoopType::Outer); });
-        if (outerParent && !backendCtx.getLoopInfo(outerParent).exclusive.empty()) {
+        if (outerParent && !outerParent->exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();

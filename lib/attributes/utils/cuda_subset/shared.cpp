@@ -1,4 +1,5 @@
 #include "core/attribute_manager/result.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -14,6 +15,18 @@ HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, S
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
     std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
+
+    Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
+
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto loopInfo = sema.getLoopInfo();
+    if (!loopInfo) {
+        return tl::make_unexpected(sharedError);
+    }
+    auto* loopBelowInfo = loopInfo->getFirstAttributedChild();
+    if (!loopBelowInfo || !(loopInfo->is(LoopType::Outer) && loopBelowInfo->is(LoopType::Inner))) {
+        return tl::make_unexpected(sharedError);
+    }
 
     s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);
     return {};

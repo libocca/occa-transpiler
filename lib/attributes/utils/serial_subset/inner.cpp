@@ -1,4 +1,8 @@
-#include "attributes/utils/serial_subset/common.h"
+#include "attributes/frontend/params/loop.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 namespace oklt::serial_subset {
 using namespace clang;
@@ -25,14 +29,13 @@ HandleResult handleInnerAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
-    auto& backendCtx = getBackendCtxFromStage(s);
     auto& rewriter = s.getRewriter();
 
     removeAttribute(a, s);
 
     // Top most `@inner` loop
     if (auto parent = loopInfo->getAttributedParent(); parent->has(LoopType::Outer)) {
-        if (!backendCtx.getLoopInfo(parent).exclusive.empty()) {
+        if (!parent->exclusive.empty()) {
             rewriter.InsertTextBefore(stmt.getBeginLoc(), exclusiveNullText);
         }
     }
@@ -40,8 +43,9 @@ HandleResult handleInnerAttribute(const Attr& a,
     // Bottom most `@inner` loop
     if (loopInfo->children.empty()) {
         // Get `@outer` attributed loop
-        auto parent = loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.has(LoopType::Outer); });
-        if (parent && !backendCtx.getLoopInfo(parent).exclusive.empty()) {
+        auto parent =
+            loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.has(LoopType::Outer); });
+        if (parent && !parent->exclusive.empty()) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();

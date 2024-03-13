@@ -1,4 +1,8 @@
-#include "attributes/utils/serial_subset/common.h"
+#include "attributes/frontend/params/loop.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 namespace oklt::serial_subset {
 using namespace clang;
