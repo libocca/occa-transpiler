@@ -272,15 +272,12 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
     auto transpiledResult = generateTranspiledCode(_stage);
     if (!transpiledResult) {
         return tl::make_unexpected(transpiledResult.error());
-        ;
     }
 
     // 2. generate build json
     auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
     if (!transpiledMetaData) {
         return tl::make_unexpected(transpiledMetaData.error());
-        ;
-        ;
     }
 
     return std::make_pair(std::move(transpiledResult.value()),
