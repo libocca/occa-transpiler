@@ -1,5 +1,4 @@
 #include "oklt/util/io_helper.h"
-#include "oklt/core/error.h"
 
 #include <clang/Basic/FileManager.h>
 #include <llvm/Support/VirtualFileSystem.h>
@@ -7,7 +6,7 @@
 
 namespace oklt::util {
 
-tl::expected<std::string, Error> readFileAsStr(const std::filesystem::path& src_file) {
+tl::expected<std::string, int> readFileAsStr(const std::filesystem::path& src_file) {
     clang::FileSystemOptions opts;
     clang::FileManager mng(opts);
 

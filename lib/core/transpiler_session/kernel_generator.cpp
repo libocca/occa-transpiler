@@ -1,7 +1,7 @@
 #include <oklt/util/io_helper.h>
 
-#include "core/transpiler_session/kernel_generator.h"
 #include "core/transpiler_session/header_info.h"
+#include "core/transpiler_session/kernel_generator.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
@@ -111,8 +111,11 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     invocation->getPreprocessorOutputOpts().RewriteIncludes = true;
     invocation->getPreprocessorOutputOpts().ShowLineMarkers = false;
     invocation->getPreprocessorOutputOpts().ShowIncludeDirectives = false;
-    invocation->getFrontendOpts().OutputFile = "Preprocessed";
-    invocation->getFrontendOpts().UseTemporary = 1;
+
+    const std::string FUSED_KERNEL_FILENAME_BASE = "fused_inc_kernel";
+    std::time_t ct = std::time(0);
+    std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + ctime(&ct) + ".cpp";
+    invocation->getFrontendOpts().OutputFile = outputFileName;
 
     invocation->getHeaderSearchOpts() = stage.getCompiler().getHeaderSearchOpts();
 
@@ -130,22 +133,24 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     // XXX clang PrintPreprocessedInput action currently can provide output in two ways:
     //     - print it into STDOUT
     //     - write to the file
-    //     as far as preprocessed file needs to be modified the first option is used with temporary
-    //     redirection of STDOUT to string
-    //     redirection should be tested in MT env - probably needs global lock
+    //     as far as preprocessed file needs to be modified the first option could be used with help
+    //     of StdCapture class that redirection of STDOUT to string redirection should be tested in
+    //     MT env - probably needs global lock
     //
-    //     lately addional option could be introduced to dump output into FS and then
-    //     read/modified/move/delete
+    //     seconf addional option could is used to dump output into FS and then
+    //     read/delete it
     //
-    //StdCapture cap;
-    //cap.BeginCapture();
     if (!ExecuteCompilerInvocation(&compiler)) {
+        std::filesystem::remove(outputFileName);
         return tl::make_unexpected(
             Error{{}, "failed to make preprocessing okl_kernel.cpp: " /*+ cap.GetCapture()*/});
     }
-    //cap.EndCapture();
 
-    auto preprocessedAndFused = util::readFileAsStr(compiler.getInvocation().getFrontendOpts().OutputFile);
+    auto preprocessedAndFused = util::readFileAsStr(outputFileName);
+    if (!preprocessedAndFused) {
+        return tl::make_unexpected(Error{{}, "failed to read file " + outputFileName});
+    }
+    std::filesystem::remove(outputFileName);
 
     return preprocessedAndFused.value();
 }
