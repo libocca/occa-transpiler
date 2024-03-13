@@ -13,12 +13,12 @@ std::string axisToStr(const Axis& dim) {
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = axisToStr(loop.axis);
+    auto strAxis = axisToStr(loop.axis);
     switch (loop.type) {
         case (LoopType::Inner):
-            return util::fmt("item.get_local_id({})", strDim).value();
+            return util::fmt("item.get_local_id({})", strAxis).value();
         case (LoopType::Outer):
-            return util::fmt("item_.get_group({})", strDim).value();
+            return util::fmt("item_.get_group({})", strAxis).value();
         default:  // Incorrect case
             return "";
     }

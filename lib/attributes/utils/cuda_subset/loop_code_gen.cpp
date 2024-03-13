@@ -2,6 +2,7 @@
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "core/sema/okl_sema_info.h"
 
 namespace oklt::cuda_subset {
 std::string axisToStr(const Axis& dim) {
@@ -11,12 +12,12 @@ std::string axisToStr(const Axis& dim) {
 }
 
 std::string getIdxVariable(const AttributedLoop& loop) {
-    auto strDim = axisToStr(loop.axis);
+    auto strAxis = axisToStr(loop.axis);
     switch (loop.type) {
         case (LoopType::Inner):
-            return util::fmt("threadIdx.{}", strDim).value();
+            return util::fmt("threadIdx.{}", strAxis).value();
         case (LoopType::Outer):
-            return util::fmt("blockIdx.{}", strDim).value();
+            return util::fmt("blockIdx.{}", strAxis).value();
         default:  // Incorrect case
             return "";
     }
