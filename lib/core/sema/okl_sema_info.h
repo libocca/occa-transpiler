@@ -22,6 +22,7 @@ struct OklLoopInfo {
 
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
+    std::string tileSize;
 
     struct {
         std::string typeName;

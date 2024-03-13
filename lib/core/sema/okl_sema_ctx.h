@@ -10,6 +10,7 @@
 namespace oklt {
 
 struct Error;
+class SessionStage;
 
 struct OklSemaCtx {
     struct ParsedKernelInfo : public OklKernelInfo {
@@ -44,7 +45,8 @@ struct OklSemaCtx {
     [[nodiscard]] tl::expected<void, Error> startParsingAttributedForLoop(
         const clang::Attr& attr,
         const clang::ForStmt& stmt,
-        const std::any* params);
+        const std::any* params,
+        SessionStage& stage);
     [[nodiscard]] tl::expected<void, Error> stopParsingAttributedForLoop(const clang::Attr& attr,
                                                                          const clang::ForStmt& stmt,
                                                                          const std::any* params);

@@ -1,5 +1,8 @@
 #include <oklt/core/error.h>
+#include "attributes/frontend/params/tile.h"
+#include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_info.h"
+#include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"
 
 #include <clang/AST/AST.h>
@@ -57,7 +60,8 @@ bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
 namespace oklt {
 tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
                                               const clang::ForStmt& s,
-                                              clang::ASTContext& ctx) {
+                                              SessionStage& stage) {
+    auto& ctx = stage.getCompiler().getASTContext();
     OklLoopInfo ret{.attr = a, .stmt = s};
     const Expr *start, *end = nullptr;
 
@@ -161,6 +165,13 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
             start_i -= end_i;
             ret.range.size = start_i.getZExtValue();
         }
+    }
+
+    // Ugly way to retireve tile size
+    auto& am = stage.getAttrManager();
+    auto params = am.parseAttr(a, stage);
+    if (params && params->type() == typeid(TileParams)) {
+        ret.tileSize = std::any_cast<TileParams>(am.parseAttr(a, stage).value()).tileSize;
     }
 
     return ret;

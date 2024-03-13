@@ -2,6 +2,7 @@
 #include "attributes/frontend/params/tile.h"
 
 #include "core/sema/okl_sema_ctx.h"
+#include "core/transpiler_session/session_stage.h"
 #include "core/utils/ast_node_parsers.h"
 #include "core/utils/type_converter.h"
 #include "oklt/core/kernel_metadata.h"
@@ -36,10 +37,11 @@ AttributedLoopTypes getLoopType(const std::any* param) {
 tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
                                                  const clang::Attr& attr,
                                                  AttributedLoopTypes loopType,
-                                                 OklSemaCtx::ParsedKernelInfo& kernelInfo) {
+                                                 OklSemaCtx::ParsedKernelInfo& kernelInfo,
+                                                 SessionStage& stage) {
     assert(kernelInfo.kernInfo);
 
-    auto parsedLoopInfo = parseForStmt(attr, stmt, kernelInfo.decl.get().getASTContext());
+    auto parsedLoopInfo = parseForStmt(attr, stmt, stage);
     if (!parsedLoopInfo) {
         return parsedLoopInfo;
     }
@@ -203,7 +205,8 @@ void OklSemaCtx::setLoopInfo(OklLoopInfo* loopInfo) {
 
 tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang::Attr& attr,
                                                                     const clang::ForStmt& stmt,
-                                                                    const std::any* params) {
+                                                                    const std::any* params,
+                                                                    SessionStage& stage) {
     assert(_parsingKernInfo);
     auto loopType = getLoopType(params);
 
@@ -225,7 +228,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
                   .desc = "Cannot have [@inner] loop outside of an [@outer] loop"});
     }
 
-    return makeOklLoopInfo(stmt, attr, loopType, *_parsingKernInfo)
+    return makeOklLoopInfo(stmt, attr, loopType, *_parsingKernInfo, stage)
         .and_then([&children, this](auto&& loopInfo) -> tl::expected<void, Error> {
             children.emplace_back(loopInfo);
 
