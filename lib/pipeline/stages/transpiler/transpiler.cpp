@@ -49,6 +49,10 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
 
     session->output.kernel.sourceCode = oklt::format(session->output.kernel.sourceCode);
 
+    if (!session->output.launcher.sourceCode.empty()) {
+        session->output.launcher.sourceCode = oklt::format(session->output.launcher.sourceCode);
+    }
+
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
 #endif

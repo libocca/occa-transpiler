@@ -19,6 +19,12 @@ std::string build_transpilation_output_filename(const std::filesystem::path& inp
     return out_file;
 }
 
+std::string build_launcher_output_filename(const std::filesystem::path& input_file_path) {
+    std::string out_file = input_file_path.filename().stem().string() + "_launcher" +
+                           input_file_path.filename().extension().string();
+    return out_file;
+}
+
 std::string build_normalization_output_filename(const std::filesystem::path& input_file_path) {
     std::string out_file = input_file_path.filename().stem().string() + "_normalized" +
                            input_file_path.filename().extension().string();
@@ -64,6 +70,9 @@ int main(int argc, char* argv[]) {
     transpile_command.add_argument("-o", "--output")
         .default_value("")
         .help("optional transpilation output file");
+    transpile_command.add_argument("-l", "--launcher")
+        .default_value("")
+        .help("optional launcher output file");
     transpile_command.add_argument("-n", "--normalizer-output")
         .default_value("")
         .help("optional normalization output file");
@@ -123,9 +132,15 @@ int main(int argc, char* argv[]) {
             auto source_path = std::filesystem::path(transpile_command.get("-i"));
             auto backend = oklt::backendFromString(transpile_command.get("-b"));
             auto need_normalize = transpile_command.get<bool>("--normalize");
+
             auto transpilation_output = std::filesystem::path(transpile_command.get("-o"));
             if (transpilation_output.empty()) {
                 transpilation_output = build_transpilation_output_filename(source_path);
+            }
+
+            auto launcher_output = std::filesystem::path(transpile_command.get("-l"));
+            if (launcher_output.empty()) {
+                launcher_output = build_launcher_output_filename(source_path);
             }
 
             auto defines = transpile_command.get<std::vector<std::string>>("-D");
@@ -174,6 +189,10 @@ int main(int argc, char* argv[]) {
                 // userOutput.normalized.sourceCode);
                 oklt::util::writeFileAsStr(transpilation_output.string(),
                                            userOutput.kernel.sourceCode);
+                if (!userOutput.launcher.sourceCode.empty()) {
+                    oklt::util::writeFileAsStr(launcher_output.string(),
+                                               userOutput.launcher.sourceCode);
+                }
                 std::cout << "Transpiling success : true" << std::endl;
             } else {
                 std::cout << "Transpiling errors: " << std::endl;
