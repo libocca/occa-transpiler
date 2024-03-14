@@ -12,6 +12,7 @@
 
 #include <clang/AST/Attr.h>
 #include <clang/FrontendTool/Utils.h>
+#include <clang/Lex/PreprocessorOptions.h>
 
 namespace {
 using namespace oklt;
@@ -118,7 +119,9 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + ctime(&ct) + ".cpp";
     invocation->getFrontendOpts().OutputFile = outputFileName;
 
+    // set options from parent compiler
     invocation->getHeaderSearchOpts() = stage.getCompiler().getHeaderSearchOpts();
+    invocation->getPreprocessorOpts() = stage.getCompiler().getPreprocessorOpts();
 
     invocation->getFrontendOpts().Inputs.push_back(
         FrontendInputFile("okl_kernel.cpp", Language::CXX));

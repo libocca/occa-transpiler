@@ -10,6 +10,12 @@ struct Configs {
     unsigned long size2;
 };
 
+struct Data {
+    @restrict float* x;
+    @restrict float* y;
+    unsigned long size;
+};
+
 // TODO: fix me when @kernel/@outer/@inner are implemented
 @kernel void function1(const Complex<float>* vectorData @ restrict,
                        unsigned int vectorSize,
