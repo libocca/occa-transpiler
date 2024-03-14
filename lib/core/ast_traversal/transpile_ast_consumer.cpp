@@ -36,7 +36,7 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
 
     // reuse traversed AST
     // retrieve launcher code and metadata if required
-    if (!isHostCategory(_stage.getBackend())) {
+    if (isDeviceCategory(_stage.getBackend())) {
         _stage.setLauncherMode();
 
         auto result = t->applyAstProcessor(tu);
