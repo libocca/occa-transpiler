@@ -1,0 +1,9 @@
+[
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/simple/macro_expansion.cpp"
+        },
+        "reference": "normalize/simple/macro_expansion_ref.cpp"
+    }
+]
