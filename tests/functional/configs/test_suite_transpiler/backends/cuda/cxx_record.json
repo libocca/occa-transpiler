@@ -1,0 +1,13 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/cxx_record/class_struct_template.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/cxx_record/class_struct_template_ref.cpp"
+     }
+]

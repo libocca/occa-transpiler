@@ -63,6 +63,24 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
     return {};
 }
 
+HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
+                             SessionStage& s,
+                             const std::string& qualifier) {
+    auto spacedModifier = qualifier + " ";
+
+    // for all explicit constructors/methods add qualifier
+    // updateFuncRange(cxxRecord.ctors(), s.getRewriter(), spacedModifier);
+    for (const auto& method : cxxRecord.methods()) {
+        if (method->isImplicit()) {
+            continue;
+        }
+        auto loc = method->getBeginLoc();
+        s.getRewriter().InsertTextBefore(loc, spacedModifier);
+    }
+
+    return {};
+}
+
 HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,
                                    std::string_view include) {
