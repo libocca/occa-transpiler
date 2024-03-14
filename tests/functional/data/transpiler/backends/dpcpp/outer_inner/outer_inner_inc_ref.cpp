@@ -145,7 +145,6 @@ extern "C" void _occa_addVectors5_0(sycl::queue* queue_,
 }
 
 // Outer -> outer -> inner -> inner + partially manual dimensions specification
-// TODO: change after sema calculates dimensions
 extern "C" void _occa_addVectors6_0(sycl::queue* queue_,
                                     sycl::nd_range<3>* range_,
                                     const int entries,
