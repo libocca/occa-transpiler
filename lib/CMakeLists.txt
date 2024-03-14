@@ -138,6 +138,9 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/openmp/atomic.cpp
     attributes/backend/openmp/barrier.cpp
 
+    # Launcher
+    attributes/backend/launcher.cpp
+
     # sugar attribute
     attributes/backend/common/dim.cpp
     # attributes/backend/common/dim_order.cpp
@@ -178,9 +181,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
-    core/transpiler_session/kernel_generator.cpp
-    core/transpiler_session/kernel_metadata_generator.h
-    core/transpiler_session/kernel_metadata_generator.cpp
+    core/transpiler_session/code_generator.cpp
 
     core/target_backends.cpp
 

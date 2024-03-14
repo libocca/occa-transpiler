@@ -1,7 +1,7 @@
 #include <oklt/util/io_helper.h>
 
+#include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/header_info.h"
-#include "core/transpiler_session/kernel_generator.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
@@ -97,7 +97,7 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
 
 // gather all transpiled files: main input and affected header and also header with removed system
 // includes
-TransformedFiles gatherTrandformedFiles(SessionStage& stage) {
+TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
     inputs.fileMap.merge(stage.getSession().normalizedHeaders.fileMap);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
@@ -172,7 +172,7 @@ std::string restoreSystemAndBackendHeaders(std::string& input, const HeaderDepsI
 tl::expected<std::string, Error> fuseIncludeDeps(const HeaderDepsInfo& deps, SessionStage& stage) {
     removeSystemHeaders(deps, stage);
 
-    auto inputs = gatherTrandformedFiles(stage);
+    auto inputs = gatherTransformedFiles(stage);
 
     auto preprocessedResult = preprocessedInputs(inputs, stage);
     if (!preprocessedResult) {
@@ -186,7 +186,7 @@ tl::expected<std::string, Error> fuseIncludeDeps(const HeaderDepsInfo& deps, Ses
 }  // namespace
 
 namespace oklt {
-tl::expected<std::string, Error> generateTranspiledKernel(SessionStage& stage) {
+tl::expected<std::string, Error> generateTranspiledCode(SessionStage& stage) {
     const auto& nodes = stage.tryEmplaceUserCtx<TranspilationNodes>();
     auto result = applyTranspilationToNodes(nodes, stage);
     if (!result) {
@@ -200,5 +200,20 @@ tl::expected<std::string, Error> generateTranspiledKernel(SessionStage& stage) {
     }
 
     return std::move(finalResult.value());
+}
+
+tl::expected<std::string, Error> generateTranspiledCodeMetaData(SessionStage& stage) {
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    auto programMeta = sema.getProgramMetaData();
+    nlohmann::json kernel_metadata;
+    to_json(kernel_metadata, programMeta);
+    auto kernelMetaData = kernel_metadata.dump(2);
+
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Program metadata: " << kernelMetaData << "\n";
+    util::writeFileAsStr("metadata.json", kernelMetaData);
+#endif
+
+    return kernelMetaData;
 }
 }  // namespace oklt

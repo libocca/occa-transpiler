@@ -4,8 +4,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 
-#include "core/transpiler_session/kernel_generator.h"
-#include "core/transpiler_session/kernel_metadata_generator.h"
+#include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
@@ -228,14 +227,13 @@ bool traverseNode(TraversalType& traversal,
     return true;
 }
 
-
-
 }  // namespace
 namespace oklt {
 
 PreorderNlrTraversal::PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage)
     : _procMng(procMng),
-      _stage(stage) {
+      _stage(stage),
+      _tu(nullptr) {
     // create storage for lazy transpiled nodes
     _stage.tryEmplaceUserCtx<OklSemaCtx>();
     _stage.tryEmplaceUserCtx<TranspilationNodes>();
@@ -251,31 +249,38 @@ bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
 
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translationUnitDecl) {
+    auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
+    sema.clear();
+
+    auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
+    tnodes.clear();
+
+    _tu = translationUnitDecl;
     return traverseNode(*this, translationUnitDecl, _procMng, _stage);
 }
 
-tl::expected<std::string, Error> PreorderNlrTraversal::applyAstProcessor(
+tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::applyAstProcessor(
     clang::TranslationUnitDecl* translationUnitDecl) {
-    // traverse AST and generate sema metadata
-    if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-        return tl::make_unexpected(Error{{}, "error during AST traversing"});
+    // traverse AST and generate sema metadata if required
+    if (!_tu || _tu != translationUnitDecl) {
+        if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
+            return tl::make_unexpected(Error{{}, "error during AST traversing"});
+        }
     }
 
-    // 1. generate transpiled kernel
-    auto transpiledKernelResult = generateTranspiledKernel(_stage);
-    if (!transpiledKernelResult) {
-        return transpiledKernelResult;
+    // 1. generate transpiled code
+    auto transpiledResult = generateTranspiledCode(_stage);
+    if (!transpiledResult) {
+        return tl::make_unexpected(transpiledResult.error());
     }
 
-    // 2. generate build json transpile
-    auto kernelMetaData = generateKernelMetaData(_stage);
-    if (!kernelMetaData) {
-        return kernelMetaData;
+    // 2. generate build json
+    auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
+    if (!transpiledMetaData) {
+        return tl::make_unexpected(transpiledMetaData.error());
     }
-    _stage.getSession().output.kernel.metadataJson = std::move(kernelMetaData.value());
-    //  if not serial/opnemp
-    // 3. generate launcher and metadata
 
-    return std::move(transpiledKernelResult.value());
+    return std::make_pair(std::move(transpiledResult.value()),
+                          std::move(transpiledMetaData.value()));
 }
 }  // namespace oklt

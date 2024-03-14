@@ -29,7 +29,7 @@ struct DataType {
     std::string name;
     DatatypeCategory type;
     int bytes = 0;                        // used only for custom
-    std::vector<StructFieldInfo> fields;  // used only for structs
+    std::list<StructFieldInfo> fields;    // used only for structs
     int64_t tupleSize = -1;               // used only for tuples
     DatatypeCategory tupleElementType;    // used only fot tuples
 };
@@ -146,7 +146,7 @@ struct PropertyInfo {
 struct ProgramMetaData {
     std::optional<DependeciesInfo> dependencies = std::nullopt;
     std::string hash;
-    std::vector<KernelInfo> kernels;
+    std::list<KernelInfo> kernels;
     std::optional<PropertyInfo> props = std::nullopt;
     KernelInfo& addKernelInfo(std::string name, size_t numArg) {
         // create new slot
