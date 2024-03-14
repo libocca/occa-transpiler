@@ -34,7 +34,9 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(
         *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
-
+    if (loopInfo->shouldSync()) {
+        suffixCode += dpcpp::SYNC_THREADS_BARRIER;
+    }
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";
 #endif

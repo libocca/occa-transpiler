@@ -4,10 +4,10 @@
 
 #include <clang/AST/AST.h>
 
-#include <optional>
 #include <clang/AST/Decl.h>
 #include <clang/AST/Expr.h>
 #include <clang/AST/Type.h>
+#include <optional>
 
 namespace oklt {
 
@@ -22,7 +22,8 @@ struct OklLoopInfo {
 
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
-    std::string tileSize;
+    std::string tileSize = "";
+    bool shmUsed = false;
 
     // references to shared and exclusive declared in this loop
     std::list<std::reference_wrapper<const clang::Decl>> shared = {};
@@ -50,26 +51,11 @@ struct OklLoopInfo {
         } op;
     } inc;
 
-    [[nodiscard]] bool IsInc() const {
-        bool ret = false;
-        if (!inc.val) {
-            ret = (inc.op.uo == UnOp::PreInc || inc.op.uo == UnOp::PostInc);
-        } else {
-            ret = (inc.op.bo == BinOp::AddAssign);
-        }
+    [[nodiscard]] bool shouldSync();
+    void markShmUsed();
 
-        ret = (ret && (condition.op == BinOp::Le || condition.op == BinOp::Lt));
-
-        return ret;
-    };
-    [[nodiscard]] bool isUnary() const {
-        if (inc.val) {
-            return false;
-        }
-        // should by unnecessary check, but just in case
-        return (inc.op.uo == UnOp::PreInc) || (inc.op.uo == UnOp::PostInc) ||
-               (inc.op.uo == UnOp::PreDec) || (inc.op.uo == UnOp::PostDec);
-    };
+    [[nodiscard]] bool IsInc() const;
+    [[nodiscard]] bool isUnary() const;
 
     OklLoopInfo* getAttributedParent();
     OklLoopInfo* getAttributedParent(std::function<bool(OklLoopInfo&)> f);

@@ -6,7 +6,6 @@ struct ComplexType {
     T imaginary;
 };
 
-// TODO: fix me when @kernel/@outer/@inner will be implementeds
 extern "C" __global__ void _occa_function1_0(const int* data) {
     int i = (0) + blockIdx.x;
     {

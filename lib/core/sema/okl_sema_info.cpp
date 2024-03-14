@@ -4,7 +4,61 @@
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
-///////////////////////////////////////////////
+
+[[nodiscard]] bool OklLoopInfo::shouldSync() {
+    // 1. There should be shared memory usage somewhere inside loop
+    if (!shmUsed) {
+        return false;
+    }
+
+    // 2. Should be highest @inner loop
+    if (!(is(LoopType::Inner) || is(LoopType::Inner, LoopType::Inner))) {
+        return false;
+    }
+    auto* parent = getAttributedParent();
+    if (!parent || parent->has(LoopType::Inner)) {
+        return false;
+    }
+
+    // 3. Should not be the last @inner loop
+    if (&parent->children.back() == this) {
+        return false;
+    }
+
+    return true;
+}
+
+void OklLoopInfo::markShmUsed() {
+    // Mark this loop and all of its ancestors
+    shmUsed = true;
+    auto* curLoop = parent;
+    while (curLoop) {
+        curLoop->shmUsed = true;
+        curLoop = curLoop->parent;
+    }
+}
+
+[[nodiscard]] bool OklLoopInfo::IsInc() const {
+    bool ret = false;
+    if (!inc.val) {
+        ret = (inc.op.uo == UnOp::PreInc || inc.op.uo == UnOp::PostInc);
+    } else {
+        ret = (inc.op.bo == BinOp::AddAssign);
+    }
+
+    ret = (ret && (condition.op == BinOp::Le || condition.op == BinOp::Lt));
+
+    return ret;
+};
+[[nodiscard]] bool OklLoopInfo::isUnary() const {
+    if (inc.val) {
+        return false;
+    }
+    // should by unnecessary check, but just in case
+    return (inc.op.uo == UnOp::PreInc) || (inc.op.uo == UnOp::PostInc) ||
+           (inc.op.uo == UnOp::PreDec) || (inc.op.uo == UnOp::PostDec);
+};
+
 [[nodiscard]] bool OklLoopInfo::is(const LoopType& loopType) const {
     return type.size() == 1 && type.front() == loopType;
 };

@@ -3,6 +3,7 @@
 
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
+#include "attributes/utils/cuda_subset/common.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/tile_utils.h"
@@ -17,8 +18,8 @@
 
 #include <functional>
 
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/AST/Decl.h>
+#include <clang/Rewrite/Core/Rewriter.h>
 
 #include <functional>
 
@@ -99,6 +100,9 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto prefixCode = buildPreffixTiledCode(
         *loopInfo, &updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+    if (loopInfo->shouldSync()) {
+        suffixCode += cuda_subset::SYNC_THREADS_BARRIER;
+    }
 
 #ifdef TRANSPILER_DEBUG_LOG
     const auto& md = *loopInfo;

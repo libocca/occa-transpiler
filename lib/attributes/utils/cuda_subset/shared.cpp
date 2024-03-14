@@ -28,6 +28,9 @@ HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, S
         return tl::make_unexpected(sharedError);
     }
 
+    // Save shared declaration to loopInfo
+    loopInfo->shared.emplace_back(std::ref(d));
+
     s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);
     return {};
 }

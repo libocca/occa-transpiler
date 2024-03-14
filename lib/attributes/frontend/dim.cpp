@@ -77,13 +77,6 @@ struct DimAttribute : public ParsedAttrInfo {
         auto* ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
         decl->addAttr(ctxAttr);
 
-        // ValueDecl:
-        //   ParmVarDecl -- func param
-        //   VarDecl -- var
-        //   FieldDecl -- struct field
-        // TypeDecl:
-        //   TypedefDecl -- typedef
-
         auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
         // Apply Attr to Type

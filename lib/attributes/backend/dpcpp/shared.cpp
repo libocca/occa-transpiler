@@ -1,5 +1,7 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/empty_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -14,6 +16,21 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     auto varName = var.getNameAsString();
     auto typeStr = var.getType().getLocalUnqualifiedType().getAsString();
+
+    Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
+
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto loopInfo = sema.getLoopInfo();
+    if (!loopInfo) {
+        return tl::make_unexpected(sharedError);
+    }
+    auto* loopBelowInfo = loopInfo->getFirstAttributedChild();
+    if (!loopBelowInfo || !(loopInfo->is(LoopType::Outer) && loopBelowInfo->is(LoopType::Inner))) {
+        return tl::make_unexpected(sharedError);
+    }
+
+    // Save shared declaration to loopInfo
+    loopInfo->shared.emplace_back(std::ref(*dyn_cast<Decl>(&var)));
 
     auto newDeclaration =
         util::fmt(
@@ -33,6 +50,9 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::DPCPP, SHARED_ATTR_NAME}, makeSpecificAttrHandle(handleSharedAttribute));
+    ok = ok && oklt::AttributeManager::instance().registerBackendHandler(
+                   {TargetBackend::DPCPP, SHARED_ATTR_NAME},
+                   makeSpecificAttrHandle(emptyHandleSharedStmtAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME
