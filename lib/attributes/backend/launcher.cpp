@@ -274,7 +274,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     auto loc = sm.getLocForStartOfFile(mainFileId);
 
 #ifdef TRANSPILER_DEBUG_LOG
-    auto offset = sourceManager.getFileOffset(decl.getLocation());
+    auto offset = sm.getFileOffset(d.getLocation());
     llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
 #endif
 
