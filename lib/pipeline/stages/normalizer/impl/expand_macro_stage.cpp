@@ -27,6 +27,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     const auto& sm = pp.getSourceManager();
     auto& rewriter = stage.getRewriter();
 
+    std::list<Token> macros;
     while (true) {
         Token tok{};
         pp.Lex(tok);
@@ -35,12 +36,26 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             break;
         }
 
+        if (tok.is(tok::unknown)) {
+            // Check for '@' symbol
+            auto spelling = pp.getSpelling(tok);
+            if (spelling.empty() || spelling[0] != OKL_ATTR_MARKER) {
+                break;
+            }
+            tok.setKind(tok::at);
+        }
+
+
         // catch start of macro expension
         if (!Lexer::isAtStartOfMacroExpansion(
                 tok.getLocation(), pp.getSourceManager(), pp.getLangOpts())) {
             continue;
         }
 
+        macros.emplace_back(std::move(tok));
+    }
+
+    for (const auto& tok : macros) {
         // and it's is in user file
         auto fid = sm.getFileID(tok.getLocation());
         if (SrcMgr::isSystem(sm.getFileCharacteristic(tok.getLocation()))) {

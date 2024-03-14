@@ -1,0 +1,28 @@
+{
+  "dependencies": {},
+  "metadata": [
+    {
+      "arguments": [
+        {
+          "const": false,
+          "dtype": {
+            "name": "int",
+            "type": "builtin"
+          },
+          "name": "in",
+          "ptr": true
+        },
+        {
+          "const": false,
+          "dtype": {
+            "name": "int",
+            "type": "builtin"
+          },
+          "name": "out",
+          "ptr": true
+        }
+      ],
+      "name": "f"
+    }
+  ]
+}
