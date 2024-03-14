@@ -167,7 +167,10 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, std::
     return {firstMeta, secondMeta};
 }
 
-std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, size_t loopNo, SessionStage& s) {
+std::string getRootLoopBody(const FunctionDecl& decl,
+                            OklLoopInfo& loopInfo,
+                            size_t loopNo,
+                            SessionStage& s) {
     std::stringstream out;
     out << " {\n";
 
@@ -302,6 +305,8 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     if (!kernelInfo || !kernelInfo->kernInfo) {
         return {};
     }
+
+    kernelInfo->kernInfo->name = decl.getNameAsString();
 
     auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
     rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);

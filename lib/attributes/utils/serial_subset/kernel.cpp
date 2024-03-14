@@ -32,6 +32,10 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
         }
     }
 
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    // TODO: pointer check
+    sema.getParsingKernelInfo()->kernInfo->name = decl.getNameAsString();
+
     return {};
 }
 
