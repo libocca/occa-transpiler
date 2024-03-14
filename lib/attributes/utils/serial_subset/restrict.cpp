@@ -8,7 +8,7 @@ const std::string restrictText = "__restrict__ ";
 }  // namespace
 
 HandleResult handleRestrictAttribute(const clang::Attr& a,
-                                     const clang::ParmVarDecl& decl,
+                                     const clang::Decl& decl,
                                      SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';

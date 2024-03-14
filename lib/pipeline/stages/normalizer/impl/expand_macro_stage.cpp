@@ -45,10 +45,14 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             tok.setKind(tok::at);
         }
 
+        // catch only valid macro loc
+        auto loc = tok.getLocation();
+        if (!loc.isValid() || !loc.isMacroID()) {
+            continue;
+        }
 
         // catch start of macro expension
-        if (!Lexer::isAtStartOfMacroExpansion(
-                tok.getLocation(), pp.getSourceManager(), pp.getLangOpts())) {
+        if (!Lexer::isAtStartOfMacroExpansion(loc, pp.getSourceManager(), pp.getLangOpts())) {
             continue;
         }
 

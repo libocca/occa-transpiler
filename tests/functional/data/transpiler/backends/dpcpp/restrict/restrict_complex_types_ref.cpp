@@ -12,6 +12,12 @@ struct Configs {
     unsigned long size2;
 };
 
+struct Data {
+    float* __restrict__ x;
+    float* __restrict__ y;
+    unsigned long size;
+};
+
 // TODO: fix me when @kernel/@outer/@inner are implemented
 extern "C" void _occa_function1_0(sycl::queue* queue_,
                                   sycl::nd_range<3>* range_,

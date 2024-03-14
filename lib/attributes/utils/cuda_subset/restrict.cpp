@@ -28,7 +28,9 @@ HandleResult handleRestrictAttribute(const clang::Attr& a,
     auto ident = [](const clang::Decl& decl) {
         switch (decl.getKind()) {
             case Decl::Field:
-                return cast<FieldDecl>(decl).getQualifiedNameAsString();
+                return cast<FieldDecl>(decl).getNameAsString();
+            case Decl::ParmVar:
+                return cast<ParmVarDecl>(decl).getQualifiedNameAsString();
             default:
                 return cast<VarDecl>(decl).getQualifiedNameAsString();
         }
