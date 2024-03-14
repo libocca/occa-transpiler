@@ -112,7 +112,7 @@ TEST(TestKernelInfo, KernelInfoJsonTest) {
     EXPECT_EQ(std::string("28e58002e281fe6b18589982a2871141d4b0bea8d0691c6564edf0d25c583d93"),
               info.hash);
     EXPECT_EQ(1, info.kernels.size());
-    EXPECT_EQ(std::string("_occa_addVectors_0"), info.kernels[0].name);
+    EXPECT_EQ(std::string("_occa_addVectors_0"), info.kernels.front().name);
     EXPECT_TRUE(info.props.has_value());
     EXPECT_EQ(std::string("nvcc"), info.props.value().compiler);
 }

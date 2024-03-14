@@ -6,6 +6,7 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "core/utils/type_converter.h"
 
 // #define OKL_LAUNCHER_RECURSIVE
 
@@ -22,9 +23,16 @@ std::string getTiledVariableName(const OklLoopInfo& forLoop) {
 }
 
 // TODO: Replace with ArgumentInfo::toString()
-std::string getFunctionDeclParamsStr(const FunctionDecl& decl) {
+std::string getFunctionDeclParamsStr(const FunctionDecl& decl, KernelInfo& kernelInfo) {
     std::stringstream out;
     // out << "(";
+
+    kernelInfo.args.clear();
+
+    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
+                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                                              .name = "deviceKernels",
+                                              .is_ptr = true});
     out << util::fmt("{} {} {}", "occa::modeKernel_t", "**", "deviceKernels").value();
 
     for (auto p : decl.parameters()) {
@@ -35,10 +43,17 @@ std::string getFunctionDeclParamsStr(const FunctionDecl& decl) {
 
         auto t = p->getType();
         if (t.getTypePtrOrNull() && !t->isPointerType()) {
+            kernelInfo.args.emplace_back(toOklArgInfo(*p).value());
+            kernelInfo.args.back().is_const = true;
             out << util::fmt(
                        "{} {} {}", t.getNonReferenceType().getAsString(), "&", p->getNameAsString())
                        .value();
         } else {
+            kernelInfo.args.emplace_back(
+                ArgumentInfo{.is_const = false,
+                             .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                             .name = p->getNameAsString(),
+                             .is_ptr = true});
             out << util::fmt("{} {} {}", "occa::modeMemory_t", "*", p->getNameAsString()).value();
         }
     }
@@ -284,11 +299,11 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     rewriter.ReplaceText(getAttrFullSourceRange(a), externC);
 
     auto kernelInfo = sema.getParsingKernelInfo();
-    if (!kernelInfo) {
+    if (!kernelInfo || !kernelInfo->kernInfo) {
         return {};
     }
 
-    auto paramsStr = getFunctionDeclParamsStr(decl);
+    auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
     rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
 
     size_t n = 0;
