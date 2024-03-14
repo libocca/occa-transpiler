@@ -115,7 +115,7 @@ bool isLegalTopLoopLevel(AttributedLoopTypes loopType) {
 
 namespace oklt {
 
-void OklSemaCtx::Reset() {
+void OklSemaCtx::clear() {
     _parsingKernInfo = nullptr;
     _parsedKernelList.clear();
     _programMetaData = ProgramMetaData();

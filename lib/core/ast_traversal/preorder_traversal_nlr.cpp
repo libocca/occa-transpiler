@@ -250,7 +250,7 @@ bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
 bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translationUnitDecl) {
     auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
-    sema.Reset();
+    sema.clear();
 
     auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
     tnodes.clear();
