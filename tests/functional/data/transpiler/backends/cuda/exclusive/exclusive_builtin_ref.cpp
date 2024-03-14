@@ -23,7 +23,6 @@ extern "C" __global__ void _occa_addVectors_0(const int N,
 
                 ab[i + j] = add(g_a, i + j, s_b, j);
             }
-            __syncthreads();
         }
     }
 }

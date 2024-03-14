@@ -101,7 +101,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         *loopInfo, &updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     if (loopInfo->shouldSync()) {
-        suffixCode += cuda_subset::SYNC_THREADS_BARRIER;
+        suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
     }
 
 #ifdef TRANSPILER_DEBUG_LOG

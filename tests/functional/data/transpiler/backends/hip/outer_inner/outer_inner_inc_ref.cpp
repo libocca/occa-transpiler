@@ -16,7 +16,6 @@ extern "C" __global__ void _occa_addVectors0_0(const int entries,
         {
             int i = (0) + ((1) * threadIdx.x);
             { ab[i] = add(a[i], b[i]); }
-            __syncthreads();
         }
     }
 }
@@ -31,7 +30,6 @@ extern "C" __global__ void _occa_addVectors1_0(const int entries,
         {
             int i = (0) + ((2) * threadIdx.x);
             { ab[i] = add(a[i], b[i]); }
-            __syncthreads();
         }
     }
 }
@@ -46,7 +44,6 @@ extern "C" __global__ void _occa_addVectors2_0(const int entries,
         {
             int i = (0) + threadIdx.x;
             { ab[i] = add(a[i], b[i]); }
-            __syncthreads();
         }
     }
 }
@@ -61,7 +58,6 @@ extern "C" __global__ void _occa_addVectors3_0(const int entries,
         {
             int i = (0) + threadIdx.x;
             { ab[i] = add(a[i], b[i]); }
-            __syncthreads();
         }
     }
 }
@@ -82,10 +78,8 @@ extern "C" __global__ void _occa_addVectors4_0(const int entries,
                     {
                         int ii = (0) + threadIdx.x;
                         { ab[ii + k] = add(a[i], b[j]); }
-                        __syncthreads();
                     }
                 }
-                __syncthreads();
             }
         }
     }
@@ -106,10 +100,8 @@ extern "C" __global__ void _occa_addVectors5_0(const int entries,
                     {
                         int ii = (0) + threadIdx.x;
                         { ab[ii + k] = add(a[i], b[j]); }
-                        __syncthreads();
                     }
                 }
-                __syncthreads();
             }
         }
     }
@@ -131,10 +123,8 @@ extern "C" __global__ void _occa_addVectors6_0(const int entries,
                     {
                         int ii = (0) + threadIdx.x;
                         { ab[ii + k] = add(a[i], b[j]); }
-                        __syncthreads();
                     }
                 }
-                __syncthreads();
             }
         }
     }

@@ -19,5 +19,5 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        int& openedScopeCounter,
                                        clang::Rewriter& rewriter);
 
-const std::string SYNC_THREADS_BARRIER = "item_.barrier(sycl::access::fence_space::local_space);";
+const std::string SYNC_THREADS_BARRIER = "item_.barrier(sycl::access::fence_space::local_space)";
 }  // namespace oklt::dpcpp

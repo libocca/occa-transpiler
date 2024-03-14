@@ -15,7 +15,10 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 #endif
 
     auto varName = var.getNameAsString();
-    auto typeStr = var.getType().getLocalUnqualifiedType().getAsString();
+    auto typeStrAttributed = var.getType().getLocalUnqualifiedType().getAsString();
+    // Desugar since it is attributed (since it is @shared variable)
+    // auto typeStr = var.getType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString();
+    auto typeStr = QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
 
     Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
 

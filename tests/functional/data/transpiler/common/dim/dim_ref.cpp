@@ -19,7 +19,6 @@ extern "C" __global__ void _occa_test_kernel_0_0(const int entries,
         {
             int j = (0) + ((1) * threadIdx.x);
             { ab[i] = a[i] + b[j] + mat[i + (8 * (j))]; }
-            __syncthreads();
         }
     }
 }
@@ -35,7 +34,6 @@ extern "C" __global__ void _occa_test_kernel_1_0(const int entries,
         {
             int j = (0) + ((1) * threadIdx.x);
             { ab[i] = a[i] + b[j] + static_cast<float>(mat[i + (8 * (j))]); }
-            __syncthreads();
         }
     }
 }
@@ -51,7 +49,6 @@ extern "C" __global__ void _occa_test_kernel_2_0(const int entries,
         {
             int j = (0) + ((1) * threadIdx.x);
             { ab[i] = a[i] + b[j] + mat[i + (8 * (j))].x; }
-            __syncthreads();
         }
     }
 }
@@ -67,7 +64,6 @@ extern "C" __global__ void _occa_test_kernel_3_0(const int entries,
         {
             int j = (0) + ((1) * threadIdx.x);
             { ab[i] = a[i] + b[j] + mat[i].x + mat[j].y; }
-            __syncthreads();
         }
     }
 }
@@ -99,7 +95,6 @@ extern "C" __global__ void _occa_test_kernel_5_0(const int entries,
                         a[i] + b[j] + mat[i + (8 * (j))].x + mat[j + (8 * (i))].y;
                 }
             }
-            __syncthreads();
         }
     }
 }
@@ -115,7 +110,6 @@ extern "C" __global__ void _occa_test_kernel_6_0(const int entries,
         {
             int j = (0) + ((1) * threadIdx.x);
             { mat[i + (8 * (j))] = a[i] + b[j] + mat[i + (8 * (mat[j + (8 * (0))]))]; }
-            __syncthreads();
         }
     }
 }
@@ -138,7 +132,6 @@ extern "C" __global__ void _occa_test_kernel_7_0(const int entries,
                 mat[i + (8 * (j + get1() + (i * j / get1())))] =
                     a[i] + b[j] + mat[i + 12 + (8 * (mat[j + (8 * (get1()))]))];
             }
-            __syncthreads();
         }
     }
 }

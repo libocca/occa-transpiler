@@ -14,7 +14,6 @@ extern "C" __global__ void _occa_function1_0(const int* data) {
         {
             int j = (0) + threadIdx.x;
             {}
-            __syncthreads();
         }
     }
 }
