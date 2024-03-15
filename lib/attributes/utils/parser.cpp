@@ -19,48 +19,76 @@ struct BraceCounter {
     unsigned short bracket = 0;
     unsigned short brace = 0;
     explicit operator bool() const { return (paren != 0 || bracket != 0 || brace != 0); }
+    void count(const Token& tok) {
+        auto kind = tok.getKind();
+        switch (kind) {
+            case tok::l_paren:
+                ++paren;
+                break;
+            case tok::r_paren:
+                --paren;
+                break;
+            case tok::l_square:
+                ++bracket;
+                break;
+            case tok::r_square:
+                --bracket;
+                break;
+            case tok::l_brace:
+                ++brace;
+                break;
+            case tok::r_brace:
+                --brace;
+                break;
+            default:
+                break;
+        }
+    }
 };
 
 unsigned getIntegerWidth(CharLiteralParser& Literal, const TargetInfo& TI) {
-    if (Literal.isMultiChar())
+    if (Literal.isMultiChar()) {
         return TI.getIntWidth();
-    if (Literal.isWide())
+    } else if (Literal.isWide()) {
         return TI.getWCharWidth();
-    if (Literal.isUTF16())
+    } else if (Literal.isUTF16()) {
         return TI.getChar16Width();
-    if (Literal.isUTF32())
+    } else if (Literal.isUTF32()) {
         return TI.getChar32Width();
-
-    // char or char8_t
-    return TI.getCharWidth();
+    } else {
+        // char or char8_t
+        return TI.getCharWidth();
+    }
 }
 
 unsigned getIntegerWidth(NumericLiteralParser& Literal, const TargetInfo& TI) {
-    if (Literal.isBitInt)
+    if (Literal.isBitInt) {
         return TI.getMaxBitIntWidth();
-    if (Literal.isLong)
+    } else if (Literal.isLong) {
         return TI.getLongWidth();
-    if (Literal.isLongLong || Literal.isSizeT)
+    } else if (Literal.isLongLong || Literal.isSizeT) {
         return TI.getLongLongWidth();
-
-    return TI.getIntWidth();
+    } else {
+        return TI.getIntWidth();
+    }
 }
 
 const llvm::fltSemantics& getFloatFormat(NumericLiteralParser& Literal, const TargetInfo& TI) {
     assert(Literal.isFloatingLiteral() && "Expected floating point literal");
-    if (Literal.isHalf)  // float16_t ?
+    if (Literal.isHalf) {  // float16_t ?
         return TI.getFloatFormat();
-    //        return TI.getHalfFormat();
-    if (Literal.isFloat)  // float, float32_t
+        //        return TI.getHalfFormat();
+    } else if (Literal.isFloat) {  // float, float32_t
         return TI.getFloatFormat();
-    if (Literal.isFloat16)  // float16_t
+    } else if (Literal.isFloat16) {  // float16_t
         return TI.getFloatFormat();
-    //        return TI.getBFloat16Format();
-    if (Literal.isFloat128)  // float128_t
-                             //        return TI.getLongDoubleFormat();
+        //        return TI.getBFloat16Format();
+    } else if (Literal.isFloat128) {  // float128_t
+                                      //        return TI.getLongDoubleFormat();
         return TI.getFloat128Format();
-
-    return TI.getDoubleFormat();  // double, float64_t
+    } else {
+        return TI.getDoubleFormat();  // double, float64_t
+    }
 }
 
 class AttrParamParser {
@@ -74,13 +102,15 @@ class AttrParamParser {
     TokenStream::const_iterator TokIt = {};
 
     std::optional<OKLAttrParam> parseArg() {
-        if (TokIt == Toks.end())
+        if (TokIt == Toks.end()) {
             return std::nullopt;
+        }
 
         if (TokIt->is(tok::at)) {
             auto peekTokIt = std::next(TokIt);
-            if (peekTokIt != Toks.end() && peekTokIt->is(tok::raw_identifier))
+            if (peekTokIt != Toks.end() && peekTokIt->is(tok::raw_identifier)) {
                 return parseOKLAttr();
+            }
         }
 
         bool isExpr = false;
@@ -91,19 +121,7 @@ class AttrParamParser {
         while (TokIt != Toks.end()) {
             argToks.push_back(*TokIt);
 
-            if (TokIt->is(tok::l_paren)) {
-                ++cnt.paren;
-            } else if (TokIt->is(tok::l_brace)) {
-                ++cnt.brace;
-            } else if (TokIt->is(tok::l_square)) {
-                ++cnt.bracket;
-            } else if (TokIt->is(tok::r_paren)) {
-                --cnt.paren;
-            } else if (TokIt->is(tok::r_brace)) {
-                --cnt.brace;
-            } else if (TokIt->is(tok::r_square)) {
-                --cnt.bracket;
-            }
+            cnt.count(*TokIt);
 
             if (tokKind == tok::unknown) {
                 tokKind = TokIt->getKind();
@@ -116,8 +134,9 @@ class AttrParamParser {
 
             ++TokIt;
 
-            if (TokIt->isOneOf(tok::comma, tok::r_paren) && !cnt)
+            if (TokIt->isOneOf(tok::comma, tok::r_paren) && !cnt) {
                 break;
+            }
         };
 
         if (argToks.empty()) {
@@ -157,22 +176,25 @@ class AttrParamParser {
                                                     PP.getLangOpts(),
                                                     PP.getTargetInfo(),
                                                     PP.getDiagnostics());
-                    if (lit.hadError)
+                    if (lit.hadError) {
                         break;  // ExprError();
+                    }
 
                     if (lit.isFloatingLiteral()) {
                         APFloat val(getFloatFormat(lit, PP.getTargetInfo()));
                         lit.GetFloatValue(val);
-                        if (argToks.front().is(tok::minus))
+                        if (argToks.front().is(tok::minus)) {
                             val = neg(val);
+                        }
                         return std::make_optional<OKLAttrParam>(rawBuf, std::move(val));
                     }
 
                     if (lit.isIntegerLiteral()) {
                         APSInt val(getIntegerWidth(lit, PP.getTargetInfo()), lit.isUnsigned);
                         lit.GetIntegerValue(val);
-                        if (argToks.front().is(tok::minus))
+                        if (argToks.front().is(tok::minus)) {
                             val.negate();
+                        }
                         return std::make_optional<OKLAttrParam>(rawBuf, std::move(val));
                     }
 
@@ -188,8 +210,9 @@ class AttrParamParser {
                 case tok::utf32_char_constant: {  // U'x'
                     auto lit = CharLiteralParser(
                         litBuf.begin(), litBuf.end(), t.getLocation(), PP, t.getKind());
-                    if (lit.hadError())
+                    if (lit.hadError()) {
                         break;  // ExprError();
+                    }
 
                     auto val = APSInt(getIntegerWidth(lit, PP.getTargetInfo()));
                     val = lit.getValue();
@@ -220,8 +243,9 @@ class AttrParamParser {
                 case tok::utf16_string_literal:    // u"x"
                 case tok::utf32_string_literal: {  // U"x"
                     auto lit = StringLiteralParser(argToks, PP);
-                    if (lit.hadError)
+                    if (lit.hadError) {
                         break;  // ExprError();
+                    }
 
                     auto ptr = reinterpret_cast<const void*>(lit.GetString().data());
                     auto n = lit.GetNumStringChars();
@@ -262,14 +286,16 @@ class AttrParamParser {
     }
 
     std::optional<OKLAttrParam> parseOKLAttr() {
-        if (TokIt == Toks.end() || !TokIt->is(tok::at))
+        if (TokIt == Toks.end() || !TokIt->is(tok::at)) {
             return std::nullopt;
+        }
 
         const auto* rawStart = SM.getCharacterData(TokIt->getLocation());
 
         ++TokIt;
-        if (TokIt == Toks.end() || !TokIt->is(tok::raw_identifier))
+        if (TokIt == Toks.end() || !TokIt->is(tok::raw_identifier)) {
             return std::nullopt;
+        }
 
         auto name = std::string("okl::") + TokIt->getRawIdentifier().str();
 
@@ -293,11 +319,13 @@ class AttrParamParser {
    public:
     OKLParsedAttr parseOKLAttr(StringRef attrFullName) {
         OKLParsedAttr ret;
-        if (!attrFullName.empty())
+        if (!attrFullName.empty()) {
             ret.name = attrFullName;
+        }
 
-        if (TokIt == Toks.end() || !TokIt->is(tok::l_paren))
+        if (TokIt == Toks.end() || !TokIt->is(tok::l_paren)) {
             return ret;
+        }
 
         ++TokIt;
 
@@ -316,8 +344,9 @@ class AttrParamParser {
                 if (peekTokIt != Toks.end() && peekTokIt->is(tok::equal)) {
                     std::advance(TokIt, 2);  // tok::identifier, tok::equal
                     auto v = parseArg();
-                    if (!v.has_value())
+                    if (!v.has_value()) {
                         break;
+                    }
 
                     ret.kwargs.insert_or_assign(name, v.value());
                     isParsed = true;
@@ -327,8 +356,10 @@ class AttrParamParser {
             // Regular arg
             if (!isParsed) {
                 auto v = parseArg();
-                if (!v.has_value())
+                if (!v.has_value()) {
                     break;
+                }
+
                 ret.args.push_back(std::move(v.value()));
             }
 
@@ -338,8 +369,9 @@ class AttrParamParser {
             }
 
             // Something gone wrong?
-            if (TokIt->isNot(tok::r_paren))
+            if (TokIt->isNot(tok::r_paren)) {
                 break;
+            }
         }
 
         return ret;
@@ -397,10 +429,6 @@ class AttrParamParser {
 
 namespace oklt {
 using namespace clang;
-
-OKLParsedAttr::OKLParsedAttr() = default;
-OKLParsedAttr::OKLParsedAttr(const std::string_view name)
-    : name(name){};
 
 OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage) {
     assert((isa<AnnotateAttr>(attr) || isa<SuppressAttr>(attr)) &&

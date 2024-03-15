@@ -94,13 +94,16 @@ class OKLAttrParam {
     void getTo(T& v, T&& u);
 
    private:
-    std::string_view rawData;
+    std::string rawData;
     std::any data;
 };
 
 struct OKLParsedAttr {
-    explicit OKLParsedAttr();
-    explicit OKLParsedAttr(const std::string_view name);
+    explicit OKLParsedAttr() = default;
+    explicit OKLParsedAttr(const std::string_view name)
+        : name(name){};
+    explicit OKLParsedAttr(const std::string& name)
+        : name(name){};
 
     std::string name;
 
