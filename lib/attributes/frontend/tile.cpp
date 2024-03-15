@@ -95,7 +95,7 @@ ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, Ses
         }
     }
 
-    for (auto param : data.kwargs) {
+    for (const auto &param : data.kwargs) {
         if (param.first != "check") {
             return tl::make_unexpected(Error{{}, "[@tile] does not take this kwarg"});
         }
