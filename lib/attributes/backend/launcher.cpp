@@ -330,12 +330,12 @@ std::string getRootLoopBody(const FunctionDecl& decl,
     out << "kernel";
     out << "(";
     {
-        out << "deviceKernels";
-        for (auto param : decl.parameters()) {
+        for (auto it = decl.param_begin(), end = decl.param_end(); it != end; ++it) {
+            auto* param = *it;
             if (!param) {
                 continue;
             }
-            out << ", " << param->getNameAsString();
+            out << (it != decl.param_begin() ? ", " : "") << param->getNameAsString();
         }
     }
     out << ");\n";
@@ -388,6 +388,7 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
         removeAttribute(loop.attr, s);
 
         auto body = getRootLoopBody(decl, loop, n, s);
+        // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
         rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
         rewriter.ReplaceText(loop.stmt.getBody()->getSourceRange(), body);
         ++n;

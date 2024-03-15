@@ -51,15 +51,29 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
     const auto& sm = _compiler.getSourceManager();
     auto mainFID = sm.getMainFileID();
     for (auto it = _rewriter->buffer_begin(); it != _rewriter->buffer_end(); ++it) {
-        // skip main source file
-        if (it->first == mainFID) {
+        const auto& [fid, buf] = *it;
+
+        // sanity check
+        if (fid.isInvalid()) {
             continue;
         }
 
-        std::string fileName = sm.getFileEntryForID(it->first)->getName().data();
+        // skip main source file
+        if (fid == mainFID) {
+            continue;
+        }
+
+        auto* fileEntry = sm.getFileEntryForID(fid);
+        if (!fileEntry) {
+            continue;
+        }
+        std::string fileName = fileEntry->getName().data();
         headers.fileMap[fileName] = [](const auto& buf) -> std::string {
+            if (buf.size() == 0) {
+                return "";
+            }
             return std::string{buf.begin(), buf.end()};
-        }(it->second);
+        }(buf);
     }
 
     return headers;
