@@ -26,6 +26,8 @@ std::string TranspilerErrorsCategory::message(int ev) const {
             return "atomic left expression must be lvalue";
         case OkltTranspilerErrorCode::INTERNAL_ERROR_PARAMS_NULL_OBJ:
             return "internal error, parameter object can't be null pointer";
+        case OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL:
+            return "internal error, kernel info object can't be null pointer";
     }
     return "unrecognized error";
 }

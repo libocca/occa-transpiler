@@ -9,6 +9,7 @@ class Backend(Enum):
     CUDA = 2
     HIP = 3
     DPCPP = 4
+    LAUNCHER = 5
 
     def from_str(s: str) -> "Backend":
         s = s.lower()
@@ -22,6 +23,8 @@ class Backend(Enum):
             return Backend.CUDA
         if s == "hip":
             return Backend.HIP
+        if s == "launcher":
+            return Backend.LAUNCHER
 
     def to_str(self) -> str:
         if self == Backend.SERIAL:
@@ -34,6 +37,8 @@ class Backend(Enum):
             return "cuda"
         if self == Backend.HIP:
             return "hip"
+        if self == Backend.LAUNCHER:
+            return "launcher"
 
 
 def main(occa_tool: str, data_path: str, backend: Backend):

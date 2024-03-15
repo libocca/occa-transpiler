@@ -1,4 +1,4 @@
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 __device__ static float add1(const float *a, int i, const float *b, int j) {
   return a[i] + b[i];

@@ -1,4 +1,4 @@
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 __constant__ int offset = 1;
 
 // template<typename T>

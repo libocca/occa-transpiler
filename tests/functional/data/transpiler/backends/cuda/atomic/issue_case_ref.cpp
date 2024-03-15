@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 
 struct ComplexTypeF32 {
-  ComplexTypeF32 &operator=(const ComplexTypeF32 &) = default;
+  __device__ ComplexTypeF32 &operator=(const ComplexTypeF32 &) = default;
   float real;
   float imag;
 };

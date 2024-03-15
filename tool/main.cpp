@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     transpile_command.add_argument("-D", "--define")
         .default_value<std::vector<std::string>>({})
         .append()
-        .help("Specify user preprocessor definitions");
+        .help("Specify user preprocessor definitions, -D<define>=<content>");
     transpile_command.add_argument("-I", "--include")
         .default_value<std::vector<std::filesystem::path>>({})
         .append()

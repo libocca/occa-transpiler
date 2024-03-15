@@ -2,6 +2,7 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "pipeline/stages/transpiler/error_codes.h"
 
 namespace oklt::serial_subset {
 using namespace clang;
@@ -34,6 +35,13 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
             rewriter.InsertTextAfter(locRange.getEnd(), " &");
         }
     }
+
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+                                         "handleKernelAttribute"});
+    }
+    sema.getParsingKernelInfo()->kernInfo->name = decl.getNameAsString();
 
     return {};
 }

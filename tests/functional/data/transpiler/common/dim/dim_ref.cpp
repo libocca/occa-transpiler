@@ -5,10 +5,10 @@ struct Coord {
     float y;
 };
 
-typedef float *mat89_f;
-typedef int *mat89_i;
-typedef Coord *mat89_s;
-typedef Coord *mat8_s;
+typedef float* mat89_f;
+typedef int* mat89_i;
+typedef Coord* mat89_s;
+typedef Coord* mat8_s;
 
 // float dim
 extern "C" __global__ void _occa_test_kernel_0_0(const int entries,
@@ -71,11 +71,25 @@ extern "C" __global__ void _occa_test_kernel_3_0(const int entries,
 }
 
 // inside attributed loop
-// TODO: Update after rewriter conflict resolving is merged
-// @kernel void test_kernel_4(const int entries, float* a, float* b, float* ab,
-// mat89_s mat) { for (int i = 0; i < mat(7, 7); i += mat(1, 1); @outer(0)) {
-// for (int j = mat(0, 0); j < entries; j += 1; @inner(0)) {
-// ab[i] = a[i] + b[j] + mat(i, j).x + mat(j, i).y;
+extern "C" __global__ void _occa_test_kernel_4_0(const int entries,
+                                                 float* a,
+                                                 float* b,
+                                                 float* ab,
+                                                 mat89_s mat) {
+    int i = (mat[7 + (8 * (7))]) + ((mat[1 + (8 * (1))]) * blockIdx.x);
+    {
+        {
+            int j = (mat[0 + (8 * (0))]) + ((1) * threadIdx.x);
+            { ab[i] = a[i] + b[j] + mat[i + (8 * (j))].x + mat[j + (8 * (i))].y; }
+        }
+    }
+}
+
+// TODO: doesn't work if dim is in condition right now
+// @kernel void test_kernel_4_2(const int entries, float* a, float* b, float*
+// ab, mat89_s mat) { for (int i = mat(7, 7); i < mat(0, 0); i += mat(1, 1);
+// @outer(0)) { for (int j = mat(0, 0); j < entries; j += 1; @inner(0)) { ab[i]
+// = a[i] + b[j] + mat(i, j).x + mat(j, i).y;
 // }
 // }
 // }

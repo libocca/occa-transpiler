@@ -1,4 +1,4 @@
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 // pointer to const
 __constant__ int *ptr_const0 = 0;
 __constant__ int *ptr_const1 = 0;

@@ -74,15 +74,15 @@ struct LoopMetaData {
 
         // TODO: Currently getLatestSourceText failes. Possibly due to bug in Rewriter
         auto& ctx = l.var.varDecl->getASTContext();
-        range.start = getLatestSourceText(*l.range.start, r);
-        range.end = getLatestSourceText(*l.range.end, r);
+        range.start = "(" + getLatestSourceText(*l.range.start, r) + ")";
+        range.end = "(" + getLatestSourceText(*l.range.end, r) + ")";
         range.size = l.range.size;
 
         condition.cmp = getLatestSourceText(*l.condition.cmp_, r);
         condition.op = l.condition.op;
 
         if (l.inc.val) {
-            inc.val = getLatestSourceText(*l.inc.val, r);
+            inc.val = "(" + getLatestSourceText(*l.inc.val, r) + ")";
             inc.op.bo = l.inc.op.bo;
         } else {
             inc.op.uo = l.inc.op.uo;
@@ -379,6 +379,8 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     if (!kernelInfo || !kernelInfo->kernInfo) {
         return {};
     }
+
+    kernelInfo->kernInfo->name = decl.getNameAsString();
 
     auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
     rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);

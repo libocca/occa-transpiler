@@ -1,4 +1,4 @@
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 __constant__ int offset = 1;
 
 __device__ float add(float a, float b) { return a + b + offset; }
