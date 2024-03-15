@@ -6,12 +6,15 @@ template <typename T> struct ComplexType {
   __device__ T calc();
 
   __device__ ComplexType(T in) : v1(in), v2(in) {}
+
+  template <typename U> __device__ U calc(T in);
 };
 
 struct ComplexTypeFloat {
   float v1;
   float v2;
   __device__ float calc();
+  template <typename T> __device__ ComplexTypeFloat(T in);
 };
 
 extern "C" __global__ void _occa_reductionWithSharedMemory_0(const int entries,

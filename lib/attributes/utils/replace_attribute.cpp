@@ -49,8 +49,6 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier) {
     // INFO: Check if function is not attributed with OKL attribute
-    auto& am = s.getAttrManager();
-
     auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
 
@@ -66,10 +64,16 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
 HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
                              SessionStage& s,
                              const std::string& qualifier) {
+    const auto& sm = s.getCompiler().getSourceManager();
+    // TODO move the logic to ast traversal to be common for all handlers
+    // skip system headers
+    if (SrcMgr::isSystem(sm.getFileCharacteristic(cxxRecord.getLocation()))) {
+        return {};
+    }
+
     auto spacedModifier = qualifier + " ";
 
     // for all explicit constructors/methods add qualifier
-    // updateFuncRange(cxxRecord.ctors(), s.getRewriter(), spacedModifier);
     for (const auto& method : cxxRecord.methods()) {
         if (method->isImplicit()) {
             continue;
@@ -77,6 +81,21 @@ HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
         auto loc = method->getBeginLoc();
         s.getRewriter().InsertTextBefore(loc, spacedModifier);
     }
+
+    // for all templated constructors/methods add qualifier
+    for (const auto& decl : cxxRecord.decls()) {
+        if (!isa<FunctionTemplateDecl>(decl))
+        {
+            continue;
+        }
+        auto funcTemplate = dyn_cast<FunctionTemplateDecl>(decl);
+        if (funcTemplate->isImplicit()) {
+            continue;
+        }
+        auto loc = funcTemplate->getAsFunction()->getBeginLoc();
+        s.getRewriter().InsertTextBefore(loc, spacedModifier);
+    }
+
 
     return {};
 }
