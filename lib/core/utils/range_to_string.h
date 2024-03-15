@@ -17,7 +17,7 @@ class Expr;
 }  // namespace clang
 
 // TODO: this is temporary thing until bug with rewriter is found out
-constexpr bool IGNORE_REWRITTEN_TEXT = true;
+constexpr bool IGNORE_REWRITTEN_TEXT = false;
 
 namespace oklt {
 std::string getSourceText(const clang::SourceRange& range, clang::ASTContext& ctx);
@@ -40,8 +40,9 @@ std::string getLatestSourceText(const NodeType& node,
     if constexpr (IGNORE_REWRITTEN_TEXT) {
         return getSourceText(node, rewriter);
     } else {
-        return rewriter.getRewrittenText(
-            clang::CharSourceRange::getCharRange(node.getSourceRange()));
+        // auto range = clang::CharSourceRange::getCharRange(node.getSourceRange());
+        auto range = clang::CharSourceRange::getTokenRange(node.getSourceRange());
+        return rewriter.getRewrittenText(range);
     }
 }
 
