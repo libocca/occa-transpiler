@@ -24,11 +24,9 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     SourceRange frange(func.getNameInfo().getSourceRange());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    // TODO: pointer check
     if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
-        s.pushError(makeError(OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
-                              "handleKernelAttribute"));
-        return {};
+        return tl::unexpected<Error>(makeError(
+            OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL, "handleKernelAttribute"));
     }
     sema.getParsingKernelInfo()->kernInfo->name = newFunctionName;
 
