@@ -1,4 +1,4 @@
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 // int const, const int
 __constant__ int var_const0 = 0;
 __constant__ int var_const1 = 0;

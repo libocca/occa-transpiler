@@ -1,9 +1,10 @@
-#include <cuda_runtime.h>
+#include <CL/sycl.hpp>
+using namespace sycl;
 
-__device__ static float add1(const float *a, int i, const float *b, int j) {
+SYCL_EXTERNAL static float add1(const float *a, int i, const float *b, int j) {
   return a[i] + b[i];
 }
 
-__device__ float add2(const float *a, int i, const float *b, int j) {
+SYCL_EXTERNAL float add2(const float *a, int i, const float *b, int j) {
   return a[i] + b[i];
 }
