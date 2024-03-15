@@ -66,6 +66,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/hip/global_constant.cpp
     attributes/backend/hip/translation_unit.cpp
     attributes/backend/hip/global_function.cpp
+    attributes/backend/hip/cxx_record.cpp
     attributes/backend/hip/tile.cpp
     attributes/backend/hip/inner.cpp
     attributes/backend/hip/outer.cpp
@@ -80,6 +81,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/cuda/global_constant.cpp
     attributes/backend/cuda/translation_unit.cpp
     attributes/backend/cuda/global_function.cpp
+    attributes/backend/cuda/cxx_record.cpp
     attributes/backend/cuda/atomic.cpp
     attributes/backend/cuda/kernel.cpp
     attributes/backend/cuda/inner.cpp

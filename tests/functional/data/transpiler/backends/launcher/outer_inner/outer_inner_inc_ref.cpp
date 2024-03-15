@@ -23,7 +23,7 @@ extern "C" void addVectors0(occa::modeKernel_t** deviceKernels,
         inner[0] = (entries - 0 + 1 - 1) / 1;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }
 
@@ -43,7 +43,7 @@ extern "C" void addVectors1(occa::modeKernel_t** deviceKernels,
         inner[0] = (entries - 0 + 2 - 1) / 2;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }
 
@@ -63,7 +63,7 @@ extern "C" void addVectors2(occa::modeKernel_t** deviceKernels,
         inner[0] = 1 + entries - 1 - 0;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }
 
@@ -83,7 +83,7 @@ extern "C" void addVectors3(occa::modeKernel_t** deviceKernels,
         inner[0] = entries - 0;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }
 
@@ -108,7 +108,7 @@ extern "C" void addVectors4(occa::modeKernel_t** deviceKernels,
         inner[0] = entries - 0;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }
 
@@ -132,7 +132,7 @@ extern "C" void addVectors5(occa::modeKernel_t** deviceKernels,
         inner[0] = entries - 0;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }
 
@@ -157,6 +157,6 @@ extern "C" void addVectors6(occa::modeKernel_t** deviceKernels,
         inner[0] = entries - 0;
         occa::kernel kernel(deviceKernels[0]);
         kernel.setRunDims(outer, inner);
-        kernel(deviceKernels, entries, a, b, ab);
+        kernel(entries, a, b, ab);
     };
 }

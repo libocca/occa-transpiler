@@ -76,3 +76,13 @@ float add(float a, float b) {
         }
     }
 }
+
+// Outer -> inner, Outer -> inner
+@kernel void addVectors9(const int entries, const float* a, const float* b, float* ab) {
+    for (int i = entries - 1; i >= 0; i -= 1; @tile(4, @outer, @inner)) {
+        ab[i] = add(a[i], b[i]);
+    }
+    for (int i = entries - 1; i >= 0; i -= 1; @tile(4, @outer, @inner)) {
+        ab[i] = add(a[i], b[i]);
+    }
+}

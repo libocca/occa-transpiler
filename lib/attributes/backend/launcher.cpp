@@ -74,15 +74,15 @@ struct LoopMetaData {
 
         // TODO: Currently getLatestSourceText failes. Possibly due to bug in Rewriter
         auto& ctx = l.var.varDecl->getASTContext();
-        range.start = getLatestSourceText(l.range.start, r);
-        range.end = getLatestSourceText(l.range.end, r);
+        range.start = getLatestSourceText(*l.range.start, r);
+        range.end = getLatestSourceText(*l.range.end, r);
         range.size = l.range.size;
 
-        condition.cmp = getLatestSourceText(l.condition.cmp_, r);
+        condition.cmp = getLatestSourceText(*l.condition.cmp_, r);
         condition.op = l.condition.op;
 
         if (l.inc.val) {
-            inc.val = getLatestSourceText(l.inc.val, r);
+            inc.val = getLatestSourceText(*l.inc.val, r);
             inc.op.bo = l.inc.op.bo;
         } else {
             inc.op.uo = l.inc.op.uo;
@@ -330,12 +330,12 @@ std::string getRootLoopBody(const FunctionDecl& decl,
     out << "kernel";
     out << "(";
     {
-        out << "deviceKernels";
-        for (auto param : decl.parameters()) {
+        for (auto it = decl.param_begin(), end = decl.param_end(); it != end; ++it) {
+            auto* param = *it;
             if (!param) {
                 continue;
             }
-            out << ", " << param->getNameAsString();
+            out << (it != decl.param_begin() ? ", " : "") << param->getNameAsString();
         }
     }
     out << ");\n";
@@ -386,9 +386,10 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     size_t n = 0;
     for (auto& loop : kernelInfo->children) {
         removeAttribute(loop.attr, s);
-        rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
 
         auto body = getRootLoopBody(decl, loop, n, s);
+        // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
+        rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
         rewriter.ReplaceText(loop.stmt.getBody()->getSourceRange(), body);
         ++n;
     }
