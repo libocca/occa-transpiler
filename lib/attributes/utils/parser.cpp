@@ -69,7 +69,6 @@ class AttrParamParser {
     Preprocessor& PP;
     SourceManager& SM;
 
-    // llvm::StringRef strVal = {};
     std::string strVal = {};
     TokenStream Toks = {};
     TokenStream::const_iterator TokIt = {};
