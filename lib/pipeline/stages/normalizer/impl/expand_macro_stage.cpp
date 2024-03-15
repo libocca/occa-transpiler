@@ -4,7 +4,6 @@
 
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/expand_macro_stage.h"
-#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
 #include "pipeline/stages/normalizer/impl/okl_attribute.h"
 
 #include <clang/AST/ASTContext.h>
@@ -19,6 +18,31 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
+SourceLocation findPreviousTokenStart(SourceLocation Start,
+                                      const SourceManager& SM,
+                                      const LangOptions& LangOpts) {
+    SourceLocation BeforeStart = Start.getLocWithOffset(-1);
+    return Lexer::GetBeginningOfToken(BeforeStart, SM, LangOpts);
+}
+
+SourceLocation findPreviousTokenKind(SourceLocation Start,
+                                     const SourceManager& SM,
+                                     const LangOptions& LangOpts,
+                                     tok::TokenKind TK) {
+    while (true) {
+        SourceLocation L = findPreviousTokenStart(Start, SM, LangOpts);
+
+        Token T;
+        if (Lexer::getRawToken(L, T, SM, LangOpts, /*IgnoreWhiteSpace=*/true))
+            return SourceLocation();
+
+        if (T.is(TK))
+            return T.getLocation();
+
+        Start = L;
+    }
+}
+
 void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
     ctx->registerForPreprocessor(pp);
@@ -27,6 +51,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     const auto& sm = pp.getSourceManager();
     auto& rewriter = stage.getRewriter();
 
+    // parse all tokens firstly
     std::list<Token> macros;
     while (true) {
         Token tok{};
@@ -59,9 +84,10 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
         macros.emplace_back(std::move(tok));
     }
 
+    // do macro expansion
+    std::set<StringRef> macroNames;
     for (const auto& tok : macros) {
         // and it's is in user file
-        auto fid = sm.getFileID(tok.getLocation());
         if (SrcMgr::isSystem(sm.getFileCharacteristic(tok.getLocation()))) {
             continue;
         }
@@ -74,22 +100,44 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             continue;
         }
 
-        // TODO add options?
-        // if (!expanded->contains(OKL_ATTR_MARKER)) {
-        //     continue;
-        // }
-
-        auto orginal = ctx->getOriginalText(expansionLoc);
-        if (!orginal) {
+        auto original = ctx->getOriginalText(expansionLoc);
+        if (!original) {
             llvm::outs() << "no original macro under: " << expansionLoc.printToString(sm) << '\n';
             continue;
         }
 
 #ifdef NORMALIZER_DEBUG_LOG
         llvm::outs() << "at " << expansionLoc.printToString(sm) << " inline macro "
-                     << orginal.value() << " by " << expanded.value() << '\n';
+                     << original.value() << " by " << expanded.value() << '\n';
 #endif
-        rewriter.ReplaceText(expansionLoc, orginal->size(), expanded.value());
+        rewriter.ReplaceText(expansionLoc, original->size(), expanded.value());
+        macroNames.insert(original.value());
+    }
+
+    // get rid of macro hell
+    for (const auto& macroName : macroNames) {
+        auto* ii = pp.getIdentifierInfo(macroName);
+        if (!ii) {
+            continue;
+        }
+
+        auto md = pp.getMacroDefinition(ii);
+        auto* mi = md.getMacroInfo();
+        if (!mi) {
+            continue;
+        }
+
+        // hash definitely there however clang pp doest not provide this info
+        // so lets find it manually
+        auto hashLoc = findPreviousTokenKind(
+            mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
+        if (hashLoc.isInvalid()) {
+            // replace by 'identical' macro to not break anything
+            auto noop = "void void\n";
+            rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
+        } else {
+            rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, " ");
+        }
     }
 
     pp.EndSourceFile();
