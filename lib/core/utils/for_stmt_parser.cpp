@@ -1,5 +1,7 @@
+#include <llvm-17/llvm/Support/Casting.h>
 #include <oklt/core/error.h>
 #include "attributes/frontend/params/tile.h"
+#include "clang/AST/Expr.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -116,14 +118,24 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         };
 
         // RSH
-        auto rsh = dyn_cast_or_null<CastExpr>(node->getRHS());
-        while (rsh && rsh->getSubExpr() && isa<CastExpr>(rsh->getSubExpr())) {
-            rsh = dyn_cast_or_null<CastExpr>(rsh->getSubExpr());
+        auto rhs = dyn_cast_or_null<CastExpr>(node->getRHS());
+        while (rhs && rhs->getSubExpr() && isa<CastExpr>(rhs->getSubExpr())) {
+            rhs = dyn_cast_or_null<CastExpr>(rhs->getSubExpr());
         };
-        if (rsh && rsh->getSubExpr()) {
-            auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
+        if (rhs && rhs->getSubExpr()) {
+            auto decl = dyn_cast_or_null<DeclRefExpr>(rhs->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getLHS();
+                ret.range.end = end;
+                ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
+            }
+        }
+
+        if (!rhs) {
+            // Recovery expr case - for example @dim usage in RHS of condition
+            auto* rhsRec = dyn_cast_or_null<RecoveryExpr>(node->getRHS());
+            if (rhsRec) {
+                end = rhsRec;
                 ret.range.end = end;
                 ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
             }
