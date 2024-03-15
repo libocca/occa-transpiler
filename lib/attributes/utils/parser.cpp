@@ -69,7 +69,8 @@ class AttrParamParser {
     Preprocessor& PP;
     SourceManager& SM;
 
-    llvm::StringRef strVal = {};
+    // llvm::StringRef strVal = {};
+    std::string strVal = {};
     TokenStream Toks = {};
     TokenStream::const_iterator TokIt = {};
 
@@ -354,9 +355,9 @@ class AttrParamParser {
         // Get payload
         auto attrRange = attr.getRange();
         if (const auto anno = dyn_cast_or_null<AnnotateAttr>(&attr)) {
-            strVal = anno->getAnnotation();
+            strVal = anno->getAnnotation().str();
         } else if (auto sup = dyn_cast_or_null<SuppressAttr>(&attr)) {
-            strVal = *sup->diagnosticIdentifiers_begin();
+            strVal = sup->diagnosticIdentifiers_begin()->str();
         }
 
         // Check if there is payload
@@ -375,9 +376,9 @@ class AttrParamParser {
         auto langOpts = PP.getLangOpts();
         langOpts.ObjC = 1;
 
-        // Create lexer
+        llvm::StringRef strView(strVal);
         auto lexer = std::make_unique<Lexer>(
-            SM.getFileLoc(tokLoc), langOpts, strVal.begin(), strVal.begin(), strVal.end());
+            SM.getFileLoc(tokLoc), langOpts, strView.begin(), strView.begin(), strView.end());
 
         // Lex tokens
         auto tok = Token{};
@@ -387,7 +388,7 @@ class AttrParamParser {
                 break;
 
             Toks.push_back(tok);
-        } while (lexer->getBufferLocation() < strVal.end());
+        } while (lexer->getBufferLocation() < strView.end());
 
         TokIt = Toks.begin();
     }
