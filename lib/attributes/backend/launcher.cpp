@@ -167,7 +167,10 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, std::
     return {firstMeta, secondMeta};
 }
 
-std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, size_t loopNo, SessionStage& s) {
+std::string getRootLoopBody(const FunctionDecl& decl,
+                            OklLoopInfo& loopInfo,
+                            size_t loopNo,
+                            SessionStage& s) {
     std::stringstream out;
     out << " {\n";
 
@@ -253,13 +256,12 @@ std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, siz
     out << "kernel";
     out << "(";
     {
-        size_t paramNo = 0;
-        for (auto param : decl.parameters()) {
+        for (auto it = decl.param_begin(), end = decl.param_end(); it != end; ++it) {
+            auto* param = *it;
             if (!param) {
                 continue;
             }
-            out << (paramNo != 0 ? ", " : "") << param->getNameAsString();
-            ++paramNo;
+            out << (it != decl.param_begin() ? ", " : "") << param->getNameAsString();
         }
     }
     out << ");\n";
