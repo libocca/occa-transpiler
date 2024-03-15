@@ -1,4 +1,5 @@
 #include "attributes/utils/serial_subset/common.h"
+#include "pipeline/stages/transpiler/error_codes.h"
 
 namespace oklt::serial_subset {
 using namespace clang;
@@ -31,6 +32,13 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
             rewriter.InsertTextAfter(locRange.getEnd(), " &");
         }
     }
+
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
+        return tl::make_unexpected(makeError(
+            OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL, "handleKernelAttribute"));
+    }
+    sema.getParsingKernelInfo()->kernInfo->name = decl.getNameAsString();
 
     return {};
 }

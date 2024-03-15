@@ -306,6 +306,8 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
         return {};
     }
 
+    kernelInfo->kernInfo->name = decl.getNameAsString();
+
     auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
     rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
 
