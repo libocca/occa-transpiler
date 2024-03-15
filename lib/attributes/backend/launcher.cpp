@@ -253,12 +253,13 @@ std::string getRootLoopBody(const FunctionDecl& decl, OklLoopInfo& loopInfo, siz
     out << "kernel";
     out << "(";
     {
-        out << "deviceKernels";
+        size_t paramNo = 0;
         for (auto param : decl.parameters()) {
             if (!param) {
                 continue;
             }
-            out << ", " << param->getNameAsString();
+            out << (paramNo != 0 ? ", " : "") << param->getNameAsString();
+            ++paramNo;
         }
     }
     out << ");\n";
