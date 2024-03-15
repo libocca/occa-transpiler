@@ -146,15 +146,17 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
         return nullptr;
     }
 
-    bool BeginSourceFileAction(CompilerInstance& compiler) override {
-        // add already preprocessed headers as overlay
+    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
         if (compiler.hasFileManager()) {
             auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
                                            _input.oklCppIncs);
             compiler.getFileManager().setVirtualFileSystem(overlayFs);
         }
 
-        // start preprocessor/lexer activity
+        return true;
+    }
+
+    bool BeginSourceFileAction(CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
         pp.EnterMainSourceFile();
         auto tokens = fetchTokens(pp);
@@ -168,7 +170,6 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
         SessionStage stage{_session, compiler};
         auto& rewriter = stage.getRewriter();
 
-        // process parsed tokens for OKL attribute replacement
         auto result = visitOklAttributes(
             tokens,
             pp,
@@ -178,26 +179,15 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
                     _output.gnuMarkers, _output.recoveryMarkers, attr, tokens, pp, rewriter);
                 return true;
             });
-
         if (!result) {
             _session.pushError(result.error().ec, result.error().desc);
             return false;
         }
 
-        pp.EndSourceFile();
-
         _output.gnuCppSrc = stage.getRewriterResultForMainFile();
-        // no errors and empty output could mean that the source is already normalized
-        // so use input as output and lets the next stage try to figure out
-        if (_output.gnuCppSrc.empty()) {
-            _output.gnuCppSrc = std::move(_input.oklCppSrc);
-        }
+        _output.gnuCppIncs = stage.getRewriterResultForHeaders();
 
-        auto preNormalizedHeaders = stage.getRewriterResultForHeaders();
-        // we need keep all headers in output even there are not modification by rewriter to
-        // populate affected files futher
-        preNormalizedHeaders.fileMap.merge(_input.oklCppIncs.fileMap);
-        _output.gnuCppIncs = std::move(preNormalizedHeaders);
+        pp.EndSourceFile();
 
         return false;
     }
