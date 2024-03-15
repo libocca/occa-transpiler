@@ -24,7 +24,7 @@ class OKLAttrParam {
           data(std::move(v)){};
 
     /// @brief return raw string representation
-    [[nodiscard]] std::string_view getRaw() const { return rawData; }
+    [[nodiscard]] std::string_view getRaw() const { return {rawData.data(), rawData.size()}; }
 
     /// @brief Checks if attribute is empty or not
     [[nodiscard]] bool empty();
@@ -101,8 +101,6 @@ class OKLAttrParam {
 struct OKLParsedAttr {
     explicit OKLParsedAttr() = default;
     explicit OKLParsedAttr(const std::string_view name)
-        : name(name){};
-    explicit OKLParsedAttr(const std::string& name)
         : name(name){};
 
     std::string name;
