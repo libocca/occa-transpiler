@@ -3,5 +3,6 @@
     "restrict.json",
     "atomic.json",
     "barrier.json",
-    "exclusive.json"
+    "exclusive.json",
+    "cxx_record.json"
 ]
