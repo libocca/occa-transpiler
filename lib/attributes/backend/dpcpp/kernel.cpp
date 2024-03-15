@@ -1,7 +1,9 @@
 #include "attributes/attribute_names.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "pipeline/stages/transpiler/error_codes.h"
 
 namespace {
 using namespace oklt;
@@ -31,6 +33,13 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     SourceRange fnameRange(func.getNameInfo().getSourceRange());
     auto newFunctionName = "_occa_" + oldFunctionName + "_0";
     rewriter.ReplaceText(fnameRange, newFunctionName);
+
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+                                         "handleKernelAttribute"});
+    }
+    sema.getParsingKernelInfo()->kernInfo->name = newFunctionName;
 
     // 3. Update function arguments
     auto insertedArgs = dpcppAdditionalArguments;

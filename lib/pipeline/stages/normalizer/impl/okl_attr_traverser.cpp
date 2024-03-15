@@ -174,10 +174,10 @@ tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token
             llvm::outs() << "error during parsing okl attr\n"
                          << tokens[fsm.token_cursor].getLocation().printToString(
                                 pp.getSourceManager());
-            return tl::make_unexpected(makeError(
+            return tl::make_unexpected(Error{
                 OkltNormalizerErrorCode::OKL_ATTR_PARSIN_ERR,
                 "error on token at: " +
-                    tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager())));
+                    tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager())});
         }
 
         if (status == FsmStepStatus::TokenProcessed) {
