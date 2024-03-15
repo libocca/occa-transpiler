@@ -92,6 +92,14 @@ std::optional<T> OKLAttrParam::get() {
         return std::nullopt;  // Not an integer
 
     auto& val = std::any_cast<llvm::APSInt&>(data);
+
+    if constexpr (std::is_same_v<T, bool>) {
+        if(val.getBitWidth() != 1) {
+            return std::nullopt;
+        }
+        return val.getBoolValue();
+    }
+
     if (val.isNonNegative())
         val.setIsSigned(std::numeric_limits<T>::is_signed);
 
