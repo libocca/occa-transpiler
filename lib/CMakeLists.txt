@@ -138,6 +138,9 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/openmp/atomic.cpp
     attributes/backend/openmp/barrier.cpp
 
+    # Launcher
+    attributes/backend/launcher.cpp
+
     # sugar attribute
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
@@ -163,6 +166,8 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/kernel_metadata.cpp
 
+    core/vfs/overlay_fs.cpp
+
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp
@@ -175,6 +180,9 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
+    core/transpiler_session/header_info.cpp
+    core/transpiler_session/code_generator.cpp
+
     core/target_backends.cpp
 
     core/utils/format.cpp
@@ -202,6 +210,7 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/stages/normalizer/normalizer.h
     pipeline/stages/normalizer/error_codes.cpp
     pipeline/stages/normalizer/error_codes.h
+    pipeline/stages/normalizer/impl/expand_macro_stage.cpp
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
     pipeline/stages/normalizer/impl/okl_attr_traverser.cpp

@@ -12,6 +12,7 @@ namespace oklt {
 
 struct OklToGnuStageOutput {
     std::string gnuCppSrc;
+    TransformedFiles gnuCppIncs;
     std::list<OklAttrMarker> gnuMarkers;
     std::list<OklAttrMarker> recoveryMarkers;
     SharedTranspilerSession session;
@@ -19,6 +20,7 @@ struct OklToGnuStageOutput {
 
 struct OklToGnuStageInput {
     std::string oklCppSrc;
+    TransformedFiles oklCppIncs;
     SharedTranspilerSession session;
 };
 

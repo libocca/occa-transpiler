@@ -1,12 +1,15 @@
 #include <oklt/core/error.h>
 
 #include "core/transpiler_session/session_stage.h"
+#include "core/vfs/overlay_fs.h"
+
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
 #include "pipeline/stages/normalizer/impl/okl_to_gnu_stage.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/Analysis/MacroExpansionContext.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
@@ -108,16 +111,20 @@ std::vector<Token> fetchTokens(Preprocessor& pp) {
     while (true) {
         Token tok{};
         pp.Lex(tok);
-        if (tok.is(tok::eof))
+
+        if (tok.is(tok::eof)) {
             break;
+        }
+
         if (tok.is(tok::unknown)) {
             // Check for '@' symbol
             auto spelling = pp.getSpelling(tok);
-            if (spelling.empty() || spelling[0] != '@') {
+            if (spelling.empty() || spelling[0] != OKL_ATTR_MARKER) {
                 break;
             }
             tok.setKind(tok::at);
         }
+
         tokens.push_back(tok);
     }
 
@@ -139,11 +146,21 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
         return nullptr;
     }
 
+    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
+        if (compiler.hasFileManager()) {
+            auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
+                                           _input.oklCppIncs);
+            compiler.getFileManager().setVirtualFileSystem(overlayFs);
+        }
+
+        return true;
+    }
+
     bool BeginSourceFileAction(CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
         pp.EnterMainSourceFile();
-
         auto tokens = fetchTokens(pp);
+
         if (tokens.empty()) {
             _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING,
                                "no tokens in source?");
@@ -167,7 +184,8 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
             return false;
         }
 
-        _output.gnuCppSrc = stage.getRewriterResult();
+        _output.gnuCppSrc = stage.getRewriterResultForMainFile();
+        _output.gnuCppIncs = stage.getRewriterResultForHeaders();
 
         pp.EndSourceFile();
 
@@ -195,7 +213,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
 #endif
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    Twine file_name("okl-kernel-to-gnu.cpp");
+    Twine file_name("main_kernel.cpp");
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.oklCppSrc);
@@ -218,11 +236,12 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
         args,
         file_name,
         tool_name);
-
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
     }
 
+    // no errors and empty output could mean that the source is already normalized
+    // so use input as output and lets the next stage try to figure out
     if (output.gnuCppSrc.empty()) {
         output.gnuCppSrc = std::move(input_file);
     }

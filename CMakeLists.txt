@@ -35,7 +35,7 @@ set(LLVM_REQUIRES_RTTI ON)
 
 include(AddLLVM)
 
-set(CLANG_LIBS libclang clangTooling)
+set(CLANG_LIBS libclang clangTooling clangFrontendTool)
 
 add_subdirectory(lib)
 add_subdirectory(tool)

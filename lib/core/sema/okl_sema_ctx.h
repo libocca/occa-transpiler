@@ -31,6 +31,7 @@ struct OklSemaCtx {
     };
 
     OklSemaCtx() = default;
+    void clear();
 
     // method to make/get/reset context of parsing OKL kernel
     bool startParsingOklKernel(const clang::FunctionDecl&);

@@ -158,6 +158,8 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
     // Determinate range size
     llvm::APSInt start_i, end_i;
     if (EvaluateAsSizeT(start, start_i, ctx) && EvaluateAsSizeT(end, end_i, ctx)) {
+        start_i.setIsSigned(true);
+        end_i.setIsSigned(true);
         if (ret.IsInc()) {
             end_i -= start_i;
             ret.range.size = end_i.getZExtValue();

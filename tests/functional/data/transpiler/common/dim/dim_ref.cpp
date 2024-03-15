@@ -1,12 +1,14 @@
 #include <cuda_runtime.h>
+
 struct Coord {
     float x;
     float y;
 };
-typedef float* mat89_f;
-typedef int* mat89_i;
-typedef Coord* mat89_s;
-typedef Coord* mat8_s;
+
+typedef float *mat89_f;
+typedef int *mat89_i;
+typedef Coord *mat89_s;
+typedef Coord *mat8_s;
 
 // float dim
 extern "C" __global__ void _occa_test_kernel_0_0(const int entries,
@@ -71,14 +73,12 @@ extern "C" __global__ void _occa_test_kernel_3_0(const int entries,
 // inside attributed loop
 // TODO: Update after rewriter conflict resolving is merged
 // @kernel void test_kernel_4(const int entries, float* a, float* b, float* ab,
-// mat89_s mat) {
-//     for (int i = 0; i < mat(7, 7); i += mat(1, 1); @outer(0)) {
-//         for (int j = mat(0, 0); j < entries; j += 1; @inner(0)) {
-//             ab[i] = a[i] + b[j] + mat(i, j).x + mat(j, i).y;
-//         }
-//     }
+// mat89_s mat) { for (int i = 0; i < mat(7, 7); i += mat(1, 1); @outer(0)) {
+// for (int j = mat(0, 0); j < entries; j += 1; @inner(0)) {
+// ab[i] = a[i] + b[j] + mat(i, j).x + mat(j, i).y;
 // }
-
+// }
+// }
 // assignment, comparison, etc.
 extern "C" __global__ void _occa_test_kernel_5_0(const int entries,
                                                  float* a,

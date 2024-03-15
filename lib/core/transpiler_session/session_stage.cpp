@@ -12,35 +12,65 @@ using namespace clang;
 SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
     : _session(session),
       _compiler(compiler),
-      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()) {}
+      _backend(session.input.backend),
+      _astProcType(session.input.astProcType),
+      _rewriter(std::make_unique<clang::Rewriter>(_compiler.getSourceManager(),
+                                                  _compiler.getLangOpts())) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
     return _compiler;
 }
 
 clang::Rewriter& SessionStage::getRewriter() {
-    return _rewriter;
+    return *_rewriter.get();
 }
 
 AttributeManager& SessionStage::getAttrManager() {
     return AttributeManager::instance();
 }
 
-std::string SessionStage::getRewriterResult() {
-    auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
+void SessionStage::setLauncherMode() {
+    _rewriter =
+        std::make_unique<clang::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
+    _backend = TargetBackend::_LAUNCHER;
+}
+
+std::string SessionStage::getRewriterResultForMainFile() {
+    const auto& sm = _compiler.getSourceManager();
+    auto mainFID = sm.getMainFileID();
+    auto* rewriteBuf = _rewriter->getRewriteBufferFor(mainFID);
     if (!rewriteBuf || rewriteBuf->size() == 0) {
-        return "";
+        return sm.getBufferData(mainFID).data();
     }
 
     return std::string{rewriteBuf->begin(), rewriteBuf->end()};
 }
 
+TransformedFiles SessionStage::getRewriterResultForHeaders() {
+    TransformedFiles headers;
+    const auto& sm = _compiler.getSourceManager();
+    auto mainFID = sm.getMainFileID();
+    for (auto it = _rewriter->buffer_begin(); it != _rewriter->buffer_end(); ++it) {
+        // skip main source file
+        if (it->first == mainFID) {
+            continue;
+        }
+
+        std::string fileName = sm.getFileEntryForID(it->first)->getName().data();
+        headers.fileMap[fileName] = [](const auto& buf) -> std::string {
+            return std::string{buf.begin(), buf.end()};
+        }(it->second);
+    }
+
+    return headers;
+}
+
 TargetBackend SessionStage::getBackend() const {
-    return _session.input.backend;
+    return _backend;
 }
 
 AstProcessorType SessionStage::getAstProccesorType() const {
-    return _session.input.astProcType;
+    return _astProcType;
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {

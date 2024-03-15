@@ -4,6 +4,8 @@
 #include <oklt/core/transpiler_session/user_input.h>
 #include <oklt/core/transpiler_session/user_output.h>
 
+#include "core/transpiler_session/header_info.h"
+
 #include <vector>
 
 namespace clang {
@@ -38,6 +40,9 @@ struct TranspilerSession {
     // TODO add methods for user input/output
     UserInput input;
     UserOutput output;
+
+    TransformedFiles normalizedHeaders;
+    TransformedFiles transpiledHeaders;
 
    private:
     std::vector<Error> _errors;

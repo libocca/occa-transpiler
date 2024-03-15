@@ -21,7 +21,7 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
 
     Twine tool_name = "okl-transpiler";
     // INFO: hot fix for *.okl extention
-    std::string rawFileName = input.sourcePath.filename().stem().string() + ".cpp";
+    std::string rawFileName = "main_kernel.cpp";
     Twine file_name(rawFileName);
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
@@ -47,11 +47,11 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }
 
-    // If no rewrites were made, source will be empty
-    if (session->output.kernel.sourceCode.empty()) {
-        session->output.kernel.sourceCode = input.sourceCode;
-    }
     session->output.kernel.sourceCode = oklt::format(session->output.kernel.sourceCode);
+
+    if (!session->output.launcher.sourceCode.empty()) {
+        session->output.launcher.sourceCode = oklt::format(session->output.launcher.sourceCode);
+    }
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
