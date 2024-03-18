@@ -18,7 +18,8 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
     auto typeStrAttributed = var.getType().getLocalUnqualifiedType().getAsString();
     // Desugar since it is attributed (since it is @shared variable)
     // auto typeStr = var.getType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString();
-    auto typeStr = QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
+    auto typeStr =
+        QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
 
     Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
 
@@ -53,9 +54,11 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::DPCPP, SHARED_ATTR_NAME}, makeSpecificAttrHandle(handleSharedAttribute));
-    ok = ok && oklt::AttributeManager::instance().registerBackendHandler(
-                   {TargetBackend::DPCPP, SHARED_ATTR_NAME},
-                   makeSpecificAttrHandle(emptyHandleSharedStmtAttribute));
+
+    // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
+    ok &= oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::DPCPP, SHARED_ATTR_NAME},
+        makeSpecificAttrHandle(emptyHandleSharedStmtAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME
