@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "attributes/utils/empty_handlers.h"
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -57,7 +57,7 @@ __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::DPCPP, SHARED_ATTR_NAME},
-        makeSpecificAttrHandle(emptyHandleSharedStmtAttribute));
+        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME

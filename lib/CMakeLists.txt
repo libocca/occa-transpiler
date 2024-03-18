@@ -47,6 +47,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/tile_utils.h
     attributes/utils/inner_outer_utils.cpp
     attributes/utils/inner_outer_utils.h
+    attributes/utils/default_handlers.cpp
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp

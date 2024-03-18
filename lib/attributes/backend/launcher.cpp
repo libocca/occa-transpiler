@@ -1,7 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
-#include "clang/Rewrite/Core/Rewriter.h"
 #include "core/attribute_manager/attr_stmt_handler.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -12,6 +11,7 @@
 #include "core/utils/type_converter.h"
 #include "oklt/core/kernel_metadata.h"
 
+#include <clang/Rewrite/Core/Rewriter.h>
 // #define OKL_LAUNCHER_RECURSIVE
 
 namespace {
@@ -22,7 +22,6 @@ const std::string includeOCCA = "<occa/core/kernel.hpp>";
 const std::string externC = "extern \"C\"";
 
 struct LoopMetaData {
-    // LoopMetaType type = LoopMetaType::Regular;
     AttributedLoopTypes type = {LoopType::Regular};
 
     struct {
