@@ -40,7 +40,7 @@ struct OklLoopInfo {
         size_t size = 0;
     } range;
     struct {
-        const clang::BinaryOperator* cmp_;
+        const clang::BinaryOperator* cmp;
         BinOp op = BinOp::Eq;
     } condition;
     struct {

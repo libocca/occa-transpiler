@@ -1,9 +1,5 @@
 #pragma once
 
-#include <clang/AST/Expr.h>
-#include <clang/AST/Stmt.h>
-#include <clang/AST/Type.h>
-#include <clang/Basic/SourceLocation.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 
@@ -11,18 +7,14 @@
 
 namespace clang {
 class ASTContext;
-class SourceRange;
-class Rewriter;
 class Expr;
+class Stmt;
 }  // namespace clang
-
-// TODO: this is temporary thing until bug with rewriter is found out
-constexpr bool IGNORE_REWRITTEN_TEXT = false;
 
 namespace oklt {
 std::string getSourceText(const clang::SourceRange& range, clang::ASTContext& ctx);
 std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx);
-std::string getSourceText(const clang::Stmt& stmt, clang::ASTContext& ctx);
+std::string prettyPrint(const clang::Stmt& stmt, clang::ASTContext& ctx);
 
 template <typename NodeType>
 std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter) {
@@ -33,14 +25,9 @@ std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter)
         .str();
 }
 
-// TODO: context is added temporary
 template <typename NodeType>
 std::string getLatestSourceText(const NodeType& node, const clang::Rewriter& rewriter) {
-    if constexpr (IGNORE_REWRITTEN_TEXT) {
-        return getSourceText(node, rewriter);
-    } else {
-        return rewriter.getRewrittenText(node.getSourceRange());
-    }
+    return rewriter.getRewrittenText(node.getSourceRange());
 }
 
 template <typename NodeType>

@@ -1,4 +1,4 @@
-#include <llvm-17/llvm/Support/Casting.h>
+#include <llvm/Support/Casting.h>
 #include <oklt/core/error.h>
 #include "attributes/frontend/params/tile.h"
 #include "clang/AST/Expr.h"
@@ -102,7 +102,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
         }
 
         ret.condition.op = toOkl(node->getOpcode());
-        ret.condition.cmp_ = node;
+        ret.condition.cmp = node;
 
         // LSH
         auto lsh = dyn_cast_or_null<CastExpr>(node->getLHS());

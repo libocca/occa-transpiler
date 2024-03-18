@@ -77,7 +77,7 @@ struct LoopMetaData {
         range.end = "(" + getLatestSourceText(*l.range.end, r) + ")";
         range.size = l.range.size;
 
-        condition.cmp = getLatestSourceText(*l.condition.cmp_, r);
+        condition.cmp = getLatestSourceText(*l.condition.cmp, r);
         condition.op = l.condition.op;
 
         if (l.inc.val) {
