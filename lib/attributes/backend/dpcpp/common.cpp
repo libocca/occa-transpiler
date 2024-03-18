@@ -1,6 +1,8 @@
 #include "attributes/backend/dpcpp/common.h"
 #include <oklt/util/string_utils.h>
+#include "clang/Rewrite/Core/Rewriter.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/utils/range_to_string.h"
 
 namespace oklt::dpcpp {
 
@@ -25,24 +27,28 @@ std::string getIdxVariable(const AttributedLoop& loop) {
 }
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
-                                       int& openedScopeCounter) {
+                                       int& openedScopeCounter,
+                                       clang::Rewriter& rewriter) {
     static_cast<void>(openedScopeCounter);
     auto idx = getIdxVariable(loop);
-    auto& meta = forLoop.metadata;
-    auto op = meta.IsInc() ? "+" : "-";
+    auto op = forLoop.IsInc() ? "+" : "-";
 
     std::string res;
-    if (meta.isUnary()) {
-        res = std::move(
-            util::fmt("{} {} = {} {} {};", meta.var.type, meta.var.name, meta.range.start, op, idx)
-                .value());
-    } else {
-        res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
-                                  meta.var.type,
-                                  meta.var.name,
-                                  meta.range.start,
+    if (forLoop.isUnary()) {
+        res = std::move(util::fmt("{} {} = ({}) {} {};",
+                                  forLoop.var.typeName,
+                                  forLoop.var.name,
+                                  getLatestSourceText(forLoop.range.start, rewriter),
                                   op,
-                                  meta.inc.val,
+                                  idx)
+                            .value());
+    } else {
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
+                                  forLoop.var.typeName,
+                                  forLoop.var.name,
+                                  getLatestSourceText(forLoop.range.start, rewriter),
+                                  op,
+                                  getLatestSourceText(forLoop.inc.val, rewriter),
                                   idx)
                             .value());
     }

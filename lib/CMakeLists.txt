@@ -47,6 +47,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/tile_utils.h
     attributes/utils/inner_outer_utils.cpp
     attributes/utils/inner_outer_utils.h
+    attributes/utils/default_handlers.cpp
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
@@ -145,7 +146,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     # sugar attribute
     attributes/backend/common/dim.cpp
-    # attributes/backend/common/dim_order.cpp
+    attributes/backend/common/dim_order.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 

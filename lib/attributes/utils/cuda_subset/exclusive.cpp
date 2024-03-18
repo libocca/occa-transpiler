@@ -1,3 +1,4 @@
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -14,6 +15,6 @@ HandleResult handleExclusiveAttribute(const clang::Attr& attr,
 #endif
 
     stage.getRewriter().RemoveText(getAttrFullSourceRange(attr));
-    return {};
+    return defaultHandleExclusiveDeclAttribute(attr, decl, stage);
 }
 }  // namespace oklt::cuda_subset

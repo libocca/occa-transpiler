@@ -3,6 +3,7 @@
 
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
+#include "attributes/utils/cuda_subset/common.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/inner_outer_utils.h"
 
@@ -29,17 +30,18 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
             Error{std::error_code(), "@inner: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams =
-        innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Inner);
+    auto updatedParams = innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Inner);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams.value(), openedScopeCounter);
+        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
-    suffixCode += "__syncthreads();";
+    if (loopInfo->shouldSync()) {
+        suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
+    }
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";

@@ -7,9 +7,9 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "params/empty_params.h"
 
-#include "clang/Basic/DiagnosticSema.h"
-#include "clang/Sema/ParsedAttr.h"
-#include "clang/Sema/Sema.h"
+#include <clang/Basic/DiagnosticSema.h>
+#include <clang/Sema/ParsedAttr.h>
+#include <clang/Sema/Sema.h>
 
 namespace {
 
@@ -71,6 +71,7 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
             args.push_back(attr.getArgAsExpr(i));
         }
 
+        // TODO: Move attributed type registering to util, since dublication with other types
         auto* ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
         decl->addAttr(ctxAttr);
 

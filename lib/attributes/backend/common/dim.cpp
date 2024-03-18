@@ -19,8 +19,10 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
                                     const clang::Decl& decl,
                                     const AttributedDim* params,
                                     SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle @dim decl: "
                  << getSourceText(decl.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
+#endif
 
     s.getRewriter().RemoveText(getAttrFullSourceRange(a));
     return {};
@@ -140,11 +142,11 @@ std::string buildIndexCalculation(const ExprVec& dimVarArgs,
     // Open brackets
     for (int dim = 0; dim < nDims - 1; ++dim) {
         auto idx = dimOrder[dim];
-        auto dimVarArgStr = rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
+        auto dimVarArgStr = getLatestSourceText(*dimVarArgs[idx], rewriter);
         indexCalculation += util::fmt("{} + ({} * (", dimVarArgStr, params->dim[idx]).value();
     }
     auto idx = dimOrder[nDims - 1];
-    indexCalculation += rewriter.getRewrittenText(dimVarArgs[idx]->getSourceRange());
+    indexCalculation += getLatestSourceText(*dimVarArgs[idx], rewriter);
     // Close brackets
     for (int i = 0; i < 2 * (nDims - 1); ++i) {
         indexCalculation += ")";

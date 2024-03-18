@@ -76,7 +76,7 @@
           "ptr": true
         }
       ],
-      "name": "addVectors"
+      "name": "_occa_addVectors_0"
     },
     {
       "arguments": [
@@ -126,7 +126,7 @@
           "ptr": true
         }
       ],
-      "name": "addVectors2"
+      "name": "_occa_addVectors2_0"
     }
   ]
 }

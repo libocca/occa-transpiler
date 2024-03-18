@@ -1,4 +1,11 @@
+#include <oklt/util/string_utils.h>
+
 #include "core/attribute_manager/common_attribute_map.h"
+#include "core/transpiler_session/session_stage.h"
+#include "tl/expected.hpp"
+
+#include <clang/AST/Stmt.h>
+#include <system_error>
 
 namespace oklt {
 using namespace clang;
@@ -22,7 +29,11 @@ HandleResult CommonAttributeMap::handleAttr(const Attr& attr,
     if (it != _declHandlers.end()) {
         return it->second.handle(attr, decl, params, stage);
     }
-    return tl::make_unexpected(Error{});
+    return tl::make_unexpected(Error{std::error_code(),
+                                     util::fmt("Warning: no handle for attribute {} for node {} \n",
+                                               attr.getNormalizedFullName(),
+                                               decl.getDeclKindName())
+                                         .value()});
 }
 
 HandleResult CommonAttributeMap::handleAttr(const Attr& attr,
@@ -34,7 +45,11 @@ HandleResult CommonAttributeMap::handleAttr(const Attr& attr,
     if (it != _stmtHandlers.end()) {
         return it->second.handle(attr, stmt, params, stage);
     }
-    return tl::make_unexpected(Error{});
+    return tl::make_unexpected(Error{std::error_code(),
+                                     util::fmt("Warning: no handle for attribute {} for node {} \n",
+                                               attr.getNormalizedFullName(),
+                                               stmt.getStmtClassName())
+                                         .value()});
 }
 
 bool CommonAttributeMap::hasAttrHandler(const std::string& name) {

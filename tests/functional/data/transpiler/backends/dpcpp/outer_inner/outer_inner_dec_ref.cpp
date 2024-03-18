@@ -51,7 +51,7 @@ extern "C" void _occa_addVectors2_0(sycl::queue *queue_,
       int j = (entries - 1) - item_.get_group(2);
       {
         {
-          int i = entries - item.get_local_id(2);
+          int i = (entries)-item.get_local_id(2);
           { ab[i] = add(a[i], b[i]); }
         }
       }

@@ -12,10 +12,10 @@ extern "C" void _occa_addVectors0_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int j = 0 + ((1) * item_.get_group(2));
+      int j = (0) + ((1) * item_.get_group(2));
       {
         {
-          int i = 0 + ((1) * item.get_local_id(2));
+          int i = (0) + ((1) * item.get_local_id(2));
           { ab[i] = add(a[i], b[i]); }
         }
       }
@@ -30,10 +30,10 @@ extern "C" void _occa_addVectors1_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int j = 0 + ((2) * item_.get_group(2));
+      int j = (0) + ((2) * item_.get_group(2));
       {
         {
-          int i = 0 + ((2) * item.get_local_id(2));
+          int i = (0) + ((2) * item.get_local_id(2));
           { ab[i] = add(a[i], b[i]); }
         }
       }
@@ -48,10 +48,10 @@ extern "C" void _occa_addVectors2_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int j = 0 + item_.get_group(2);
+      int j = (0) + item_.get_group(2);
       {
         {
-          int i = 0 + item.get_local_id(2);
+          int i = (0) + item.get_local_id(2);
           { ab[i] = add(a[i], b[i]); }
         }
       }
@@ -66,10 +66,10 @@ extern "C" void _occa_addVectors3_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int j = 0 + item_.get_group(2);
+      int j = (0) + item_.get_group(2);
       {
         {
-          int i = 0 + item.get_local_id(2);
+          int i = (0) + item.get_local_id(2);
           { ab[i] = add(a[i], b[i]); }
         }
       }
@@ -85,15 +85,15 @@ extern "C" void _occa_addVectors4_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = 0 + item_.get_group(1);
+      int i = (0) + item_.get_group(1);
       {
-        int j = 0 + item_.get_group(2);
+        int j = (0) + item_.get_group(2);
         {
           {
-            int k = 0 + item.get_local_id(1);
+            int k = (0) + item.get_local_id(1);
             {
               {
-                int ii = 0 + item.get_local_id(2);
+                int ii = (0) + item.get_local_id(2);
                 { ab[ii + k] = add(a[i], b[j]); }
               }
             }
@@ -111,15 +111,15 @@ extern "C" void _occa_addVectors5_0(sycl::queue *queue_,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = 0 + item_.get_group(1);
+      int i = (0) + item_.get_group(1);
       {
-        int j = 0 + item_.get_group(2);
+        int j = (0) + item_.get_group(2);
         {
           {
-            int k = 0 + item.get_local_id(1);
+            int k = (0) + item.get_local_id(1);
             {
               {
-                int ii = 0 + item.get_local_id(2);
+                int ii = (0) + item.get_local_id(2);
                 { ab[ii + k] = add(a[i], b[j]); }
               }
             }
@@ -131,22 +131,21 @@ extern "C" void _occa_addVectors5_0(sycl::queue *queue_,
 }
 
 // Outer -> outer -> inner -> inner + partially manual dimensions specification
-// TODO: change after sema calculates dimensions
 extern "C" void _occa_addVectors6_0(sycl::queue *queue_,
                                     sycl::nd_range<3> *range_,
                                     const int entries, const float *a,
                                     const float *b, float *ab) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = 0 + item_.get_group(1);
+      int i = (0) + item_.get_group(1);
       {
-        int j = 0 + item_.get_group(2);
+        int j = (0) + item_.get_group(2);
         {
           {
-            int k = 0 + item.get_local_id(1);
+            int k = (0) + item.get_local_id(1);
             {
               {
-                int ii = 0 + item.get_local_id(2);
+                int ii = (0) + item.get_local_id(2);
                 { ab[ii + k] = add(a[i], b[j]); }
               }
             }

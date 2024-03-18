@@ -33,7 +33,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams.value(), openedScopeCounter);
+        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

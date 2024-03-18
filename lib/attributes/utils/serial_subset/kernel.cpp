@@ -1,4 +1,7 @@
-#include "attributes/utils/serial_subset/common.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
 namespace oklt::serial_subset {

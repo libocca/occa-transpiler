@@ -1,8 +1,14 @@
 #include <oklt/core/error.h>
-#include <oklt/core/kernel_metadata.h>
+#include "attributes/frontend/params/tile.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_info.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/range_to_string.h"
 
 #include <clang/AST/AST.h>
+#include <clang/AST/Expr.h>
 #include <clang/AST/ParentMapContext.h>
+#include <llvm/Support/Casting.h>
 
 #include <tl/expected.hpp>
 
@@ -34,18 +40,6 @@ UnOp toOkl(UnaryOperatorKind uok) {
     return it != clang2okl.end() ? it->second : UnOp::Other;
 }
 
-std::string prettyPrint(const Stmt* S, const PrintingPolicy& policy) {
-    std::string ret;
-    if (!S) {
-        return ret;
-    }
-
-    llvm::raw_string_ostream os(ret);
-    S->printPretty(os, nullptr, policy);
-
-    return ret;
-};
-
 bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
     unsigned BitsInSizeT = ctx.getTypeSize(ctx.getSizeType());
 
@@ -63,11 +57,16 @@ bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
     return true;
 };
 
-tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext& ctx) {
-    LoopMetaData ret;
+}  // namespace
+
+namespace oklt {
+tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
+                                              const clang::ForStmt& s,
+                                              SessionStage& stage) {
+    auto& ctx = stage.getCompiler().getASTContext();
+    OklLoopInfo ret{.attr = a, .stmt = s};
     const Expr *start, *end = nullptr;
 
-    auto policy = ctx.getPrintingPolicy();
     if (isa<DeclStmt>(s.getInit())) {
         auto d = dyn_cast<DeclStmt>(s.getInit());
         if (!d->isSingleDecl()) {
@@ -82,20 +81,16 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         }
 
         ret.var.name = node->getDeclName().getAsString();
-        ret.var.type = node->getType().getAsString();
+        ret.var.varDecl = node;
+        ret.var.typeName = node->getType().getAsString();
 
         start = node->getInit();
         while (auto rsh = dyn_cast_or_null<CastExpr>(start)) {
             start = rsh->getSubExpr();
         }
-        ret.range.start = prettyPrint(start, policy);
+        ret.range.start = start;
 
         auto child_count = std::distance(start->children().begin(), start->children().end());
-        if (child_count > 0 && !node->getInit()->isEvaluatable(ctx)) {
-            if (ret.range.start.front() != '(' && ret.range.start.back() != ')') {
-                ret.range.start = "(" + ret.range.start + ")";
-            }
-        }
     }
 
     // Condition
@@ -107,7 +102,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         }
 
         ret.condition.op = toOkl(node->getOpcode());
-        ret.condition.cmp = prettyPrint(node, policy);
+        ret.condition.cmp = node;
 
         // LSH
         auto lsh = dyn_cast_or_null<CastExpr>(node->getLHS());
@@ -118,20 +113,30 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
             auto decl = dyn_cast_or_null<DeclRefExpr>(lsh->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getRHS();
-                ret.range.end = prettyPrint(end, policy);
+                ret.range.end = end;
             }
         };
 
         // RSH
-        auto rsh = dyn_cast_or_null<CastExpr>(node->getRHS());
-        while (rsh && rsh->getSubExpr() && isa<CastExpr>(rsh->getSubExpr())) {
-            rsh = dyn_cast_or_null<CastExpr>(rsh->getSubExpr());
+        auto rhs = dyn_cast_or_null<CastExpr>(node->getRHS());
+        while (rhs && rhs->getSubExpr() && isa<CastExpr>(rhs->getSubExpr())) {
+            rhs = dyn_cast_or_null<CastExpr>(rhs->getSubExpr());
         };
-        if (rsh && rsh->getSubExpr()) {
-            auto decl = dyn_cast_or_null<DeclRefExpr>(rsh->getSubExpr());
+        if (rhs && rhs->getSubExpr()) {
+            auto decl = dyn_cast_or_null<DeclRefExpr>(rhs->getSubExpr());
             if (decl && decl->getNameInfo().getAsString() == ret.var.name) {
                 end = node->getLHS();
-                ret.range.end = prettyPrint(end, policy);
+                ret.range.end = end;
+                ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
+            }
+        }
+
+        if (!rhs) {
+            // Recovery expr case - for example @dim usage in RHS of condition
+            auto* rhsRec = dyn_cast_or_null<RecoveryExpr>(node->getRHS());
+            if (rhsRec) {
+                end = rhsRec;
+                ret.range.end = end;
                 ret.condition.op = toOkl(BinaryOperator::reverseComparisonOp(node->getOpcode()));
             }
         }
@@ -157,7 +162,7 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         }
 
         ret.inc.op.bo = toOkl(node->getOpcode());
-        ret.inc.val = prettyPrint(node->getRHS(), policy);
+        ret.inc.val = node->getRHS();
     }
 
     ret.range.size = 0;
@@ -165,6 +170,8 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
     // Determinate range size
     llvm::APSInt start_i, end_i;
     if (EvaluateAsSizeT(start, start_i, ctx) && EvaluateAsSizeT(end, end_i, ctx)) {
+        start_i.setIsSigned(true);
+        end_i.setIsSigned(true);
         if (ret.IsInc()) {
             end_i -= start_i;
             ret.range.size = end_i.getZExtValue();
@@ -174,13 +181,13 @@ tl::expected<LoopMetaData, Error> parseForStmtImpl(const ForStmt& s, ASTContext&
         }
     }
 
+    // Ugly way to retireve tile size
+    auto& am = stage.getAttrManager();
+    auto params = am.parseAttr(a, stage);
+    if (params && params->type() == typeid(TileParams)) {
+        ret.tileSize = std::any_cast<TileParams>(am.parseAttr(a, stage).value()).tileSize;
+    }
+
     return ret;
-}
-
-}  // namespace
-
-namespace oklt {
-tl::expected<LoopMetaData, Error> parseForStmt(const ForStmt& s, ASTContext& ctx) {
-    return parseForStmtImpl(s, ctx);
 }
 }  // namespace oklt

@@ -4,8 +4,11 @@ struct ComplexValueFloat {
     float imaginary;
 };
 
-// TODO: fix me when @kernel/@outer/@inner will be implementeds
 @kernel void function1(const int* data) {
-    @shared ComplexValueFloat arr1[32];
-    @shared ComplexValueFloat arr2[8][32];
+    @outer for (int i = 0; i < 64; ++i) {
+        @shared ComplexValueFloat arr2[8][32];
+        @shared ComplexValueFloat arr1[32];
+        @inner for (int j = 0; j < 64; ++j) {
+        }
+    }
 }

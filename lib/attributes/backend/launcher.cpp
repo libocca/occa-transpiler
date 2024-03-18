@@ -1,13 +1,17 @@
 #include "attributes/attribute_names.h"
-#include "attributes/frontend/params/loop.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
+#include "core/attribute_manager/attr_stmt_handler.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "core/utils/range_to_string.h"
 #include "core/utils/type_converter.h"
+#include "oklt/core/kernel_metadata.h"
 
+#include <clang/Rewrite/Core/Rewriter.h>
 // #define OKL_LAUNCHER_RECURSIVE
 
 namespace {
@@ -17,8 +21,75 @@ using namespace clang;
 const std::string includeOCCA = "<occa/core/kernel.hpp>";
 const std::string externC = "extern \"C\"";
 
-std::string getTiledVariableName(const OklLoopInfo& forLoop) {
-    auto& meta = forLoop.metadata;
+struct LoopMetaData {
+    AttributedLoopTypes type = {LoopType::Regular};
+
+    struct {
+        std::string type;
+        std::string name;
+    } var;
+    struct {
+        std::string start;
+        std::string end;
+        size_t size = 0;
+    } range;
+    struct {
+        std::string cmp;
+        BinOp op = BinOp::Eq;
+    } condition;
+    struct {
+        std::string val;
+        union {
+            UnOp uo;
+            BinOp bo;
+        } op;
+    } inc;
+
+    [[nodiscard]] bool IsInc() const {
+        bool ret = false;
+        if (inc.val.empty()) {
+            ret = (inc.op.uo == UnOp::PreInc || inc.op.uo == UnOp::PostInc);
+        } else {
+            ret = (inc.op.bo == BinOp::AddAssign);
+        }
+
+        ret = (ret && (condition.op == BinOp::Le || condition.op == BinOp::Lt));
+
+        return ret;
+    };
+
+    [[nodiscard]] std::string getRangeSizeStr() const {
+        if (IsInc()) {
+            return range.end + " - " + range.start;
+        } else {
+            return range.start + " - " + range.end;
+        };
+    };
+
+    explicit LoopMetaData(const OklLoopInfo& l, const Rewriter& r) {
+        type = l.type;
+        var.type = l.var.typeName;
+        var.name = l.var.name;
+
+        // TODO: Currently getLatestSourceText failes. Possibly due to bug in Rewriter
+        auto& ctx = l.var.varDecl->getASTContext();
+        range.start = "(" + getLatestSourceText(*l.range.start, r) + ")";
+        range.end = "(" + getLatestSourceText(*l.range.end, r) + ")";
+        range.size = l.range.size;
+
+        condition.cmp = getLatestSourceText(*l.condition.cmp, r);
+        condition.op = l.condition.op;
+
+        if (l.inc.val) {
+            inc.val = "(" + getLatestSourceText(*l.inc.val, r) + ")";
+            inc.op.bo = l.inc.op.bo;
+        } else {
+            inc.op.uo = l.inc.op.uo;
+        }
+    }
+};
+
+std::string getTiledVariableName(const LoopMetaData& meta) {
     return "_occa_tiled_" + meta.var.name;
 }
 
@@ -123,15 +194,15 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
 }
 #endif
 
-std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, std::string& tileSize) {
-    auto sz = util::parseStrTo<size_t>(tileSize);
+std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const Rewriter& r) {
+    auto sz = util::parseStrTo<size_t>(loopInfo.tileSize);
 
     // Prepare first loop
-    LoopMetaData firstMeta = loopInfo.metadata;
-    firstMeta.var.name = getTiledVariableName(loopInfo);
+    auto firstMeta = LoopMetaData(loopInfo, r);
+    firstMeta.var.name = getTiledVariableName(firstMeta);
     if (sz.value_or(1024) > 1) {
         if (firstMeta.inc.val.empty()) {
-            firstMeta.inc.val = tileSize;
+            firstMeta.inc.val = loopInfo.tileSize;
             switch (firstMeta.inc.op.uo) {
                 case UnOp::PreInc:
                 case UnOp::PostInc:
@@ -143,12 +214,12 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, std::
                     break;
             }
         } else {
-            firstMeta.inc.val = "(" + tileSize + " * " + firstMeta.inc.val + ")";
+            firstMeta.inc.val = "(" + loopInfo.tileSize + " * " + firstMeta.inc.val + ")";
         }
     }
 
     // Prepare second loop
-    LoopMetaData secondMeta = loopInfo.metadata;
+    auto secondMeta = LoopMetaData(loopInfo, r);
     secondMeta.range.start = firstMeta.var.name;
     switch (secondMeta.condition.op) {
         case BinOp::Le:
@@ -159,7 +230,7 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, std::
             break;
     }
     if (sz.value_or(1024) > 1) {
-        secondMeta.range.end = "(" + firstMeta.var.name + " + " + tileSize + ")";
+        secondMeta.range.end = "(" + firstMeta.var.name + " + " + loopInfo.tileSize + ")";
     } else {
         secondMeta.range.end = firstMeta.var.name;
     }
@@ -172,6 +243,8 @@ std::string getRootLoopBody(const FunctionDecl& decl,
                             size_t loopNo,
                             SessionStage& s) {
     std::stringstream out;
+    auto& r = s.getRewriter();
+
     out << " {\n";
 
     // List all loops
@@ -182,8 +255,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
     std::list<LoopMetaData> outer = {};
     std::list<LoopMetaData> inner = {};
     for (auto child : loops) {
-        auto& metadata = child->metadata;
-        if (metadata.type.empty()) {
+        if (loopInfo.isRegular()) {
             continue;
         }
 
@@ -192,10 +264,10 @@ std::string getRootLoopBody(const FunctionDecl& decl,
             auto& am = s.getAttrManager();
             auto params = std::any_cast<TileParams>(am.parseAttr(child->attr, s).value());
 
-            auto [firstMeta, secondMeta] = splitTileAttr(*child, params.tileSize);
+            auto [firstMeta, secondMeta] = splitTileAttr(*child, r);
             //  if (metadata.type.size() > 0)
             {
-                auto loopType = metadata.type.front();
+                auto loopType = child->type.front();
                 if (loopType == LoopType::Outer) {
                     outer.push_back(firstMeta);
                 } else if (loopType == LoopType::Inner) {
@@ -203,8 +275,8 @@ std::string getRootLoopBody(const FunctionDecl& decl,
                 }
             }
 
-            if (metadata.type.size() > 1) {
-                auto loopType = metadata.type[1];
+            if (child->type.size() > 1) {
+                auto loopType = child->type[1];
                 if (loopType == LoopType::Outer) {
                     outer.push_back(secondMeta);
                 } else if (loopType == LoopType::Inner) {
@@ -215,13 +287,14 @@ std::string getRootLoopBody(const FunctionDecl& decl,
             continue;
         }
 
+        auto metadata = LoopMetaData(*child, r);
         if (child->is(LoopType::Outer)) {
-            outer.push_back(metadata);
+            outer.emplace_back(std::move(metadata));
             continue;
         }
 
         if (child->is(LoopType::Inner)) {
-            inner.push_back(metadata);
+            inner.emplace_back(std::move(metadata));
             continue;
         }
     }
@@ -314,9 +387,10 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     size_t n = 0;
     for (auto& loop : kernelInfo->children) {
         removeAttribute(loop.attr, s);
-        rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
 
         auto body = getRootLoopBody(decl, loop, n, s);
+        // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
+        rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
         rewriter.ReplaceText(loop.stmt.getBody()->getSourceRange(), body);
         ++n;
     }
@@ -352,6 +426,7 @@ __attribute__((constructor)) void registerLauncherHandler() {
     REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
     REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, AttrDeclHandler{serial_subset::handleEmptyDeclAttribute});
     REG_ATTR_HANDLE(SHARED_ATTR_NAME, AttrDeclHandler{serial_subset::handleEmptyDeclAttribute});
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
 
     REG_ATTR_HANDLE(RESTRICT_ATTR_NAME,
                     makeSpecificAttrHandle(serial_subset::handleRestrictAttribute));
