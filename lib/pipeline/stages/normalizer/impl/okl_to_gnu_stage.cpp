@@ -146,17 +146,13 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
         return nullptr;
     }
 
-    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
+    bool BeginSourceFileAction(CompilerInstance& compiler) override {
         if (compiler.hasFileManager()) {
             auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
                                            _input.oklCppIncs);
             compiler.getFileManager().setVirtualFileSystem(overlayFs);
         }
 
-        return true;
-    }
-
-    bool BeginSourceFileAction(CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
         pp.EnterMainSourceFile();
         auto tokens = fetchTokens(pp);
@@ -185,7 +181,16 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
         }
 
         _output.gnuCppSrc = stage.getRewriterResultForMainFile();
+        // no errors and empty output could mean that the source is already normalized
+        // so use input as output and lets the next stage try to figure out
+        if (_output.gnuCppSrc.empty()) {
+            _output.gnuCppSrc = std::move(_input.oklCppSrc);
+        }
+
+        // we need keep all headers in output even there are not modififcation by rewriter to
+        // populate affected files futher
         _output.gnuCppIncs = stage.getRewriterResultForHeaders();
+        _output.gnuCppIncs.fileMap.merge(_input.oklCppIncs.fileMap);
 
         pp.EndSourceFile();
 
