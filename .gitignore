@@ -1131,3 +1131,7 @@ secring.*
 *build*
 
 .vscode/
+
+script/run_all_test.sh
+temp
+demo

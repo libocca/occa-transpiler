@@ -15,7 +15,6 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 #endif
 
     auto varName = var.getNameAsString();
-    auto typeStrAttributed = var.getType().getLocalUnqualifiedType().getAsString();
     // Desugar since it is attributed (since it is @shared variable)
     // auto typeStr = var.getType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString();
     auto typeStr =

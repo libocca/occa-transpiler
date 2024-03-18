@@ -35,20 +35,16 @@ std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter)
 
 // TODO: context is added temporary
 template <typename NodeType>
-std::string getLatestSourceText(const NodeType& node,
-                                const clang::Rewriter& rewriter) {
+std::string getLatestSourceText(const NodeType& node, const clang::Rewriter& rewriter) {
     if constexpr (IGNORE_REWRITTEN_TEXT) {
         return getSourceText(node, rewriter);
     } else {
-        // auto range = clang::CharSourceRange::getCharRange(node.getSourceRange());
-        auto range = clang::CharSourceRange::getTokenRange(node.getSourceRange());
-        return rewriter.getRewrittenText(range);
+        return rewriter.getRewrittenText(node.getSourceRange());
     }
 }
 
 template <typename NodeType>
-std::string getLatestSourceText(const NodeType* node,
-                                const clang::Rewriter& rewriter) {
+std::string getLatestSourceText(const NodeType* node, const clang::Rewriter& rewriter) {
     return getLatestSourceText(*node, rewriter);
 }
 }  // namespace oklt
