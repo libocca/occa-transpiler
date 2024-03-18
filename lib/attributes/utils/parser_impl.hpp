@@ -24,7 +24,7 @@ inline bool OKLAttrParam::is_unsigned() {
     if (!is_integral())
         return false;
 
-    auto& val = std::any_cast<llvm::APSInt&>(data);
+    const auto& val = std::any_cast<llvm::APSInt&>(data);
     return val.isUnsigned();
 }
 
@@ -47,11 +47,11 @@ inline bool OKLAttrParam::is_expr() {
 }
 
 template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool>>
-bool OKLAttrParam::isa() {
+bool OKLAttrParam::isa() const {
     if (!data.has_value() || data.type() != typeid(llvm::APSInt))
         return false;
 
-    auto& val = std::any_cast<llvm::APSInt&>(data);
+    auto val = std::any_cast<llvm::APSInt>(data);
     if (val.isNonNegative())
         val.setIsSigned(std::numeric_limits<T>::is_signed);
 
@@ -64,11 +64,11 @@ bool OKLAttrParam::isa() {
 }
 
 template <typename T, std::enable_if_t<std::is_floating_point_v<T>, bool>>
-bool OKLAttrParam::isa() {
+bool OKLAttrParam::isa() const {
     if (!data.has_value() || data.type() != typeid(llvm::APFloat))
         return false;
 
-    auto& val = std::any_cast<llvm::APFloat&>(data);
+    const auto& val = std::any_cast<llvm::APFloat&>(data);
     if (llvm::APFloat::getSizeInBits(val.getSemantics()) != sizeof(T) * 8)
         return false;
 
@@ -76,22 +76,22 @@ bool OKLAttrParam::isa() {
 }
 
 template <typename T, std::enable_if_t<is_string_v<T>, bool>>
-bool OKLAttrParam::isa() {
+bool OKLAttrParam::isa() const {
     using cell_t = typename T::value_type;
     return (data.has_value() && (data.type() == typeid(std::string) || isa<cell_t>()));
 }
 
 template <typename T, std::enable_if_t<std::is_same_v<T, OKLParsedAttr>, bool>>
-bool OKLAttrParam::isa() {
+bool OKLAttrParam::isa() const {
     return (data.has_value() && data.type() == typeid(T));
 }
 
 template <typename T, std::enable_if_t<std::is_integral_v<T>, bool>>
-std::optional<T> OKLAttrParam::get() {
+std::optional<T> OKLAttrParam::get() const {
     if (!data.has_value() || data.type() != typeid(llvm::APSInt))
         return std::nullopt;  // Not an integer
 
-    auto& val = std::any_cast<llvm::APSInt&>(data);
+    auto val = std::any_cast<llvm::APSInt>(data);
 
     if constexpr (std::is_same_v<T, bool>) {
         if(val.getBitWidth() != 1) {
@@ -117,11 +117,11 @@ std::optional<T> OKLAttrParam::get() {
 }
 
 template <typename T, std::enable_if_t<std::is_floating_point_v<T>, bool>>
-std::optional<T> OKLAttrParam::get() {
+std::optional<T> OKLAttrParam::get() const {
     if (!data.has_value() || data.type() != typeid(llvm::APFloat))
         return std::nullopt;  // Not an integer
 
-    auto& val = std::any_cast<llvm::APFloat&>(data);
+    auto val = std::any_cast<llvm::APFloat>(data);
 
     if (llvm::APFloat::getSizeInBits(val.getSemantics()) > sizeof(T) * 8)
         return std::nullopt;  // Downcast
@@ -143,7 +143,7 @@ std::optional<T> OKLAttrParam::get() {
 }
 
 template <typename T, std::enable_if_t<is_string_v<T>, bool>>
-std::optional<T> OKLAttrParam::get() {
+std::optional<T> OKLAttrParam::get() const {
     using cell_t = typename T::value_type;
     if (!data.has_value())
         return std::nullopt;
@@ -161,7 +161,7 @@ std::optional<T> OKLAttrParam::get() {
 }
 
 template <typename T, std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLParsedAttr>, bool>>
-std::optional<T> OKLAttrParam::get() {
+std::optional<T> OKLAttrParam::get() const {
     if (!data.has_value() || data.type() != typeid(OKLParsedAttr))
         return std::nullopt;  // Not an OKLParsedAttr
 
@@ -169,7 +169,7 @@ std::optional<T> OKLAttrParam::get() {
 }
 
 template <typename T>
-bool OKLAttrParam::getTo(T& v) {
+bool OKLAttrParam::getTo(T& v) const {
     auto val = get<T>();
     if (val.has_value()) {
         v = std::move(val.value());
@@ -180,7 +180,7 @@ bool OKLAttrParam::getTo(T& v) {
 }
 
 template <typename T>
-void OKLAttrParam::getTo(T& v, T&& u) {
+void OKLAttrParam::getTo(T& v, T&& u) const {
     v = get<T>().value_or(u);
 }
 
