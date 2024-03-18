@@ -1,18 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 
 namespace {
 using namespace oklt;
-
-HandleResult handleHIPExclusiveExprAttribute(const clang::Attr& a,
-                                             const clang::DeclRefExpr& expr,
-                                             SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
-    return {};
-}
 
 __attribute__((constructor)) void registerHIPExclusiveAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
@@ -25,7 +17,7 @@ __attribute__((constructor)) void registerHIPExclusiveAttrBackend() {
 
     ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(handleHIPExclusiveExprAttribute));
+        makeSpecificAttrHandle(defaultHandleExclusiveStmtAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME << " attribute handler\n";

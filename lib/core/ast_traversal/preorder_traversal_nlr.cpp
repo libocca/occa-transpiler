@@ -1,5 +1,4 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
-#include "attributes/attribute_names.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 
 #include "core/attribute_manager/attribute_manager.h"
@@ -68,20 +67,6 @@ tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::D
     auto& ctx = stage.getCompiler().getASTContext();
     auto attrs = attrTypeMap.get(ctx, expr.getType());
     auto res = std::set<const Attr*>(attrs.begin(), attrs.end());
-
-    // If this is a usage of shared memory, mark it in the loop
-    for (auto* attr : attrs) {
-        auto name = attr->getNormalizedFullName();
-        if (name != SHARED_ATTR_NAME) {
-            continue;
-        }
-        auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-        auto* currLoop = sema.getLoopInfo();
-        if (!currLoop) {
-            return res;
-        }
-        currLoop->markShmUsed();
-    }
 
     return res;
 }

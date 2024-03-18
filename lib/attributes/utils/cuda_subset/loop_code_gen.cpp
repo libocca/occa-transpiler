@@ -2,14 +2,14 @@
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include <clang/Rewrite/Core/Rewriter.h>
 #include "core/sema/okl_sema_info.h"
 #include "core/utils/range_to_string.h"
 
+#include <clang/Rewrite/Core/Rewriter.h>
+
 namespace oklt::cuda_subset {
 std::string axisToStr(const Axis& axis) {
-    static std::map<Axis, std::string> mapping{
-        {Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
+    static std::map<Axis, std::string> mapping{{Axis::X, "x"}, {Axis::Y, "y"}, {Axis::Z, "z"}};
     return mapping[axis];
 }
 
@@ -77,7 +77,8 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         res = std::move(
-            util::fmt("{} {} = {} {} {};", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
+            util::fmt(
+                "{} {} = {} {} {};", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
                 .value());
     } else {
         res = std::move(util::fmt("{} {} = {} {} (({}) * {});",

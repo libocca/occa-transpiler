@@ -43,16 +43,16 @@ class OKLAttrParam {
     [[nodiscard]] bool is_expr();
 
     template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-    [[nodiscard]] bool isa();
+    [[nodiscard]] bool isa() const;
 
     template <typename T, typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-    [[nodiscard]] bool isa();
+    [[nodiscard]] bool isa() const;
 
     template <typename T, typename std::enable_if_t<is_string_v<T>, bool> = true>
-    [[nodiscard]] bool isa();
+    [[nodiscard]] bool isa() const;
 
     template <typename T, typename std::enable_if_t<std::is_same_v<T, OKLParsedAttr>, bool> = true>
-    [[nodiscard]] bool isa();
+    [[nodiscard]] bool isa() const;
 
     //    /// @brief check if value is of type
     //    template <typename T>
@@ -62,23 +62,23 @@ class OKLAttrParam {
 
     /// @brief check if value if of given types
     template <typename F, typename S, typename... T>
-    [[nodiscard]] inline bool isa() {
+    [[nodiscard]] inline bool isa() const {
         return isa<F>() || isa<S, T...>();
     }
 
     template <typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-    [[nodiscard]] std::optional<T> get();
+    [[nodiscard]] std::optional<T> get() const;
 
     template <typename T, typename std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
-    [[nodiscard]] std::optional<T> get();
+    [[nodiscard]] std::optional<T> get() const;
 
     template <typename T, typename std::enable_if_t<is_string_v<T>, bool> = true>
-    [[nodiscard]] std::optional<T> get();
+    [[nodiscard]] std::optional<T> get() const;
 
     template <
         typename T,
         typename std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, OKLParsedAttr>, bool> = true>
-    [[nodiscard]] std::optional<T> get();
+    [[nodiscard]] std::optional<T> get() const;
 
     //    /// @brief get value of desired type or std::nullopt
     //    template <typename T>
@@ -88,10 +88,10 @@ class OKLAttrParam {
 
     /// @brief get value to referenced buffer, return true on success.
     template <typename T>
-    bool getTo(T& v);
+    bool getTo(T& v) const;
 
     template <typename T>
-    void getTo(T& v, T&& u);
+    void getTo(T& v, T&& u) const;
 
    private:
     std::string rawData;

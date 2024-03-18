@@ -16,6 +16,13 @@ struct KernelInfo;
 using AttributedLoopTypes = std::vector<LoopType>;
 
 struct OklLoopInfo {
+    struct AttributedTypeInfo {
+        // variable of this attributed type declared in THIS loop (applied to @outer only)
+        bool declared = false;
+        // variable of this attributed type used in this or child loops (applied to @inner only)
+        bool used = false;
+    };
+
     const clang::Attr& attr;
     const clang::ForStmt& stmt;
     AttributedLoopTypes type = {LoopType::Regular};
@@ -23,11 +30,9 @@ struct OklLoopInfo {
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
     std::string tileSize = "";
-    bool shmUsed = false;
 
-    // references to shared and exclusive declared in this loop
-    std::list<std::reference_wrapper<const clang::Decl>> shared = {};
-    std::list<std::reference_wrapper<const clang::VarDecl>> exclusive = {};
+    AttributedTypeInfo sharedInfo;
+    AttributedTypeInfo exclusiveInfo;
 
     struct {
         std::string typeName;
@@ -40,7 +45,7 @@ struct OklLoopInfo {
         size_t size = 0;
     } range;
     struct {
-        const clang::BinaryOperator* cmp_;
+        const clang::BinaryOperator* cmp;
         BinOp op = BinOp::Eq;
     } condition;
     struct {
@@ -52,7 +57,8 @@ struct OklLoopInfo {
     } inc;
 
     [[nodiscard]] bool shouldSync();
-    void markShmUsed();
+    void markSharedUsed();
+    void markExclusiveUsed();
 
     [[nodiscard]] bool IsInc() const;
     [[nodiscard]] bool isUnary() const;

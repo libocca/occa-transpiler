@@ -1,18 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 
 namespace {
 using namespace oklt;
-
-HandleResult handleCUDAExclusiveExprAttribute(const clang::Attr& a,
-                                              const clang::DeclRefExpr& expr,
-                                              SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
-    return {};
-}
 
 __attribute__((constructor)) void registerCUDAExclusiveAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
@@ -20,7 +12,7 @@ __attribute__((constructor)) void registerCUDAExclusiveAttrBackend() {
         makeSpecificAttrHandle(cuda_subset::handleExclusiveAttribute));
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(handleCUDAExclusiveExprAttribute));
+        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME << " attribute handler\n";

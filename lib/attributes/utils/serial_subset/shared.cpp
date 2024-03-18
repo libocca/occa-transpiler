@@ -1,3 +1,4 @@
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -29,11 +30,8 @@ HandleResult handleSharedAttribute(const Attr& a, const Decl& decl, SessionStage
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
-    // Process later when processing ForStmt
-    loopInfo->shared.emplace_back(std::ref(decl));
-
     removeAttribute(a, s);
-    return {};
+    return defaultHandleSharedDeclAttribute(a, decl, s);
 }
 
 }  // namespace oklt::serial_subset
