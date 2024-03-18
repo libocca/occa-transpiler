@@ -1,6 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
+#include "clang/Basic/SourceLocation.h"
 #include "core/attribute_manager/attr_stmt_handler.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -382,7 +383,11 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     kernelInfo->kernInfo->name = decl.getNameAsString();
 
     auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
-    rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
+    if (decl.getNumParams()) {
+        rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
+    } else {
+        rewriter.InsertText(decl.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1), paramsStr);
+    }
 
     size_t n = 0;
     for (auto& loop : kernelInfo->children) {
