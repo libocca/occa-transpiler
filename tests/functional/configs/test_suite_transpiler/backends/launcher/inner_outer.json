@@ -20,5 +20,16 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/launcher/outer_inner/outer_inner_dec_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "launcher",
+      "source": "transpiler/backends/launcher/outer_inner/empty_parameters_list.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/launcher/outer_inner/empty_parameters_list_ref.cpp"
   }
 ]
