@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-POSITIONAL_ARGS=()
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 SUITES_PATH=$SCRIPT_DIR/../tests/functional/configs/test_suite_transpiler/
 DATA_ROOT=$SCRIPT_DIR/../tests/functional/data
