@@ -7,7 +7,7 @@ namespace oklt {
 
 [[nodiscard]] bool OklLoopInfo::shouldSync() {
     // 1. There should be shared memory usage somewhere inside loop
-    if (!shmUsed) {
+    if (!sharedInfo.used) {
         return false;
     }
 
@@ -28,12 +28,22 @@ namespace oklt {
     return true;
 }
 
-void OklLoopInfo::markShmUsed() {
+void OklLoopInfo::markSharedUsed() {
     // Mark this loop and all of its ancestors
-    shmUsed = true;
+    sharedInfo.used = true;
     auto* curLoop = parent;
     while (curLoop) {
-        curLoop->shmUsed = true;
+        curLoop->sharedInfo.used = true;
+        curLoop = curLoop->parent;
+    }
+}
+
+void OklLoopInfo::markExclusiveUsed() {
+    // Mark this loop and all of its ancestors
+    exclusiveInfo.used = true;
+    auto* curLoop = parent;
+    while (curLoop) {
+        curLoop->exclusiveInfo.used = true;
         curLoop = curLoop->parent;
     }
 }

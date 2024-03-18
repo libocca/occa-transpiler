@@ -16,7 +16,6 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     auto varName = var.getNameAsString();
     // Desugar since it is attributed (since it is @shared variable)
-    // auto typeStr = var.getType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString();
     auto typeStr =
         QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
 
@@ -32,9 +31,6 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
         return tl::make_unexpected(sharedError);
     }
 
-    // Save shared declaration to loopInfo
-    loopInfo->shared.emplace_back(std::ref(*dyn_cast<Decl>(&var)));
-
     auto newDeclaration =
         util::fmt(
             "auto & {} = "
@@ -47,7 +43,7 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     s.getRewriter().ReplaceText(range, newDeclaration);
 
-    return {};
+    return defaultHandleSharedDeclAttribute(a, var, s);
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {

@@ -1,3 +1,4 @@
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -33,7 +34,7 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
     auto child = loopInfo->getFirstAttributedChild();
     if (!child || !child->is(LoopType::Inner)) {
         return tl::make_unexpected(
-            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+            Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
 
     auto& rewriter = s.getRewriter();
@@ -41,13 +42,10 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.RemoveText(attrRange);
 
-    if (loopInfo->exclusive.empty()) {
+    if (!loopInfo->exclusiveInfo.declared) {
         auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
         rewriter.InsertTextAfter(indexLoc, outerLoopText);
     }
-
-    // Process later when processing ForStmt
-    loopInfo->exclusive.emplace_back(std::ref(decl));
 
     // Find max size of inner loops
     size_t sz = 0;
@@ -70,7 +68,7 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
         rewriter.InsertTextAfter(decl.getEndLoc().getLocWithOffset(1), "}");
     }
 
-    return {};
+    return defaultHandleExclusiveDeclAttribute(a, decl, s);
 }
 
 HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr, SessionStage& s) {
@@ -86,8 +84,7 @@ HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr
 
     auto loc = expr.getLocation().getLocWithOffset(expr.getNameInfo().getAsString().size());
     s.getRewriter().InsertTextAfter(loc, exlusiveExprText);
-
-    return {};
+    return defaultHandleExclusiveStmtAttribute(a, expr, s);
 }
 
 }  // namespace oklt::serial_subset

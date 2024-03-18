@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 #include "core/attribute_manager/result.h"
 
@@ -19,5 +19,17 @@ HandleResult emptyHandleDeclAttribute(const clang::Attr&, const clang::Decl&, Se
 HandleResult defaultHandleSharedStmtAttribute(const clang::Attr&,
                                               const clang::Stmt&,
                                               SessionStage&);
+
+HandleResult defaultHandleExclusiveStmtAttribute(const clang::Attr&,
+                                                 const clang::Stmt&,
+                                                 SessionStage&);
+
+HandleResult defaultHandleSharedDeclAttribute(const clang::Attr&,
+                                              const clang::Decl&,
+                                              SessionStage&);
+
+HandleResult defaultHandleExclusiveDeclAttribute(const clang::Attr&,
+                                                 const clang::Decl&,
+                                                 SessionStage&);
 
 }  // namespace oklt

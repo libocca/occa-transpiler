@@ -170,7 +170,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && parent->has(LoopType::Outer) && loopInfo->is(LoopType::Inner)) {
-        if (!parent->exclusive.empty()) {
+        if (parent->exclusiveInfo.declared) {
             s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
         }
     }
@@ -184,7 +184,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && loopInfo->is(LoopType::Outer, LoopType::Inner)) {
-        if (!parent->exclusive.empty()) {
+        if (loopInfo->exclusiveInfo.declared) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
@@ -205,7 +205,7 @@ HandleResult handleTileAttribute(const Attr& a,
     if (loopInfo->children.empty()) {
         auto outerParent =
             loopInfo->getAttributedParent([](OklLoopInfo& v) { return v.has(LoopType::Outer); });
-        if (outerParent && !outerParent->exclusive.empty()) {
+        if (outerParent && outerParent->exclusiveInfo.used) {
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();

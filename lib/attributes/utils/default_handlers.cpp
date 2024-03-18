@@ -9,18 +9,14 @@ class Stmt;
 namespace oklt {
 class SessionStage;
 
-HandleResult emptyHandleStmtAttribute(const clang::Attr& a,
-                                             const clang::Stmt&,
-                                             SessionStage&) {
+HandleResult emptyHandleStmtAttribute(const clang::Attr& a, const clang::Stmt&, SessionStage&) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "Called empty " << a.getNormalizedFullName() << " stmt handler\n";
 #endif
     return {};
 }
 
-HandleResult emptyHandleDeclAttribute(const clang::Attr& a,
-                                             const clang::Decl&,
-                                             SessionStage&) {
+HandleResult emptyHandleDeclAttribute(const clang::Attr& a, const clang::Decl&, SessionStage&) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "Called empty " << a.getNormalizedFullName() << " decl handler\n";
 #endif
@@ -30,12 +26,65 @@ HandleResult emptyHandleDeclAttribute(const clang::Attr& a,
 HandleResult defaultHandleSharedStmtAttribute(const clang::Attr& a,
                                               const clang::Stmt& stmt,
                                               SessionStage& stage) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Called default " << a.getNormalizedFullName() << " stmt handler\n";
+#endif
+
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();
     if (!currLoop) {
         return {};
     }
-    currLoop->markShmUsed();
+    currLoop->markSharedUsed();
+    return {};
+}
+
+HandleResult defaultHandleExclusiveStmtAttribute(const clang::Attr& a,
+                                                 const clang::Stmt& stmt,
+                                                 SessionStage& stage) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Called default " << a.getNormalizedFullName() << " stmt handler\n";
+#endif
+
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    auto* currLoop = sema.getLoopInfo();
+    if (!currLoop) {
+        return {};
+    }
+    currLoop->markExclusiveUsed();
+    return {};
+}
+
+HandleResult defaultHandleSharedDeclAttribute(const clang::Attr& a,
+                                              const clang::Decl& d,
+                                              SessionStage& stage) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Called default " << a.getNormalizedFullName() << " decl handler\n";
+#endif
+
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    auto* currLoop = sema.getLoopInfo();
+    if (!currLoop) {
+        return {};
+    }
+    currLoop->sharedInfo.declared = true;
+
+    return {};
+}
+
+HandleResult defaultHandleExclusiveDeclAttribute(const clang::Attr& a,
+                                                 const clang::Decl& d,
+                                                 SessionStage& stage) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "Called default " << a.getNormalizedFullName() << " decl handler\n";
+#endif
+
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    auto* currLoop = sema.getLoopInfo();
+    if (!currLoop) {
+        return {};
+    }
+    currLoop->exclusiveInfo.declared = true;
     return {};
 }
 
