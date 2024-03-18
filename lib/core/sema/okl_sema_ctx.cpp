@@ -45,12 +45,8 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
     if (!parsedLoopInfo) {
         return parsedLoopInfo;
     }
-
-    auto& metaList = kernelInfo.currentLoop ? kernelInfo.currentLoop->children
-                                            : kernelInfo.highestLevelLoops;
-    metaList.emplace_back(std::move(parsedLoopInfo.value()));
-    metaList.back().type = loopType;
-    return metaList.back();
+    parsedLoopInfo->type = loopType;
+    return parsedLoopInfo;
 }
 
 // check if loop types inside one loop are legal. firstType/lastType - first and alst non regular
@@ -221,7 +217,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
             .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer] for-loop"});
     }
 
-    auto currentLoop = _parsingKernInfo->currentLoop;
+    auto* currentLoop = _parsingKernInfo->currentLoop;
     auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
     AttributedLoopTypes parentType{LoopType::Regular};
     if (currentLoop) {

@@ -14,7 +14,7 @@ extern "C" __global__ void _occa_addVectors_0(const int entries, float *a,
       __shared__ int shm[32];
       __shared__ int shm2[32];
       {
-        int j = (0) + ((1) * threadIdx.y);
+        int j = (0) + ((1) * threadIdx.z);
         {
           shm[j] =
               0; // shared memory usage -> should be barrier after @inner loop
@@ -60,7 +60,7 @@ extern "C" __global__ void _occa_addVectors_0(const int entries, float *a,
         __syncthreads();
       }
       {
-        int j = (0) + ((1) * threadIdx.y);
+        int j = (0) + ((1) * threadIdx.z);
         {
           shm[j] = 0;
           {
@@ -97,7 +97,7 @@ extern "C" __global__ void _occa_addVectors1_0(const int entries, float *a,
       __shared__ int shm[32];
       __shared__ int shm2[32];
       {
-        int j = (0) + ((1) * threadIdx.y);
+        int j = (0) + ((1) * threadIdx.z);
         {
           // shm[j] = 0; // shared memory usage -> should be barrier after
           // @inner loop
@@ -140,7 +140,7 @@ extern "C" __global__ void _occa_addVectors1_0(const int entries, float *a,
         }
       }
       {
-        int j = (0) + ((1) * threadIdx.y);
+        int j = (0) + ((1) * threadIdx.z);
         {
           shm[j] = 0;
           {

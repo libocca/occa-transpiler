@@ -22,7 +22,7 @@ extern "C" void _occa_addVectors_0(sycl::queue *queue_,
               *(sycl::ext::oneapi::group_local_memory_for_overwrite<int[32]>(
                   item_.get_group()));
           {
-            int j = (0) + ((1) * item.get_local_id(1));
+            int j = (0) + ((1) * item.get_local_id(0));
             {
               shm[j] = 0; // shared memory usage -> should be barrier after
                           // @inner loop
@@ -68,7 +68,7 @@ extern "C" void _occa_addVectors_0(sycl::queue *queue_,
             item_.barrier(sycl::access::fence_space::local_space);
           }
           {
-            int j = (0) + ((1) * item.get_local_id(1));
+            int j = (0) + ((1) * item.get_local_id(0));
             {
               shm[j] = 0;
               {
@@ -114,7 +114,7 @@ extern "C" void _occa_addVectors1_0(sycl::queue *queue_,
               *(sycl::ext::oneapi::group_local_memory_for_overwrite<int[32]>(
                   item_.get_group()));
           {
-            int j = (0) + ((1) * item.get_local_id(1));
+            int j = (0) + ((1) * item.get_local_id(0));
             {
               // shm[j] = 0; // shared memory usage -> should be barrier after
               // @inner loop
@@ -157,7 +157,7 @@ extern "C" void _occa_addVectors1_0(sycl::queue *queue_,
             }
           }
           {
-            int j = (0) + ((1) * item.get_local_id(1));
+            int j = (0) + ((1) * item.get_local_id(0));
             {
               shm[j] = 0;
               {
