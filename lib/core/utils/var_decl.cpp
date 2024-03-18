@@ -6,8 +6,8 @@
 namespace oklt {
 using namespace clang;
 
-std::string getNewDeclStrConstantArray(const VarDecl& var, const std::string& qualifier) {
-    auto* arrDecl = dyn_cast<ConstantArrayType>(var.getType().getTypePtr());
+std::string getNewDeclStrArray(const VarDecl& var, const std::string& qualifier) {
+    auto* arrDecl = dyn_cast<ArrayType>(var.getType().getTypePtr());
     auto unqualifiedTypeStr = arrDecl->getElementType().getLocalUnqualifiedType().getAsString();
 
     auto type = arrDecl->getElementType();

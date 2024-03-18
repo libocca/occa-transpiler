@@ -25,12 +25,16 @@ HandleResult handleGlobalConstant(const clang::VarDecl& decl,
 #endif
 
     std::string newDeclStr;
-    if (isConstantSizeArray(decl)) {
-        newDeclStr = getNewDeclStrConstantArray(decl, qualifier);
+    if (isArray(decl)) {
+        newDeclStr = getNewDeclStrArray(decl, qualifier);
     } else if (isPointerToConst(decl)) {
         newDeclStr = getNewDeclStrPointerToConst(decl, qualifier);
     } else {
         newDeclStr = getNewDeclStrVariable(decl, qualifier);
+    }
+
+    if (decl.hasExternalStorage()) {
+        newDeclStr = "extern " + newDeclStr;
     }
 
     // INFO: volatile const int var_const = 0;
