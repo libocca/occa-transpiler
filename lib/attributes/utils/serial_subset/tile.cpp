@@ -170,7 +170,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && parent->has(LoopType::Outer) && loopInfo->is(LoopType::Inner)) {
-        if (!loopInfo->exclusive.empty()) {
+        if (!parent->exclusive.empty()) {
             s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
         }
     }
@@ -184,7 +184,7 @@ HandleResult handleTileAttribute(const Attr& a,
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
     if (parent && loopInfo->is(LoopType::Outer, LoopType::Inner)) {
-        if (!loopInfo->exclusive.empty()) {
+        if (!parent->exclusive.empty()) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
