@@ -66,8 +66,9 @@ tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::D
     auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
     auto& ctx = stage.getCompiler().getASTContext();
     auto attrs = attrTypeMap.get(ctx, expr.getType());
+    auto res = std::set<const Attr*>(attrs.begin(), attrs.end());
 
-    return std::set<const Attr*>(attrs.begin(), attrs.end());
+    return res;
 }
 
 tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::RecoveryExpr& expr,

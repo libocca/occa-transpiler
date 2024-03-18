@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/sema/okl_sema_info.h"
+#include "oklt/core/kernel_metadata.h"
 
 #include <clang/AST/AST.h>
 
@@ -9,6 +10,7 @@
 namespace oklt {
 
 struct Error;
+class SessionStage;
 
 struct OklSemaCtx {
     struct ParsedKernelInfo : public OklKernelInfo {
@@ -19,6 +21,7 @@ struct OklSemaCtx {
               argStrs(args),
               kernInfo(info){};
         KernelInfo* kernInfo{nullptr};
+        std::list<OklLoopInfo> highestLevelLoops;
 
         std::string transpiledFuncAttrStr = {};
         std::vector<std::string> argStrs = {};
@@ -43,7 +46,8 @@ struct OklSemaCtx {
     [[nodiscard]] tl::expected<void, Error> startParsingAttributedForLoop(
         const clang::Attr& attr,
         const clang::ForStmt& stmt,
-        const std::any* params);
+        const std::any* params,
+        SessionStage& stage);
     [[nodiscard]] tl::expected<void, Error> stopParsingAttributedForLoop(const clang::Attr& attr,
                                                                          const clang::ForStmt& stmt,
                                                                          const std::any* params);

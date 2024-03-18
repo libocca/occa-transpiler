@@ -69,7 +69,6 @@ float add(float a, float b) {
 }
 
 // Outer -> outer -> inner -> inner + partially manual dimensions specification
-// TODO: change after sema calculates dimensions
 @kernel void addVectors6(const int entries, const float* a, const float* b, float* ab) {
     @outer for (int i = 0; i < entries; ++i) {
         @outer(0) for (int j = 0; j < entries; ++j) {

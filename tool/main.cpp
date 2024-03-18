@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
         program.parse_args(argc, argv);
         if (program.is_subcommand_used(normalize_command)) {
             auto input = std::filesystem::path(normalize_command.get("-i"));
-            auto output = std::filesystem::path(normalize_command.get("-n"));
+            auto output = std::filesystem::path(normalize_command.get("-o"));
             if (output.empty()) {
                 output = build_normalization_output_filename(input);
             }

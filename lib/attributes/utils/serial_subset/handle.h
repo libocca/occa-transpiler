@@ -1,4 +1,3 @@
-#include "attributes/frontend/params/barrier.h"
 #include "attributes/frontend/params/loop.h"
 #include "attributes/frontend/params/tile.h"
 #include "core/attribute_manager/result.h"

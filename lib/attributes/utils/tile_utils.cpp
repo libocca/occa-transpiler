@@ -23,7 +23,7 @@ tl::expected<TileParams, Error> updateParamsAxis(TileParams& params,
     }();
     auto height = loopInfo.getHeightSameType(metaLoopType);
     // Case of @outer @outer or @inner @inner
-    if (isFirst && loopInfo.metadata.type[1] == metaLoopType) {
+    if (isFirst && loopInfo.type[1] == metaLoopType) {
         ++height;
     }
     if (height > heightLimit) {

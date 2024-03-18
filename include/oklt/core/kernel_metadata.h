@@ -2,10 +2,10 @@
 
 #include <nlohmann/json.hpp>
 
-#include <list>
 #include <optional>
 #include <string>
 #include <vector>
+#include <list>
 
 namespace oklt {
 
@@ -69,67 +69,9 @@ enum class BinOp { Eq, Le, Lt, Gt, Ge, AddAssign, RemoveAssign, Other };
 
 enum class UnOp { PreInc, PostInc, PreDec, PostDec, Other };
 
-using AttributedLoopTypes = std::vector<LoopType>;
-struct LoopMetaData {
-    // LoopMetaType type = LoopMetaType::Regular;
-    AttributedLoopTypes type = {LoopType::Regular};
-    std::list<LoopMetaData> childrens;
-
-    struct {
-        std::string type;
-        std::string name;
-    } var;
-    struct {
-        std::string start;
-        std::string end;
-        size_t size = 0;
-    } range;
-    struct {
-        std::string cmp;
-        BinOp op = BinOp::Eq;
-    } condition;
-    struct {
-        std::string val;
-        union {
-            UnOp uo;
-            BinOp bo;
-        } op;
-    } inc;
-
-    [[nodiscard]] bool IsInc() const {
-        bool ret = false;
-        if (inc.val.empty()) {
-            ret = (inc.op.uo == UnOp::PreInc || inc.op.uo == UnOp::PostInc);
-        } else {
-            ret = (inc.op.bo == BinOp::AddAssign);
-        }
-
-        ret = (ret && (condition.op == BinOp::Le || condition.op == BinOp::Lt));
-
-        return ret;
-    };
-    [[nodiscard]] bool isUnary() const {
-        if (!inc.val.empty()) {
-            return false;
-        }
-        // should by unnecessary check, but just in case
-        return (inc.op.uo == UnOp::PreInc) || (inc.op.uo == UnOp::PostInc) ||
-               (inc.op.uo == UnOp::PreDec) || (inc.op.uo == UnOp::PostDec);
-    };
-
-    [[nodiscard]] std::string getRangeSizeStr() const {
-        if (IsInc()) {
-            return range.end + " - " + range.start;
-        } else {
-            return range.start + " - " + range.end;
-        };
-    };
-};
-
 struct KernelInfo {
     std::string name;
     std::vector<ArgumentInfo> args;
-    std::list<LoopMetaData> childrens;
 };
 
 struct DependeciesInfo {};

@@ -20,7 +20,7 @@ HandleResult preValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    auto ok = sema.startParsingAttributedForLoop(attr, stmt, &params.value());
+    auto ok = sema.startParsingAttributedForLoop(attr, stmt, &params.value(), stage);
     if (!ok) {
         return tl::make_unexpected(std::move(ok.error()));
     }

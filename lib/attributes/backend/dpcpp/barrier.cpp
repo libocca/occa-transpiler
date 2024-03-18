@@ -1,4 +1,5 @@
 #include "attributes/attribute_names.h"
+#include "attributes/backend/dpcpp/common.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/utils/attributes.h"
@@ -17,7 +18,7 @@ HandleResult handleBarrierAttribute(const clang::Attr& a,
 #endif
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());
-    s.getRewriter().ReplaceText(range, "item_.barrier(sycl::access::fence_space::local_space);");
+    s.getRewriter().ReplaceText(range, dpcpp::SYNC_THREADS_BARRIER);
     return {};
 }
 

@@ -1,5 +1,7 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -13,7 +15,21 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 #endif
 
     auto varName = var.getNameAsString();
-    auto typeStr = var.getType().getLocalUnqualifiedType().getAsString();
+    // Desugar since it is attributed (since it is @shared variable)
+    auto typeStr =
+        QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
+
+    Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
+
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    auto loopInfo = sema.getLoopInfo();
+    if (!loopInfo) {
+        return tl::make_unexpected(sharedError);
+    }
+    auto* loopBelowInfo = loopInfo->getFirstAttributedChild();
+    if (!loopBelowInfo || !(loopInfo->is(LoopType::Outer) && loopBelowInfo->is(LoopType::Inner))) {
+        return tl::make_unexpected(sharedError);
+    }
 
     auto newDeclaration =
         util::fmt(
@@ -27,12 +43,17 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     s.getRewriter().ReplaceText(range, newDeclaration);
 
-    return {};
+    return defaultHandleSharedDeclAttribute(a, var, s);
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::DPCPP, SHARED_ATTR_NAME}, makeSpecificAttrHandle(handleSharedAttribute));
+
+    // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
+    ok &= oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::DPCPP, SHARED_ATTR_NAME},
+        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {
         llvm::errs() << "failed to register " << SHARED_ATTR_NAME

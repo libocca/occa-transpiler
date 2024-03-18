@@ -74,15 +74,9 @@ struct DimAttribute : public ParsedAttrInfo {
             args.push_back(attr.getArgAsExpr(i));
         }
 
+        // TODO: Move attributed type registering to util, since dublication with other types
         auto* ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
         decl->addAttr(ctxAttr);
-
-        // ValueDecl:
-        //   ParmVarDecl -- func param
-        //   VarDecl -- var
-        //   FieldDecl -- struct field
-        // TypeDecl:
-        //   TypedefDecl -- typedef
 
         auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
