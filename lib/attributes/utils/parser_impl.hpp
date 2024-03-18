@@ -24,7 +24,7 @@ inline bool OKLAttrParam::is_unsigned() {
     if (!is_integral())
         return false;
 
-    auto& val = std::any_cast<llvm::APSInt&>(data);
+    const auto& val = std::any_cast<llvm::APSInt&>(data);
     return val.isUnsigned();
 }
 
@@ -68,7 +68,7 @@ bool OKLAttrParam::isa() const {
     if (!data.has_value() || data.type() != typeid(llvm::APFloat))
         return false;
 
-    auto& val = std::any_cast<llvm::APFloat&>(data);
+    const auto& val = std::any_cast<llvm::APFloat&>(data);
     if (llvm::APFloat::getSizeInBits(val.getSemantics()) != sizeof(T) * 8)
         return false;
 
@@ -91,7 +91,7 @@ std::optional<T> OKLAttrParam::get() const {
     if (!data.has_value() || data.type() != typeid(llvm::APSInt))
         return std::nullopt;  // Not an integer
 
-    auto& val = std::any_cast<llvm::APSInt&>(data);
+    auto val = std::any_cast<llvm::APSInt>(data);
 
     if constexpr (std::is_same_v<T, bool>) {
         if(val.getBitWidth() != 1) {
