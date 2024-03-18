@@ -382,7 +382,11 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     kernelInfo->kernInfo->name = decl.getNameAsString();
 
     auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
-    rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
+    if (decl.getNumParams()) {
+        rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
+    } else {
+        rewriter.InsertText(decl.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1), paramsStr);
+    }
 
     size_t n = 0;
     for (auto& loop : kernelInfo->children) {
