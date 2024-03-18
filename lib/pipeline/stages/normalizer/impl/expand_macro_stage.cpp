@@ -111,12 +111,14 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
                      << original.value() << " by " << expanded.value() << '\n';
 #endif
         rewriter.ReplaceText(expansionLoc, original->size(), expanded.value());
-        macroNames.insert(original.value());
+
+        // in case of macro with args take only macro name
+        macroNames.insert(original.value().split('(').first);
     }
 
     // get rid of macro hell
-    for (const auto& macroName : macroNames) {
-        auto* ii = pp.getIdentifierInfo(macroName);
+    for (const auto& name : macroNames) {
+        auto* ii = pp.getIdentifierInfo(name);
         if (!ii) {
             continue;
         }
@@ -136,7 +138,10 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             auto noop = "void void\n";
             rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
         } else {
-            rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, " ");
+            // keep number of new lines
+            auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
+            lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
+            rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, std::string(lines, '\n'));
         }
     }
 
