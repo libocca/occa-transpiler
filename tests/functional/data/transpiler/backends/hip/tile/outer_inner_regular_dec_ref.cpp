@@ -14,10 +14,11 @@ extern "C" __global__ void _occa_addVectors0_0(const int entries,
       if (i >= 0) {
         for (int _occa_tiled_j = entries; _occa_tiled_j > 0;
              _occa_tiled_j -= (4)) {
-          for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j)
-            if (j > 0) {
-              ab[i] = add(a[i], b[j - 1]);
-            }
+              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
+                  if (j > 0) {
+                      ab[i] = add(a[i], b[j - 1]);
+                  }
+              }
         }
       }
     }
@@ -35,9 +36,10 @@ extern "C" __global__ void _occa_addVectors2_0(const int entries,
       if (i >= 0) {
         {
           int _occa_tiled_j = (entries) - ((4) * threadIdx.y);
-          for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j)
-            if (j > 0) {
+            for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
+                if (j > 0) {
               ab[i] = add(a[i], b[j - 1]);
+            }
             }
         }
       }
@@ -79,9 +81,10 @@ extern "C" __global__ void _occa_addVectors4_0(const int entries,
       if (i >= 0) {
         {
           int _occa_tiled_j = (entries) - ((4) * threadIdx.y);
-          for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j)
-            if (j > 0) {
+            for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
+                if (j > 0) {
               ab[i] = add(a[i], b[j - 1]);
+            }
             }
         }
       }

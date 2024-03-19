@@ -7,39 +7,32 @@ __device__ float add(float a, float b) { return a + b + offset; }
 // with shared memory usage (should be automatic sync)
 extern "C" __global__ void _occa_addVectors_0(const int entries, float *a,
                                               float *b, float *ab, float *mat) {
-  int i = (0) + ((1) * blockIdx.y);
-  {
-    int i2 = (0) + ((1) * blockIdx.x);
     {
-      __shared__ int shm[32];
+        int i = (0) + ((1) * blockIdx.y);
+        {
+            int i2 = (0) + ((1) * blockIdx.x);
+            __shared__ int shm[32];
       __shared__ int shm2[32];
       {
         int j = (0) + ((1) * threadIdx.z);
-        {
-          shm[j] =
-              0; // shared memory usage -> should be barrier after @inner loop
+          shm[j] = 0;  // shared memory usage -> should be barrier after @inner loop
           mat[0 + (10 * (0))] = 12;
           {
-            int k = (0) + ((1) * threadIdx.y);
-            {
+              int k = (0) + ((1) * threadIdx.y);
               {
-                int ii = (0) + ((1) * threadIdx.x);
-                { ab[i] = add(a[i], b[k]); }
+                  int ii = (0) + ((1) * threadIdx.x);
+                  ab[i] = add(a[i], b[k]);
               }
               ab[i] = add(a[i], b[k]);
-            }
           }
           {
-            int k = (0) + ((1) * threadIdx.y);
-            {
+              int k = (0) + ((1) * threadIdx.y);
               {
-                int ii = (0) + ((1) * threadIdx.x);
-                { ab[i] = add(a[i], b[k]); }
+                  int ii = (0) + ((1) * threadIdx.x);
+                  ab[i] = add(a[i], b[k]);
               }
               ab[i] = add(a[i], b[k]);
-            }
           }
-        }
         __syncthreads();
       }
       {
@@ -49,11 +42,9 @@ extern "C" __global__ void _occa_addVectors_0(const int entries, float *a,
           {
             {
               int k = (0) + ((1) * threadIdx.x);
-              {
-                // shared memory usage -> should be barrier, since @tile is
-                // inner, inner
+                // shared memory usage -> should be barrier, since @tile is inner,
+                // inner
                 shm[j] = 0;
-              }
             }
           }
         }
@@ -61,25 +52,21 @@ extern "C" __global__ void _occa_addVectors_0(const int entries, float *a,
       }
       {
         int j = (0) + ((1) * threadIdx.z);
-        {
           shm[j] = 0;
           {
-            int k = (0) + ((1) * threadIdx.y);
-            {
+              int k = (0) + ((1) * threadIdx.y);
               {
-                int ii = (0) + ((1) * threadIdx.x);
-                { ab[i] = add(a[i], b[k]); }
+                  int ii = (0) + ((1) * threadIdx.x);
+                  ab[i] = add(a[i], b[k]);
               }
               ab[i] = add(a[i], b[k]);
-            }
           }
           {
-            int _occa_tiled_k = (0) + (((4) * 1) * threadIdx.y);
-            {
-              int k = _occa_tiled_k + ((1) * threadIdx.x);
-              { ab[i] = add(a[i], b[k]); }
-            }
-          }
+              int _occa_tiled_k = (0) + (((4) * 1) * threadIdx.y);
+              {
+                  int k = _occa_tiled_k + ((1) * threadIdx.x);
+                  { ab[i] = add(a[i], b[k]); }
+              }
         }
       }
     }
@@ -90,39 +77,33 @@ extern "C" __global__ void _occa_addVectors_0(const int entries, float *a,
 extern "C" __global__ void _occa_addVectors1_0(const int entries, float *a,
                                                float *b, float *ab,
                                                float *mat) {
-  int i = (0) + ((1) * blockIdx.y);
-  {
-    int i2 = (0) + ((1) * blockIdx.x);
     {
-      __shared__ int shm[32];
+        int i = (0) + ((1) * blockIdx.y);
+        {
+            int i2 = (0) + ((1) * blockIdx.x);
+            __shared__ int shm[32];
       __shared__ int shm2[32];
       {
         int j = (0) + ((1) * threadIdx.z);
-        {
-          // shm[j] = 0; // shared memory usage -> should be barrier after
-          // @inner loop
+          // shm[j] = 0; // shared memory usage -> should be barrier after @inner
+          // loop
           mat[0 + (10 * (0))] = 12;
           {
-            int k = (0) + ((1) * threadIdx.y);
-            {
+              int k = (0) + ((1) * threadIdx.y);
               {
-                int ii = (0) + ((1) * threadIdx.x);
-                { ab[i] = add(a[i], b[k]); }
+                  int ii = (0) + ((1) * threadIdx.x);
+                  ab[i] = add(a[i], b[k]);
               }
               ab[i] = add(a[i], b[k]);
-            }
           }
           {
-            int k = (0) + ((1) * threadIdx.y);
-            {
+              int k = (0) + ((1) * threadIdx.y);
               {
-                int ii = (0) + ((1) * threadIdx.x);
-                { ab[i] = add(a[i], b[k]); }
+                  int ii = (0) + ((1) * threadIdx.x);
+                  ab[i] = add(a[i], b[k]);
               }
               ab[i] = add(a[i], b[k]);
-            }
           }
-        }
       }
       {
         int _occa_tiled_j = (0) + (((4) * 1) * threadIdx.z);
@@ -131,35 +112,29 @@ extern "C" __global__ void _occa_addVectors1_0(const int entries, float *a,
           {
             {
               int k = (0) + ((1) * threadIdx.x);
-              {
-                // shared memory usage -> should be barrier, since @tile is
-                // inner, inner shm[j] = 0;
-              }
+                // shared memory usage -> should be barrier, since @tile is inner,
+                // inner shm[j] = 0;
             }
           }
         }
       }
       {
         int j = (0) + ((1) * threadIdx.z);
-        {
           shm[j] = 0;
           {
-            int k = (0) + ((1) * threadIdx.y);
-            {
+              int k = (0) + ((1) * threadIdx.y);
               {
-                int ii = (0) + ((1) * threadIdx.x);
-                { ab[i] = add(a[i], b[k]); }
+                  int ii = (0) + ((1) * threadIdx.x);
+                  ab[i] = add(a[i], b[k]);
               }
               ab[i] = add(a[i], b[k]);
-            }
           }
           {
-            int _occa_tiled_k = (0) + (((4) * 1) * threadIdx.y);
-            {
-              int k = _occa_tiled_k + ((1) * threadIdx.x);
-              { ab[i] = add(a[i], b[k]); }
-            }
-          }
+              int _occa_tiled_k = (0) + (((4) * 1) * threadIdx.y);
+              {
+                  int k = _occa_tiled_k + ((1) * threadIdx.x);
+                  { ab[i] = add(a[i], b[k]); }
+              }
         }
       }
     }
