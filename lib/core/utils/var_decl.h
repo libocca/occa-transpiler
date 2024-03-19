@@ -1,5 +1,7 @@
 #pragma once
 
+#include <clang/AST/Decl.h>
+
 #include <string>
 
 namespace clang {
@@ -11,6 +13,12 @@ template <typename DeclType>
 bool isConstantSizeArray(const DeclType& var) {
     static_assert(std::is_base_of_v<clang::Decl, DeclType>);
     return var.getType().getTypePtr()->isConstantArrayType();
+}
+
+template <typename DeclType>
+bool isArray(const DeclType& var) {
+    static_assert(std::is_base_of_v<clang::Decl, DeclType>);
+    return var.getType().getTypePtr()->isArrayType();
 }
 
 template <typename DeclType>
@@ -58,7 +66,7 @@ bool isGlobalConstVariable(const DeclType& var) {
 
     return true;
 }
-std::string getNewDeclStrConstantArray(const clang::VarDecl& var, const std::string& qualifier);
+std::string getNewDeclStrArray(const clang::VarDecl& var, const std::string& qualifier);
 std::string getNewDeclStrVariable(const clang::VarDecl& var, const std::string& qualifier);
 std::string getNewDeclStrPointerToConst(const clang::VarDecl& var, const std::string& qualifier);
 }  // namespace oklt
