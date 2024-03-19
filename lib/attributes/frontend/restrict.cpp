@@ -2,9 +2,8 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 
+#include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
-#include "params/empty_params.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -31,7 +30,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
     bool diagAppertainsToDecl(clang::Sema& sema,
                               const clang::ParsedAttr& attr,
                               const clang::Decl* decl) const override {
-        // INFO: this can be as the function argument
+        // INFO: this can to applied to following decl
         if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
                 << attr << ": can be applied only for parameters of pointer type in function";
@@ -48,7 +47,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
             }
         }(decl);
 
-        if (!type->isPointerType()) {
+        if (!type->isPointerType() && !type->isArrayType()) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
                 << attr << ": supports only pointer type";
             return false;
