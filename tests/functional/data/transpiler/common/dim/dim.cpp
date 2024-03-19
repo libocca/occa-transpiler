@@ -52,7 +52,7 @@ typedef Coord* mat8_s @dim(8);
     }
 }
 
-// TODO: doesn't work if dim is in condition right now
+// TODO: doesnt work if dim is in condition right now
 // @kernel void test_kernel_4_2(const int entries, float* a, float* b, float* ab, mat89_s mat) {
 //     for (int i = mat(7, 7); i < mat(0, 0); i += mat(1, 1); @outer(0)) {
 //         for (int j = mat(0, 0); j < entries; j += 1; @inner(0)) {
