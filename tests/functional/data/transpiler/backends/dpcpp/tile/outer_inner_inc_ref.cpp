@@ -1,5 +1,6 @@
 #include <CL/sycl.hpp>
 using namespace sycl;
+
 const int offset = 1;
 
 // template<typename T>

@@ -1,5 +1,6 @@
 #include <CL/sycl.hpp>
 using namespace sycl;
+
 const int offset = 1;
 
 SYCL_EXTERNAL float add(float a, float b) { return a + b + offset; }
@@ -18,10 +19,11 @@ extern "C" void _occa_addVectors0_0(sycl::queue *queue_,
           if (i >= 0) {
             for (int _occa_tiled_j = entries; _occa_tiled_j > 0;
                  _occa_tiled_j -= (4)) {
-              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j)
+              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
                 if (j > 0) {
                   ab[i] = add(a[i], b[j - 1]);
                 }
+              }
             }
           }
         }
@@ -44,10 +46,11 @@ extern "C" void _occa_addVectors2_0(sycl::queue *queue_,
           if (i >= 0) {
             {
               int _occa_tiled_j = (entries) - ((4) * item.get_local_id(1));
-              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j)
+              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
                 if (j > 0) {
                   ab[i] = add(a[i], b[j - 1]);
                 }
+              }
             }
           }
         }
@@ -98,10 +101,11 @@ extern "C" void _occa_addVectors4_0(sycl::queue *queue_,
           if (i >= 0) {
             {
               int _occa_tiled_j = (entries) - ((4) * item.get_local_id(1));
-              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j)
+              for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
                 if (j > 0) {
                   ab[i] = add(a[i], b[j - 1]);
                 }
+              }
             }
           }
         }
