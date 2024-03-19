@@ -6,6 +6,6 @@
     "atomic.json",
     "barrier.json",
     "exclusive.json",
-  "cxx_record.json",
-  "macro.json"
+    "cxx_record.json",
+    "macro.json"
 ]
