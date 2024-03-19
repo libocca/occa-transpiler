@@ -18,7 +18,7 @@ std::string getFunctionName(const FunctionDecl& func, size_t n) {
 }
 
 std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func,
-                                     OklLoopInfo& child) {
+                                     OklLoopInfo* child) {
     std::stringstream out;
     out << KERNEL_DEFINITION;
 
@@ -59,8 +59,20 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = rewriter.getRewrittenText(func.getParametersSourceRange());
 
-    auto startPos = getAttrFullSourceRange(a).getBegin();
+    if (kernelInfo.children.empty()) {
+        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
+        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
+        if (func.getNumParams()) {
+            rewriter.ReplaceText(func.getParametersSourceRange(), paramStr);
+        } else {
+            rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1),
+                                paramStr);
+        }
 
+        return {};
+    }
+
+    auto startPos = getAttrFullSourceRange(a).getBegin();
     size_t n = 0;
     for (auto& child : kernelInfo.children) {
         kernels.push_back(oklKernelInfo.value());
@@ -71,7 +83,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         if (n != 0) {
             out << "}\n\n";
         }
-        out << getFunctionAttributesStr(func, child);
+        out << getFunctionAttributesStr(func, &child);
         out << typeStr << " " << getFunctionName(func, n) << "(" << paramStr << ")"
             << " {\n";
 
@@ -83,9 +95,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         ++n;
     }
 
-    if (!kernelInfo.children.empty()) {
-        rewriter.ReplaceText(SourceRange{startPos, func.getEndLoc()}, "\n}\n");
-    }
+    rewriter.ReplaceText(SourceRange{startPos, func.getEndLoc()}, "\n}\n");
 
     return {};
 }
