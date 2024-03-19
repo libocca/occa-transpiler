@@ -13,9 +13,9 @@ extern "C" __global__ void _occa_addVectors_0(const int N, const float *a,
     const float *g_a = a;
     {
       int j = (0) + threadIdx.x;
-        s_b[j] = b[i + j];
-        __syncthreads();
-        ab[i + j] = add(g_a, i + j, s_b, j);
+      s_b[j] = b[i + j];
+      __syncthreads();
+      ab[i + j] = add(g_a, i + j, s_b, j);
     }
   }
 }
