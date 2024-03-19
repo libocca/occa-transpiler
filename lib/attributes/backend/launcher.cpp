@@ -389,13 +389,11 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     // Add 'extern "C"'
     rewriter.ReplaceText(getAttrFullSourceRange(a), externC);
 
-    auto paramsStr = getFunctionParamStr(func, meta);
-    if (func.getNumParams()) {
-        rewriter.ReplaceText(func.getParametersSourceRange(), paramsStr);
-    } else {
-        rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1),
-                            paramsStr);
-    }
+    auto paramStr = getFunctionParamStr(func, meta);
+    auto typeLoc = func.getFunctionTypeLoc();
+    auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
+                                   typeLoc.getRParenLoc().getLocWithOffset(-1));
+    rewriter.ReplaceText(paramsRange, paramStr);
 
     size_t n = 0;
     for (auto& loop : kernelInfo.children) {

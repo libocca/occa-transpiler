@@ -28,7 +28,10 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
 }
 
 std::string getFunctionParamStr(const FunctionDecl& func, Rewriter& r) {
-    return r.getRewrittenText(func.getParametersSourceRange());
+    auto typeLoc = func.getFunctionTypeLoc();
+    auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
+                                   typeLoc.getRParenLoc().getLocWithOffset(-1));
+    return r.getRewrittenText(paramsRange);
 }
 
 }  // namespace
@@ -56,17 +59,16 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
     auto& kernels = sema.getProgramMetaData().kernels;
 
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
-    auto paramStr = rewriter.getRewrittenText(func.getParametersSourceRange());
+    auto paramStr = getFunctionParamStr(func, rewriter);
 
     if (kernelInfo.children.empty()) {
         rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
         rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
-        if (func.getNumParams()) {
-            rewriter.ReplaceText(func.getParametersSourceRange(), paramStr);
-        } else {
-            rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1),
-                                paramStr);
-        }
+
+        auto typeLoc = func.getFunctionTypeLoc();
+        auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
+                                       typeLoc.getRParenLoc().getLocWithOffset(-1));
+        rewriter.ReplaceText(paramsRange, paramStr);
 
         return {};
     }

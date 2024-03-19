@@ -73,7 +73,10 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
         }
     }
 
-    out << r.getRewrittenText(func.getParametersSourceRange());
+    auto typeLoc = func.getFunctionTypeLoc();
+    auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
+                                   typeLoc.getRParenLoc().getLocWithOffset(-1));
+    out << r.getRewrittenText(paramsRange);
     return out.str();
 }
 
@@ -102,22 +105,22 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
     if (kernelInfo.children.empty()) {
-      rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
-      rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
-      if (func.getNumParams()) {
-        rewriter.ReplaceText(func.getParametersSourceRange(), paramStr);
-      } else {
-        rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1), paramStr);
-      }
+        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
+        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
 
-      auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
-      if (body) {
-        rewriter.InsertText(
-          body->getLBracLoc().getLocWithOffset(1), std::string("\n") + prefixCode, true, true);
-        rewriter.InsertText(body->getRBracLoc(), suffixCode + std::string("\n"), false, true);
-      }
+        auto typeLoc = func.getFunctionTypeLoc();
+        auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
+                                       typeLoc.getRParenLoc().getLocWithOffset(-1));
+        rewriter.ReplaceText(paramsRange, paramStr);
 
-      return {};
+        auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
+        if (body) {
+            rewriter.InsertTextAfter(body->getLBracLoc().getLocWithOffset(1),
+                                     std::string("\n") + prefixCode);
+            rewriter.InsertTextBefore(body->getRBracLoc(), suffixCode + std::string("\n"));
+        }
+
+        return {};
     }
 
     size_t n = 0;
