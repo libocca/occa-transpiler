@@ -15,7 +15,6 @@ llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> makeOverlayFs(
     overlayFs->pushOverlay(inMemoryFs);
 
     for (const auto& f : files.fileMap) {
-        printf("add file: %s with conent:\n%s\n", f.first.c_str(), f.second.c_str());
         inMemoryFs->addFile(f.first, 0, llvm::MemoryBuffer::getMemBuffer(f.second));
     }
 

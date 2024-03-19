@@ -200,7 +200,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
         // expand macro in source code
         rewriter.ReplaceText(expansionLoc, original->size(), expanded.value());
 
-        // save macro name to delete it definition later
+        // save macro name to delete its definition later
         macroNames.insert(macroName);
     }
 
@@ -233,40 +233,9 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
         }
     }
 
-    // auto* ii = pp.getIdentifierInfo(macro);
-    // if (!ii) {
-    //     continue;
-    // }
-
-    // auto md = pp.getMacroDefinition(ii);
-    // md.forAllDefinitions([&macro, &pp, &rewriter, &sm](MacroInfo* mi) {
-    //     if (!mi) {
-    //         return;
-    //     }
-    //     llvm::outs() << "name: " << macro << " at: " <<
-    //     mi->getDefinitionLoc().printToString(sm)
-    //                  << '\n';
-
-    //    // hash definitely there however clang pp does not provide this info
-    //    // so lets find it manually
-    //    auto hashLoc = findPreviousTokenKind(
-    //        mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
-    //    if (hashLoc.isInvalid()) {
-    //        // replace by 'identical' macro to not break anything
-    //        auto noop = "void void\n";
-    //        rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
-    //    } else {
-    //        // keep number of new lines
-    //        auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
-    //        lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
-    //        rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()},
-    //                             std::string(lines, '\n'));
-    //    }
-    //});
-
     // macro can be under #if/#elif
-    // in such case expansion ctx does not work so just replace macro dependent condition on
-    // static true/false
+    // in such case expansion ctx does not work so just replace macro dependent condition by
+    // context free true/false
     for (auto& c : condCallback->results) {
         if (c.conditionValue == PPCallbacks::CVK_NotEvaluated) {
             continue;
