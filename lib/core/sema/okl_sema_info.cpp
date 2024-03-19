@@ -1,6 +1,8 @@
 #include "core/sema/okl_sema_info.h"
 
 #include <deque>
+#include <numeric>
+#include <optional>
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
@@ -152,36 +154,42 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild(std::function<bool(OklLoopInfo
     return nullptr;
 }
 
-std::optional<size_t> OklLoopInfo::getSize() {
+OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
     if (isRegular()) {
         if (children.empty()) {
-            return std::nullopt;
+            return {};
         }
     } else if (range.size == 0) {
-        return std::nullopt;
+        return OklLoopInfo::OptSizes{{0}};
     }
 
-    auto sz = size_t{1};
+    OptSize sz = size_t{1};
     if (is(LoopType::Inner)) {
-        sz = std::max(range.size, sz);
+        sz = std::max(range.size, sz.value());
     } else if (is(LoopType::Outer, LoopType::Inner)) {
         if (!tileSize.empty()) {
             // TODO: maybe reuse attribute parser
             char* p;
             auto tileSizeLL = std::strtoll(tileSize.c_str(), &p, 10);
-            if (!*p) {
+            if (*p) {
+                sz = std::nullopt;
+            } else {
                 sz = static_cast<size_t>(tileSizeLL);
             }
         }
     }
 
-    auto ret = sz;
+    OklLoopInfo::OptSizes ret;
+    size_t prevProd = 0;
     for (auto& child : children) {
-        auto v = child.getSize();
-        if (!v.has_value()) {
-            return std::nullopt;
+        auto currSizes = child.getInnerSizes();
+        auto prod = currSizes.product();
+        if (prod > prevProd) {
+            ret = currSizes;
         }
-        ret = std::max(sz * v.value(), ret);
+    }
+    if (has(LoopType::Inner)) {
+        ret.emplace_front(sz);
     }
     return ret;
 }
@@ -209,6 +217,18 @@ size_t OklLoopInfo::getHeightSameType(const LoopType& type) {
         currLoop = currLoop->getFirstAttributedChild();
     }
     return h;
+}
+
+size_t OklLoopInfo::OptSizes::product() {
+    return std::accumulate(begin(), end(), size_t{1}, [](const OptSize& a, const OptSize& b) {
+        size_t aZ = a.value_or(size_t{1});
+        size_t bZ = b.value_or(size_t{1});
+        return aZ * bZ;
+    });
+}
+bool OklLoopInfo::OptSizes::hasNullOpts() {
+    return std::find_if(begin(), end(), [](const auto& val) { return val == std::nullopt; }) !=
+           end();
 }
 
 }  // namespace oklt

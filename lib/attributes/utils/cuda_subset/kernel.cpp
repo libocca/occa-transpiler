@@ -38,9 +38,10 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     }
 
     std::string kernelPrefix = CUDA_KERNEL_DEFINITION;
-    auto size = loopInfo->getSize();
-    if (size.has_value()) {
-        kernelPrefix += " " + util::fmt(LAUNCH_BOUND_FMT, size.value()).value();
+    auto sizes = loopInfo->getInnerSizes();
+    if (!sizes.hasNullOpts()) {
+        auto prod = sizes.product();
+        kernelPrefix += " " + util::fmt(LAUNCH_BOUND_FMT, prod).value();
     }
 
     //    // Basic idea for the future split

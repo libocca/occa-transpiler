@@ -23,6 +23,12 @@ struct OklLoopInfo {
         bool used = false;
     };
 
+    using OptSize = std::optional<size_t>;
+    struct OptSizes: public std::list<OptSize> {
+        size_t product();
+        bool hasNullOpts();
+    };
+
     const clang::Attr& attr;
     const clang::ForStmt& stmt;
     AttributedLoopTypes type = {LoopType::Regular};
@@ -73,7 +79,7 @@ struct OklLoopInfo {
     /* Distance to the for loop tree leave, ignoring loops of other types */
     size_t getHeightSameType(const LoopType&);
 
-    std::optional<size_t> getSize();
+    OptSizes getInnerSizes();
 
     [[nodiscard]] bool is(const LoopType&) const;
     [[nodiscard]] bool is(const LoopType&, const LoopType&) const;

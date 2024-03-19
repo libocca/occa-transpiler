@@ -50,12 +50,12 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
     // Find max size of inner loops
     size_t sz = 0;
     for (auto child : loopInfo->children) {
-        auto v = child.getSize();
-        if (!v.has_value()) {
+        auto v = child.getInnerSizes();
+        if (v.hasNullOpts()) {
             sz = 1024;
             break;
         }
-        sz = std::max(v.value(), sz);
+        sz = std::max(v.product(), sz);
     }
     std::string varSuffix = "[" + std::to_string(sz) + "]";
 
