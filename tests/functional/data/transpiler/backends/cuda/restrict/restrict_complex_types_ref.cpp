@@ -17,8 +17,15 @@ struct Data {
 };
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
-extern "C" __global__ void
-_occa_function1_0(const Complex<float> *__restrict__ vectorData,
-                  unsigned int vectorSize,
-                  const Complex<float> **__restrict__ matricesData,
-                  const Configs *__restrict__ matricesSizes) {}
+extern "C" __global__ __launch_bounds__(1) void _occa_function1_0(
+    const Complex<float> *__restrict__ vectorData, unsigned int vectorSize,
+    const Complex<float> **__restrict__ matricesData,
+    const Configs *__restrict__ matricesSizes) {
+  int i = (0) + blockIdx.x;
+  {
+    {
+      int j = (0) + threadIdx.x;
+      {}
+    }
+  }
+}

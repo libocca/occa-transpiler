@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 
-extern "C" __global__ void _occa_function1_0(const int *data) {
+extern "C" __global__
+__launch_bounds__(64) void _occa_function1_0(const int *data) {
   int i = (0) + blockIdx.x;
   {
     __shared__ int arr1[32];

@@ -1,7 +1,11 @@
 // TODO: fix me when @kernel/@outer/@inner are implemented
 @kernel void atomic_sub_builtin(const int* iVec, int* iSum, const float* fVec, float* fSum) {
-    @atomic* iSum -= iVec[0];
-    @atomic* fSum -= fVec[0];
+    @outer for (int i = 0; i < 1; ++i) {
+        @inner for (int j = 0; j < 1; ++j) {
+            @atomic* iSum -= iVec[0];
+            @atomic* fSum -= fVec[0];
+        }
+    }
 }
 
 struct ComplexTypeF32 {
@@ -11,8 +15,12 @@ struct ComplexTypeF32 {
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
 @kernel void atomic_sub_struct(const ComplexTypeF32* vec, ComplexTypeF32* sum) {
-    @atomic sum->real -= vec[0].real;
-    @atomic sum->imag -= vec[0].imag;
+    @outer for (int i = 0; i < 1; ++i) {
+        @inner for (int j = 0; j < 1; ++j) {
+            @atomic sum->real -= vec[0].real;
+            @atomic sum->imag -= vec[0].imag;
+        }
+    }
 }
 
 template <class T>
@@ -23,6 +31,10 @@ struct ComplexType {
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
 @kernel void atomic_sub_template(const ComplexType<float>* vec, ComplexType<float>* sum) {
-    @atomic sum->real -= vec[0].real;
-    @atomic sum->imag -= vec[0].imag;
+    @outer for (int i = 0; i < 1; ++i) {
+        @inner for (int j = 0; j < 1; ++j) {
+            @atomic sum->real -= vec[0].real;
+            @atomic sum->imag -= vec[0].imag;
+        }
+    }
 }

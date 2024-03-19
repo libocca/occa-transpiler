@@ -20,14 +20,29 @@ typedef SIZE_TYPE SIZES;
 } // namespace A
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
-extern "C" __global__ void
-_occa_function1_0(const A::Complex<float> *__restrict__ vectorData,
-                  unsigned int vectorSize,
-                  const A::Complex<float> **__restrict__ matricesData,
-                  const A::B::Configs *__restrict__ matricesSizes) {}
+extern "C" __global__ __launch_bounds__(1) void _occa_function1_0(
+    const A::Complex<float> *__restrict__ vectorData, unsigned int vectorSize,
+    const A::Complex<float> **__restrict__ matricesData,
+    const A::B::Configs *__restrict__ matricesSizes) {
+  int i = (0) + blockIdx.x;
+  {
+    {
+      int j = (0) + threadIdx.x;
+      {}
+    }
+  }
+}
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
-extern "C" __global__ void
-_occa_function2_0(const A::Complex<float> *__restrict__ vectorData,
-                  const A::B::Configs *__restrict__ configs,
-                  A::B::C::SIZES *__restrict__ vectorSize) {}
+extern "C" __global__ __launch_bounds__(1) void _occa_function2_0(
+    const A::Complex<float> *__restrict__ vectorData,
+    const A::B::Configs *__restrict__ configs,
+    A::B::C::SIZES *__restrict__ vectorSize) {
+  int i = (0) + blockIdx.x;
+  {
+    {
+      int j = (0) + threadIdx.x;
+      {}
+    }
+  }
+}

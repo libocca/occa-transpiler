@@ -247,11 +247,6 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
                                                                    const std::any* params) {
     assert(_parsingKernInfo);
 
-    auto loopType = getLoopType(params);
-    if (loopType.front() == LoopType::Regular) {
-        return {};
-    }
-
     auto loopInfo = getLoopInfo(stmt);
     if (!loopInfo) {
         return {};

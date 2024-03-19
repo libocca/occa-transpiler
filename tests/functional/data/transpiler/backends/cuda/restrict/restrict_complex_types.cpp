@@ -21,4 +21,8 @@ struct Data {
                        unsigned int vectorSize,
                        const Complex<float>** matricesData @ restrict,
                        const Configs* matricesSizes @ restrict) {
+    @outer for (int i = 0; i < 1; ++i) {
+        @inner for (int j = 0; j < 1; ++j) {
+        }
+    }
 }
