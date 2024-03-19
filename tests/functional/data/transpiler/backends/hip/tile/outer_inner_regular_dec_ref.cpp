@@ -37,7 +37,7 @@ extern "C" __global__ void _occa_addVectors2_0(const int entries,
         {
           int _occa_tiled_j = (entries) - ((4) * threadIdx.y);
           for (int j = _occa_tiled_j; j > (_occa_tiled_j - (4)); --j) {
-                if (j > 0) {
+            if (j > 0) {
               ab[i] = add(a[i], b[j - 1]);
             }
           }
