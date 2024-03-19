@@ -3,7 +3,6 @@
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "attributes/utils/inner_outer_utils.h"
 
 #include "core/attribute_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -26,14 +25,13 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
             .ec = std::error_code(), .desc = "@outer: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Outer);
-    if (!updatedParams) {
-        return tl::make_unexpected(updatedParams.error());
-    }
+    // Auto Axes in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
+    auto updatedParams = *params;
+    updatedParams.axis = loopInfo->axis.front();
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
+        *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
 #ifdef TRANSPILER_DEBUG_LOG

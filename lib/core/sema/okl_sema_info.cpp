@@ -3,6 +3,7 @@
 #include <deque>
 #include <numeric>
 #include <optional>
+#include "attributes/frontend/params/loop.h"
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
@@ -78,9 +79,6 @@ void OklLoopInfo::markExclusiveUsed() {
     return type.size() == 2 && type[0] == loopType1 && type[1] == loopType2;
 };
 
-[[nodiscard]] bool OklLoopInfo::isTiled() const {
-    return type.size() == 2;
-};
 [[nodiscard]] bool OklLoopInfo::has(const LoopType& loopType) const {
     for (auto& currLoopType : type) {
         if (currLoopType == loopType) {
@@ -89,6 +87,11 @@ void OklLoopInfo::markExclusiveUsed() {
     }
     return false;
 };
+
+[[nodiscard]] bool OklLoopInfo::isTiled() const {
+    return type.size() == 2;
+};
+
 [[nodiscard]] bool OklLoopInfo::isRegular() const {
     for (auto& loopType : type) {
         if (loopType != LoopType::Regular) {
@@ -96,6 +99,22 @@ void OklLoopInfo::markExclusiveUsed() {
         }
     }
     return true;
+};
+
+[[nodiscard]] bool OklLoopInfo::is(const Axis& loopAxis) const {
+    return type.size() == 1 && axis.front() == loopAxis;
+};
+[[nodiscard]] bool OklLoopInfo::is(const Axis& loopAxis1, const Axis& loopAxis2) const {
+    return type.size() == 2 && axis[0] == loopAxis1 && axis[1] == loopAxis2;
+};
+
+[[nodiscard]] bool OklLoopInfo::has(const Axis& loopAxis) const {
+    for (auto& currAxis : axis) {
+        if (currAxis == loopAxis) {
+            return true;
+        }
+    }
+    return false;
 };
 
 OklLoopInfo* OklLoopInfo::getAttributedParent() {
@@ -216,6 +235,38 @@ size_t OklLoopInfo::getHeightSameType(const LoopType& type) {
         currLoop = currLoop->getFirstAttributedChild();
     }
     return h;
+}
+
+bool OklLoopInfo::updateAutoWithSpecificAxis() {
+    if (isTiled()) {
+        auto height1 = getHeightSameType(type[0]);
+        auto height2 = getHeightSameType(type[1]);
+        if (type[0] == type[1]) {
+            ++height1;
+        }
+
+        if (height1 > MAX_AXIS_SZ || height2 > MAX_AXIS_SZ) {
+            return false;
+        }
+
+        if (axis[0] == Axis::Auto) {
+            axis[0] = static_cast<Axis>(height1);
+        }
+        if (axis[1] == Axis::Auto) {
+            axis[1] = static_cast<Axis>(height2);
+        }
+
+    } else {
+        if (axis[0] != Axis::Auto) {
+            return true;
+        }
+        auto height = getHeightSameType(type[0]);
+        if (height > MAX_AXIS_SZ) {
+            return false;
+        }
+        axis[0] = static_cast<Axis>(height);
+    }
+    return true;
 }
 
 size_t OklLoopInfo::OptSizes::product() {

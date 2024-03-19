@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oklt/core/kernel_metadata.h>
+#include "attributes/frontend/params/loop.h"
 
 #include <clang/AST/AST.h>
 
@@ -15,7 +16,8 @@ namespace oklt {
 
 struct KernelInfo;
 
-using AttributedLoopTypes = std::vector<LoopType>;
+using LoopTypes = std::vector<LoopType>;
+using Axes = std::vector<Axis>;
 
 struct OklLoopInfo {
     struct AttributedTypeInfo {
@@ -34,7 +36,8 @@ struct OklLoopInfo {
 
     const clang::Attr& attr;
     const clang::ForStmt& stmt;
-    AttributedLoopTypes type = {LoopType::Regular};
+    LoopTypes type = {LoopType::Regular};
+    Axes axis = {Axis::Auto};
 
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
@@ -89,6 +92,13 @@ struct OklLoopInfo {
     [[nodiscard]] bool has(const LoopType&) const;
     [[nodiscard]] bool isTiled() const;
     [[nodiscard]] bool isRegular() const;
+
+    [[nodiscard]] bool is(const Axis&) const;
+    [[nodiscard]] bool is(const Axis&, const Axis&) const;
+    [[nodiscard]] bool has(const Axis&) const;
+
+    // Returns true if updated successfully
+    [[nodiscard]] bool updateAutoWithSpecificAxis();
 };
 
 struct OklKernelInfo {

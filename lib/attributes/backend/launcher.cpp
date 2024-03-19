@@ -22,7 +22,7 @@ const std::string includeOCCA = "<occa/core/kernel.hpp>";
 const std::string externC = "extern \"C\"";
 
 struct LoopMetaData {
-    AttributedLoopTypes type = {LoopType::Regular};
+    LoopTypes type = {LoopType::Regular};
 
     struct {
         std::string type;
