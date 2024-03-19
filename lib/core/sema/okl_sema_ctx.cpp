@@ -253,12 +253,11 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
     if (!loopInfo) {
         return {};
     }
-    // Set specific axis on stopParsingAttributedForLoop, since children for loopInfo should be
-    // complete
+    // Set specific axis here, since children for loopInfo should be complete
     if (loopInfo->has(Axis::Auto)) {
         if (!loopInfo->updateAutoWithSpecificAxis()) {
             return tl::make_unexpected(Error{
-                {}, util::fmt("More than {} nested [@inner] loops", MAX_AXIS_SZ + 1).value()});
+                {}, util::fmt("More than {} nested [@inner] loops", N_AXES).value()});
         }
     }
     _parsingKernInfo->currentLoop = loopInfo->parent;

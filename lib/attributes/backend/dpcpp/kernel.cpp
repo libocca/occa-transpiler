@@ -41,12 +41,9 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto kernelPrefix = EXTERN_C;
     auto sizes = loopInfo->getInnerSizes();
     if (!sizes.hasNullOpts()) {
-        while (sizes.size() < 3) {
-            sizes.emplace_front(1);
-        }
-        kernelPrefix +=
-            " " +
-            util::fmt(INNER_SIZES_FMT, *sizes[0], *sizes[1], *sizes[2]).value();
+        // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to
+        // axisToStr in dpcpp/common.cpp
+        kernelPrefix += " " + util::fmt(INNER_SIZES_FMT, *sizes[2], *sizes[1], *sizes[0]).value();
     }
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.ReplaceText(attrRange, kernelPrefix);

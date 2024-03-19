@@ -10,7 +10,6 @@
 #include <clang/AST/Type.h>
 
 #include <optional>
-#include <deque>
 
 namespace oklt {
 
@@ -28,7 +27,7 @@ struct OklLoopInfo {
     };
 
     using OptSize = std::optional<size_t>;
-    struct OptSizes: public std::deque<OptSize> {
+    struct OptSizes: public std::array<OptSize, N_AXES> {
         size_t product();
         bool hasNullOpts();
         bool allNullOpts();

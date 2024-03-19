@@ -176,7 +176,7 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild(std::function<bool(OklLoopInfo
 OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
     if (isRegular()) {
         if (children.empty()) {
-            return {};
+            return {1, 1, 1};
         }
     }
 
@@ -196,7 +196,7 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
         }
     }
 
-    OklLoopInfo::OptSizes ret;
+    OklLoopInfo::OptSizes ret{1, 1, 1};
     size_t prevProd = 0;
     for (auto& child : children) {
         auto currSizes = child.getInnerSizes();
@@ -207,7 +207,11 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
         prevProd = prod;
     }
     if (has(LoopType::Inner)) {
-        ret.emplace_front(sz);
+        for (size_t i = 0; i < type.size(); ++i) {
+            if (type[i] == LoopType::Inner) {
+                ret[static_cast<size_t>(axis[i])] = sz;
+            }
+        }
     }
     return ret;
 }

@@ -14,6 +14,7 @@ enum class Axis {
 
 constexpr auto MAX_AXIS = Axis::Z;
 constexpr auto MAX_AXIS_SZ = static_cast<size_t>(Axis::Z);
+constexpr auto N_AXES = MAX_AXIS_SZ + 1;
 
 struct AttributedLoop {
     LoopType type = LoopType::Regular;

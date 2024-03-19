@@ -127,7 +127,7 @@ _occa_addVectors5_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
 }
 
 // Outer -> inner, set dimension
-extern "C" [[sycl::reqd_work_group_size(1, 1, 4)]] void
+extern "C" [[sycl::reqd_work_group_size(4, 1, 1)]] void
 _occa_addVectors6_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                     const int entries, const float *a, const float *b,
                     float *ab) {
