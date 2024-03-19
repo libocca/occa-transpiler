@@ -162,7 +162,18 @@ std::optional<size_t> OklLoopInfo::getSize() {
     }
 
     auto sz = size_t{1};
-    sz = std::max(range.size, sz);
+    if (is(LoopType::Inner)) {
+        sz = std::max(range.size, sz);
+    } else if (is(LoopType::Outer, LoopType::Inner)) {
+        if (!tileSize.empty()) {
+            // TODO: maybe reuse attribute parser
+            char* p;
+            auto tileSizeLL = std::strtoll(tileSize.c_str(), &p, 10);
+            if (!*p) {
+                sz = static_cast<size_t>(tileSizeLL);
+            }
+        }
+    }
 
     auto ret = sz;
     for (auto& child : children) {
