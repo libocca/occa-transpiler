@@ -1,3 +1,5 @@
+#pragma once
+
 #include <oklt/core/kernel_metadata.h>
 #include "core/sema/okl_sema_info.h"
 

@@ -3,7 +3,7 @@
 #include "attributes/utils/inner_outer_utils.h"
 
 namespace oklt {
-tl::expected<AttributedLoop, Error> innerOuterParamsHandleAutoAxes(const AttributedLoop& params,
+tl::expected<AttributedLoop, Error> innerOuterParamsHandleAutoAxis(const AttributedLoop& params,
                                                                    OklLoopInfo& loopInfo,
                                                                    const LoopType& loopType,
                                                                    size_t heightLimit) {

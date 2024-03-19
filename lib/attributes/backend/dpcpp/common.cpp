@@ -5,9 +5,10 @@
 #include "core/utils/range_to_string.h"
 
 namespace oklt::dpcpp {
+using namespace clang;
 
 std::string axisToStr(const Axis& axis) {
-    // TODO: Verify that this is a correct mapping from original OKL transpiler developera
+    // TODO: Verify that this is a correct mapping
     //      (intuitively should be x->0, y->1, z->2)
     static std::map<Axis, std::string> mapping{
         {Axis::X, "2"}, {Axis::Y, "1"}, {Axis::Z, "0"}};
@@ -35,7 +36,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        res = std::move(util::fmt("{} {} = ({}) {} {};",
+        res = std::move(util::fmt("{} {} = ({}) {} {};\n",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -43,7 +44,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     } else {
-        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});\n",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -52,10 +53,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    if (loop.type == LoopType::Outer) {
-        return res;
-    }
-    ++openedScopeCounter;
-    return "{" + res;
+    return res;
 }
+
 }  // namespace oklt::dpcpp

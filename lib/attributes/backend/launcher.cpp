@@ -9,9 +9,12 @@
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 #include "core/utils/type_converter.h"
-#include "oklt/core/kernel_metadata.h"
+#include "pipeline/stages/transpiler/error_codes.h"
+
+#include <oklt/core/kernel_metadata.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
+
 // #define OKL_LAUNCHER_RECURSIVE
 
 namespace {
@@ -94,11 +97,12 @@ std::string getTiledVariableName(const LoopMetaData& meta) {
 }
 
 // TODO: Replace with ArgumentInfo::toString()
-std::string getFunctionDeclParamsStr(const FunctionDecl& decl, KernelInfo& kernelInfo) {
+std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo) {
     std::stringstream out;
     // out << "(";
 
     kernelInfo.args.clear();
+    kernelInfo.args.reserve(func.getNumParams() + 1);
 
     kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
                                               .dtype = DataType{.type = DatatypeCategory::CUSTOM},
@@ -106,7 +110,7 @@ std::string getFunctionDeclParamsStr(const FunctionDecl& decl, KernelInfo& kerne
                                               .is_ptr = true});
     out << util::fmt("{} {} {}", "occa::modeKernel_t", "**", "deviceKernels").value();
 
-    for (auto p : decl.parameters()) {
+    for (auto p : func.parameters()) {
         if (!p) {
             continue;
         }
@@ -362,7 +366,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     return {};
 }
 HandleResult handleLauncherKernelAttribute(const Attr& a,
-                                           const FunctionDecl& decl,
+                                           const FunctionDecl& func,
                                            SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
@@ -371,28 +375,33 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();
 
+    if (!sema.getParsingKernelInfo()) {
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+                                         "handleKernelAttribute"});
+    }
+
+    auto kernelInfo = *sema.getParsingKernelInfo();
+    auto& kernels = sema.getProgramMetaData().kernels;
+
+    auto& meta = kernels.emplace_back();
+    meta.name = func.getNameAsString();
+
     // Add 'extern "C"'
     rewriter.ReplaceText(getAttrFullSourceRange(a), externC);
 
-    auto kernelInfo = sema.getParsingKernelInfo();
-    if (!kernelInfo || !kernelInfo->kernInfo) {
-        return {};
-    }
-
-    kernelInfo->kernInfo->name = decl.getNameAsString();
-
-    auto paramsStr = getFunctionDeclParamsStr(decl, *kernelInfo->kernInfo);
-    if (decl.getNumParams()) {
-        rewriter.ReplaceText(decl.getParametersSourceRange(), paramsStr);
+    auto paramsStr = getFunctionParamStr(func, meta);
+    if (func.getNumParams()) {
+        rewriter.ReplaceText(func.getParametersSourceRange(), paramsStr);
     } else {
-        rewriter.InsertText(decl.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1), paramsStr);
+        rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1),
+                            paramsStr);
     }
 
     size_t n = 0;
-    for (auto& loop : kernelInfo->children) {
+    for (auto& loop : kernelInfo.children) {
         removeAttribute(loop.attr, s);
 
-        auto body = getRootLoopBody(decl, loop, n, s);
+        auto body = getRootLoopBody(func, loop, n, s);
         // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
         rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
         rewriter.ReplaceText(loop.stmt.getBody()->getSourceRange(), body);

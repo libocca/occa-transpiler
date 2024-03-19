@@ -1,3 +1,5 @@
+#pragma once
+
 #include <clang/AST/AST.h>
 #include <oklt/core/kernel_metadata.h>
 #include "core/utils/var_decl.h"
@@ -6,6 +8,7 @@
 
 namespace clang {
 struct QualType;
+struct FunctionDecl;
 struct VarDecl;
 struct ForStmt;
 struct ASTContext;
@@ -14,6 +17,8 @@ struct ASTContext;
 namespace oklt {
 struct Error;
 
+tl::expected<KernelInfo, std::error_code> toOklKernelInfo(const clang::FunctionDecl&,
+                                                          const std::string& suffix = "");
 tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const clang::VarDecl&);
 tl::expected<StructFieldInfo, std::error_code> toOklStructFieldInfo(const clang::FieldDecl&);
 DatatypeCategory toOklDatatypeCategory(const clang::QualType&);

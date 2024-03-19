@@ -15,23 +15,21 @@
 #include "tl/expected.hpp"
 
 #include <clang/AST/Decl.h>
-
-#include <functional>
-
-#include <clang/AST/Decl.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 
 #include <functional>
 
-namespace oklt::cuda_subset {
-using namespace clang;
 namespace {
+using namespace clang;
+using namespace oklt;
 
 std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const TileParams* params,
                              const LoopOrder& ord,
                              int& openedScopeCounter,
                              clang::Rewriter& rewriter) {
+    using namespace oklt::cuda_subset;
+
     // TODO: this logic should be based on first or second loop, not inner/outer/regular
     static std::map<
         std::tuple<LoopType, LoopOrder>,
@@ -64,6 +62,13 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
                          cmpStr,
                          getLatestSourceText(forLoop.range.end, rewriter))
                    .value();
+
+    auto& stmt = forLoop.stmt;
+    if (!isa<clang::CompoundStmt>(stmt.getBody())) {
+        ++openedScopeCounter;
+        res += " {\n";
+    }
+
     return res;
 }
 
@@ -81,18 +86,20 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
 
 }  // namespace
 
-HandleResult handleTileAttribute(const clang::Attr& a,
-                                 const clang::ForStmt& forStmt,
+namespace oklt::cuda_subset {
+using namespace clang;
+
+HandleResult handleTileAttribute(const Attr& a,
+                                 const ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
-    auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = tileParamsHandleAutoAxes(*params, *loopInfo);
+    auto updatedParams = tileParamsHandleAutoAxis(*params, *loopInfo);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }
@@ -111,6 +118,8 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                  << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
                  << ", isUnary: " << md.isUnary() << ")\n";
 #endif
+
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
+
 }  // namespace oklt::cuda_subset

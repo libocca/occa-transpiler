@@ -1,7 +1,10 @@
 #include "attributes/utils/code_gen.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/utils/attributes.h"
 
 namespace oklt {
+using namespace clang;
+
 std::string getCondCompStr(const BinOp& bo) {
     switch (bo) {
         case BinOp::Le:
@@ -35,26 +38,44 @@ std::string getUnaryStr(const UnOp& uo, const std::string& var) {
 
 std::string buildCloseScopes(int& openedScopeCounter) {
     std::string res;
+    res.reserve(openedScopeCounter * 2);
+
     // Close all opened scopes
     while (openedScopeCounter--) {
-        res += "}";
+        res += "}\n";
     }
+
     return res;
 }
 
-HandleResult replaceAttributedLoop(const clang::Attr& a,
-                                   const clang::ForStmt& f,
+HandleResult replaceAttributedLoop(const Attr& a,
+                                   const ForStmt& f,
                                    const std::string& prefixCode,
                                    const std::string& suffixCode,
-                                   SessionStage& s) {
+                                   SessionStage& s,
+                                   bool insertInside) {
     auto& rewriter = s.getRewriter();
-    // Remove attribute + for loop:
-    //      @attribute(...) for (int i = start; i < end; i += inc)
-    //  or: for (int i = start; i < end; i += inc; @attribute(...))
 
-    rewriter.RemoveText({getAttrFullSourceRange(a).getBegin(), f.getRParenLoc()});
-    rewriter.InsertText(f.getRParenLoc(), prefixCode);
-    rewriter.InsertText(f.getEndLoc(), suffixCode);
+    rewriter.RemoveText(getAttrFullSourceRange(a));
+
+    if (insertInside) {
+        auto body = dyn_cast_or_null<CompoundStmt>(f.getBody());
+        if (body) {
+            rewriter.RemoveText(SourceRange{f.getForLoc(), f.getRParenLoc()});
+            rewriter.InsertText(body->getLBracLoc().getLocWithOffset(1),
+                                std::string("\n") + prefixCode,
+                                true,
+                                true);
+            rewriter.InsertText(f.getEndLoc(), suffixCode, true, true);
+        } else {
+            rewriter.ReplaceText(SourceRange{f.getForLoc(), f.getRParenLoc()},
+                                 std::string("{\n") + prefixCode);
+            rewriter.InsertTextAfterToken(f.getEndLoc().getLocWithOffset(1), suffixCode + "\n}");
+        }
+    } else {
+        rewriter.ReplaceText(SourceRange{f.getForLoc(), f.getRParenLoc()}, prefixCode);
+        rewriter.InsertText(f.getEndLoc(), suffixCode, true, true);
+    }
 
     return {};
 }

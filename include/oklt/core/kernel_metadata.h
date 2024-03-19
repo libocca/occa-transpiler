@@ -90,18 +90,6 @@ struct ProgramMetaData {
     std::string hash;
     std::list<KernelInfo> kernels;
     std::optional<PropertyInfo> props = std::nullopt;
-    KernelInfo& addKernelInfo(std::string name, size_t numArg) {
-        // create new slot
-        // there is no way to pass args nicely for POD
-        kernels.emplace_back();
-
-        // get just created slot and fill it
-        auto& kiPtr = kernels.back();
-        kiPtr.name = std::move(name);
-        kiPtr.args.resize(numArg);
-
-        return kiPtr;
-    }
 };
 
 // INFO: because of different behaviour of presence field bytes when category is builtin

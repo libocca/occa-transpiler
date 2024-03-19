@@ -7,7 +7,7 @@ namespace oklt {
 
 class SessionStage;
 class AstProcessorManager;
-struct OklSemaCtx;
+class OklSemaCtx;
 struct Error;
 
 class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraversal> {
