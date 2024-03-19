@@ -100,7 +100,8 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
 // includes
 TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
-    // merge move the source so clone headers
+    // merging operation move the source to destination map so clone headers
+    // to preserve them for possible laucher generator
     auto clone = stage.getSession().normalizedHeaders.fileMap;
     inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
