@@ -15,7 +15,7 @@
 namespace oklt {
 
 class SessionStage;
-struct OklSemaCtx;
+class OklSemaCtx;
 
 class AstProcessorManager {
    protected:

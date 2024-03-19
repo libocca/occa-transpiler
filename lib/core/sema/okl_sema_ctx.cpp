@@ -39,8 +39,6 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
                                                  AttributedLoopTypes loopType,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo,
                                                  SessionStage& stage) {
-    assert(kernelInfo.kernInfo);
-
     auto parsedLoopInfo = parseForStmt(attr, stmt, stage);
     if (!parsedLoopInfo) {
         return parsedLoopInfo;
@@ -122,19 +120,7 @@ bool OklSemaCtx::startParsingOklKernel(const FunctionDecl& fd) {
         return false;
     }
 
-    // create slot for kernel info in list
-    auto* kiPtr = &_programMetaData.addKernelInfo(fd.getNameAsString(), fd.param_size());
-    auto kiParams = std::vector<std::string>(fd.param_size());
-    _parsingKernInfo = &_parsedKernelList.emplace_back(fd, std::move(kiParams), kiPtr);
-
-    // Set kernel info parameters
-    for (auto param : fd.parameters()) {
-        if (param) {
-            setKernelArgInfo(*param);
-            setTranspiledArgStr(*param);
-        }
-    }
-
+    _parsingKernInfo = &_parsedKernelList.emplace_back(fd);
     return true;
 }
 
@@ -260,35 +246,6 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
     _parsingKernInfo->currentLoop = loopInfo->parent;
 
     return {};
-}
-
-void OklSemaCtx::setKernelArgInfo(const ParmVarDecl& parm) {
-    assert(_parsingKernInfo);
-    auto result = toOklArgInfo(parm);
-    if (!result) {
-        llvm::errs() << "failed to convert parm var decl to okl data type\n";
-        return;
-    }
-
-    auto* ki = _parsingKernInfo->kernInfo;
-    ki->args[parm.getFunctionScopeIndex()] = std::move(result.value());
-}
-
-void OklSemaCtx::setTranspiledArgStr(const ParmVarDecl& parm, std::string_view transpiledArgStr) {
-    assert(_parsingKernInfo);
-    if (!transpiledArgStr.empty()) {
-        auto& pki = *_parsingKernInfo;
-        pki.argStrs[parm.getFunctionScopeIndex()] = std::string(transpiledArgStr);
-    }
-
-    auto& pki = *_parsingKernInfo;
-    pki.argStrs[parm.getFunctionScopeIndex()] =
-        parm.getType().getAsString() + " " + parm.getNameAsString();
-}
-
-void OklSemaCtx::setKernelTranspiledAttrStr(std::string attrStr) {
-    assert(_parsingKernInfo);
-    _parsingKernInfo->transpiledFuncAttrStr = std::move(attrStr);
 }
 
 ProgramMetaData& OklSemaCtx::getProgramMetaData() {

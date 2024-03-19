@@ -22,7 +22,6 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
-    auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -30,7 +29,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
             Error{std::error_code(), "@inner: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Inner);
+    auto updatedParams = innerOuterParamsHandleAutoAxis(*params, *loopInfo, LoopType::Inner);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }
@@ -40,12 +39,13 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     if (loopInfo->shouldSync()) {
-        suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
+        suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
     }
 
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";
 #endif
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
 }  // namespace oklt::cuda_subset

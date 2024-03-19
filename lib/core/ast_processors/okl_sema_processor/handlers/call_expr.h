@@ -8,8 +8,8 @@ struct Attr;
 }  // namespace clang
 
 namespace oklt {
-struct SessionStage;
-struct OklSemaCtx;
+class SessionStage;
+class OklSemaCtx;
 
 // validator and translator for OKL attributed for loop
 HandleResult preValidateCallExpr(const clang::Attr*,

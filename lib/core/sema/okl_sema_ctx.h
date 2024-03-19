@@ -14,17 +14,8 @@ class SessionStage;
 
 struct OklSemaCtx {
     struct ParsedKernelInfo : public OklKernelInfo {
-        explicit ParsedKernelInfo(const clang::FunctionDecl& d,
-                                  std::vector<std::string>&& args,
-                                  KernelInfo* info = nullptr)
-            : OklKernelInfo(d),
-              argStrs(args),
-              kernInfo(info){};
-        KernelInfo* kernInfo{nullptr};
-        std::list<OklLoopInfo> highestLevelLoops;
-
-        std::string transpiledFuncAttrStr = {};
-        std::vector<std::string> argStrs = {};
+        explicit ParsedKernelInfo(const clang::FunctionDecl& d)
+            : OklKernelInfo(d){};
 
         OklLoopInfo* currentLoop = nullptr;
         std::map<const clang::ForStmt*, OklLoopInfo*> loopMap = {};
@@ -54,12 +45,6 @@ struct OklSemaCtx {
     [[nodiscard]] OklLoopInfo* getLoopInfo(const clang::ForStmt& forStmt) const;
     [[nodiscard]] OklLoopInfo* getLoopInfo();
     void setLoopInfo(OklLoopInfo* loopInfo);
-
-    void setKernelArgInfo(const clang::ParmVarDecl& parm);
-    void setTranspiledArgStr(const clang::ParmVarDecl& parm,
-                             std::string_view transpiledArgStr = {});
-
-    void setKernelTranspiledAttrStr(std::string attrStr);
 
     [[nodiscard]] ProgramMetaData& getProgramMetaData();
     [[nodiscard]] const ProgramMetaData& getProgramMetaData() const;

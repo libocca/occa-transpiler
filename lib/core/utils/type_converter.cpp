@@ -61,4 +61,23 @@ tl::expected<ArgumentInfo, std::error_code> toOklArgInfo(const VarDecl& var) {
     return res;
 }
 
+tl::expected<KernelInfo, std::error_code> toOklKernelInfo(const FunctionDecl& fd,
+                                                          const std::string& suffix) {
+    KernelInfo ret;
+    ret.name = fd.getNameAsString() + suffix;
+
+    for (auto param : fd.parameters()) {
+        if (!param) {
+            return tl::make_unexpected(std::error_code());
+        }
+        auto arg = toOklArgInfo(*param);
+        if (!arg) {
+            return tl::make_unexpected(arg.error());
+        }
+        ret.args.emplace_back(std::move(arg.value()));
+    }
+
+    return ret;
+}
+
 }  // namespace oklt

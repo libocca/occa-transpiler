@@ -85,11 +85,15 @@ extern "C" void addVectors4(occa::modeKernel_t **deviceKernels,
   {
     occa::dim outer, inner;
     outer.dims = 2;
-    inner.dims = 0;
+    inner.dims = 2;
     int i = 0;
     outer[1] = (entries) - (0);
     int j = 0;
     outer[0] = (entries) - (0);
+    int k = 0;
+    inner[1] = (entries) - (0);
+    int ii = 0;
+    inner[0] = (entries) - (0);
     occa::kernel kernel(deviceKernels[0]);
     kernel.setRunDims(outer, inner);
     kernel(entries, a, b, ab);
@@ -103,11 +107,15 @@ extern "C" void addVectors5(occa::modeKernel_t **deviceKernels,
   {
     occa::dim outer, inner;
     outer.dims = 2;
-    inner.dims = 0;
+    inner.dims = 2;
     int i = 0;
     outer[1] = (entries) - (0);
     int j = 0;
     outer[0] = (entries) - (0);
+    int k = 0;
+    inner[1] = (entries) - (0);
+    int ii = 0;
+    inner[0] = (entries) - (0);
     occa::kernel kernel(deviceKernels[0]);
     kernel.setRunDims(outer, inner);
     kernel(entries, a, b, ab);
@@ -122,11 +130,15 @@ extern "C" void addVectors6(occa::modeKernel_t **deviceKernels,
   {
     occa::dim outer, inner;
     outer.dims = 2;
-    inner.dims = 0;
+    inner.dims = 2;
     int i = 0;
     outer[1] = (entries) - (0);
     int j = 0;
     outer[0] = (entries) - (0);
+    int k = 0;
+    inner[1] = (entries) - (0);
+    int ii = 0;
+    inner[0] = (entries) - (0);
     occa::kernel kernel(deviceKernels[0]);
     kernel.setRunDims(outer, inner);
     kernel(entries, a, b, ab);
