@@ -43,7 +43,9 @@ std::string SessionStage::getRewriterResultForMainFile() {
         return sm.getBufferData(mainFID).data();
     }
 
-    return std::string{rewriteBuf->begin(), rewriteBuf->end()};
+    std::string mainContent{rewriteBuf->begin(), rewriteBuf->end()};
+
+    return mainContent;
 }
 
 TransformedFiles SessionStage::getRewriterResultForHeaders() {

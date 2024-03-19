@@ -89,8 +89,8 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
             continue;
         }
 #ifdef OKL_SEMA_DEBUG_LOG
-        llvm::outs() << "remove system include " << dep.relativePath << " "
-                     << dep.fileName << " \n";
+        llvm::outs() << "remove system include " << dep.relativePath << " " << dep.fileName
+                     << " \n";
 #endif
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});
     }
@@ -100,7 +100,10 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
 // includes
 TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
-    inputs.fileMap.merge(stage.getSession().normalizedHeaders.fileMap);
+    // merging operation move the source to destination map so clone headers
+    // to preserve them for possible laucher generator
+    auto clone = stage.getSession().normalizedHeaders.fileMap;
+    inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
     return inputs;
 }
@@ -142,8 +145,7 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     //
     if (!ExecuteCompilerInvocation(&compiler)) {
         std::filesystem::remove(outputFileName);
-        return tl::make_unexpected(
-            Error{{}, "failed to make preprocessing okl_kernel.cpp: "});
+        return tl::make_unexpected(Error{{}, "failed to make preprocessing okl_kernel.cpp: "});
     }
 
     auto preprocessedAndFused = util::readFileAsStr(outputFileName);

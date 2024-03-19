@@ -225,11 +225,10 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
             _output.stdCppSrc = std::move(_input.gnuCppSrc);
         }
 
-        auto normalizedHeaders = _stage->getRewriterResultForHeaders();
         // we need keep all headers in output even there are not modififcation by rewriter to
         // populate affected files futher
-        normalizedHeaders.fileMap.merge(_input.gnuCppIncs.fileMap);
-        _output.stdCppIncs = std::move(normalizedHeaders);
+        _output.stdCppIncs = _stage->getRewriterResultForHeaders();
+        _output.stdCppIncs.fileMap.merge(_input.gnuCppIncs.fileMap);
     }
 
    private:
