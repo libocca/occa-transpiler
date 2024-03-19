@@ -31,9 +31,8 @@ std::string getFunctionName(const FunctionDecl& func, size_t n) {
     return util::fmt("_occa_{}_{}", func.getNameAsString(), n).value();
 }
 
-std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func,
-                                     OklLoopInfo& child) {
-    std::stringstream out;
+std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
+  std::stringstream out;
     out << externC;
 
     // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z)]]"
@@ -102,6 +101,18 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
+    if (kernelInfo.children.empty()) {
+      rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
+      rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
+      if (func.getNumParams()) {
+        rewriter.ReplaceText(func.getParametersSourceRange(), paramStr);
+      } else {
+        rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1), paramStr);
+      }
+
+      return {};
+    }
+
     size_t n = 0;
     auto startPos = getAttrFullSourceRange(a).getBegin();
     for (auto& child : kernelInfo.children) {
@@ -114,7 +125,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
             out << suffixCode;
             out << "}\n\n";
         }
-        out << getFunctionAttributesStr(func, child);
+        out << getFunctionAttributesStr(func, &child);
         out << typeStr << " " << getFunctionName(func, n) << "(" << paramStr << ")"
             << " {\n";
         out << prefixCode;
@@ -128,9 +139,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         ++n;
     }
 
-    if (!kernelInfo.children.empty()) {
-        rewriter.ReplaceText(SourceRange{startPos, func.getEndLoc()}, suffixCode + "\n}\n");
-    }
+    rewriter.ReplaceText(SourceRange{startPos, func.getEndLoc()}, suffixCode + "\n}\n");
 
     return {};
 }

@@ -17,9 +17,8 @@ std::string getFunctionName(const FunctionDecl& func, size_t n) {
     return util::fmt("_occa_{}_{}", func.getNameAsString(), n).value();
 }
 
-std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func,
-                                     OklLoopInfo* child) {
-    std::stringstream out;
+std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
+  std::stringstream out;
     out << KERNEL_DEFINITION;
 
     // TODO: add __launch_bounds__
