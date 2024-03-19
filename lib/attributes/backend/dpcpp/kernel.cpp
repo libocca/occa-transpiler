@@ -110,6 +110,14 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(1), paramStr);
       }
 
+      auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
+      if (body) {
+        std::stringstream out;
+        out << "{\n" << prefixCode;
+        out << "\n" << suffixCode << "\n}\n";
+        rewriter.ReplaceText(body->getSourceRange(), out.str());
+      }
+
       return {};
     }
 
