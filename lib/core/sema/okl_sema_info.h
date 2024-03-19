@@ -27,6 +27,7 @@ struct OklLoopInfo {
     struct OptSizes: public std::list<OptSize> {
         size_t product();
         bool hasNullOpts();
+        bool allNullOpts();
     };
 
     const clang::Attr& attr;

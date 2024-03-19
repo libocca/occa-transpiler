@@ -159,13 +159,11 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
         if (children.empty()) {
             return {};
         }
-    } else if (range.size == 0) {
-        return OklLoopInfo::OptSizes{{0}};
     }
 
-    OptSize sz = size_t{1};
-    if (is(LoopType::Inner)) {
-        sz = std::max(range.size, sz.value());
+    OptSize sz = std::nullopt;
+    if (is(LoopType::Inner) && range.size != 0) {
+        sz = range.size;
     } else if (is(LoopType::Outer, LoopType::Inner)) {
         if (!tileSize.empty()) {
             // TODO: maybe reuse attribute parser
@@ -187,6 +185,7 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
         if (prod > prevProd) {
             ret = currSizes;
         }
+        prevProd = prod;
     }
     if (has(LoopType::Inner)) {
         ret.emplace_front(sz);
@@ -227,8 +226,11 @@ size_t OklLoopInfo::OptSizes::product() {
     });
 }
 bool OklLoopInfo::OptSizes::hasNullOpts() {
-    return std::find_if(begin(), end(), [](const auto& val) { return val == std::nullopt; }) !=
-           end();
+    return std::any_of(begin(), end(), [](const auto& val) { return val == std::nullopt; });
+}
+
+bool OklLoopInfo::OptSizes::allNullOpts() {
+    return std::all_of(begin(), end(), [](const auto& val) { return val == std::nullopt; });
 }
 
 }  // namespace oklt
