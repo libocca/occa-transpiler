@@ -112,10 +112,8 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
 
       auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
       if (body) {
-        std::stringstream out;
-        out << "{\n" << prefixCode;
-        out << "\n" << suffixCode << "\n}\n";
-        rewriter.ReplaceText(body->getSourceRange(), out.str());
+        rewriter.InsertText(body->getLBracLoc(), std::string("\n") + prefixCode, true, true);
+        rewriter.InsertText(body->getRBracLoc(), suffixCode + std::string("\n"), false, true);
       }
 
       return {};
