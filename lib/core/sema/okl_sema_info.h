@@ -7,7 +7,9 @@
 #include <clang/AST/Decl.h>
 #include <clang/AST/Expr.h>
 #include <clang/AST/Type.h>
+
 #include <optional>
+#include <deque>
 
 namespace oklt {
 
@@ -24,7 +26,7 @@ struct OklLoopInfo {
     };
 
     using OptSize = std::optional<size_t>;
-    struct OptSizes: public std::list<OptSize> {
+    struct OptSizes: public std::deque<OptSize> {
         size_t product();
         bool hasNullOpts();
         bool allNullOpts();

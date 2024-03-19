@@ -3,15 +3,18 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+#include "tl/expected.hpp"
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string externC = "extern \"C\"";
-const std::string dpcppAdditionalArguments = "sycl::queue * queue_,sycl::nd_range<3> * range_";
-const std::string submitQueue =
+const std::string EXTERN_C = "extern \"C\"";
+const std::string DPCPP_ADDITIONAL_ARGUMENTS = "sycl::queue * queue_,sycl::nd_range<3> * range_";
+const std::string INNER_SIZES_FMT = "[[sycl::reqd_work_group_size({},{},{})]]";
+const std::string SUBMIT_QUEUE =
     R"(queue_->submit(
     [&](sycl::handler & handler_) {
       handler_.parallel_for(
@@ -22,11 +25,31 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
                                    const clang::FunctionDecl& func,
                                    SessionStage& s) {
     auto& rewriter = s.getRewriter();
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+                                         "handleKernelAttribute"});
+    }
+    auto loopInfo = sema.getLoopInfo();
+    if (!loopInfo) {
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
+                                         "[@kernel] requires at least one [@outer] for-loop"});
+    }
 
     // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z]]"
-    // 1. Add 'extern "C"`
+    // 1. Add 'extern "C" [[sycl::reqd_work_group_size(z,y,x)]]`
+    auto kernelPrefix = EXTERN_C;
+    auto sizes = loopInfo->getInnerSizes();
+    if (!sizes.hasNullOpts()) {
+        while (sizes.size() < 3) {
+            sizes.emplace_front(1);
+        }
+        kernelPrefix +=
+            " " +
+            util::fmt(INNER_SIZES_FMT, *sizes[0], *sizes[1], *sizes[2]).value();
+    }
     SourceRange attrRange = getAttrFullSourceRange(a);
-    rewriter.ReplaceText(attrRange, externC);
+    rewriter.ReplaceText(attrRange, kernelPrefix);
 
     // 2. Rename function
     auto oldFunctionName = func.getNameAsString();
@@ -34,15 +57,10 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto newFunctionName = "_occa_" + oldFunctionName + "_0";
     rewriter.ReplaceText(fnameRange, newFunctionName);
 
-    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
-                                         "handleKernelAttribute"});
-    }
     sema.getParsingKernelInfo()->kernInfo->name = newFunctionName;
 
     // 3. Update function arguments
-    auto insertedArgs = dpcppAdditionalArguments;
+    auto insertedArgs = DPCPP_ADDITIONAL_ARGUMENTS;
     if (func.getNumParams() > 0) {
         insertedArgs += ",";
     }
@@ -51,7 +69,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
 
     // 4. Add submission of kernel in the queue:
     auto* body = dyn_cast<CompoundStmt>(func.getBody());
-    rewriter.InsertText(body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), submitQueue);
+    rewriter.InsertText(body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), SUBMIT_QUEUE);
 
     // Close two new scopes
     rewriter.InsertText(body->getRBracLoc(), "});});");

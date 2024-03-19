@@ -8,7 +8,7 @@ namespace oklt::serial_subset {
 using namespace clang;
 
 namespace {
-const std::string externC = "extern \"C\"";
+const std::string EXTERN_C = "extern \"C\"";
 }  // namespace
 
 HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, SessionStage& s) {
@@ -20,7 +20,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
 
     // Add 'extern "C"'
     SourceRange attrRange = getAttrFullSourceRange(a);
-    rewriter.ReplaceText(attrRange, externC);
+    rewriter.ReplaceText(attrRange, EXTERN_C);
 
     // Convert a non-pointer params to references
     auto& ctx = s.getCompiler().getASTContext();

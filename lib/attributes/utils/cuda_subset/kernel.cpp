@@ -34,7 +34,8 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
 
     auto loopInfo = sema.getLoopInfo();
     if (!loopInfo) {
-        return tl::make_unexpected(Error{{}, "[@kernel] requires at least one [@outer] for-loop"});
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
+                                         "[@kernel] requires at least one [@outer] for-loop"});
     }
 
     std::string kernelPrefix = CUDA_KERNEL_DEFINITION;
