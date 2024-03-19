@@ -18,40 +18,97 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-SourceLocation findPreviousTokenStart(SourceLocation Start,
-                                      const SourceManager& SM,
-                                      const LangOptions& LangOpts) {
-    SourceLocation BeforeStart = Start.getLocWithOffset(-1);
-    return Lexer::GetBeginningOfToken(BeforeStart, SM, LangOpts);
+SourceLocation findPreviousTokenStart(SourceLocation start,
+                                      const SourceManager& sm,
+                                      const LangOptions& langOpts) {
+    SourceLocation beforeStart = start.getLocWithOffset(-1);
+    return Lexer::GetBeginningOfToken(beforeStart, sm, langOpts);
 }
 
-SourceLocation findPreviousTokenKind(SourceLocation Start,
-                                     const SourceManager& SM,
-                                     const LangOptions& LangOpts,
-                                     tok::TokenKind TK) {
+SourceLocation findPreviousTokenKind(SourceLocation start,
+                                     const SourceManager& sm,
+                                     const LangOptions& langOpts,
+                                     tok::TokenKind tk) {
     while (true) {
-        SourceLocation L = findPreviousTokenStart(Start, SM, LangOpts);
+        SourceLocation l = findPreviousTokenStart(start, sm, langOpts);
 
-        Token T;
-        if (Lexer::getRawToken(L, T, SM, LangOpts, /*IgnoreWhiteSpace=*/true))
+        Token t;
+        if (Lexer::getRawToken(l, t, sm, langOpts, /*IgnoreWhiteSpace=*/true))
             return SourceLocation();
 
-        if (T.is(TK))
-            return T.getLocation();
+        if (t.is(tk))
+            return t.getLocation();
 
-        Start = L;
+        start = l;
     }
 }
 
-void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
-    auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
-    ctx->registerForPreprocessor(pp);
+class CondDirectiveCallbacks : public PPCallbacks {
+   public:
+    struct Result {
+        SourceRange conditionRange;
+        ConditionValueKind conditionValue;
 
-    pp.EnterMainSourceFile();
-    const auto& sm = pp.getSourceManager();
-    auto& rewriter = stage.getRewriter();
+        Result(SourceRange r, ConditionValueKind k)
+            : conditionRange(r),
+              conditionValue(k) {}
+    };
 
-    // parse all tokens firstly
+    std::vector<Result> results;
+    CondDirectiveCallbacks(const SourceManager& sm_)
+        : sm(sm_) {}
+    const SourceManager& sm;
+
+    void If(SourceLocation loc,
+            SourceRange conditionRange,
+            ConditionValueKind conditionValue) override {
+        if (sm.isInSystemHeader(conditionRange.getBegin())) {
+            return;
+        }
+        results.emplace_back(conditionRange, conditionValue);
+    }
+
+    void Elif(SourceLocation loc,
+              SourceRange conditionRange,
+              ConditionValueKind conditionValue,
+              SourceLocation ifLoc) override {
+        if (sm.isInSystemHeader(conditionRange.getBegin())) {
+            return;
+        }
+        results.emplace_back(conditionRange, conditionValue);
+    }
+};
+
+class DefineDirectiveCallbacks : public PPCallbacks {
+   public:
+    struct Result {
+        std::string name;
+        const MacroDirective* md;
+        Result(const StringRef name_, const MacroDirective* md_)
+            : name(name_),
+              md(md_) {}
+    };
+
+    std::vector<Result> results;
+    DefineDirectiveCallbacks(const SourceManager& sm_)
+        : sm(sm_) {}
+    const SourceManager& sm;
+
+    void MacroDefined(const Token& macroNameTok, const MacroDirective* md) override {
+        const auto* id = macroNameTok.getIdentifierInfo();
+        if (!id) {
+            return;
+        }
+
+        if (sm.isInSystemHeader(md->getLocation())) {
+            return;
+        }
+
+        results.emplace_back(id->getName(), md);
+    }
+};
+
+std::list<Token> lexMacroToken(Preprocessor& pp) {
     std::list<Token> macros;
     while (true) {
         Token tok{};
@@ -76,13 +133,41 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             continue;
         }
 
-        // catch start of macro expension
-        if (!Lexer::isAtStartOfMacroExpansion(loc, pp.getSourceManager(), pp.getLangOpts())) {
+        if (pp.getSourceManager().isInSystemHeader(loc)) {
+            continue;
+        }
+
+        // catch start of macro expansion
+        if (!Lexer::isAtEndOfMacroExpansion(loc, pp.getSourceManager(), pp.getLangOpts())) {
             continue;
         }
 
         macros.emplace_back(std::move(tok));
     }
+
+    return macros;
+}
+
+void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
+    pp.Initialize(stage.getCompiler().getTarget());
+
+    auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
+    ctx->registerForPreprocessor(pp);
+
+    const auto& sm = pp.getSourceManager();
+
+    // intercept all conditions to replace them by non context static value
+    auto* condCallback = new CondDirectiveCallbacks(sm);
+    pp.addPPCallbacks(std::unique_ptr<PPCallbacks>(condCallback));
+
+    // intercept all macro definition in case of multiple definitions to hace source info about each
+    auto* defCallback = new DefineDirectiveCallbacks(sm);
+    pp.addPPCallbacks(std::unique_ptr<PPCallbacks>(defCallback));
+
+    pp.EnterMainSourceFile();
+    auto& rewriter = stage.getRewriter();
+
+    auto macros = lexMacroToken(pp);
 
     // do macro expansion
     std::set<StringRef> macroNames;
@@ -106,46 +191,90 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             continue;
         }
 
+        // in case of macro with args take only macro name
+        auto macroName = original->split('(').first;
 #ifdef NORMALIZER_DEBUG_LOG
-        llvm::outs() << "at " << expansionLoc.printToString(sm) << " inline macro "
+        llvm::outs() << "expansion at: " << expansionLoc.printToString(sm) << " inline macro "
                      << original.value() << " by " << expanded.value() << '\n';
 #endif
+        // expand macro in source code
         rewriter.ReplaceText(expansionLoc, original->size(), expanded.value());
 
-        // in case of macro with args take only macro name
-        macroNames.insert(original.value().split('(').first);
+        // save macro name to delete it definition later
+        macroNames.insert(macroName);
     }
 
     // get rid of macro hell
-    for (const auto& name : macroNames) {
-        auto* ii = pp.getIdentifierInfo(name);
-        if (!ii) {
-            continue;
-        }
+    const auto& defResults = defCallback->results;
+    for (const auto& macro : macroNames) {
+        // remove all defintions
+        for (const auto& defined : defResults) {
+            if (defined.name != macro) {
+                continue;
+            }
 
-        auto md = pp.getMacroDefinition(ii);
-        auto* mi = md.getMacroInfo();
-        if (!mi) {
-            continue;
-        }
+            auto mi = defined.md->getMacroInfo();
+            if (!mi) {
+                continue;
+            }
 
-        // hash definitely there however clang pp doest not provide this info
-        // so lets find it manually
-        auto hashLoc = findPreviousTokenKind(
-            mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
-        if (hashLoc.isInvalid()) {
-            // replace by 'identical' macro to not break anything
-            auto noop = "void void\n";
-            rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
-        } else {
-            // keep number of new lines
-            auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
-            lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
-            rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, std::string(lines, '\n'));
+            auto hashLoc = findPreviousTokenKind(
+                mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
+            if (hashLoc.isInvalid()) {
+                // replace by 'identical' macro to not break anything
+                auto noop = "void void\n";
+                rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
+            } else {  // keep number of new lines
+                auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
+                lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
+                rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()},
+                                     std::string(lines, '\n'));
+            }
         }
     }
 
-    pp.EndSourceFile();
+    // auto* ii = pp.getIdentifierInfo(macro);
+    // if (!ii) {
+    //     continue;
+    // }
+
+    // auto md = pp.getMacroDefinition(ii);
+    // md.forAllDefinitions([&macro, &pp, &rewriter, &sm](MacroInfo* mi) {
+    //     if (!mi) {
+    //         return;
+    //     }
+    //     llvm::outs() << "name: " << macro << " at: " <<
+    //     mi->getDefinitionLoc().printToString(sm)
+    //                  << '\n';
+
+    //    // hash definitely there however clang pp does not provide this info
+    //    // so lets find it manually
+    //    auto hashLoc = findPreviousTokenKind(
+    //        mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
+    //    if (hashLoc.isInvalid()) {
+    //        // replace by 'identical' macro to not break anything
+    //        auto noop = "void void\n";
+    //        rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
+    //    } else {
+    //        // keep number of new lines
+    //        auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
+    //        lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
+    //        rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()},
+    //                             std::string(lines, '\n'));
+    //    }
+    //});
+
+    // macro can be under #if/#elif
+    // in such case expansion ctx does not work so just replace macro dependent condition on
+    // static true/false
+    for (auto& c : condCallback->results) {
+        if (c.conditionValue == PPCallbacks::CVK_NotEvaluated) {
+            continue;
+        }
+
+        rewriter.ReplaceText(sm.getExpansionRange(c.conditionRange),
+                             c.conditionValue == PPCallbacks::CVK_True ? "1" : "0");
+    }
 }
 
 struct MacroExpander : public clang::ASTFrontendAction {
