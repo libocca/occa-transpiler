@@ -29,9 +29,7 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
 
 std::string getFunctionParamStr(const FunctionDecl& func, Rewriter& r) {
     auto typeLoc = func.getFunctionTypeLoc();
-    auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
-                                   typeLoc.getRParenLoc().getLocWithOffset(-1));
-    return r.getRewrittenText(paramsRange);
+    return r.getRewrittenText(typeLoc.getParensRange());
 }
 
 }  // namespace
@@ -66,9 +64,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
 
         auto typeLoc = func.getFunctionTypeLoc();
-        auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
-                                       typeLoc.getRParenLoc().getLocWithOffset(-1));
-        rewriter.ReplaceText(paramsRange, paramStr);
+        rewriter.ReplaceText(typeLoc.getParensRange(), paramStr);
 
         return {};
     }
@@ -85,8 +81,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
             out << "}\n\n";
         }
         out << getFunctionAttributesStr(func, &child);
-        out << typeStr << " " << getFunctionName(func, n) << "(" << paramStr << ")"
-            << " {\n";
+        out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
 
         auto endPos = getAttrFullSourceRange(child.attr).getBegin();
         rewriter.ReplaceText(SourceRange{startPos, endPos}, out.str());
