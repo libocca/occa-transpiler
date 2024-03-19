@@ -64,6 +64,9 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
         out << ", ";
     }
 
+    auto typeLoc = func.getFunctionTypeLoc();
+    r.InsertTextAfterToken(typeLoc.getLParenLoc(), out.str());
+
     for (auto param : func.parameters()) {
         if (!param) {
             continue;
@@ -73,11 +76,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
         }
     }
 
-    auto typeLoc = func.getFunctionTypeLoc();
-    auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
-                                   typeLoc.getRParenLoc().getLocWithOffset(-1));
-    out << r.getRewrittenText(paramsRange);
-    return out.str();
+    return r.getRewrittenText(typeLoc.getParensRange());
 }
 
 HandleResult handleKernelAttribute(const clang::Attr& a,
@@ -109,9 +108,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
 
         auto typeLoc = func.getFunctionTypeLoc();
-        auto paramsRange = SourceRange(typeLoc.getLParenLoc().getLocWithOffset(1),
-                                       typeLoc.getRParenLoc().getLocWithOffset(-1));
-        rewriter.ReplaceText(paramsRange, paramStr);
+        rewriter.ReplaceText(typeLoc.getParensRange(), paramStr);
 
         auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
         if (body) {
@@ -136,8 +133,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
             out << "}\n\n";
         }
         out << getFunctionAttributesStr(func, &child);
-        out << typeStr << " " << getFunctionName(func, n) << "(" << paramStr << ")"
-            << " {\n";
+        out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
         out << prefixCode;
 
         auto endPos = getAttrFullSourceRange(child.attr).getBegin().getLocWithOffset(-1);
