@@ -1,0 +1,24 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/outer_inner/outer_inner_inc.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/outer_inner/outer_inner_inc_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/outer_inner/outer_inner_dec.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/outer_inner/outer_inner_dec_ref.cpp"
+  }
+]

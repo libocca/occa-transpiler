@@ -1,73 +1,68 @@
-#include <clang/Basic/SourceManager.h>
+#include <oklt/core/error.h>
+#include <oklt/core/kernel_metadata.h>
 
-#include "oklt/core/transpiler_session/transpiler_session.h"
-#include "oklt/core/utils/format.h"
+#include "core/transpiler_session/transpiler_session.h"
 
+#include <clang/Basic/Diagnostic.h>
 
 namespace oklt {
-using namespace clang;
 
-TranspilerSession::TranspilerSession(TRANSPILER_TYPE backend)
-  :targetBackend(backend)
-  ,transpiledCode()
-{}
-
-
-SessionStage::SessionStage(TranspilerSession &globalSession,
-                                     ASTContext &ctx)
-    :_globalSession(globalSession)
-    , _ctx(ctx)
-    ,_rewriter(ctx.getSourceManager(), ctx.getLangOpts())
-    ,_astVisitor(nullptr)
-    ,_attrManager(AttributeManager::instance())
-{}
-
-
-clang::Rewriter& SessionStage::getRewriter() {
-  return _rewriter;
+SharedTranspilerSession TranspilerSession::make(UserInput input) {
+    return std::make_shared<TranspilerSession>(std::move(input));
 }
 
-void SessionStage::setAstVisitor(ASTVisitor *visitor) {
-  _astVisitor = visitor;
+SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::string sourceCode) {
+    return std::make_shared<TranspilerSession>(backend, sourceCode);
 }
 
-ASTVisitor *SessionStage::getVisitor() {
-  assert(_astVisitor == nullptr);
-  return _astVisitor;
+TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
+    input.backend = backend;
+    input.sourceCode = std::move(sourceCode);
 }
 
-TRANSPILER_TYPE SessionStage::getBackend() const {
-  return _globalSession.targetBackend;
+TranspilerSession::TranspilerSession(UserInput input_)
+    : input(std::move(input_)) {}
+
+void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
+    // TODO: Fixup sourceLocation
+    auto msg = message.getMessage();
+    auto lineNo = message.getLocation().getLineNumber();
+
+    std::stringstream ss;
+    ss << "line " << lineNo << ": ";
+    ss << msg.str();
+    // TODO
+    //  create error category for syntax/semantic error/warning
+    if (message.getLevel() > clang::DiagnosticsEngine::Level::Warning) {
+        _errors.push_back(Error{std::error_code(), ss.str()});
+    } else {
+        _warnings.push_back(Warning{ss.str()});
+    }
 }
 
-AttributeManager &SessionStage::getAttrManager() {
-  return _attrManager;
+bool setCurrentKernelInfo(KernelInfo* ki);
+[[nodiscard]] KernelInfo* getCurrentKernelInfo();
+void TranspilerSession::pushError(std::error_code ec, std::string desc) {
+    _errors.push_back(Error{ec, std::move(desc)});
 }
 
-const AttributeManager &SessionStage::getAttrManager() const {
-  return _attrManager;
+void TranspilerSession::pushWarning(std::string desc) {
+    _warnings.push_back(Warning{std::move(desc)});
 }
 
-void SessionStage::writeTranspiledSource() {
-  SourceManager &sm = _ctx.getSourceManager();
-  const RewriteBuffer* rb = _rewriter.getRewriteBufferFor(sm.getMainFileID());
-  if (!rb) {
-    return;
-  }
-  std::string modifiedCode = std::string(rb->begin(), rb->end());
-  _globalSession.transpiledCode = format(modifiedCode);
+const std::vector<Error>& TranspilerSession::getErrors() const {
+    return _errors;
 }
 
-void SessionStage::setUserCtx(std::any userCtx) {
-  _userCtx = userCtx;
+std::vector<Error>& TranspilerSession::getErrors() {
+    return _errors;
 }
 
-std::any &SessionStage::getUserCtx() {
-  return _userCtx;
+const std::vector<Warning>& TranspilerSession::getWarnings() const {
+    return _warnings;
 }
 
-const std::any &SessionStage::getUserCtx() const {
-  return _userCtx;
+std::vector<Warning>& TranspilerSession::getWarnings() {
+    return _warnings;
 }
-
-}
+}  // namespace oklt

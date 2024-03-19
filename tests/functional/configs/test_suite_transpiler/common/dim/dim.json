@@ -1,0 +1,14 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "compare": "source",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/dim/dim.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/dim/dim_ref.cpp"
+    }
+]

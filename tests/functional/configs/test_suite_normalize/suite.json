@@ -1,0 +1,7 @@
+[
+    "simple_normalize.json",
+    "macro_expansion.json",
+    "atomic_test_case.json",
+    "tile_paren_test_case.json",
+    "attr_inside_for_test_case.json"
+]
