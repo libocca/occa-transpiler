@@ -31,6 +31,11 @@ std::string build_normalization_output_filename(const std::filesystem::path& inp
     return out_file;
 }
 
+std::string build_meta_filename(std::filesystem::path file_path) {
+    file_path.replace_extension(".json");
+    return file_path.string();
+}
+
 int main(int argc, char* argv[]) {
     argparse::ArgumentParser program("okl-tool");
 
@@ -137,11 +142,13 @@ int main(int argc, char* argv[]) {
             if (transpilation_output.empty()) {
                 transpilation_output = build_transpilation_output_filename(source_path);
             }
+            auto transpilation_meta = build_meta_filename(transpilation_output);
 
             auto launcher_output = std::filesystem::path(transpile_command.get("-l"));
             if (launcher_output.empty()) {
                 launcher_output = build_launcher_output_filename(source_path);
             }
+            auto launcher_meta = build_meta_filename(launcher_output);
 
             auto defines = transpile_command.get<std::vector<std::string>>("-D");
             std::vector<std::string> includesStr;
@@ -189,9 +196,11 @@ int main(int argc, char* argv[]) {
                 // userOutput.normalized.sourceCode);
                 oklt::util::writeFileAsStr(transpilation_output.string(),
                                            userOutput.kernel.sourceCode);
+                oklt::util::writeFileAsStr(transpilation_meta, userOutput.kernel.metadataJson);
                 if (!userOutput.launcher.sourceCode.empty()) {
                     oklt::util::writeFileAsStr(launcher_output.string(),
                                                userOutput.launcher.sourceCode);
+                    oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadataJson);
                 }
                 std::cout << "Transpiling success : true" << std::endl;
             } else {

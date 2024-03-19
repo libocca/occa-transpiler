@@ -16,11 +16,11 @@ extern "C" __global__ void _occa_test_kernel_0_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_f mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            { ab[i] = a[i] + b[j] + mat[i + (8 * (j))]; }
+            ab[i] = a[i] + b[j] + mat[i + (8 * (j))];
         }
     }
 }
@@ -31,11 +31,11 @@ extern "C" __global__ void _occa_test_kernel_1_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_i mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            { ab[i] = a[i] + b[j] + static_cast<float>(mat[i + (8 * (j))]); }
+            ab[i] = a[i] + b[j] + static_cast<float>(mat[i + (8 * (j))]);
         }
     }
 }
@@ -46,11 +46,11 @@ extern "C" __global__ void _occa_test_kernel_2_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_s mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            { ab[i] = a[i] + b[j] + mat[i + (8 * (j))].x; }
+            ab[i] = a[i] + b[j] + mat[i + (8 * (j))].x;
         }
     }
 }
@@ -61,11 +61,11 @@ extern "C" __global__ void _occa_test_kernel_3_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat8_s mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            { ab[i] = a[i] + b[j] + mat[i].x + mat[j].y; }
+            ab[i] = a[i] + b[j] + mat[i].x + mat[j].y;
         }
     }
 }
@@ -76,16 +76,16 @@ extern "C" __global__ void _occa_test_kernel_4_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_s mat) {
-    int i = (mat[7 + (8 * (7))]) + ((mat[1 + (8 * (1))]) * blockIdx.x);
     {
+        int i = (mat[7 + (8 * (7))]) + ((mat[1 + (8 * (1))]) * blockIdx.x);
         {
             int j = (mat[0 + (8 * (0))]) + ((1) * threadIdx.x);
-            { ab[i] = a[i] + b[j] + mat[i + (8 * (j))].x + mat[j + (8 * (i))].y; }
+            ab[i] = a[i] + b[j] + mat[i + (8 * (j))].x + mat[j + (8 * (i))].y;
         }
     }
 }
 
-// TODO: doesn't work if dim is in condition right now
+// TODO: doesnt work if dim is in condition right now
 // @kernel void test_kernel_4_2(const int entries, float* a, float* b, float*
 // ab, mat89_s mat) { for (int i = mat(7, 7); i < mat(0, 0); i += mat(1, 1);
 // @outer(0)) { for (int j = mat(0, 0); j < entries; j += 1; @inner(0)) { ab[i]
@@ -99,15 +99,12 @@ extern "C" __global__ void _occa_test_kernel_5_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_s mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            {
-                if (mat[i + (8 * (j))].x <= 0) {
-                    mat[i + (8 * (j))].x =
-                        a[i] + b[j] + mat[i + (8 * (j))].x + mat[j + (8 * (i))].y;
-                }
+            if (mat[i + (8 * (j))].x <= 0) {
+                mat[i + (8 * (j))].x = a[i] + b[j] + mat[i + (8 * (j))].x + mat[j + (8 * (i))].y;
             }
         }
     }
@@ -119,11 +116,11 @@ extern "C" __global__ void _occa_test_kernel_6_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_s mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            { mat[i + (8 * (j))] = a[i] + b[j] + mat[i + (8 * (mat[j + (8 * (0))]))]; }
+            mat[i + (8 * (j))] = a[i] + b[j] + mat[i + (8 * (mat[j + (8 * (0))]))];
         }
     }
 }
@@ -138,14 +135,12 @@ extern "C" __global__ void _occa_test_kernel_7_0(const int entries,
                                                  float* b,
                                                  float* ab,
                                                  mat89_s mat) {
-    int i = (0) + ((1) * blockIdx.x);
     {
+        int i = (0) + ((1) * blockIdx.x);
         {
             int j = (0) + ((1) * threadIdx.x);
-            {
-                mat[i + (8 * (j + get1() + (i * j / get1())))] =
-                    a[i] + b[j] + mat[i + 12 + (8 * (mat[j + (8 * (get1()))]))];
-            }
+            mat[i + (8 * (j + get1() + (i * j / get1())))] =
+                a[i] + b[j] + mat[i + 12 + (8 * (mat[j + (8 * (get1()))]))];
         }
     }
 }

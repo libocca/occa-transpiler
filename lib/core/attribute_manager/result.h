@@ -1,3 +1,5 @@
+#pragma once
+
 #include <oklt/core/error.h>
 #include <tl/expected.hpp>
 

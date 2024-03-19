@@ -1,3 +1,5 @@
+#pragma once
+
 #include <oklt/core/error.h>
 
 #include "attributes/frontend/params/tile.h"
@@ -6,7 +8,7 @@
 #include <tl/expected.hpp>
 
 namespace oklt {
-tl::expected<TileParams, Error> tileParamsHandleAutoAxes(const TileParams& params,
+tl::expected<TileParams, Error> tileParamsHandleAutoAxis(const TileParams& params,
                                                          OklLoopInfo& loopInfo,
                                                          size_t heightLimit = 2);
 }

@@ -35,7 +35,7 @@ tl::expected<TileParams, Error> updateParamsAxis(TileParams& params,
 }
 }  // namespace
 
-tl::expected<TileParams, Error> tileParamsHandleAutoAxes(const TileParams& params,
+tl::expected<TileParams, Error> tileParamsHandleAutoAxis(const TileParams& params,
                                                          OklLoopInfo& loopInfo,
                                                          size_t heightLimit) {
     TileParams res = params;

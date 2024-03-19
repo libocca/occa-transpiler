@@ -13,12 +13,11 @@
 
 namespace oklt::cuda_subset {
 using namespace clang;
-// TODO: function is very similar to handleInnerAttribute
+
 HandleResult handleOuterAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
-    auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -26,7 +25,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
             .ec = std::error_code(), .desc = "@outer: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = innerOuterParamsHandleAutoAxes(*params, *loopInfo, LoopType::Outer);
+    auto updatedParams = innerOuterParamsHandleAutoAxis(*params, *loopInfo, LoopType::Outer);
     if (!updatedParams) {
         return tl::make_unexpected(updatedParams.error());
     }
@@ -39,6 +38,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @outer attribute\n";
 #endif
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
+
 }  // namespace oklt::cuda_subset

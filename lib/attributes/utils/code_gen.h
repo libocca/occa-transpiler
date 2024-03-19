@@ -1,3 +1,5 @@
+#pragma once
+
 #include <oklt/core/kernel_metadata.h>
 #include "core/attribute_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
@@ -15,5 +17,6 @@ HandleResult replaceAttributedLoop(const clang::Attr& a,
                                    const clang::ForStmt& f,
                                    const std::string& prefixCode,
                                    const std::string& suffixCode,
-                                   SessionStage& s);
+                                   SessionStage& s,
+                                   bool insertInside = false);
 }  // namespace oklt
