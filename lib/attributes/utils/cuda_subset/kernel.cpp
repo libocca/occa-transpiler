@@ -63,9 +63,6 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
         rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
 
-        auto typeLoc = func.getFunctionTypeLoc();
-        rewriter.ReplaceText(typeLoc.getParensRange(), paramStr);
-
         return {};
     }
 

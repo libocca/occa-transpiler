@@ -107,9 +107,6 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
         rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
 
-        auto typeLoc = func.getFunctionTypeLoc();
-        rewriter.ReplaceText(typeLoc.getParensRange(), paramStr);
-
         auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
         if (body) {
             rewriter.InsertTextAfter(body->getLBracLoc().getLocWithOffset(1),
