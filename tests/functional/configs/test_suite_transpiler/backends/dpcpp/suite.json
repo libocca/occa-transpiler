@@ -4,6 +4,6 @@
     "inner_outer.json",
     "shared.json",
     "restrict.json",
-  "atomic.json",
-  "macro.json"
+    "atomic.json",
+    "macro.json"
 ]
