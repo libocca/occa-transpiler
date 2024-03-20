@@ -29,14 +29,12 @@ LoopTypesAxes getLoopTypeAxis(const std::any* param) {
     LoopTypesAxes res{};
     if (param->type() == typeid(TileParams)) {
         auto tile = std::any_cast<TileParams>(*param);
-        res.types.push_back(tile.firstLoop.type);
-        res.types.push_back(tile.secondLoop.type);
-        res.axes.push_back(tile.firstLoop.axis);
-        res.axes.push_back(tile.secondLoop.axis);
+        res.types = {tile.firstLoop.type, tile.secondLoop.type};
+        res.axes = {tile.firstLoop.axis, tile.secondLoop.axis};
     } else if (param->type() == typeid(AttributedLoop)) {
         auto loop = std::any_cast<AttributedLoop>(*param);
-        res.types.push_back(loop.type);
-        res.axes.push_back(loop.axis);
+        res.types = {loop.type};
+        res.axes = {loop.axis};
     }
 
     return res;
@@ -242,8 +240,8 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
     // Set specific axis here, since children for loopInfo should be complete
     if (loopInfo->has(Axis::Auto)) {
         if (!loopInfo->updateAutoWithSpecificAxis()) {
-            return tl::make_unexpected(Error{
-                {}, util::fmt("More than {} nested [@inner] loops", N_AXES).value()});
+            return tl::make_unexpected(
+                Error{{}, util::fmt("More than {} nested [@inner] loops", N_AXES).value()});
         }
     }
     _parsingKernInfo->currentLoop = loopInfo->parent;

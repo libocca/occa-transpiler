@@ -6,7 +6,6 @@
 #include "core/utils/type_converter.h"
 #include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
-#include "tl/expected.hpp"
 
 namespace {
 using namespace oklt;
