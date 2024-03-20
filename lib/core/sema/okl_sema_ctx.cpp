@@ -21,6 +21,7 @@ struct LoopAxisTypes {
     LoopTypes types;
     Axises axis;
 };
+
 LoopAxisTypes getLoopAxisType(const std::any* param) {
     if (!param) {
         return {{LoopType::Regular}, {Axis::Auto}};
