@@ -1,17 +1,30 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/transpiler_session/session_stage.h"
+#include "clang/AST/Type.h"
 
 #include <clang/AST/AST.h>
 
 namespace oklt {
 using namespace clang;
 
-std::string getNewDeclStrArray(const VarDecl& var, const std::string& qualifier) {
-    auto* arrDecl = dyn_cast<ArrayType>(var.getType().getTypePtr());
-    auto unqualifiedTypeStr = arrDecl->getElementType().getLocalUnqualifiedType().getAsString();
+namespace {
+QualType getElementTypeRecursive(const ArrayType* type) {
+    QualType elementType = type->getElementType();
+    auto* elementTypePtr = elementType.getTypePtr();
+    while (isa<ArrayType>(elementTypePtr)) {
+        elementType = dyn_cast<ArrayType>(elementTypePtr)->getElementType();
+        elementTypePtr = elementType.getTypePtr();
+    }
+    return elementType;
+}
+}  // namespace
 
-    auto type = arrDecl->getElementType();
+std::string getNewDeclStrArray(const VarDecl& var, const std::string& qualifier) {
+    auto* arrType = dyn_cast<ArrayType>(var.getType().getTypePtr());
+
+    auto type = getElementTypeRecursive(arrType);
+    auto unqualifiedTypeStr = type.getLocalUnqualifiedType().getAsString();
     type.removeLocalConst();
+
     auto qualifiers = type.getQualifiers();
 
     auto varName = var.getDeclName().getAsString();  // Name of variable
