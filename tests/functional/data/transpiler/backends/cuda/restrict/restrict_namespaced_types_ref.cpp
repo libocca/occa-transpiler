@@ -19,7 +19,7 @@ typedef SIZE_TYPE SIZES;
 } // namespace B
 } // namespace A
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" __global__ __launch_bounds__(1) void _occa_function1_0(
     const A::Complex<float> *__restrict__ vectorData, unsigned int vectorSize,
     const A::Complex<float> **__restrict__ matricesData,
@@ -30,7 +30,7 @@ extern "C" __global__ __launch_bounds__(1) void _occa_function1_0(
   }
 }
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" __global__ __launch_bounds__(1) void _occa_function2_0(
     const A::Complex<float> *__restrict__ vectorData,
     const A::B::Configs *__restrict__ configs,

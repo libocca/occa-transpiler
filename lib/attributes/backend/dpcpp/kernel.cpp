@@ -1,9 +1,12 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
+#include "oklt/core/kernel_metadata.h"
 #include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
@@ -110,18 +113,8 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
-    if (kernelInfo.children.empty()) {
-        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
-        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
-
-        auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
-        if (body) {
-            rewriter.InsertTextAfter(body->getLBracLoc().getLocWithOffset(1),
-                                     std::string("\n") + SUBMIT_QUEUE);
-            rewriter.InsertTextBefore(body->getRBracLoc(), suffixCode + std::string("\n"));
-        }
-
-        return {};
+    if (auto verified = verifyLoops(kernelInfo); !verified) {
+        return verified;
     }
 
     size_t n = 0;

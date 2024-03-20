@@ -10,7 +10,7 @@ struct Configs {
     unsigned long size2;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void function1(const Complex<float>* __restrict__ vectorData,
                           unsigned int& vectorSize,
                           const Complex<float>** __restrict__ matricesData,

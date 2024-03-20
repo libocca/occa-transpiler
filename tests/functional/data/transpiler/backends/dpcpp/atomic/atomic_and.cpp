@@ -1,4 +1,3 @@
-// TODO: fix me when @kernel/@outer/@inner are implemented
 @kernel void atomic_and_builtin(const unsigned int* masks, unsigned int* mask) {
     @outer for (int i = 0; i < 1; ++i) {
         @inner for (int j = 0; j < 1; ++j) {
@@ -12,7 +11,6 @@ struct ComplexMaskType {
     unsigned int mask2;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
 @kernel void atomic_and_struct(const ComplexMaskType* masks, ComplexMaskType* mask) {
     @outer for (int i = 0; i < 1; ++i) {
         @inner for (int j = 0; j < 1; ++j) {

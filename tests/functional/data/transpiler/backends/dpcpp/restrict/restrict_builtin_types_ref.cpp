@@ -1,7 +1,7 @@
 #include <CL/sycl.hpp>
 using namespace sycl;
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" [[sycl::reqd_work_group_size(1, 1, 1)]] void
 _occa_function1_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                   const int *__restrict__ i32Data, float *__restrict__ fp32Data,

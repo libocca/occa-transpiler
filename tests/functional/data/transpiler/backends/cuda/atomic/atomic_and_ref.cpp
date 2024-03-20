@@ -1,6 +1,6 @@
 #include <cuda_runtime.h>
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" __global__
 __launch_bounds__(1) void _occa_atomic_and_builtin_0(const unsigned int *masks,
                                                      unsigned int *mask) {
@@ -18,7 +18,7 @@ struct ComplexMaskType {
   unsigned int mask2;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" __global__ __launch_bounds__(1) void _occa_atomic_and_struct_0(
     const ComplexMaskType *masks, ComplexMaskType *mask) {
   {

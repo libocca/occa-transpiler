@@ -1,4 +1,5 @@
 #include "attributes/utils/cuda_subset/handle.h"
+#include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -22,7 +23,6 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
     std::stringstream out;
     out << KERNEL_DEFINITION;
 
-    // TODO: add __launch_bounds__
     auto sizes = info->getInnerSizes();
     if (!sizes.hasNullOpts()) {
         auto prod = sizes.product();
@@ -65,11 +65,8 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, rewriter);
 
-    if (kernelInfo.children.empty()) {
-        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
-        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
-
-        return {};
+    if (auto verified = verifyLoops(kernelInfo); !verified) {
+        return verified;
     }
 
     auto startPos = getAttrFullSourceRange(a).getBegin();

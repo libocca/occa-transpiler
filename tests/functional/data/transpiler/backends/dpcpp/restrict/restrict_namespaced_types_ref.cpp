@@ -20,7 +20,7 @@ typedef SIZE_TYPE SIZES;
 } // namespace B
 } // namespace A
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" [[sycl::reqd_work_group_size(1, 1, 1)]] void
 _occa_function1_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                   const A::Complex<float> *__restrict__ vectorData,
@@ -37,7 +37,7 @@ _occa_function1_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
   });
 }
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" [[sycl::reqd_work_group_size(1, 1, 1)]] void
 _occa_function2_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                   const A::Complex<float> *__restrict__ vectorData,

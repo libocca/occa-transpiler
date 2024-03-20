@@ -17,7 +17,7 @@ struct Data {
   unsigned long size;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" [[sycl::reqd_work_group_size(1, 1, 1)]] void
 _occa_function1_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                   const Complex<float> *__restrict__ vectorData,

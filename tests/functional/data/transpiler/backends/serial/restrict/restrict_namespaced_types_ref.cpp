@@ -18,13 +18,13 @@ typedef SIZE_TYPE SIZES;
 }  // namespace B
 }  // namespace A
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void function1(const A::Complex<float>* __restrict__ vectorData,
                           unsigned int& vectorSize,
                           const A::Complex<float>** __restrict__ matricesData,
                           const A::B::Configs* __restrict__ matricesSizes) {}
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void function2(const A::Complex<float>* __restrict__ vectorData,
                           const A::B::Configs* __restrict__ configs,
                           A::B::C::SIZES* __restrict__ vectorSize) {}

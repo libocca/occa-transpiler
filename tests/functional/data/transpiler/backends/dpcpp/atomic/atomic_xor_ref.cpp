@@ -1,7 +1,7 @@
 #include <CL/sycl.hpp>
 using namespace sycl;
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" [[sycl::reqd_work_group_size(1, 1, 1)]] void
 _occa_atomic_and_builtin_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                            const unsigned int *masks, unsigned int *mask) {
@@ -26,7 +26,7 @@ struct ComplexMaskType {
   unsigned int mask2;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" [[sycl::reqd_work_group_size(1, 1, 1)]] void
 _occa_atomic_and_struct_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                           const ComplexMaskType *masks, ComplexMaskType *mask) {

@@ -1,4 +1,4 @@
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void atomic_add_builtin(const int* iVec, int* iSum, const float* fVec, float* fSum) {
 #pragma omp critical
     {
@@ -12,7 +12,7 @@ struct ComplexTypeF32 {
     float imag;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void atomic_add_struct(const ComplexTypeF32* vec, ComplexTypeF32* sum) {
 #pragma omp critical
     {
@@ -27,7 +27,7 @@ struct ComplexType {
     T imag;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void atomic_add_template(const ComplexType<float>* vec, ComplexType<float>* sum) {
 #pragma omp critical
     {
