@@ -149,7 +149,7 @@ std::list<Token> lexMacroToken(Preprocessor& pp) {
 }
 
 void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
-    pp.Initialize(stage.getCompiler().getTarget());
+    // pp.Initialize(stage.getCompiler().getTarget());
 
     auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
     ctx->registerForPreprocessor(pp);
@@ -294,7 +294,7 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
+    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I.", "-v"};
 
     auto input_file = std::move(input.cppSrc);
 
