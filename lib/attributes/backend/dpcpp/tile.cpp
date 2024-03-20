@@ -31,7 +31,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});\n",
                                   forLoop.var.typeName,
                                   tiledVar,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -40,7 +40,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     } else {
-        res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});\n",
                                   forLoop.var.typeName,
                                   tiledVar,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -50,8 +50,9 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
+
     ++openedScopeCounter;
-    return "{" + res;
+    return " {\n" + res;
 }
 
 std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
@@ -71,7 +72,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                 "{} {} = {} {} {};", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
                 .value());
     } else {
-        res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = {} {} (({}) * {});\n",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   tiledVar,
@@ -80,8 +81,9 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
+
     ++openedScopeCounter;
-    return "{" + res;  // Open new scope
+    return " {\n" + res;  // Open new scope
 }
 
 std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
@@ -93,7 +95,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
 
-    auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
+    auto res = util::fmt("for ({} {} = {}; {} {} {}; {} {} ({}))",
                          forLoop.var.typeName,
                          tiledVar,
                          getLatestSourceText(forLoop.range.start, rewriter),
@@ -105,8 +107,9 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                          params->tileSize)
                    .value();  // shouldn't fail
 
+    // Open new scope (Note: after line unlike @outer and @inner)
     ++openedScopeCounter;
-    return res + " {";  // Open new scope (Note: after line unlike @outer and @inner)
+    return res + " {\n";
 }
 
 std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
@@ -121,7 +124,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
     std::string res;
     if (forLoop.isUnary()) {
         auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.var.name);  // ++i/i++/--i/i--
-        res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {})",
+        res = util::fmt("for ({} {} = {}; {} {} ({} {} ({})); {})",
                         forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
@@ -134,7 +137,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                   .value();
     } else {
         auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
-        res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {} {} {})",
+        res = util::fmt("for ({} {} = {}; {} {} ({} {} ({})); {} {} {})",
                         forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
@@ -148,6 +151,13 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                         getLatestSourceText(forLoop.inc.val, rewriter))
                   .value();
     }
+
+    auto& stmt = forLoop.stmt;
+    if (params->check || !llvm::isa<clang::CompoundStmt>(stmt.getBody())) {
+        ++openedScopeCounter;
+        res += " {\n";
+    }
+
     return res;
 }
 
@@ -180,6 +190,7 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
     if (!tileParams->check) {
         return "";
     }
+
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
     // TODO: parse cmp operator
@@ -188,6 +199,13 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
                          cmpStr,
                          getLatestSourceText(forLoop.range.end, rewriter))
                    .value();
+
+    auto& stmt = forLoop.stmt;
+    if (!llvm::isa<clang::CompoundStmt>(stmt.getBody())) {
+        ++openedScopeCounter;
+        res += " {\n";
+    }
+
     return res;
 }
 

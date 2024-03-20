@@ -7,19 +7,16 @@ _occa_atomic_inc_builtin_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                            unsigned int *value) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = (0) + item_.get_group(2);
       {
+        int i = (0) + item_.get_group(2);
         {
           int j = (0) + item.get_local_id(2);
-          {
-            sycl::atomic_ref<unsigned int, sycl::memory_order::relaxed,
-                             sycl::memory_scope::device,
-                             sycl::access::address_space::global_space>(
-                (*value))++;
-          }
+          sycl::atomic_ref<unsigned int, sycl::memory_order::relaxed,
+                           sycl::memory_scope::device,
+                           sycl::access::address_space::global_space>(
+              (*value))++;
         }
       }
-      // @atomic (*value)++; normalizer issue
     });
   });
 }
@@ -35,20 +32,18 @@ _occa_atomic_inc_struct_0(sycl::queue *queue_, sycl::nd_range<3> *range_,
                           ComplexMaskType *value) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
-      int i = (0) + item_.get_group(2);
       {
+        int i = (0) + item_.get_group(2);
         {
           int j = (0) + item.get_local_id(2);
-          {
-            sycl::atomic_ref<unsigned int, sycl::memory_order::relaxed,
-                             sycl::memory_scope::device,
-                             sycl::access::address_space::global_space>(
-                value->val1)++;
-            sycl::atomic_ref<int, sycl::memory_order::relaxed,
-                             sycl::memory_scope::device,
-                             sycl::access::address_space::global_space>(
-                value->val2)++;
-          }
+          sycl::atomic_ref<unsigned int, sycl::memory_order::relaxed,
+                           sycl::memory_scope::device,
+                           sycl::access::address_space::global_space>(
+              value->val1)++;
+          sycl::atomic_ref<int, sycl::memory_order::relaxed,
+                           sycl::memory_scope::device,
+                           sycl::access::address_space::global_space>(
+              value->val2)++;
         }
       }
     });

@@ -9,8 +9,8 @@ struct Attr;
 }  // namespace clang
    //
 namespace oklt {
-struct SessionStage;
-struct OklSemaCtx;
+class SessionStage;
+class OklSemaCtx;
 
 HandleResult preValidateOklKernel(const clang::Attr& attr,
                                   const clang::FunctionDecl& fd,

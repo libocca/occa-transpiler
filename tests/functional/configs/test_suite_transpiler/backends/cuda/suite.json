@@ -1,8 +1,11 @@
 [
+    "tile.json",
+    "inner_outer.json",
     "shared.json",
     "restrict.json",
     "atomic.json",
     "barrier.json",
     "exclusive.json",
-    "cxx_record.json"
+    "cxx_record.json",
+    "macro.json"
 ]

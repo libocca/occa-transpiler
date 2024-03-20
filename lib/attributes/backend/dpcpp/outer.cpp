@@ -17,7 +17,6 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{std::error_code(), "@outer params nullptr"});
     }
 
-    auto& astCtx = s.getCompiler().getASTContext();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -36,7 +35,8 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @outer attribute\n";
 #endif
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {

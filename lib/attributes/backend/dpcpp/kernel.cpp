@@ -3,6 +3,7 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "core/utils/type_converter.h"
 #include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 #include "tl/expected.hpp"
@@ -19,63 +20,138 @@ const std::string SUBMIT_QUEUE =
     [&](sycl::handler & handler_) {
       handler_.parallel_for(
         *range_,
-        [=](sycl::nd_item<3> item_) {)";
+        [=](sycl::nd_item<3> item_) {
+)";
+const std::string suffixCode =
+    R"(
+        }
+      );
+    }
+  );
+)";
+
+std::string getFunctionName(const FunctionDecl& func, size_t n) {
+    return util::fmt("_occa_{}_{}", func.getNameAsString(), n).value();
+}
+
+std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
+    std::stringstream out;
+    out << EXTERN_C;
+
+    // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z)]]"
+    auto sizes = info->getInnerSizes();
+    if (!sizes.hasNullOpts()) {
+        // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to
+        // axisToStr in dpcpp/common.cpp
+        out << " " << util::fmt(INNER_SIZES_FMT, *sizes[2], *sizes[1], *sizes[0]).value();
+    }
+
+    out << " ";
+    return out.str();
+}
+
+std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo, Rewriter& r) {
+    std::stringstream out;
+
+    kernelInfo.args.clear();
+    kernelInfo.args.reserve(func.getNumParams() + 2);
+
+    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
+                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                                              .name = "queue_",
+                                              .is_ptr = true});
+    out << util::fmt("{} {} {}", "sycl::queue", "*", "queue_").value();
+
+    out << ", ";
+
+    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
+                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                                              .name = "range_",
+                                              .is_ptr = true});
+    out << util::fmt("{} {} {}", "sycl::nd_range<3>", "*", "range_").value();
+    if (func.getNumParams() > 0) {
+        out << ", ";
+    }
+
+    auto typeLoc = func.getFunctionTypeLoc();
+    r.InsertTextAfterToken(typeLoc.getLParenLoc(), out.str());
+
+    for (auto param : func.parameters()) {
+        if (!param) {
+            continue;
+        }
+        if (auto arg = toOklArgInfo(*param)) {
+            kernelInfo.args.emplace_back(std::move(arg.value()));
+        }
+    }
+
+    return r.getRewrittenText(typeLoc.getParensRange());
+}
 
 HandleResult handleKernelAttribute(const clang::Attr& a,
                                    const clang::FunctionDecl& func,
                                    SessionStage& s) {
+#ifdef TRANSPILER_DEBUG_LOG
+    llvm::outs() << "[DEBUG] Handle @kernel attribute (DPCPP backend): return type: "
+                 << func.getReturnType().getAsString()
+                 << ", old kernel name: " << func.getNameAsString() << '\n';
+#endif
+
     auto& rewriter = s.getRewriter();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
+
+    if (!sema.getParsingKernelInfo()) {
         return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
                                          "handleKernelAttribute"});
     }
-    auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
-                                         "[@kernel] requires at least one [@outer] for-loop"});
+
+    auto kernelInfo = *sema.getParsingKernelInfo();
+    auto& kernels = sema.getProgramMetaData().kernels;
+
+    auto oklKernelInfo = KernelInfo{.name = func.getNameAsString()};
+    auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
+    auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
+
+    if (kernelInfo.children.empty()) {
+        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
+        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
+
+        auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
+        if (body) {
+            rewriter.InsertTextAfter(body->getLBracLoc().getLocWithOffset(1),
+                                     std::string("\n") + SUBMIT_QUEUE);
+            rewriter.InsertTextBefore(body->getRBracLoc(), suffixCode + std::string("\n"));
+        }
+
+        return {};
     }
 
-    // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z]]"
-    // 1. Add 'extern "C" [[sycl::reqd_work_group_size(z,y,x)]]`
-    auto kernelPrefix = EXTERN_C;
-    auto sizes = loopInfo->getInnerSizes();
-    if (!sizes.hasNullOpts()) {
-        // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to
-        // axisToStr in dpcpp/common.cpp
-        kernelPrefix += " " + util::fmt(INNER_SIZES_FMT, *sizes[2], *sizes[1], *sizes[0]).value();
+    size_t n = 0;
+    auto startPos = getAttrFullSourceRange(a).getBegin();
+    for (auto& child : kernelInfo.children) {
+        kernels.push_back(oklKernelInfo);
+        auto& meta = kernels.back();
+        meta.name = getFunctionName(func, n);
+
+        std::stringstream out;
+        if (n != 0) {
+            out << suffixCode;
+            out << "}\n\n";
+        }
+        out << getFunctionAttributesStr(func, &child);
+        out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
+        out << SUBMIT_QUEUE;
+
+        auto endPos = getAttrFullSourceRange(child.attr).getBegin().getLocWithOffset(-1);
+        rewriter.ReplaceText(SourceRange{startPos, endPos}, out.str());
+
+        auto body = dyn_cast_or_null<CompoundStmt>(child.stmt.getBody());
+        startPos = (body ? body->getEndLoc() : child.stmt.getRParenLoc()).getLocWithOffset(1);
+
+        ++n;
     }
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    rewriter.ReplaceText(attrRange, kernelPrefix);
 
-    // 2. Rename function
-    auto oldFunctionName = func.getNameAsString();
-    SourceRange fnameRange(func.getNameInfo().getSourceRange());
-    auto newFunctionName = "_occa_" + oldFunctionName + "_0";
-    rewriter.ReplaceText(fnameRange, newFunctionName);
-
-    sema.getParsingKernelInfo()->kernInfo->name = newFunctionName;
-
-    // 3. Update function arguments
-    auto insertedArgs = DPCPP_ADDITIONAL_ARGUMENTS;
-    if (func.getNumParams() > 0) {
-        insertedArgs += ",";
-    }
-    rewriter.InsertText(func.getFunctionTypeLoc().getLParenLoc().getLocWithOffset(sizeof("(") - 1),
-                        insertedArgs);
-
-    // 4. Add submission of kernel in the queue:
-    auto* body = dyn_cast<CompoundStmt>(func.getBody());
-    rewriter.InsertText(body->getLBracLoc().getLocWithOffset(sizeof("{") - 1), SUBMIT_QUEUE);
-
-    // Close two new scopes
-    rewriter.InsertText(body->getRBracLoc(), "});});");
-
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @kernel attribute (DPCPP backend): return type: "
-                 << func.getReturnType().getAsString() << ", old kernel name: " << oldFunctionName
-                 << '\n';
-#endif
+    rewriter.ReplaceText(SourceRange{startPos, func.getEndLoc()}, suffixCode + "\n}\n");
 
     return {};
 }

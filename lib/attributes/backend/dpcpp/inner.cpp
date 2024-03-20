@@ -33,12 +33,13 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     if (loopInfo->shouldSync()) {
-        suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";";
+        suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "[DEBUG] Handle @inner attribute\n";
 #endif
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
 
 __attribute__((constructor)) void registerDpppInnerAttrBackend() {

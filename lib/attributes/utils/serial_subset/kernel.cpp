@@ -2,6 +2,7 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
+#include "core/utils/type_converter.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
 namespace oklt::serial_subset {
@@ -11,12 +12,19 @@ namespace {
 const std::string EXTERN_C = "extern \"C\"";
 }  // namespace
 
-HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, SessionStage& s) {
+HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
     llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
 #endif
 
     auto& rewriter = s.getRewriter();
+    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
+
+    auto oklKernelInfo = toOklKernelInfo(func);
+    if (!sema.getParsingKernelInfo() && !oklKernelInfo) {
+        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+                                         "handleKernelAttribute"});
+    }
 
     // Add 'extern "C"'
     SourceRange attrRange = getAttrFullSourceRange(a);
@@ -24,7 +32,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
 
     // Convert a non-pointer params to references
     auto& ctx = s.getCompiler().getASTContext();
-    for (const auto param : decl.parameters()) {
+    for (const auto param : func.parameters()) {
         if (!param || !param->getType().getTypePtrOrNull()) {
             continue;
         }
@@ -36,12 +44,8 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& decl, Sess
         }
     }
 
-    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    if (!sema.getParsingKernelInfo() && sema.getParsingKernelInfo()->kernInfo) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
-                                         "handleKernelAttribute"});
-    }
-    sema.getParsingKernelInfo()->kernInfo->name = decl.getNameAsString();
+    auto& kernels = sema.getProgramMetaData().kernels;
+    kernels.push_back(oklKernelInfo.value());
 
     return {};
 }

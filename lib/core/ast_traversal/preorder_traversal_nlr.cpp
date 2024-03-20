@@ -269,6 +269,10 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
         }
     }
 
+    // 0. Clear Kernel metadata
+    auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
+    sema.getProgramMetaData().kernels.clear();
+
     // 1. generate transpiled code
     auto transpiledResult = generateTranspiledCode(_stage);
     if (!transpiledResult) {

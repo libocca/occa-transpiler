@@ -65,9 +65,9 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
     return ret;
 }
 
-std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
+std::string buildSecondLoopString(const ForStmt& stmt,
                                   const OklLoopInfo& forLoop,
-                                  [[maybe_unused]] const TileParams* params,
+                                  const TileParams* params,
                                   size_t& parenCnt,
                                   clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
@@ -113,7 +113,7 @@ std::string buildSecondLoopString([[maybe_unused]] const ForStmt& stmt,
     return ret;
 }
 
-std::string buildCheckString([[maybe_unused]] const ForStmt& stmt,
+std::string buildCheckString(const ForStmt& stmt,
                              const OklLoopInfo& forLoop,
                              [[maybe_unused]] const TileParams* params,
                              size_t& parenCnt,

@@ -10,11 +10,11 @@ struct ComplexTypeF32 {
 extern "C" __global__
 __launch_bounds__(1) void _occa_atomic_exch_struct_0(const ComplexTypeF32 *vec,
                                                      ComplexTypeF32 *result) {
-  int i = (0) + blockIdx.x;
   {
+    int i = (0) + blockIdx.x;
     {
       int j = (0) + threadIdx.x;
-      { atomicExch(&(*result), vec[0]); }
+      atomicExch(&(*result), vec[0]);
     }
   }
 }

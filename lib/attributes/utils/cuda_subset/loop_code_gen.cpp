@@ -41,7 +41,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});\n",
                                   forLoop.var.typeName,
                                   tiledVar,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -50,7 +50,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     } else {
-        res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} ((({}) * {}) * {});\n",
                                   forLoop.var.typeName,
                                   tiledVar,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -61,7 +61,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                             .value());
     }
     ++openedScopeCounter;
-    return "{" + res;
+    return " {\n" + res;
 }
 
 std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
@@ -78,10 +78,10 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
     if (forLoop.isUnary()) {
         res = std::move(
             util::fmt(
-                "{} {} = {} {} {};", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
+                "{} {} = {} {} {};\n", forLoop.var.typeName, forLoop.var.name, tiledVar, op, idx)
                 .value());
     } else {
-        res = std::move(util::fmt("{} {} = {} {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = {} {} (({}) * {});\n",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   tiledVar,
@@ -91,7 +91,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                             .value());
     }
     ++openedScopeCounter;
-    return "{" + res;  // Open new scope
+    return " {\n" + res;  // Open new scope
 }
 
 std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
@@ -103,7 +103,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
 
-    auto res = util::fmt("for({} {} = {}; {} {} {}; {} {} ({}))",
+    auto res = util::fmt("for ({} {} = {}; {} {} {}; {} {} ({}))",
                          forLoop.var.typeName,
                          tiledVar,
                          getLatestSourceText(forLoop.range.start, rewriter),
@@ -116,7 +116,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                    .value();  // shouldn't fail
 
     ++openedScopeCounter;
-    return res + " {";  // Open new scope (Note: after line unlike @outer and @inner)
+    return res + " {\n";  // Open new scope (Note: after line unlike @outer and @inner)
 }
 
 std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
@@ -125,13 +125,14 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                           int& openedScopeCounter,
                                           clang::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
+    auto& stmt = forLoop.stmt;
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
 
     std::string res;
     if (forLoop.isUnary()) {
         auto unaryStr = getUnaryStr(forLoop.inc.op.uo, forLoop.var.name);  // ++i/i++/--i/i--
-        res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {})",
+        res = util::fmt("for ({} {} = {}; {} {} ({} {} ({})); {})",
                         forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
@@ -144,7 +145,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                   .value();
     } else {
         auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
-        res = util::fmt("for({} {} = {}; {} {} ({} {} ({})); {} {} {})",
+        res = util::fmt("for ({} {} = {}; {} {} ({} {} ({})); {} {} {})",
                         forLoop.var.typeName,
                         forLoop.var.name,
                         tiledVar,
@@ -158,6 +159,12 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                         getLatestSourceText(forLoop.inc.val, rewriter))
                   .value();
     }
+
+    if (params->check || !llvm::isa<clang::CompoundStmt>(stmt.getBody())) {
+        ++openedScopeCounter;
+        res += " {\n";
+    }
+
     return res;
 }
 }  // namespace tile
@@ -173,7 +180,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
 
     std::string res;
     if (forLoop.isUnary()) {
-        res = std::move(util::fmt("{} {} = ({}) {} {};",
+        res = std::move(util::fmt("{} {} = ({}) {} {};\n",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -181,7 +188,7 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     } else {
-        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});",
+        res = std::move(util::fmt("{} {} = ({}) {} (({}) * {});\n",
                                   forLoop.var.typeName,
                                   forLoop.var.name,
                                   getLatestSourceText(forLoop.range.start, rewriter),
@@ -190,11 +197,8 @@ std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                   idx)
                             .value());
     }
-    if (loop.type == LoopType::Outer) {
-        return res;
-    }
-    ++openedScopeCounter;
-    return "{" + res;
+
+    return res;
 }
 
 }  // namespace inner_outer

@@ -4,7 +4,6 @@
 #include "attributes/frontend/params/loop.h"
 
 #include <clang/AST/AST.h>
-
 #include <clang/AST/Decl.h>
 #include <clang/AST/Expr.h>
 #include <clang/AST/Type.h>

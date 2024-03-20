@@ -4,11 +4,11 @@
 extern "C" __global__
 __launch_bounds__(1) void _occa_atomic_and_builtin_0(const unsigned int *masks,
                                                      unsigned int *mask) {
-  int i = (0) + blockIdx.x;
   {
+    int i = (0) + blockIdx.x;
     {
       int j = (0) + threadIdx.x;
-      { atomicOr(&(*mask), masks[0]); }
+      atomicOr(&(*mask), masks[0]);
     }
   }
 }
@@ -21,14 +21,12 @@ struct ComplexMaskType {
 // TODO: fix me when @kernel/@outer/@inner are implemented
 extern "C" __global__ __launch_bounds__(1) void _occa_atomic_and_struct_0(
     const ComplexMaskType *masks, ComplexMaskType *mask) {
-  int i = (0) + blockIdx.x;
   {
+    int i = (0) + blockIdx.x;
     {
       int j = (0) + threadIdx.x;
-      {
-        atomicOr(&(mask->mask1), masks[0].mask1);
-        atomicOr(&(mask->mask2), masks[0].mask2);
-      }
+      atomicOr(&(mask->mask1), masks[0].mask1);
+      atomicOr(&(mask->mask2), masks[0].mask2);
     }
   }
 }
