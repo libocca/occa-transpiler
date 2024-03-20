@@ -7,10 +7,10 @@ __device__ float add(float a, float b) {
 }
 
 // Outer -> inner ==> regular -> regular
-extern "C" __global__ void _occa_addVectors0_0(const int entries,
-                                               const float* a,
-                                               const float* b,
-                                               float* ab) {
+extern "C" __global__ __launch_bounds__(4) void _occa_addVectors0_0(const int entries,
+                                                                    const float* a,
+                                                                    const float* b,
+                                                                    float* ab) {
     {
         int _occa_tiled_i = (0) + (((4) * 1) * blockIdx.x);
         {
@@ -123,10 +123,10 @@ extern "C" __global__ void _occa_addVectors5_0(const int entries,
 }
 
 // Outer -> outer ==> outer -> inner
-extern "C" __global__ void _occa_addVectors6_0(const int entries,
-                                               const float* a,
-                                               const float* b,
-                                               float* ab) {
+extern "C" __global__ __launch_bounds__(4) void _occa_addVectors6_0(const int entries,
+                                                                    const float* a,
+                                                                    const float* b,
+                                                                    float* ab) {
     {
         int _occa_tiled_i = (0) + (((4) * 1) * blockIdx.x);
         {

@@ -2,7 +2,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "attributes/utils/inner_outer_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 
@@ -25,14 +24,13 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@inner: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = innerOuterParamsHandleAutoAxis(*params, *loopInfo, LoopType::Inner);
-    if (!updatedParams) {
-        return tl::make_unexpected(updatedParams.error());
-    }
+    auto updatedParams = *params;
+    // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
+    updatedParams.axis = loopInfo->axis.front();
 
     int openedScopeCounter = 0;
     auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
+        *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";

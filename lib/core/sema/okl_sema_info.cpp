@@ -1,6 +1,9 @@
 #include "core/sema/okl_sema_info.h"
 
 #include <deque>
+#include <numeric>
+#include <optional>
+#include "attributes/frontend/params/loop.h"
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
@@ -76,9 +79,6 @@ void OklLoopInfo::markExclusiveUsed() {
     return type.size() == 2 && type[0] == loopType1 && type[1] == loopType2;
 };
 
-[[nodiscard]] bool OklLoopInfo::isTiled() const {
-    return type.size() == 2;
-};
 [[nodiscard]] bool OklLoopInfo::has(const LoopType& loopType) const {
     for (auto& currLoopType : type) {
         if (currLoopType == loopType) {
@@ -87,6 +87,11 @@ void OklLoopInfo::markExclusiveUsed() {
     }
     return false;
 };
+
+[[nodiscard]] bool OklLoopInfo::isTiled() const {
+    return type.size() == 2;
+};
+
 [[nodiscard]] bool OklLoopInfo::isRegular() const {
     for (auto& loopType : type) {
         if (loopType != LoopType::Regular) {
@@ -94,6 +99,22 @@ void OklLoopInfo::markExclusiveUsed() {
         }
     }
     return true;
+};
+
+[[nodiscard]] bool OklLoopInfo::is(const Axis& loopAxis) const {
+    return type.size() == 1 && axis.front() == loopAxis;
+};
+[[nodiscard]] bool OklLoopInfo::is(const Axis& loopAxis1, const Axis& loopAxis2) const {
+    return type.size() == 2 && axis[0] == loopAxis1 && axis[1] == loopAxis2;
+};
+
+[[nodiscard]] bool OklLoopInfo::has(const Axis& loopAxis) const {
+    for (auto& currAxis : axis) {
+        if (currAxis == loopAxis) {
+            return true;
+        }
+    }
+    return false;
 };
 
 OklLoopInfo* OklLoopInfo::getAttributedParent() {
@@ -152,25 +173,48 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild(std::function<bool(OklLoopInfo
     return nullptr;
 }
 
-std::optional<size_t> OklLoopInfo::getSize() {
+OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
+    if (overridenInnerSizes.has_value()) {
+        return overridenInnerSizes.value();
+    }
     if (isRegular()) {
         if (children.empty()) {
-            return std::nullopt;
+            return {1, 1, 1};
         }
-    } else if (range.size == 0) {
-        return std::nullopt;
     }
 
-    auto sz = size_t{1};
-    sz = std::max(range.size, sz);
-
-    auto ret = sz;
-    for (auto& child : children) {
-        auto v = child.getSize();
-        if (!v.has_value()) {
-            return std::nullopt;
+    OptSize sz = std::nullopt;
+    if (is(LoopType::Inner) && range.size != 0) {
+        sz = range.size;
+    } else if (is(LoopType::Outer, LoopType::Inner)) {
+        if (!tileSize.empty()) {
+            // TODO: maybe reuse attribute parser
+            char* p;
+            auto tileSizeLL = std::strtoll(tileSize.c_str(), &p, 10);
+            if (*p) {
+                sz = std::nullopt;
+            } else {
+                sz = static_cast<size_t>(tileSizeLL);
+            }
         }
-        ret = std::max(sz * v.value(), ret);
+    }
+
+    OklLoopInfo::OptSizes ret{1, 1, 1};
+    size_t prevProd = 0;
+    for (auto& child : children) {
+        auto currSizes = child.getInnerSizes();
+        auto prod = currSizes.product();
+        if (prod > prevProd) {
+            ret = currSizes;
+        }
+        prevProd = prod;
+    }
+    if (has(LoopType::Inner)) {
+        for (size_t i = 0; i < type.size(); ++i) {
+            if (type[i] == LoopType::Inner) {
+                ret[static_cast<size_t>(axis[i])] = sz;
+            }
+        }
     }
     return ret;
 }
@@ -201,6 +245,53 @@ size_t OklLoopInfo::getHeightSameType(const LoopType& type) {
         }
     }
     return h;
+}
+
+bool OklLoopInfo::updateAutoWithSpecificAxis() {
+    if (isTiled()) {
+        auto height1 = getHeightSameType(type[0]);
+        auto height2 = getHeightSameType(type[1]);
+        if (type[0] == type[1]) {
+            ++height1;
+        }
+
+        if (height1 > MAX_AXIS_SZ || height2 > MAX_AXIS_SZ) {
+            return false;
+        }
+
+        if (axis[0] == Axis::Auto) {
+            axis[0] = static_cast<Axis>(height1);
+        }
+        if (axis[1] == Axis::Auto) {
+            axis[1] = static_cast<Axis>(height2);
+        }
+
+    } else {
+        if (axis[0] != Axis::Auto) {
+            return true;
+        }
+        auto height = getHeightSameType(type[0]);
+        if (height > MAX_AXIS_SZ) {
+            return false;
+        }
+        axis[0] = static_cast<Axis>(height);
+    }
+    return true;
+}
+
+size_t OklLoopInfo::OptSizes::product() {
+    return std::accumulate(begin(), end(), size_t{1}, [](const OptSize& a, const OptSize& b) {
+        size_t aZ = a.value_or(size_t{1});
+        size_t bZ = b.value_or(size_t{1});
+        return aZ * bZ;
+    });
+}
+bool OklLoopInfo::OptSizes::hasNullOpts() {
+    return std::any_of(begin(), end(), [](const auto& val) { return val == std::nullopt; });
+}
+
+bool OklLoopInfo::OptSizes::allNullOpts() {
+    return std::all_of(begin(), end(), [](const auto& val) { return val == std::nullopt; });
 }
 
 }  // namespace oklt

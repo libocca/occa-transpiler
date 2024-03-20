@@ -1,8 +1,8 @@
 #pragma once
 
 struct Data {
-    float* data @ restrict;
-    int* idxs @ restrict;
+    float* data @restrict;
+    int* idxs @restrict;
 };
 
 const int SIZE = 128;

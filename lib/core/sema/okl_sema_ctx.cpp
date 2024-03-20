@@ -2,6 +2,7 @@
 #include "attributes/frontend/params/tile.h"
 
 #include "core/sema/okl_sema_ctx.h"
+#include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/ast_node_parsers.h"
 #include "core/utils/type_converter.h"
@@ -16,19 +17,25 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-AttributedLoopTypes getLoopType(const std::any* param) {
+struct LoopAxisTypes {
+    LoopTypes types;
+    Axises axis;
+};
+
+LoopAxisTypes getLoopAxisType(const std::any* param) {
     if (!param) {
-        return {LoopType::Regular};
+        return {{LoopType::Regular}, {Axis::Auto}};
     }
 
-    AttributedLoopTypes res{};
+    LoopAxisTypes res{};
     if (param->type() == typeid(TileParams)) {
         auto tile = std::any_cast<TileParams>(*param);
-        res.push_back(tile.firstLoop.type);
-        res.push_back(tile.secondLoop.type);
+        res.types = {tile.firstLoop.type, tile.secondLoop.type};
+        res.axis = {tile.firstLoop.axis, tile.secondLoop.axis};
     } else if (param->type() == typeid(AttributedLoop)) {
         auto loop = std::any_cast<AttributedLoop>(*param);
-        res.push_back(LoopType{loop.type});
+        res.types = {loop.type};
+        res.axis = {loop.axis};
     }
 
     return res;
@@ -36,22 +43,21 @@ AttributedLoopTypes getLoopType(const std::any* param) {
 
 tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
                                                  const clang::Attr& attr,
-                                                 AttributedLoopTypes loopType,
+                                                 LoopAxisTypes loopTypeAxis,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo,
                                                  SessionStage& stage) {
     auto parsedLoopInfo = parseForStmt(attr, stmt, stage);
     if (!parsedLoopInfo) {
         return parsedLoopInfo;
     }
-    parsedLoopInfo->type = loopType;
+    parsedLoopInfo->type = loopTypeAxis.types;
+    parsedLoopInfo->axis = loopTypeAxis.axis;
     return parsedLoopInfo;
 }
 
 // check if loop types inside one loop are legal. firstType/lastType - first and alst non regular
 // loop type
-bool isLegalLoopLevel(AttributedLoopTypes loopTypes,
-                      LoopType& firstType,
-                      LoopType& lastType) {
+bool isLegalLoopLevel(LoopTypes loopTypes, LoopType& firstType, LoopType& lastType) {
     lastType = LoopType::Regular;
     firstType = LoopType::Regular;
     for (auto& loopType : loopTypes) {
@@ -71,12 +77,9 @@ bool isLegalLoopLevel(AttributedLoopTypes loopTypes,
     return true;
 }
 
-bool isLegalLoopLevel(AttributedLoopTypes childTypes,
-                      AttributedLoopTypes parentTypes = {LoopType::Regular}) {
-    LoopType firstParentType = LoopType::Regular,
-                       lastParentType = LoopType::Regular;
-    LoopType firstChildType = LoopType::Regular,
-                       lastChildType = LoopType::Regular;
+bool isLegalLoopLevel(LoopTypes childTypes, LoopTypes parentTypes = {LoopType::Regular}) {
+    LoopType firstParentType = LoopType::Regular, lastParentType = LoopType::Regular;
+    LoopType firstChildType = LoopType::Regular, lastChildType = LoopType::Regular;
     if (!isLegalLoopLevel(parentTypes, firstParentType, lastParentType)) {
         return false;
     }
@@ -88,20 +91,18 @@ bool isLegalLoopLevel(AttributedLoopTypes childTypes,
         return true;
     }
 
-    if (firstChildType == LoopType::Regular ||
-        lastParentType == LoopType::Regular) {
+    if (firstChildType == LoopType::Regular || lastParentType == LoopType::Regular) {
         return true;
     }
 
-    if (lastParentType == LoopType::Outer &&
-        firstChildType == LoopType::Inner) {
+    if (lastParentType == LoopType::Outer && firstChildType == LoopType::Inner) {
         return true;
     }
 
     return false;
 }
 
-bool isLegalTopLoopLevel(AttributedLoopTypes loopType) {
+bool isLegalTopLoopLevel(LoopTypes loopType) {
     return loopType.front() == LoopType::Outer;
 }
 
@@ -196,27 +197,27 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
                                                                     const std::any* params,
                                                                     SessionStage& stage) {
     assert(_parsingKernInfo);
-    auto loopType = getLoopType(params);
+    auto loopTypeAxis = getLoopAxisType(params);
 
-    if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopType)) {
+    if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopTypeAxis.types)) {
         return tl::make_unexpected(Error{
             .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer] for-loop"});
     }
 
     auto* currentLoop = _parsingKernInfo->currentLoop;
     auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
-    AttributedLoopTypes parentType{LoopType::Regular};
+    LoopTypes parentType{LoopType::Regular};
     if (currentLoop) {
         parentType = currentLoop->type;
     }
 
-    if (!isLegalLoopLevel(loopType, parentType)) {
+    if (!isLegalLoopLevel(loopTypeAxis.types, parentType)) {
         return tl::make_unexpected(
             Error{.ec = std::error_code(),
                   .desc = "Cannot have [@inner] loop outside of an [@outer] loop"});
     }
 
-    return makeOklLoopInfo(stmt, attr, loopType, *_parsingKernInfo, stage)
+    return makeOklLoopInfo(stmt, attr, loopTypeAxis, *_parsingKernInfo, stage)
         .and_then([&children, this](auto&& loopInfo) -> tl::expected<void, Error> {
             children.emplace_back(loopInfo);
 
@@ -233,16 +234,17 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
                                                                    const std::any* params) {
     assert(_parsingKernInfo);
 
-    auto loopType = getLoopType(params);
-    if (loopType.front() == LoopType::Regular) {
-        return {};
-    }
-
     auto loopInfo = getLoopInfo(stmt);
     if (!loopInfo) {
         return {};
     }
-
+    // Set specific axis here, since children for loopInfo should be complete
+    if (loopInfo->has(Axis::Auto)) {
+        if (!loopInfo->updateAutoWithSpecificAxis()) {
+            return tl::make_unexpected(
+                Error{{}, util::fmt("More than {} nested [@inner] loops", N_AXIS).value()});
+        }
+    }
     _parsingKernInfo->currentLoop = loopInfo->parent;
 
     return {};
