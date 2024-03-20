@@ -174,6 +174,9 @@ OklLoopInfo* OklLoopInfo::getFirstAttributedChild(std::function<bool(OklLoopInfo
 }
 
 OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
+    if (overridenInnerSizes.has_value()) {
+        return overridenInnerSizes.value();
+    }
     if (isRegular()) {
         if (children.empty()) {
             return {1, 1, 1};

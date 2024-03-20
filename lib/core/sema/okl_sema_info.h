@@ -44,6 +44,8 @@ struct OklLoopInfo {
     AttributedTypeInfo sharedInfo;
     AttributedTypeInfo exclusiveInfo;
 
+    std::optional<OptSizes> overridenInnerSizes;
+
     struct {
         std::string typeName;
         std::string name;
