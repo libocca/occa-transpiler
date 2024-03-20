@@ -6,7 +6,7 @@ typedef @dim(W, H, "rowMajor") int* Mat2d;
 template <class T>
 void f(T* a) {}
 
-@kernel void f0(@ restrict int* a, @ restrict int* b) {
+@kernel void f0(@restrict int* a, @restrict int* b) {
     Mat2d mat[100];
     @barrier;
 

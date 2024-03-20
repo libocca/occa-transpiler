@@ -19,10 +19,10 @@ typedef SIZE_TYPE SIZES;
 }  // namespace A
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
-@kernel void function1(const A::Complex<float>* vectorData @ restrict,
+@kernel void function1(const A::Complex<float>* vectorData @restrict,
                        unsigned int vectorSize,
-                       const A::Complex<float>** matricesData @ restrict,
-                       const A::B::Configs* matricesSizes @ restrict) {
+                       const A::Complex<float>** matricesData @restrict,
+                       const A::B::Configs* matricesSizes @restrict) {
     @outer for (int i = 0; i < 1; ++i) {
         @inner for (int j = 0; j < 1; ++j) {
         }
@@ -30,9 +30,9 @@ typedef SIZE_TYPE SIZES;
 }
 
 // TODO: fix me when @kernel/@outer/@inner are implemented
-@kernel void function2(const A::Complex<float>* vectorData @ restrict,
-                       const A::B::Configs* configs @ restrict,
-                       A::B::C::SIZES* vectorSize @ restrict) {
+@kernel void function2(const A::Complex<float>* vectorData @restrict,
+                       const A::B::Configs* configs @restrict,
+                       A::B::C::SIZES* vectorSize @restrict) {
     @outer for (int i = 0; i < 1; ++i) {
         @inner for (int j = 0; j < 1; ++j) {
         }

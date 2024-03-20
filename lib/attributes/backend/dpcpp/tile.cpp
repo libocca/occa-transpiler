@@ -236,8 +236,8 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    // Auto Axes in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
     auto updatedParams = *params;
+    // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
     updatedParams.firstLoop.axis = loopInfo->axis[0];
     updatedParams.secondLoop.axis = loopInfo->axis[1];
 

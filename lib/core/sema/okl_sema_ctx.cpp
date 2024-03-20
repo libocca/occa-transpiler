@@ -17,24 +17,24 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-struct LoopTypesAxes {
+struct LoopAxisTypes {
     LoopTypes types;
-    Axes axes;
+    Axises axis;
 };
-LoopTypesAxes getLoopTypeAxis(const std::any* param) {
+LoopAxisTypes getLoopAxisType(const std::any* param) {
     if (!param) {
         return {{LoopType::Regular}, {Axis::Auto}};
     }
 
-    LoopTypesAxes res{};
+    LoopAxisTypes res{};
     if (param->type() == typeid(TileParams)) {
         auto tile = std::any_cast<TileParams>(*param);
         res.types = {tile.firstLoop.type, tile.secondLoop.type};
-        res.axes = {tile.firstLoop.axis, tile.secondLoop.axis};
+        res.axis = {tile.firstLoop.axis, tile.secondLoop.axis};
     } else if (param->type() == typeid(AttributedLoop)) {
         auto loop = std::any_cast<AttributedLoop>(*param);
         res.types = {loop.type};
-        res.axes = {loop.axis};
+        res.axis = {loop.axis};
     }
 
     return res;
@@ -42,7 +42,7 @@ LoopTypesAxes getLoopTypeAxis(const std::any* param) {
 
 tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
                                                  const clang::Attr& attr,
-                                                 LoopTypesAxes loopTypeAxis,
+                                                 LoopAxisTypes loopTypeAxis,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo,
                                                  SessionStage& stage) {
     auto parsedLoopInfo = parseForStmt(attr, stmt, stage);
@@ -50,7 +50,7 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
         return parsedLoopInfo;
     }
     parsedLoopInfo->type = loopTypeAxis.types;
-    parsedLoopInfo->axis = loopTypeAxis.axes;
+    parsedLoopInfo->axis = loopTypeAxis.axis;
     return parsedLoopInfo;
 }
 
@@ -196,7 +196,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
                                                                     const std::any* params,
                                                                     SessionStage& stage) {
     assert(_parsingKernInfo);
-    auto loopTypeAxis = getLoopTypeAxis(params);
+    auto loopTypeAxis = getLoopAxisType(params);
 
     if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopTypeAxis.types)) {
         return tl::make_unexpected(Error{
@@ -241,7 +241,7 @@ tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::
     if (loopInfo->has(Axis::Auto)) {
         if (!loopInfo->updateAutoWithSpecificAxis()) {
             return tl::make_unexpected(
-                Error{{}, util::fmt("More than {} nested [@inner] loops", N_AXES).value()});
+                Error{{}, util::fmt("More than {} nested [@inner] loops", N_AXIS).value()});
         }
     }
     _parsingKernInfo->currentLoop = loopInfo->parent;

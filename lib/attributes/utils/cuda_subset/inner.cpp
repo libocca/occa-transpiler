@@ -28,8 +28,8 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
             Error{std::error_code(), "@inner: failed to fetch loop meta data from sema"});
     }
 
-    // Auto Axes in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
     auto updatedParams = *params;
+    // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
     updatedParams.axis = loopInfo->axis.front();
 
     int openedScopeCounter = 0;

@@ -37,7 +37,6 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
     std::stringstream out;
     out << EXTERN_C;
 
-    // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z)]]"
     auto sizes = info->getInnerSizes();
     if (!sizes.hasNullOpts()) {
         // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to

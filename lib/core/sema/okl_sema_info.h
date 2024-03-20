@@ -15,7 +15,8 @@ namespace oklt {
 struct KernelInfo;
 
 using LoopTypes = std::vector<LoopType>;
-using Axes = std::vector<Axis>;
+// I know that plural of Axis is Axes, but that way it isn't similar to lumberjack Axe
+using Axises = std::vector<Axis>;
 
 struct OklLoopInfo {
     struct AttributedTypeInfo {
@@ -26,7 +27,7 @@ struct OklLoopInfo {
     };
 
     using OptSize = std::optional<size_t>;
-    struct OptSizes: public std::array<OptSize, N_AXES> {
+    struct OptSizes : public std::array<OptSize, N_AXIS> {
         size_t product();
         bool hasNullOpts();
         bool allNullOpts();
@@ -35,7 +36,7 @@ struct OklLoopInfo {
     const clang::Attr& attr;
     const clang::ForStmt& stmt;
     LoopTypes type = {LoopType::Regular};
-    Axes axis = {Axis::Auto};
+    Axises axis = {Axis::Auto};
 
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};

@@ -3,7 +3,7 @@ template<typename T> struct TypedStruct {
 };
 
 #define DECL_TYPED_STRUCT(x) TypedStruct<decltype(x)> x##name;
-@kernel void simple_function(const float* inputArray @ restrict,
+@kernel void simple_function(const float* inputArray @restrict,
                              float* outputArray,
                              float value,
                              int size) {
