@@ -23,10 +23,12 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
     std::stringstream out;
     out << KERNEL_DEFINITION;
 
-    auto sizes = info->getInnerSizes();
-    if (!sizes.hasNullOpts()) {
-        auto prod = sizes.product();
-        out << " " << util::fmt(KERNEL_BOUNDS, prod).value();
+    if (info) {
+        auto sizes = info->getInnerSizes();
+        if (!sizes.hasNullOpts()) {
+            auto prod = sizes.product();
+            out << " " << util::fmt(KERNEL_BOUNDS, prod).value();
+        }
     }
 
     out << " ";

@@ -40,11 +40,13 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
     std::stringstream out;
     out << EXTERN_C;
 
-    auto sizes = info->getInnerSizes();
-    if (!sizes.hasNullOpts()) {
-        // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to
-        // axisToStr in dpcpp/common.cpp
-        out << " " << util::fmt(INNER_SIZES_FMT, *sizes[2], *sizes[1], *sizes[0]).value();
+    if (info) {
+        auto sizes = info->getInnerSizes();
+        if (!sizes.hasNullOpts()) {
+            // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to
+            // axisToStr in dpcpp/common.cpp
+            out << " " << util::fmt(INNER_SIZES_FMT, *sizes[2], *sizes[1], *sizes[0]).value();
+        }
     }
 
     out << " ";
