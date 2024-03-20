@@ -149,8 +149,6 @@ std::list<Token> lexMacroToken(Preprocessor& pp) {
 }
 
 void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
-    // pp.Initialize(stage.getCompiler().getTarget());
-
     auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
     ctx->registerForPreprocessor(pp);
 
