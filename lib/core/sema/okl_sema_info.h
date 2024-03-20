@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oklt/core/kernel_metadata.h>
+#include "attributes/frontend/params/loop.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/Decl.h>
@@ -13,7 +14,9 @@ namespace oklt {
 
 struct KernelInfo;
 
-using AttributedLoopTypes = std::vector<LoopType>;
+using LoopTypes = std::vector<LoopType>;
+// I know that plural of Axis is Axes, but that way it isn't similar to lumberjack Axe
+using Axises = std::vector<Axis>;
 
 struct OklLoopInfo {
     struct AttributedTypeInfo {
@@ -23,9 +26,17 @@ struct OklLoopInfo {
         bool used = false;
     };
 
+    using OptSize = std::optional<size_t>;
+    struct OptSizes : public std::array<OptSize, N_AXIS> {
+        size_t product();
+        bool hasNullOpts();
+        bool allNullOpts();
+    };
+
     const clang::Attr& attr;
     const clang::ForStmt& stmt;
-    AttributedLoopTypes type = {LoopType::Regular};
+    LoopTypes type = {LoopType::Regular};
+    Axises axis = {Axis::Auto};
 
     OklLoopInfo* parent = nullptr;
     std::list<OklLoopInfo> children = {};
@@ -33,6 +44,8 @@ struct OklLoopInfo {
 
     AttributedTypeInfo sharedInfo;
     AttributedTypeInfo exclusiveInfo;
+
+    std::optional<OptSizes> overridenInnerSizes;
 
     struct {
         std::string typeName;
@@ -73,13 +86,20 @@ struct OklLoopInfo {
     /* Distance to the for loop tree leave, ignoring loops of other types */
     size_t getHeightSameType(const LoopType&);
 
-    std::optional<size_t> getSize();
+    OptSizes getInnerSizes();
 
     [[nodiscard]] bool is(const LoopType&) const;
     [[nodiscard]] bool is(const LoopType&, const LoopType&) const;
     [[nodiscard]] bool has(const LoopType&) const;
     [[nodiscard]] bool isTiled() const;
     [[nodiscard]] bool isRegular() const;
+
+    [[nodiscard]] bool is(const Axis&) const;
+    [[nodiscard]] bool is(const Axis&, const Axis&) const;
+    [[nodiscard]] bool has(const Axis&) const;
+
+    // Returns true if updated successfully
+    [[nodiscard]] bool updateAutoWithSpecificAxis();
 };
 
 struct OklKernelInfo {

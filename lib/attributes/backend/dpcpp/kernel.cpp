@@ -1,18 +1,23 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
+#include "oklt/core/kernel_metadata.h"
+#include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string externC = "extern \"C\"";
-const std::string additionalArguments = "sycl::queue * queue_, sycl::nd_range<3> * range_";
-const std::string prefixCode =
+const std::string EXTERN_C = "extern \"C\"";
+const std::string DPCPP_ADDITIONAL_ARGUMENTS = "sycl::queue * queue_,sycl::nd_range<3> * range_";
+const std::string INNER_SIZES_FMT = "[[sycl::reqd_work_group_size({},{},{})]]";
+const std::string SUBMIT_QUEUE =
     R"(queue_->submit(
     [&](sycl::handler & handler_) {
       handler_.parallel_for(
@@ -32,10 +37,17 @@ std::string getFunctionName(const FunctionDecl& func, size_t n) {
 }
 
 std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
-  std::stringstream out;
-    out << externC;
+    std::stringstream out;
+    out << EXTERN_C;
 
-    // TODO: Add  "[[sycl::reqd_work_group_size(x, y, z)]]"
+    if (info) {
+        auto sizes = info->getInnerSizes();
+        if (!sizes.hasNullOpts()) {
+            // NOTE: 2,1,0, since in DPCPP for some reason mapping is 0 -> Axis::Z. Also, refer to
+            // axisToStr in dpcpp/common.cpp
+            out << " " << util::fmt(INNER_SIZES_FMT, *sizes[2], *sizes[1], *sizes[0]).value();
+        }
+    }
 
     out << " ";
     return out.str();
@@ -103,18 +115,8 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
-    if (kernelInfo.children.empty()) {
-        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
-        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
-
-        auto body = dyn_cast_or_null<CompoundStmt>(func.getBody());
-        if (body) {
-            rewriter.InsertTextAfter(body->getLBracLoc().getLocWithOffset(1),
-                                     std::string("\n") + prefixCode);
-            rewriter.InsertTextBefore(body->getRBracLoc(), suffixCode + std::string("\n"));
-        }
-
-        return {};
+    if (auto verified = verifyLoops(kernelInfo); !verified) {
+        return verified;
     }
 
     size_t n = 0;
@@ -131,7 +133,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         }
         out << getFunctionAttributesStr(func, &child);
         out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
-        out << prefixCode;
+        out << SUBMIT_QUEUE;
 
         auto endPos = getAttrFullSourceRange(child.attr).getBegin().getLocWithOffset(-1);
         rewriter.ReplaceText(SourceRange{startPos, endPos}, out.str());

@@ -1,4 +1,4 @@
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void atomic_sub_builtin(const int* iVec, int* iSum, const float* fVec, float* fSum) {
     *iSum -= iVec[0];
     *fSum -= fVec[0];
@@ -9,7 +9,7 @@ struct ComplexTypeF32 {
     float imag;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void atomic_sub_struct(const ComplexTypeF32* vec, ComplexTypeF32* sum) {
     sum->real -= vec[0].real;
     sum->imag -= vec[0].imag;
@@ -21,7 +21,7 @@ struct ComplexType {
     T imag;
 };
 
-// TODO: fix me when @kernel/@outer/@inner are implemented
+
 extern "C" void atomic_sub_template(const ComplexType<float>* vec, ComplexType<float>* sum) {
     sum->real -= vec[0].real;
     sum->imag -= vec[0].imag;

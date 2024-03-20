@@ -6,7 +6,6 @@
 #include "attributes/utils/cuda_subset/common.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "attributes/utils/tile_utils.h"
 
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -99,13 +98,14 @@ HandleResult handleTileAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = tileParamsHandleAutoAxis(*params, *loopInfo);
-    if (!updatedParams) {
-        return tl::make_unexpected(updatedParams.error());
-    }
+    auto updatedParams = *params;
+    // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
+    updatedParams.firstLoop.axis = loopInfo->axis[0];
+    updatedParams.secondLoop.axis = loopInfo->axis[1];
+
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(
-        *loopInfo, &updatedParams.value(), openedScopeCounter, s.getRewriter());
+    auto prefixCode =
+        buildPreffixTiledCode(*loopInfo, &updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
     if (loopInfo->shouldSync()) {
         suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";

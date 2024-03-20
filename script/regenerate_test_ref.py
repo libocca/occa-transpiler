@@ -41,7 +41,7 @@ class Backend(Enum):
             return "launcher"
 
 
-def main(occa_tool: str, data_path: str, backend: Backend):
+def main(occa_tool: str, data_path: str, backend: Backend, verbose: bool):
     print(f"occa-tool: {occa_tool}, data_path: {data_path}")
     for root, dirs, files in os.walk(data_path):
         # print(f"root: {root}, dirs: {dirs}, files: {files}")
@@ -50,9 +50,10 @@ def main(occa_tool: str, data_path: str, backend: Backend):
                 continue
             file = root + "/" + file
             output_file = file.split(".cpp")[0] + "_ref.cpp"
-            os.system(
-                f"{occa_tool} transpile -b {backend.to_str()} --normalize -i {file} -o {output_file}"
-            )
+            exec_str = f"{occa_tool} transpile -b {backend.to_str()} --normalize -i {file} -o {output_file}"
+            if verbose:
+                print(exec_str)
+            os.system(exec_str)
 
 
 if __name__ == "__main__":
@@ -64,9 +65,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--backend", "-b", type=str, required=True, help="serial/openmp/cuda/hip/dpcppp"
     )
+    parser.add_argument(
+        "--verbose", "-v", default=False, action="store_const", const=True
+    )
     args = parser.parse_args()
 
     occa_tool = os.path.abspath(args.occa_tool_path)
     data_path = os.path.abspath(args.data)
     backend = Backend.from_str(args.backend)
-    main(occa_tool, data_path, backend)
+    main(occa_tool, data_path, backend, args.verbose)
