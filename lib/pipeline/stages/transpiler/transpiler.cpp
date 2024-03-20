@@ -43,6 +43,17 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
                                      file_name,
                                      tool_name,
                                      std::make_shared<PCHContainerOperations>());
+
+// TODO make reporting of warnings as runtime option
+#ifdef TRANSPILER_DEBUG_LOG
+    const auto& warnings = session->getWarnings();
+    if (!warnings.empty()) {
+        llvm::outs() << "tranpilation warnings:\n";
+        for (const auto& w : warnings) {
+            llvm::outs() << w.desc << "\n";
+        }
+    }
+#endif
     if (!ret || !session->getErrors().empty()) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }

@@ -1,0 +1,13 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/undeclare_var/ignore_use_of_undecl_var.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/undeclare_var/ignore_use_of_undecl_var_ref.cpp"
+     }
+]
