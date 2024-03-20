@@ -164,6 +164,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/sema/okl_sema_info.h
 
     core/diag/diag_consumer.cpp
+    core/diag/builtin_handlers/ignore_undecl_indent.cpp
 
     core/kernel_metadata.cpp
 
