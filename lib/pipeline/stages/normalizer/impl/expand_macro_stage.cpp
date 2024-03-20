@@ -292,7 +292,7 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I.", "-v"};
+    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.cppSrc);
 
