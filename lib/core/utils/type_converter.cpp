@@ -10,7 +10,11 @@ using namespace clang;
 namespace {
 
 std::string getTypeName(const QualType& type) {
-    auto res = type.getCanonicalType().getAsString();
+    auto strippedType = type;
+    if (strippedType->isPointerType()) {
+        strippedType = strippedType->getPointeeType().getUnqualifiedType();
+    }
+    auto res = strippedType.getCanonicalType().getAsString();
     if (res == "_Bool") {
         return "bool";
     }

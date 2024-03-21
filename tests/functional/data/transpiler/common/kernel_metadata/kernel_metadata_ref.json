@@ -51,6 +51,13 @@
               },
               {
                 "dtype": {
+                  "name": "int",
+                  "type": "builtin"
+                },
+                "name": "ptr"
+              },
+              {
+                "dtype": {
                   "dtype": {
                     "name": "float",
                     "type": "builtin"
