@@ -60,7 +60,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     kernelInfo.args.reserve(func.getNumParams() + 2);
 
     kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
                                               .name = "queue_",
                                               .is_ptr = true});
     out << util::fmt("{} {} {}", "sycl::queue", "*", "queue_").value();
@@ -68,7 +68,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     out << ", ";
 
     kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
                                               .name = "range_",
                                               .is_ptr = true});
     out << util::fmt("{} {} {}", "sycl::nd_range<3>", "*", "range_").value();

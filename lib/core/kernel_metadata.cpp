@@ -53,26 +53,32 @@ void from_json(const json& j, StructFieldInfo& dt) {
 }
 
 void to_json(json& j, const DataType& dt) {
-    if (dt.type == DatatypeCategory::BUILTIN) {
-        j = json{{"type", dt.type}, {"name", dt.name}};
-    } else if (dt.type == DatatypeCategory::STRUCT) {
-        j = json{{"type", dt.type}, {"fields", dt.fields}};
-    } else if (dt.type == DatatypeCategory::TUPLE) {
-        j = json{{"type", dt.type},
-                 {"size", dt.tupleSize},
-                 {"dtype", json{{"name", dt.name}, {"type", dt.tupleElementType}}}};
+    if (dt.typeCategory == DatatypeCategory::BUILTIN) {
+        j = json{{"type", dt.typeCategory}, {"name", dt.name}};
+    } else if (dt.typeCategory == DatatypeCategory::STRUCT) {
+        j = json{{"type", dt.typeCategory}, {"fields", dt.fields}};
+    } else if (dt.typeCategory == DatatypeCategory::TUPLE) {
+        if (dt.tupleElementType == DatatypeCategory::STRUCT) {
+            j = json{{"type", dt.typeCategory},
+                     {"size", dt.tupleSize},
+                     {"dtype", {{"type", dt.tupleElementType}, {"fields", dt.fields}}}};
+        } else {
+            j = json{{"type", dt.typeCategory},
+                     {"size", dt.tupleSize},
+                     {"dtype", json{{"name", dt.name}, {"type", dt.tupleElementType}}}};
+        }
     } else {  // custom
-        j = json{{"type", dt.type}, {"bytes", dt.bytes}, {"name", "none"}};
+        j = json{{"type", dt.typeCategory}, {"bytes", dt.bytes}, {"name", "none"}};
     }
 }
 
 void from_json(const json& j, DataType& dt) {
     auto dtCategory = j.at("type").get<std::string>();
     if (dtCategory == "builtin") {
-        dt.type = DatatypeCategory::BUILTIN;
+        dt.typeCategory = DatatypeCategory::BUILTIN;
         j.at("name").get_to(dt.name);
     } else {
-        dt.type = DatatypeCategory::CUSTOM;
+        dt.typeCategory = DatatypeCategory::CUSTOM;
         dt.name = "none";
         j.at("bytes").get_to(dt.bytes);
     }

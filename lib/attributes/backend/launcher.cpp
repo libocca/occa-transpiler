@@ -105,7 +105,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     kernelInfo.args.reserve(func.getNumParams() + 1);
 
     kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
                                               .name = "deviceKernels",
                                               .is_ptr = true});
     out << util::fmt("{} {} {}", "occa::modeKernel_t", "**", "deviceKernels").value();
@@ -126,7 +126,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
         } else {
             kernelInfo.args.emplace_back(
                 ArgumentInfo{.is_const = false,
-                             .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                             .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
                              .name = p->getNameAsString(),
                              .is_ptr = true});
             out << util::fmt("{} {} {}", "occa::modeMemory_t", "*", p->getNameAsString()).value();

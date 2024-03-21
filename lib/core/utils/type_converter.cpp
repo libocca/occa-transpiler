@@ -80,4 +80,26 @@ tl::expected<KernelInfo, std::error_code> toOklKernelInfo(const FunctionDecl& fd
     return ret;
 }
 
+namespace detail {
+tl::expected<void, std::error_code> fillStructFields(DataType& dt,
+                                                     const clang::Type* structTypePtr) {
+    const auto* structDecl = structTypePtr->getAsCXXRecordDecl();
+    if (structTypePtr->isPointerType()) {
+        structDecl = structTypePtr->getPointeeCXXRecordDecl();
+    }
+    if (!structDecl) {
+        return tl::make_unexpected(std::error_code());
+    }
+
+    for (const auto* field : structDecl->fields()) {
+        auto fieldDataType = toOklStructFieldInfo(*field);
+        if (!fieldDataType) {
+            return tl::make_unexpected(fieldDataType.error());
+        }
+        dt.fields.push_back(fieldDataType.value());
+    }
+    return {};
+}
+}  // namespace detail
+
 }  // namespace oklt
