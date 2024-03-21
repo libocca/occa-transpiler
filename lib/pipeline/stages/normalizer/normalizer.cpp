@@ -1,5 +1,6 @@
 #include "impl/expand_macro_stage.h"
 #include "impl/gnu_to_std_cpp_stage.h"
+#include "impl/okl_macro_stage.h"
 #include "impl/okl_to_gnu_stage.h"
 
 #include "pipeline/stages/normalizer/normalizer.h"
@@ -12,17 +13,18 @@ using namespace clang;
 namespace {
 using namespace oklt;
 
-ExpandMacroStageInput toExpandMacroInput(SharedTranspilerSession session) {
+OklMacroStageInput toOklMacroInput(SharedTranspilerSession session) {
     return {
         .cppSrc = std::move(session->input.sourceCode),
         .session = session,
     };
 }
 
-OklToGnuStageInput toOkltoGnuInput(SharedTranspilerSession session) {
+ExpandMacroStageInput toExpandMacroInput(OklMacroStageOutput output) {
     return {
-        .oklCppSrc = std::move(session->input.sourceCode),
-        .session = session,
+        .cppSrc = std::move(output.cppSrc),
+        .cppIncs = std::move(output.cppIncs),
+        .session = output.session,
     };
 }
 
@@ -52,8 +54,12 @@ TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
     return output.session;
 }
 
-ExpandMacroResult runMacroExpander(SharedTranspilerSession session) {
-    return expandMacro(toExpandMacroInput(session));
+OklMacroResult runOklMacroAttrConverter(SharedTranspilerSession session) {
+    return convertOklMacroAttribute(toOklMacroInput(session));
+}
+
+ExpandMacroResult runMacroExpander(OklMacroStageOutput output) {
+    return expandMacro(toExpandMacroInput(output));
 }
 
 OklToGnuResult runOklToGnuConverter(ExpandMacroStageOutput output) {
@@ -86,7 +92,8 @@ GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
 //  'for' stmt is tested against stored corner case to restore OKL attribute as C++ one.
 //
 TranspilerSessionResult applyGnuAttrBasedNormalization(SharedTranspilerSession session) {
-    return runMacroExpander(session)
+    return runOklMacroAttrConverter(session)
+        .and_then(runMacroExpander)
         .and_then(runOklToGnuConverter)
         .and_then(runGnuToStdConverter)
         .and_then(toSessionResult);

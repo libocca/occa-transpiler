@@ -1,6 +1,7 @@
 #include <oklt/core/error.h>
 
 #include "core/transpiler_session/session_stage.h"
+#include "core/vfs/overlay_fs.h"
 
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/expand_macro_stage.h"
@@ -256,6 +257,16 @@ struct MacroExpander : public clang::ASTFrontendAction {
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                           llvm::StringRef in_file) override {
         return nullptr;
+    }
+
+    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
+        if (compiler.hasFileManager()) {
+            auto overlayFs =
+                makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(), _input.cppIncs);
+            compiler.getFileManager().setVirtualFileSystem(overlayFs);
+        }
+
+        return true;
     }
 
     bool BeginSourceFileAction(CompilerInstance& compiler) override {

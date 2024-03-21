@@ -76,16 +76,14 @@ unsigned getIntegerWidth(NumericLiteralParser& Literal, const TargetInfo& TI) {
 const llvm::fltSemantics& getFloatFormat(NumericLiteralParser& Literal, const TargetInfo& TI) {
     assert(Literal.isFloatingLiteral() && "Expected floating point literal");
     if (Literal.isHalf) {  // float16_t ?
-        return TI.getFloatFormat();
-        //        return TI.getHalfFormat();
+        return TI.getFloatFormat();  // return TI.getHalfFormat();
     } else if (Literal.isFloat) {  // float, float32_t
         return TI.getFloatFormat();
     } else if (Literal.isFloat16) {  // float16_t
         return TI.getFloatFormat();
         //        return TI.getBFloat16Format();
     } else if (Literal.isFloat128) {  // float128_t
-                                      //        return TI.getLongDoubleFormat();
-        return TI.getFloat128Format();
+        return TI.getFloat128Format();  // return TI.getLongDoubleFormat();
     } else {
         return TI.getDoubleFormat();  // double, float64_t
     }
