@@ -21,18 +21,12 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-std::set<std::string> inplaceTypeAttrs{"dim", "dimOrder"};
-
 bool isProbablyOklSpecificForStmt(Token left, Token right) {
     return left.is(tok::semi) && right.is(tok::r_paren);
 }
 
 bool isProbablyAtBeginnigOfExpr(Token left, Token right) {
     return ((left.is(tok::semi) || left.is(tok::l_brace)) && !right.is(tok::semi));
-}
-
-bool isProbablyInPlaceTypettr(const OklAttribute& attr) {
-    return (inplaceTypeAttrs.find(attr.name) != inplaceTypeAttrs.end());
 }
 
 Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {
@@ -85,8 +79,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     }
     // INFO: just replace directly with standard attribute
     // if it's originally at the beginning, or an in-place type attribute.
-    else if (isProbablyAtBeginnigOfExpr(leftNeighbour, rightNeighbour) ||
-             isProbablyInPlaceTypettr(oklAttr)) {
+    else if (isProbablyAtBeginnigOfExpr(leftNeighbour, rightNeighbour)) {
         auto cppAttr = wrapAsSpecificCxxAttr(oklAttr);
         rewriter.InsertTextBefore(insertLoc, cppAttr);
     }

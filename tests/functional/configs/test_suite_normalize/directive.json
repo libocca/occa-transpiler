@@ -1,0 +1,9 @@
+[
+  {
+    "action": "normalizer",
+    "action_config": {
+      "source": "normalize/simple/directive_1.cpp"
+    },
+    "reference": "normalize/simple/directive_1_ref.cpp"
+  }
+]
