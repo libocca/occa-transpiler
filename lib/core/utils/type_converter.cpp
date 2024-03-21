@@ -118,8 +118,9 @@ tl::expected<void, std::error_code> fillStructFields(std::list<StructFieldInfo>&
 }
 
 tl::expected<void, std::error_code> fillTupleElement(
-    const clang::QualType& elementType,
+    const clang::QualType& type,
     const std::shared_ptr<TupleElementDataType>& tupleElementDType) {
+    auto elementType = getBaseType(type);
     tupleElementDType->typeCategory = toOklDatatypeCategory(elementType);
     tupleElementDType->name = elementType.getCanonicalType().getAsString();
 
@@ -133,18 +134,17 @@ tl::expected<void, std::error_code> fillTupleElement(
     }
     if (tupleElementDType->typeCategory == DatatypeCategory::TUPLE) {
         tupleElementDType->tupleElementDType = std::make_shared<TupleElementDataType>();
-        auto nextElementType = getBaseType(elementType);
-        auto fillStatus = fillTupleElement(nextElementType, tupleElementDType->tupleElementDType);
+        auto fillStatus = fillTupleElement(elementType, tupleElementDType->tupleElementDType);
         if (!fillStatus) {
             return fillStatus;
         }
-        auto arraySize = clang::dyn_cast_or_null<clang::ConstantArrayType>(elementType)->getSize();
-        if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of int
-            tupleElementDType->tupleElementDType->tupleSize = arraySize.getSExtValue();  // Convert APInt to int
-        } else {
-            // APInt value too large to fit into int64_t
-            return tl::make_unexpected(std::error_code());
-        }
+    }
+    auto arraySize = clang::dyn_cast_or_null<clang::ConstantArrayType>(type)->getSize();
+    if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of int
+        tupleElementDType->tupleSize = arraySize.getSExtValue();  // Convert APInt to int
+    } else {
+        // APInt value too large to fit into int64_t
+        return tl::make_unexpected(std::error_code());
     }
     return {};
 }

@@ -1,0 +1,39 @@
+{
+  "dependencies": {},
+  "metadata": [
+    {
+      "arguments": [
+        {
+          "const": false,
+          "dtype": {
+            "fields": [
+              {
+                "dtype": {
+                  "dtype": {
+                    "dtype": {
+                      "dtype": {
+                        "name": "int",
+                        "type": "builtin"
+                      },
+                      "size": 4,
+                      "type": "tuple"
+                    },
+                    "size": 3,
+                    "type": "tuple"
+                  },
+                  "size": 2,
+                  "type": "tuple"
+                },
+                "name": "vals"
+              }
+            ],
+            "type": "struct"
+          },
+          "name": "s",
+          "ptr": false
+        }
+      ],
+      "name": "_occa_kern_0"
+    }
+  ]
+}

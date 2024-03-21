@@ -82,6 +82,7 @@ void to_json(json& j, const TupleElementDataType& tupleDtype) {
         case DatatypeCategory::TUPLE: {
             j["dtype"] = json::object();
             to_json(j["dtype"], *tupleDtype.tupleElementDType);
+            j["dtype"]["type"] = tupleDtype.typeCategory;
             break;
         }
         default: {
@@ -103,6 +104,7 @@ void to_json(json& j, const DataType& dt) {
         }
         case DatatypeCategory::TUPLE: {
             j = *dt.tupleElementDType;
+            j["type"] = dt.typeCategory;
             break;
         }
         default: {
