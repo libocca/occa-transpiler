@@ -212,7 +212,7 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/stages/normalizer/normalizer.h
     pipeline/stages/normalizer/error_codes.cpp
     pipeline/stages/normalizer/error_codes.h
-        pipeline/stages/normalizer/impl/okl_macro_stage.cpp
+    pipeline/stages/normalizer/impl/okl_macro_stage.cpp
     pipeline/stages/normalizer/impl/expand_macro_stage.cpp
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
