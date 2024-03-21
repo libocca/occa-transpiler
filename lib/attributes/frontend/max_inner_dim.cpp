@@ -50,9 +50,7 @@ struct MaxInnerDim : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseMaxInnerDim(const clang::Attr& attr,
-                                 OKLParsedAttr& data,
-                                 SessionStage& stage) {
+ParseResult parseMaxInnerDim(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@outer] does not take kwargs"});
     }
@@ -78,6 +76,6 @@ ParseResult parseMaxInnerDim(const clang::Attr& attr,
 
 __attribute__((constructor)) void registerAttrFrontend() {
     AttributeManager::instance().registerAttrFrontend<MaxInnerDim>(OUTER_ATTR_NAME,
-                                                                      parseMaxInnerDim);
+                                                                   parseMaxInnerDim);
 }
 }  // namespace

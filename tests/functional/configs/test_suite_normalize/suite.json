@@ -1,5 +1,6 @@
 [
     "simple_normalize.json",
+    "directive.json",
     "macro_expansion.json",
     "atomic_test_case.json",
     "tile_paren_test_case.json",

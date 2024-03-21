@@ -1,6 +1,7 @@
 #include <oklt/core/error.h>
 
 #include "core/transpiler_session/session_stage.h"
+#include "core/vfs/overlay_fs.h"
 
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/expand_macro_stage.h"
@@ -258,6 +259,16 @@ struct MacroExpander : public clang::ASTFrontendAction {
         return nullptr;
     }
 
+    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
+        if (compiler.hasFileManager()) {
+            auto overlayFs =
+                makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(), _input.cppIncs);
+            compiler.getFileManager().setVirtualFileSystem(overlayFs);
+        }
+
+        return true;
+    }
+
     bool BeginSourceFileAction(CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
 
@@ -266,6 +277,7 @@ struct MacroExpander : public clang::ASTFrontendAction {
 
         _output.cppSrc = stage.getRewriterResultForMainFile();
         _output.cppIncs = stage.getRewriterResultForHeaders();
+        _output.cppIncs.fileMap.merge(_input.cppIncs.fileMap);
 
         return false;
     }

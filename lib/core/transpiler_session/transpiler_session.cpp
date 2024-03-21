@@ -26,10 +26,17 @@ TranspilerSession::TranspilerSession(UserInput input_)
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
     // TODO: Fixup sourceLocation
     auto msg = message.getMessage();
-    auto lineNo = message.getLocation().getLineNumber();
+    auto loc = message.getLocation();
+
+    uint32_t lineNo = 0;
+    if (loc.isValid()) {
+        lineNo = message.getLocation().getLineNumber();
+    }
 
     std::stringstream ss;
-    ss << "line " << lineNo << ": ";
+    if (loc.isValid()) {
+        ss << "line " << lineNo << ": ";
+    }
     ss << msg.str();
     // TODO
     //  create error category for syntax/semantic error/warning
