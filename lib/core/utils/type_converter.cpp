@@ -3,12 +3,22 @@
 
 #include <clang/AST/AST.h>
 #include <memory>
+#include "clang/AST/Type.h"
 #include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
 using namespace clang;
 
 namespace {
+
+std::string getTypeName(const QualType& type) {
+    auto res = type.getCanonicalType().getAsString();
+    if (res == "_Bool") {
+        return "bool";
+    }
+    return res;
+}
+
 clang::QualType getBaseType(const clang::QualType& type) {
     auto baseType = type.getUnqualifiedType();
     if (baseType->isPointerType()) {
@@ -47,12 +57,11 @@ tl::expected<void, std::error_code> fillTupleElement(
     const std::shared_ptr<TupleElementDataType>& tupleElementDType) {
     auto elementType = getBaseType(type);
     tupleElementDType->typeCategory = toOklDatatypeCategory(elementType);
-    tupleElementDType->name = elementType.getCanonicalType().getAsString();
+    tupleElementDType->name = getTypeName(elementType);
 
     // In case element type is struct, we must fill it's fields
     if (tupleElementDType->typeCategory == DatatypeCategory::STRUCT) {
-        auto fillRes =
-            fillStructFields(tupleElementDType->fields, elementType.getTypePtr());
+        auto fillRes = fillStructFields(tupleElementDType->fields, elementType.getTypePtr());
         if (!fillRes) {
             return fillRes;
         }
@@ -86,7 +95,7 @@ tl::expected<DataType, std::error_code> toOklDataTypeImpl(const DeclType& var) {
     auto type = var.getType();
     auto baseType = getBaseType(type);
 
-    std::string name = baseType.getCanonicalType().getAsString();
+    std::string name = getTypeName(baseType);
     auto typeCategory = toOklDatatypeCategory(type);
 
     DataType res{.name = name, .typeCategory = typeCategory};
