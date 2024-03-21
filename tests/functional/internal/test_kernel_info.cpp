@@ -26,17 +26,17 @@ TEST(TestKernelInfo, DatatypeInfoJsonTest) {
     EXPECT_EQ(tests.size(), deserialized.size());
     EXPECT_EQ(4, deserialized.size()) << "Test contains different amount of entries";
 
-    EXPECT_EQ(DatatypeCategory::BUILTIN, deserialized[0].type);
+    EXPECT_EQ(DatatypeCategory::BUILTIN, deserialized[0].typeCategory);
     EXPECT_STREQ("int", deserialized[0].name.c_str());
 
-    EXPECT_EQ(DatatypeCategory::BUILTIN, deserialized[1].type);
+    EXPECT_EQ(DatatypeCategory::BUILTIN, deserialized[1].typeCategory);
     EXPECT_STREQ("float", deserialized[1].name.c_str());
 
-    EXPECT_EQ(DatatypeCategory::CUSTOM, deserialized[2].type);
+    EXPECT_EQ(DatatypeCategory::CUSTOM, deserialized[2].typeCategory);
     EXPECT_STREQ("none", deserialized[2].name.c_str());
     EXPECT_EQ(0, deserialized[2].bytes);
 
-    EXPECT_EQ(DatatypeCategory::CUSTOM, deserialized[3].type);
+    EXPECT_EQ(DatatypeCategory::CUSTOM, deserialized[3].typeCategory);
     EXPECT_STREQ("none", deserialized[3].name.c_str());
     EXPECT_EQ(4, deserialized[3].bytes);
 

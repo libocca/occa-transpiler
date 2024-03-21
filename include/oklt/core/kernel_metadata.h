@@ -16,22 +16,23 @@ enum struct DatatypeCategory {
     TUPLE,
 };
 
-//// map TaskState values to JSON as strings
-// NLOHMANN_JSON_SERIALIZE_ENUM(
-//   DatatypeCategory, {
-//   {DatatypeCategory::BUILTIN, "builtin"},
-//   {DatatypeCategory::CUSTOM, "custom"},
-// });
-
 struct StructFieldInfo;
+struct TupleElementDataType;
+
+struct TupleElementDataType {
+    int64_t tupleSize = -1;
+    DatatypeCategory typeCategory = DatatypeCategory::CUSTOM;
+    std::string name;                                           // Used only for builtin and custom
+    std::list<StructFieldInfo> fields;                          // Used only for struct element type
+    std::shared_ptr<TupleElementDataType> tupleElementDType = nullptr;    // Used only for tuple element type
+};
 
 struct DataType {
     std::string name;
-    DatatypeCategory type;
-    int bytes = 0;                        // used only for custom
-    std::list<StructFieldInfo> fields;    // used only for structs
-    int64_t tupleSize = -1;               // used only for tuples
-    DatatypeCategory tupleElementType;    // used only fot tuples
+    DatatypeCategory typeCategory;
+    int bytes = 0;                              // used only for custom
+    std::list<StructFieldInfo> fields;          // used only for structs
+    std::shared_ptr<TupleElementDataType> tupleElementDType;     // used only fot tuples
 };
 
 struct StructFieldInfo {

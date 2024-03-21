@@ -8,6 +8,7 @@ struct CC {
 
 struct C {
     CC cc;
+    int* ptr;
     float d[3];
 };
 
