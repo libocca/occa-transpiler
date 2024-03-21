@@ -8,34 +8,89 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
+struct BraceCounter {
+    unsigned short paren = 0;
+    unsigned short bracket = 0;
+    unsigned short brace = 0;
+    explicit operator bool() const { return (paren != 0 || bracket != 0 || brace != 0); }
+    void count(const Token& tok) {
+        auto kind = tok.getKind();
+        switch (kind) {
+            case tok::l_paren:
+                ++paren;
+                break;
+            case tok::r_paren:
+                --paren;
+                break;
+            case tok::l_square:
+                ++bracket;
+                break;
+            case tok::r_square:
+                --bracket;
+                break;
+            case tok::l_brace:
+                ++brace;
+                break;
+            case tok::r_brace:
+                --brace;
+                break;
+            default:
+                break;
+        }
+    }
+};
+
+bool isAllowedTok(tok::TokenKind K) {
+    switch (K) {
+        case tok::l_paren:
+        case tok::r_paren:
+        case tok::l_square:
+        case tok::r_square:
+        case tok::l_brace:
+        case tok::r_brace:
+        case tok::identifier:
+        case tok::coloncolon:
+            return true;
+        default:
+            break;
+    }
+
+    return false;
+}
+
 bool isLooksLikeFunctionCall(const SourceLocation& loc,
                              const SourceManager& sm,
                              const LangOptions& lo) {
-    std::list<Token> tokens;
-    SourceLocation currLoc = loc;
-    while (1) {
-        auto maybeToken = Lexer::findNextToken(currLoc, sm, lo);
-        if (!maybeToken) {
+    bool hasLParen = false;
+    bool hasRParen = false;
+
+    std::optional<Token> token = Token{};
+    token->setKind(tok::identifier);
+
+    BraceCounter cnt;
+    for (SourceLocation currLoc = loc; cnt || isAllowedTok(token->getKind());
+         currLoc = token->getLocation()) {
+        token = Lexer::findNextToken(currLoc, sm, lo);
+        if (!token || token->is(tok::unknown)) {
             return false;
         }
 
-        if (maybeToken->is(tok::semi)) {
+        if (!cnt && token->is(tok::l_paren) && !hasLParen) {
+            hasLParen = true;
+        }
+
+        cnt.count(token.value());
+        if (cnt) {
+            continue;
+        }
+
+        if (token->is(tok::r_paren)) {
+            hasRParen = true;
             break;
         }
-
-        if (maybeToken->isOneOf(tok::l_paren, tok::r_paren)) {
-            tokens.push_back(maybeToken.value());
-        }
-
-        currLoc = maybeToken->getLocation();
     }
 
-    // at least two token for function call 'func()'
-    if (tokens.size() < 2) {
-        return false;
-    }
-
-    return tokens.front().is(tok::l_paren) && tokens.back().is(tok::r_paren);
+    return (!cnt && hasLParen && hasRParen);
 }
 
 class IgnoreUndeclHandler : public DiagHandler {
