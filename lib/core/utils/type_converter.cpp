@@ -2,6 +2,8 @@
 #include <oklt/core/error.h>
 
 #include <clang/AST/AST.h>
+#include <memory>
+#include "oklt/core/kernel_metadata.h"
 
 namespace oklt {
 using namespace clang;
@@ -81,7 +83,21 @@ tl::expected<KernelInfo, std::error_code> toOklKernelInfo(const FunctionDecl& fd
 }
 
 namespace detail {
-tl::expected<void, std::error_code> fillStructFields(DataType& dt,
+
+clang::QualType getBaseType(const clang::QualType& type) {
+    auto baseType = type.getUnqualifiedType();
+    if (baseType->isPointerType()) {
+        baseType = baseType->getPointeeType().getUnqualifiedType();
+    }
+    if (type.getTypePtr()->isConstantArrayType()) {
+        baseType = clang::dyn_cast_or_null<clang::ConstantArrayType>(baseType)
+                       ->getElementType()
+                       .getUnqualifiedType();
+    }
+    return baseType;
+}
+
+tl::expected<void, std::error_code> fillStructFields(std::list<StructFieldInfo>& fields,
                                                      const clang::Type* structTypePtr) {
     const auto* structDecl = structTypePtr->getAsCXXRecordDecl();
     if (structTypePtr->isPointerType()) {
@@ -96,7 +112,39 @@ tl::expected<void, std::error_code> fillStructFields(DataType& dt,
         if (!fieldDataType) {
             return tl::make_unexpected(fieldDataType.error());
         }
-        dt.fields.push_back(fieldDataType.value());
+        fields.push_back(fieldDataType.value());
+    }
+    return {};
+}
+
+tl::expected<void, std::error_code> fillTupleElement(
+    const clang::QualType& elementType,
+    const std::shared_ptr<TupleElementDataType>& tupleElementDType) {
+    tupleElementDType->typeCategory = toOklDatatypeCategory(elementType);
+    tupleElementDType->name = elementType.getCanonicalType().getAsString();
+
+    // In case element type is struct, we must fill it's fields
+    if (tupleElementDType->typeCategory == DatatypeCategory::STRUCT) {
+        auto fillRes =
+            detail::fillStructFields(tupleElementDType->fields, elementType.getTypePtr());
+        if (!fillRes) {
+            return fillRes;
+        }
+    }
+    if (tupleElementDType->typeCategory == DatatypeCategory::TUPLE) {
+        tupleElementDType->tupleElementDType = std::make_shared<TupleElementDataType>();
+        auto nextElementType = getBaseType(elementType);
+        auto fillStatus = fillTupleElement(nextElementType, tupleElementDType->tupleElementDType);
+        if (!fillStatus) {
+            return fillStatus;
+        }
+        auto arraySize = clang::dyn_cast_or_null<clang::ConstantArrayType>(elementType)->getSize();
+        if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of int
+            tupleElementDType->tupleElementDType->tupleSize = arraySize.getSExtValue();  // Convert APInt to int
+        } else {
+            // APInt value too large to fit into int64_t
+            return tl::make_unexpected(std::error_code());
+        }
     }
     return {};
 }

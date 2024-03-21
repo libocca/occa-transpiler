@@ -5,6 +5,7 @@
 #include "clang/AST/Type.h"
 #include "core/utils/var_decl.h"
 
+#include <memory>
 #include <tl/expected.hpp>
 
 namespace clang {
@@ -27,25 +28,13 @@ DatatypeCategory toOklDatatypeCategory(const clang::QualType&);
 // Functions in this namespace are not ment to be called outside of this and .cpp file. But since
 // They are used in header, it's impossible to hide then in anon namespace in .cpp file :( )
 namespace detail {
-tl::expected<void, std::error_code> fillStructFields(DataType& dt, const clang::Type* structType);
-
 //  Base type = pointed type for pointer or element type for array, otherwise just type of 'var'
-template <typename DeclType>
-clang::QualType getBaseType(const DeclType& var) {
-    auto qt = var.getType();
-    auto unqualifiedType = qt.getUnqualifiedType();
-
-    auto baseType = unqualifiedType;
-    if (baseType->isPointerType()) {
-        baseType = baseType->getPointeeType().getUnqualifiedType();
-    }
-    if (isConstantSizeArray(var)) {
-        baseType = clang::dyn_cast_or_null<clang::ConstantArrayType>(baseType)
-                       ->getElementType()
-                       .getUnqualifiedType();
-    }
-    return baseType;
-}
+clang::QualType getBaseType(const clang::QualType& type);
+tl::expected<void, std::error_code> fillStructFields(std::list<StructFieldInfo>& fields,
+                                                     const clang::Type* structType);
+tl::expected<void, std::error_code> fillTupleElement(
+    const clang::QualType& qt,
+    const std::shared_ptr<TupleElementDataType>& tupleElementType);
 }  // namespace detail
 
 template <typename DeclType>
@@ -58,7 +47,7 @@ tl::expected<DataType, std::error_code> toOklDataType(const DeclType& var) {
 
     // Find correct unqualified type
     auto type = var.getType();
-    auto baseType = detail::getBaseType(var);
+    auto baseType = detail::getBaseType(type);
 
     std::string name = baseType.getCanonicalType().getAsString();
     auto typeCategory = toOklDatatypeCategory(type);
@@ -69,27 +58,44 @@ tl::expected<DataType, std::error_code> toOklDataType(const DeclType& var) {
     }
     if (typeCategory == DatatypeCategory::STRUCT) {
         // Fill type of each struct field
-        auto fillRes = detail::fillStructFields(res, type.getTypePtr());
+        auto fillRes = detail::fillStructFields(res.fields, type.getTypePtr());
         if (!fillRes) {
             return tl::make_unexpected(fillRes.error());
         }
     }
     if (typeCategory == DatatypeCategory::TUPLE) {
-        res.tupleElementType = toOklDatatypeCategory(baseType);
-        // In case element type is struct, we must fill it's fields
-        if (res.tupleElementType == DatatypeCategory::STRUCT) {
-            auto fillRes = detail::fillStructFields(res, baseType.getTypePtr());
-            if (!fillRes) {
-                return tl::make_unexpected(fillRes.error());
-            }
+        res.tupleElementDType = std::make_shared<TupleElementDataType>();
+        auto fillRes = detail::fillTupleElement(baseType, res.tupleElementDType);
+        if (!fillRes) {
+            return tl::make_unexpected(fillRes.error());
         }
         auto arraySize = clang::dyn_cast_or_null<clang::ConstantArrayType>(type)->getSize();
         if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of int
-            res.tupleSize = arraySize.getSExtValue();  // Convert APInt to int
+            res.tupleElementDType->tupleSize = arraySize.getSExtValue();  // Convert APInt to int
         } else {
             // APInt value too large to fit into int64_t
             return tl::make_unexpected(std::error_code());
         }
+
+        // res.tupleElementDType.typeCategory = toOklDatatypeCategory(baseType);
+        // // In case element type is struct, we must fill it's fields
+        // if (res.tupleElementDType.typeCategory == DatatypeCategory::STRUCT) {
+        //     auto fillRes =
+        //         detail::fillStructFields(res.tupleElementDType.fields, baseType.getTypePtr());
+        //     if (!fillRes) {
+        //         return tl::make_unexpected(fillRes.error());
+        //     }
+        // }
+        // if (res.tupleElementDType.typeCategory == DatatypeCategory::TUPLE) {
+        // }
+        // auto arraySize = clang::dyn_cast_or_null<clang::ConstantArrayType>(type)->getSize();
+        // if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of
+        // int
+        //     res.tupleSize = arraySize.getSExtValue();  // Convert APInt to int
+        // } else {
+        //     // APInt value too large to fit into int64_t
+        //     return tl::make_unexpected(std::error_code());
+        // }
     }
     return res;
 }
