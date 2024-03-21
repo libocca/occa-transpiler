@@ -21,8 +21,6 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-std::set<std::string> gnuExcepStmtAttrs{"atomic", "shared"};
-
 bool isProbablyOklSpecificForStmt(Token left, Token right) {
     return left.is(tok::semi) && right.is(tok::r_paren);
 }
@@ -65,28 +63,29 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
                               Rewriter& rewriter) {
-    // TODO log each mofidification to adjust marker line col coordinate accordinagly
+    // TODO log each modification to adjust marker line col coordinate accordingly
     removeOklAttr(tokens, oklAttr, rewriter);
 
-    auto leftNeigbour = getLeftNeigbour(oklAttr, tokens);
+    auto leftNeighbour = getLeftNeigbour(oklAttr, tokens);
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
     auto insertLoc(tokens[oklAttr.tok_indecies.front()].getLocation());
 
     // fix malformed C++ syntax like for(init;cond;step;@outer) to for(init;cond;step) and mark
     // source location to fix it during AST traversal
-    if (isProbablyOklSpecificForStmt(leftNeigbour, rightNeighbour)) {
-        rewriter.ReplaceText(leftNeigbour.getLocation(), 1, ")");
+    if (isProbablyOklSpecificForStmt(leftNeighbour, rightNeighbour)) {
+        rewriter.ReplaceText(leftNeighbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
-        recovery_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, leftNeigbour.getLocation()));
+        recovery_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, leftNeighbour.getLocation()));
     }
-    // INFO: just replace directly with standard attribute if it's originally at the beginnig
-    else if (isProbablyAtBeginnigOfExpr(leftNeigbour, rightNeighbour)) {
+    // INFO: just replace directly with standard attribute
+    // if it's originally at the beginning, or an in-place type attribute.
+    else if (isProbablyAtBeginnigOfExpr(leftNeighbour, rightNeighbour)) {
         auto cppAttr = wrapAsSpecificCxxAttr(oklAttr);
         rewriter.InsertTextBefore(insertLoc, cppAttr);
     }
     // INFO: attribute is not at the beginning of expr so wrap it as GNU.
-    // GNU attribute has more diverisity for locations(and it's nigtmare for parser and AST to
-    // handle all cases). than standard attribute. After parsing AST GNU will be replaced by CXX NB:
+    // GNU attribute has more diversity for locations (and it's a nightmare for parser and AST to
+    // handle all cases) than standard attribute. After parsing AST GNU will be replaced by CXX NB:
     // there are cases where GNU attribute could not be parsed and embed into AST For example:
     //   a+=1 __attrbute((okl_atomic));
     // and
