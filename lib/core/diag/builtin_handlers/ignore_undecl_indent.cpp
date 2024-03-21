@@ -49,6 +49,7 @@ bool isAllowedTok(tok::TokenKind K) {
         case tok::l_brace:
         case tok::r_brace:
         case tok::identifier:
+        case tok::raw_identifier:
         case tok::coloncolon:
             return true;
         default:
