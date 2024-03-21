@@ -1,12 +1,12 @@
 #pragma once
 
-#include <clang/AST/AST.h>
 #include <oklt/core/kernel_metadata.h>
-#include "clang/AST/Decl.h"
-#include "clang/AST/Type.h"
 #include "core/utils/var_decl.h"
 
-#include <memory>
+#include <clang/AST/AST.h>
+#include <clang/AST/Decl.h>
+#include <clang/AST/Type.h>
+
 #include <tl/expected.hpp>
 
 namespace clang {
