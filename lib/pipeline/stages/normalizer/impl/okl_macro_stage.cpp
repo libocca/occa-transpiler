@@ -162,6 +162,8 @@ struct OklMacroAttributeNormalizerAction : public clang::ASTFrontendAction {
 namespace oklt {
 
 OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
+    // TODO refactor all stages/sub-stages to move communality into generic component and provide
+    // facility for customization points.
     if (input.cppSrc.empty()) {
         llvm::outs() << "input source string is empty\n";
         auto error =
@@ -170,7 +172,7 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
     }
 
 #ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 0 OKL source:\n\n" << input.oklCppSrc << '\n';
+    llvm::outs() << "stage OKL directive expansion, source:\n\n" << input.cppSrc << '\n';
 #endif
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";

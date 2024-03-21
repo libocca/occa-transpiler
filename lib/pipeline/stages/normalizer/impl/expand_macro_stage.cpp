@@ -277,6 +277,7 @@ struct MacroExpander : public clang::ASTFrontendAction {
 
         _output.cppSrc = stage.getRewriterResultForMainFile();
         _output.cppIncs = stage.getRewriterResultForHeaders();
+        _output.cppIncs.fileMap.merge(_input.cppIncs.fileMap);
 
         return false;
     }
