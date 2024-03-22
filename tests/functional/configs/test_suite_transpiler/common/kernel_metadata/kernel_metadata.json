@@ -34,5 +34,17 @@
             "launcher": ""
         },
         "reference": "transpiler/common/kernel_metadata/kernel_metadata_multidimensional_array_ref.json"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "metadata",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/kernel_metadata/kernel_metadata_enum.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/kernel_metadata/kernel_metadata_enum_ref.json"
     }
 ]

@@ -1,6 +1,6 @@
-#include <oklt/core/kernel_metadata.h>
-#include <oklt/core/error.h>
 #include "core/utils/type_converter.h"
+#include <oklt/core/error.h>
+#include <oklt/core/kernel_metadata.h>
 
 #include <clang/AST/AST.h>
 
@@ -54,27 +54,35 @@ tl::expected<void, std::error_code> fillStructFields(std::list<StructFieldInfo>&
     return {};
 }
 
+tl::expected<void, std::error_code> fillEnumNames(std::vector<std::string>& enumNames,
+                                                  const Type* type) {
+    auto enumType = dyn_cast<EnumType>(type->getCanonicalTypeUnqualified());
+    if (!enumType) {
+        return tl::make_unexpected(std::error_code());
+    }
+    const EnumDecl* enumDecl = enumType->getDecl();
+    if (!enumDecl) {
+        return tl::make_unexpected(std::error_code());
+    }
+
+    for (const auto& enumerator : enumDecl->enumerators()) {
+        enumNames.push_back(enumerator->getNameAsString());
+    }
+
+    return {};
+}
+
+tl::expected<DataType, std::error_code> toOklDataTypeImpl(const QualType& type, ASTContext& ctx);
 tl::expected<void, std::error_code> fillTupleElement(
     const clang::QualType& type,
-    const std::shared_ptr<TupleElementDataType>& tupleElementDType) {
+    const std::shared_ptr<TupleElementDataType>& tupleElementDType, ASTContext& ctx) {
     auto elementType = getBaseType(type);
-    tupleElementDType->typeCategory = toOklDatatypeCategory(elementType);
-    tupleElementDType->name = getTypeName(elementType);
+    auto elementDType = toOklDataTypeImpl(elementType, ctx);
+    if (!elementDType) {
+        return tl::make_unexpected(elementDType.error());
+    }
+    tupleElementDType->elementDType = elementDType.value();
 
-    // In case element type is struct, we must fill it's fields
-    if (tupleElementDType->typeCategory == DatatypeCategory::STRUCT) {
-        auto fillRes = fillStructFields(tupleElementDType->fields, elementType.getTypePtr());
-        if (!fillRes) {
-            return fillRes;
-        }
-    }
-    if (tupleElementDType->typeCategory == DatatypeCategory::TUPLE) {
-        tupleElementDType->tupleElementDType = std::make_shared<TupleElementDataType>();
-        auto fillStatus = fillTupleElement(elementType, tupleElementDType->tupleElementDType);
-        if (!fillStatus) {
-            return fillStatus;
-        }
-    }
     auto arraySize = clang::dyn_cast_or_null<clang::ConstantArrayType>(type)->getSize();
     if (arraySize.isIntN(sizeof(int64_t) * 8)) {  // Check if APInt fits within the range of int
         tupleElementDType->tupleSize = arraySize.getSExtValue();  // Convert APInt to int
@@ -83,6 +91,49 @@ tl::expected<void, std::error_code> fillTupleElement(
         return tl::make_unexpected(std::error_code());
     }
     return {};
+}
+
+tl::expected<DataType, std::error_code> toOklDataTypeImpl(const QualType& type, ASTContext& ctx) {
+    auto baseType = getBaseType(type);
+
+    std::string name = getTypeName(baseType);
+    auto anotherName =
+        getTypeName(QualType(baseType.getTypePtr()->getUnqualifiedDesugaredType(), 0));
+    auto typeCategory = toOklDatatypeCategory(type);
+
+    DataType res{.name = name, .typeCategory = typeCategory};
+    switch (typeCategory) {
+        case DatatypeCategory::CUSTOM: {
+            res.bytes = static_cast<int>(ctx.getTypeSize(type));
+            break;
+        }
+        case DatatypeCategory::STRUCT: {
+            // Fill type of each struct field
+            auto fillRes = fillStructFields(res.fields, type.getTypePtr());
+            if (!fillRes) {
+                return tl::make_unexpected(fillRes.error());
+            }
+            break;
+        }
+        case DatatypeCategory::TUPLE: {
+            res.tupleElementDType = std::make_shared<TupleElementDataType>();
+            auto fillRes = fillTupleElement(type, res.tupleElementDType, ctx);
+            if (!fillRes) {
+                return tl::make_unexpected(fillRes.error());
+            }
+            break;
+        }
+        case DatatypeCategory::ENUM: {
+            auto fillRes = fillEnumNames(res.enumNames, type.getTypePtr());
+            if (!fillRes) {
+                return tl::make_unexpected(fillRes.error());
+            }
+            break;
+        }
+        default: {
+        }
+    }
+    return res;
 }
 
 template <typename DeclType>
@@ -95,30 +146,11 @@ tl::expected<DataType, std::error_code> toOklDataTypeImpl(const DeclType& var) {
 
     // Find correct unqualified type
     auto type = var.getType();
-    auto baseType = getBaseType(type);
-
-    std::string name = getTypeName(baseType);
-    auto typeCategory = toOklDatatypeCategory(type);
-
-    DataType res{.name = name, .typeCategory = typeCategory};
-    if (typeCategory == DatatypeCategory::CUSTOM) {
-        res.bytes = static_cast<int>(var.getASTContext().getTypeSize(type));
+    if (isa<ParmVarDecl>(var)) {
+        // This gets type of array before decay
+        type = dyn_cast<ParmVarDecl>(&var)->getOriginalType();
     }
-    if (typeCategory == DatatypeCategory::STRUCT) {
-        // Fill type of each struct field
-        auto fillRes = fillStructFields(res.fields, type.getTypePtr());
-        if (!fillRes) {
-            return tl::make_unexpected(fillRes.error());
-        }
-    }
-    if (typeCategory == DatatypeCategory::TUPLE) {
-        res.tupleElementDType = std::make_shared<TupleElementDataType>();
-        auto fillRes = fillTupleElement(type, res.tupleElementDType);
-        if (!fillRes) {
-            return tl::make_unexpected(fillRes.error());
-        }
-    }
-    return res;
+    return toOklDataTypeImpl(type, var.getASTContext());
 }
 
 }  // namespace
@@ -139,6 +171,9 @@ inline DatatypeCategory toOklDatatypeCategory(const clang::QualType& qt) {
     }
     if (qt_->isConstantArrayType()) {
         return DatatypeCategory::TUPLE;
+    }
+    if (qt_->isEnumeralType()) {
+        return DatatypeCategory::ENUM;
     }
     return DatatypeCategory::CUSTOM;
 }

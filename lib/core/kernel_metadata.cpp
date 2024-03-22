@@ -23,6 +23,9 @@ void to_json(json& j, const DatatypeCategory& cat) {
         case DatatypeCategory::TUPLE:
             j = "tuple";
             break;
+        case DatatypeCategory::ENUM:
+            j = "enum";
+            break;
         default:
             j = "";
     }
@@ -41,6 +44,9 @@ void from_json(const json& j, DatatypeCategory& cat) {
     if (j == "tuple") {
         cat = DatatypeCategory::TUPLE;
     }
+    if (j == "enum") {
+        cat = DatatypeCategory::ENUM;
+    }
 }
 
 void to_json(json& j, const StructFieldInfo& dt) {
@@ -53,65 +59,47 @@ void from_json(const json& j, StructFieldInfo& dt) {
 }
 
 void from_json(const json& j, TupleElementDataType& tupleDtype) {
-    tupleDtype.typeCategory = j.at("type").get<DatatypeCategory>();
-    tupleDtype.tupleSize = j.at("size").get<int64_t>();
-    switch (tupleDtype.typeCategory) {
-        case DatatypeCategory::STRUCT: {
-            tupleDtype.fields = j["dtype"]["fields"].get<std::list<StructFieldInfo>>();
-            break;
-        }
-        case DatatypeCategory::TUPLE: {
-            *tupleDtype.tupleElementDType = j["dtype"].get<TupleElementDataType>();
-            break;
-        }
-        default: {
-            tupleDtype.name = j["dtype"]["name"].get<std::string>();
-            tupleDtype.typeCategory = j["dtype"]["name"].get<DatatypeCategory>();
-            break;
-        }
-    }
+    tupleDtype.tupleSize = j["size"];
+    tupleDtype.elementDType = j["dtype"];
+    tupleDtype.elementDType.typeCategory = j["type"];
 }
 
 void to_json(json& j, const TupleElementDataType& tupleDtype) {
-    j = json{{"type", tupleDtype.typeCategory}, {"size", tupleDtype.tupleSize}};
-    switch (tupleDtype.typeCategory) {
-        case DatatypeCategory::STRUCT: {
-            j["dtype"] = json{{"type", tupleDtype.typeCategory}, {"fields", tupleDtype.fields}};
-            break;
-        }
-        case DatatypeCategory::TUPLE: {
-            j["dtype"] = json::object();
-            to_json(j["dtype"], *tupleDtype.tupleElementDType);
-            j["dtype"]["type"] = tupleDtype.typeCategory;
-            break;
-        }
-        default: {
-            j["dtype"] = {{"name", tupleDtype.name}, {"type", tupleDtype.typeCategory}};
-            break;
-        }
-    }
+    j = json{{"type", tupleDtype.elementDType.typeCategory},
+             {"size", tupleDtype.tupleSize},
+             {"dtype", tupleDtype.elementDType}};
 }
 
 void to_json(json& j, const DataType& dt) {
     switch (dt.typeCategory) {
         case DatatypeCategory::BUILTIN: {
-            j = json{{"name", dt.name}, {"type", dt.typeCategory}};
+            j = json{{"name", dt.name}};
             break;
         }
         case DatatypeCategory::STRUCT: {
-            j = json{{"type", dt.typeCategory}, {"fields", dt.fields}};
+            j = json{{"fields", dt.fields}};
             break;
         }
         case DatatypeCategory::TUPLE: {
             j = *dt.tupleElementDType;
-            j["type"] = dt.typeCategory;
+            break;
+        }
+        case DatatypeCategory::ENUM: {
+            std::vector<json> enumerators;
+            for (const auto& name : dt.enumNames) {
+                enumerators.push_back(json{
+                    {"name", name},
+                });
+            }
+            j["enumerators"] = enumerators;
             break;
         }
         default: {
-            j = json{{"type", dt.typeCategory}, {"bytes", dt.bytes}, {"name", "none"}};
+            j = json{{"bytes", dt.bytes}, {"name", "none"}};
             break;
         }
     }
+    j["type"] = dt.typeCategory;
 }
 
 void from_json(const json& j, DataType& dt) {

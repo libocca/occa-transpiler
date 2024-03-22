@@ -2,10 +2,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <list>
 #include <optional>
 #include <string>
 #include <vector>
-#include <list>
 
 namespace oklt {
 
@@ -14,25 +14,24 @@ enum struct DatatypeCategory {
     CUSTOM,
     STRUCT,
     TUPLE,
+    ENUM,
 };
 
 struct StructFieldInfo;
 struct TupleElementDataType;
 
-struct TupleElementDataType {
-    int64_t tupleSize = -1;
-    DatatypeCategory typeCategory = DatatypeCategory::CUSTOM;
-    std::string name;                                           // Used only for builtin and custom
-    std::list<StructFieldInfo> fields;                          // Used only for struct element type
-    std::shared_ptr<TupleElementDataType> tupleElementDType = nullptr;    // Used only for tuple element type
-};
-
 struct DataType {
     std::string name;
     DatatypeCategory typeCategory;
-    int bytes = 0;                              // used only for custom
-    std::list<StructFieldInfo> fields;          // used only for structs
-    std::shared_ptr<TupleElementDataType> tupleElementDType;     // used only fot tuples
+    int bytes = 0;                                            // used only for custom
+    std::list<StructFieldInfo> fields;                        // used only for structs
+    std::shared_ptr<TupleElementDataType> tupleElementDType;  // used only for tuples
+    std::vector<std::string> enumNames;                       // Used only for enums
+};
+
+struct TupleElementDataType {
+    int64_t tupleSize = -1;
+    DataType elementDType;
 };
 
 struct StructFieldInfo {
