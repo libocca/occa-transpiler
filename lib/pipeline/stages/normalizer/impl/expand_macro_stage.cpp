@@ -130,7 +130,7 @@ std::list<Token> lexMacroToken(Preprocessor& pp) {
 
         // catch only valid macro loc
         auto loc = tok.getLocation();
-        if (!loc.isValid() || !loc.isMacroID()) {
+        if (loc.isInvalid() || !loc.isMacroID()) {
             continue;
         }
 
@@ -215,6 +215,10 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
         }
 
         if (mi->isUsedForHeaderGuard()) {
+            continue;
+        }
+
+        if (mi->getNumTokens() == 0) {
             continue;
         }
 
