@@ -203,33 +203,26 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
         macroNames.insert(macroName);
     }
 
-    // get rid of macro hell
+    // get rid of macro hell - try to remove all users macro except header guards
     const auto& defResults = defCallback->results;
-    for (const auto& macro : macroNames) {
-        // remove all defintions
-        for (const auto& defined : defResults) {
-            if (defined.name != macro) {
-                continue;
-            }
-
-            auto mi = defined.md->getMacroInfo();
-            if (!mi) {
-                continue;
-            }
-
-            auto hashLoc = findPreviousTokenKind(
-                mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
-            if (hashLoc.isInvalid()) {
-                // replace by 'identical' macro to not break anything
-                auto noop = "void void\n";
-                rewriter.ReplaceText({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, noop);
-            } else {  // keep number of new lines
-                auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
-                lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
-                rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()},
-                                     std::string(lines, '\n'));
-            }
+    for (const auto& defined : defResults) {
+        if (!defined.md) {
+            continue;
         }
+        auto* mi = defined.md->getMacroInfo();
+        if (!mi) {
+            continue;
+        }
+
+        if (mi->isUsedForHeaderGuard()) {
+            continue;
+        }
+
+        auto hashLoc = findPreviousTokenKind(
+            mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
+        auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
+        lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
+        rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, std::string(lines, '\n'));
     }
 
     // macro can be under #if/#elif
