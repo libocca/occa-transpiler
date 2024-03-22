@@ -36,7 +36,7 @@ HandleResult applyTranspilationToAttrNode(const Attr& attr,
     }
 
     return tl::make_unexpected(
-        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().data()});
+        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().str()});
 }
 
 HandleResult applyTranspilationToNode(const DynTypedNode& node, SessionStage& stage) {
@@ -49,7 +49,7 @@ HandleResult applyTranspilationToNode(const DynTypedNode& node, SessionStage& st
     }
 
     return tl::make_unexpected(
-        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().data()});
+        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().str()});
 }
 
 HandleResult applyTranspilationToNode(const Attr* attr,
