@@ -63,7 +63,8 @@ class SessionStage {
     }
 
     template <typename T, typename... Args>
-    inline T& tryEmplaceUserCtx(const std::string& key = typeid(T).name(), Args&&... args) {
+    inline T& tryEmplaceUserCtx(Args&&... args) {
+        std::string key = typeid(T).name();
         if (!hasUserCtx(key))
             setUserCtx(key, std::make_any<T>(std::forward<Args>(args)...));
 

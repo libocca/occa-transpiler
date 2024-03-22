@@ -2,7 +2,7 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
 
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/attribute_manager/attribute_store.h"
 
 #include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"
@@ -57,22 +57,22 @@ int getNodeType(const Stmt& s) {
     return s.getStmtClass();
 }
 
-tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Decl& decl, SessionStage& stage) {
+tl::expected<std::vector<const Attr*>, Error> getNodeAttrs(const Decl& decl, SessionStage& stage) {
     return stage.getAttrManager().checkAttrs(decl, stage);
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::DeclRefExpr& expr,
-                                                                  SessionStage& stage) {
-    auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
+tl::expected<std::vector<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::DeclRefExpr& expr,
+                                                                     SessionStage& stage) {
     auto& ctx = stage.getCompiler().getASTContext();
-    auto attrs = attrTypeMap.get(ctx, expr.getType());
-    auto res = std::set<const Attr*>(attrs.begin(), attrs.end());
+    auto& attrStore = stage.tryEmplaceUserCtx<AttributeStore>(ctx);
+    auto attrs = attrStore.get(expr.getType());
 
-    return res;
+    return std::vector<const Attr*>(attrs.begin(), attrs.end());
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::RecoveryExpr& expr,
-                                                                   SessionStage& stage) {
+tl::expected<std::vector<const Attr*>, Error> tryGetRecoveryExprAttrs(
+    const clang::RecoveryExpr& expr,
+    SessionStage& stage) {
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
         return {};
@@ -86,8 +86,8 @@ tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::
     return tryGetDeclRefExprAttrs(*declRefExpr, stage);
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::CallExpr& expr,
-                                                               SessionStage& stage) {
+tl::expected<std::vector<const Attr*>, Error> tryGetCallExprAttrs(const clang::CallExpr& expr,
+                                                                  SessionStage& stage) {
     // If no errors, call default postValidate.
     if (!expr.containsErrors()) {
         return {};
@@ -112,7 +112,7 @@ tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::Call
     return tryGetDeclRefExprAttrs(*declRefExpr, stage);
 }
 
-tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Stmt& stmt, SessionStage& stage) {
+tl::expected<std::vector<const Attr*>, Error> getNodeAttrs(const Stmt& stmt, SessionStage& stage) {
     switch (stmt.getStmtClass()) {
         case Stmt::RecoveryExprClass:
             return tryGetRecoveryExprAttrs(cast<RecoveryExpr>(stmt), stage);
@@ -131,7 +131,7 @@ template <typename TraversalType, typename NodeType>
 HandleResult runFromRootToLeaves(TraversalType& traversal,
                                  AstProcessorManager& procMng,
                                  AstProcessorType procType,
-                                 const std::set<const Attr*>& attrs,
+                                 const std::vector<const Attr*>& attrs,
                                  NodeType& node,
                                  OklSemaCtx& sema,
                                  SessionStage& stage) {
@@ -153,7 +153,7 @@ template <typename TraversalType, typename NodeType>
 HandleResult runFromLeavesToRoot(TraversalType& traversal,
                                  AstProcessorManager& procMng,
                                  AstProcessorType procType,
-                                 const std::set<const Attr*>& attrs,
+                                 const std::vector<const Attr*>& attrs,
                                  NodeType& node,
                                  OklSemaCtx& sema,
                                  SessionStage& stage) {

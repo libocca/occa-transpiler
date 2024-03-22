@@ -1,6 +1,3 @@
-#include <oklt/core/kernel_metadata.h>
-#include <oklt/util/string_utils.h>
-
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/common.h"
@@ -11,7 +8,6 @@
 #include "core/transpiler_session/session_stage.h"
 #include "tl/expected.hpp"
 
-#include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>
 
 namespace oklt::cuda_subset {

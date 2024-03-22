@@ -47,4 +47,18 @@ bool isOklAttribute(const clang::Attr& attr) {
            StringRef(attr.getNormalizedFullName()).starts_with(OKL_CXX_PREFIX);
 }
 
+std::string getOklAttrFullName(const clang::Attr& attr) {
+    if (isOklAttribute(attr)) {
+        auto name = attr.getAttrName() ? attr.getAttrName()->getName() : StringRef{};
+        if (name.starts_with(OKL_GNU_PREFIX)) {
+            name = name.substr(OKL_GNU_PREFIX.size());
+        }
+
+        std::string ret = {OKL_CXX_PREFIX};
+        ret.append(name);
+        return ret;
+    }
+
+    return attr.getNormalizedFullName();
+}
 }  // namespace oklt

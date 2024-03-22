@@ -1,5 +1,6 @@
 #include <oklt/core/error.h>
 
+#include "core/attribute_manager/attribute_store.h"
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -63,7 +64,11 @@ void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& sta
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
     assert(lastProccesedAttr);
-    for (auto* attr : e.getAttrs()) {
+
+    auto& attrStore = stage.tryEmplaceUserCtx<AttributeStore>(stage.getCompiler().getASTContext());
+    auto attrs = attrStore.get(e);
+
+    for (auto* attr : attrs) {
         if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
             continue;
         }
@@ -110,21 +115,13 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
 
     bool VisitDecl(Decl* d) {
         assert(d != nullptr && "declaration is nullptr");
-
-        if (!d->hasAttrs()) {
-            return true;
-        }
         return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage, &_lastProccesedAttr);
     }
 
-    bool TraverseAttributedStmt(AttributedStmt* as) {
-        assert(as != nullptr && "attributed statement is nullptr");
+    bool VisitStmt(Stmt* s) {
+        assert(s != nullptr && "statement is nullptr");
 
-        if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage, &_lastProccesedAttr)) {
-            return false;
-        }
-
-        return RecursiveASTVisitor<GnuToCppAttrNormalizer>::TraverseAttributedStmt(as);
+        return tryToNormalizeAttrExpr<SuppressAttr>(*s, _stage, &_lastProccesedAttr);
     }
 
     // Special visitor for attribute inside in 'for loop' statement

@@ -2,6 +2,7 @@
 
 #include "core/attribute_manager/backend_attribute_map.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 namespace oklt {
 using namespace clang;
@@ -20,7 +21,7 @@ HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
                                              const Decl& decl,
                                              const std::any* params,
                                              SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
+    auto name = getOklAttrFullName(attr);
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, name));
     if (it == _declHandlers.end()) {
@@ -33,9 +34,8 @@ HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
                                              const Stmt& stmt,
                                              const std::any* params,
                                              SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
-    auto backend = stage.getBackend();
-    auto it = _stmtHandlers.find(std::make_tuple(backend, name));
+    auto name = getOklAttrFullName(attr);
+    auto it = _stmtHandlers.find(std::make_tuple(stage.getBackend(), name));
     if (it == _stmtHandlers.end()) {
         return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
     }

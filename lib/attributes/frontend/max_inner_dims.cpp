@@ -5,17 +5,17 @@
 #include "params/loop.h"
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling OUTER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "outer"},
-    {ParsedAttr::AS_CXX11, OUTER_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_outer"}};
+    {ParsedAttr::AS_CXX11, "max_inner_dims"},
+    {ParsedAttr::AS_CXX11, MAX_INNER_DIMS},
+    {ParsedAttr::AS_GNU, "okl_max_inner_dims"}};
 
-struct OuterAttribute : public ParsedAttrInfoBase {
-    OuterAttribute() {
+struct MaxInnerDim : public ParsedAttrInfoBase {
+    MaxInnerDim() {
+        AttrKind = AttributeKind::MODIFIER;
         Spellings = OUTER_ATTRIBUTE_SPELLINGS;
         NumArgs = 1;
         OptArgs = 0;
@@ -43,34 +43,33 @@ struct OuterAttribute : public ParsedAttrInfoBase {
     }
 };
 
-ParseResult parseOuterAttrParams(const clang::Attr& attr,
-                                 OKLParsedAttr& data,
-                                 SessionStage& stage) {
+ParseResult parseMaxInnerDim(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
     if (!data.kwargs.empty()) {
-        return tl::make_unexpected(Error{{}, "[@outer] does not take kwargs"});
+        return tl::make_unexpected(Error{{}, "[@max_inner_dims] does not take kwargs"});
     }
 
-    if (data.args.size() > 1) {
-        return tl::make_unexpected(Error{{}, "[@outer] takes at most one index"});
+    if (data.args.empty()) {
+        return tl::make_unexpected(Error{{}, "[@max_inner_dims] expects at least one argument"});
     }
 
-    AttributedLoop ret{
-        .type = LoopType::Outer,
-        .axis = Axis::Auto,
-    };
+    if (data.args.size() > 3) {
+        return tl::make_unexpected(Error{{}, "[@max_inner_dims] takes at most 3 arguments"});
+    }
 
-    if (auto dimSize = data.get<int>(0); dimSize.has_value()) {
-        if (dimSize.value() < 0 || dimSize.value() > 2) {
-            return tl::make_unexpected(Error{{}, "[@outer] argument must be 0, 1, or 2"});
+    AttributedLoopInnerSize ret{};
+    for (auto i = size_t(0); i < data.args.size(); ++i) {
+        auto dimSize = data.get<int>(i);
+        if (!dimSize.has_value() || dimSize.value() < 0) {
+            return tl::make_unexpected(Error{{}, "[@max_inner_dims] arguments must be positive!"});
         }
-        ret.axis = static_cast<Axis>(dimSize.value());
+        ret.size[i] = dimSize.value();
     }
 
     return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
-                                                                      parseOuterAttrParams);
+    AttributeManager::instance().registerAttrFrontend<MaxInnerDim>(MAX_INNER_DIMS,
+                                                                   parseMaxInnerDim);
 }
 }  // namespace
