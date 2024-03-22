@@ -7,7 +7,7 @@ typedef struct {
 
 float* __restrict__ aa;
 
-extern "C" __global__ void _occa_hello_kern_0(S* a) {
+extern "C" __global__ __launch_bounds__(10) void _occa_hello_kern_0(S* a) {
     {
         int i = (0) + blockIdx.x;
         __shared__ float buf[100];

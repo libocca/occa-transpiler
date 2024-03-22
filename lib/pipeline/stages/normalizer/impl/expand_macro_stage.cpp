@@ -91,6 +91,7 @@ class DefineDirectiveCallbacks : public PPCallbacks {
     };
 
     std::vector<Result> results;
+    std::vector<Token> emptyMacros;
     DefineDirectiveCallbacks(const SourceManager& sm_)
         : sm(sm_) {}
     const SourceManager& sm;
@@ -106,6 +107,31 @@ class DefineDirectiveCallbacks : public PPCallbacks {
         }
 
         results.emplace_back(id->getName(), md);
+    }
+
+    void MacroExpands(const Token& macroNameTok,
+                      const MacroDefinition& md,
+                      SourceRange range,
+                      const MacroArgs* args) override {
+        const auto* id = macroNameTok.getIdentifierInfo();
+        if (!id) {
+            return;
+        }
+
+        auto* mi = md.getMacroInfo();
+        if (!mi) {
+            return;
+        }
+
+        if (sm.isInSystemHeader(mi->getDefinitionLoc())) {
+            return;
+        }
+
+        if (mi->getNumTokens() != 0) {
+            return;
+        }
+
+        emptyMacros.emplace_back(macroNameTok);
     }
 };
 
@@ -171,6 +197,11 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     // do macro expansion
     std::set<StringRef> macroNames;
     for (const auto& tok : macros) {
+        if (tok.hasLeadingEmptyMacro()) {
+            rewriter.RemoveText({tok.getLocation().getLocWithOffset(-1), tok.getLocation()});
+            continue;
+        }
+
         // and it's is in user file
         if (SrcMgr::isSystem(sm.getFileCharacteristic(tok.getLocation()))) {
             continue;
@@ -204,8 +235,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     }
 
     // get rid of macro hell - try to remove all users macro except header guards
-    const auto& defResults = defCallback->results;
-    for (const auto& defined : defResults) {
+    for (const auto& defined : defCallback->results) {
         if (!defined.md) {
             continue;
         }
@@ -218,15 +248,16 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             continue;
         }
 
-        if (mi->getNumTokens() == 0) {
-            continue;
-        }
-
         auto hashLoc = findPreviousTokenKind(
             mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
         auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
         lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
         rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, std::string(lines, '\n'));
+    }
+
+    // remove empty macros from source code
+    for (const auto& em : defCallback->emptyMacros) {
+        rewriter.RemoveText({em.getLocation(), em.getLocation()});
     }
 
     // macro can be under #if/#elif

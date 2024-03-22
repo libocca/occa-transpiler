@@ -6,9 +6,10 @@
     b += 1;              \
     @barrier;
 
+#define __magic__
 typedef struct {
-    __restrict__ float* b;
-    @restrict float* c;
+   __magic__  __restrict__ float* b;
+   __magic__  @restrict float* c;
 } S;
 @restrict float* aa;
 

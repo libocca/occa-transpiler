@@ -52,6 +52,7 @@ TEST_CASES=(
     'backends/serial'
     'common/dim'
     'common/kernel_metadata'
+    'common/macro'
 )
 
 for case in "${TEST_CASES[@]}"; do
