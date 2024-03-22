@@ -3,7 +3,6 @@
 #include <oklt/core/kernel_metadata.h>
 
 #include <clang/AST/AST.h>
-#include "clang/AST/Type.h"
 
 namespace oklt {
 using namespace clang;
