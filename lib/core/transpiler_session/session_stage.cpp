@@ -40,7 +40,7 @@ std::string SessionStage::getRewriterResultForMainFile() {
     auto mainFID = sm.getMainFileID();
     auto* rewriteBuf = _rewriter->getRewriteBufferFor(mainFID);
     if (!rewriteBuf || rewriteBuf->size() == 0) {
-        return sm.getBufferData(mainFID).data();
+        return sm.getBufferData(mainFID).str();
     }
 
     std::string mainContent{rewriteBuf->begin(), rewriteBuf->end()};
@@ -69,7 +69,7 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
         if (!fileEntry) {
             continue;
         }
-        std::string fileName = fileEntry->getName().data();
+        auto fileName = fileEntry->getName().str();
         headers.fileMap[fileName] = [](const auto& buf) -> std::string {
             if (buf.size() == 0) {
                 return "";

@@ -30,8 +30,10 @@ void removeAttr(Rewriter& rewriter, const Attr& attr) {
 }
 
 std::string getArgAsStr(const SuppressAttr& attr) {
-    auto str = attr.diagnosticIdentifiers_begin()->data();
-    return str != nullptr ? str : "";
+    if (attr.diagnosticIdentifiers_size() == 0) {
+        return "";
+    }
+    return attr.diagnosticIdentifiers_begin()[0].str();
 }
 
 std::string getOklName(const Attr& attr) {

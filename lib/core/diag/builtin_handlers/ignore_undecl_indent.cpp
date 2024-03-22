@@ -115,7 +115,7 @@ class IgnoreUndeclHandler : public DiagHandler {
         std::string msg{buf.begin(), buf.end()};
 
         FullSourceLoc loc(info.getLocation(), sm);
-        session.pushWarning(std::to_string(loc.getLineNumber()) + ":" + msg.data());
+        session.pushWarning(std::to_string(loc.getLineNumber()) + ":" + msg);
 
         return true;
     }
