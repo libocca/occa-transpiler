@@ -136,6 +136,7 @@ tl::expected<DataType, std::error_code> toOklDataTypeImpl(const DeclType& var) {
     switch (typeCategory) {
         case DatatypeCategory::CUSTOM: {
             res.bytes = static_cast<int>(var.getASTContext().getTypeSize(type));
+            break;
         }
         case DatatypeCategory::STRUCT: {
             // Fill type of each struct field

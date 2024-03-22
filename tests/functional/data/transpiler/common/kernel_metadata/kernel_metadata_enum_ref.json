@@ -1,0 +1,63 @@
+{
+  "dependencies": {},
+  "metadata": [
+    {
+      "arguments": [
+        {
+          "const": false,
+          "dtype": {
+            "fields": [
+              {
+                "dtype": {
+                  "enumerators": [
+                    {
+                      "name": "El1"
+                    },
+                    {
+                      "name": "El2"
+                    }
+                  ],
+                  "type": "enum"
+                },
+                "name": "val"
+              }
+            ],
+            "type": "struct"
+          },
+          "name": "s",
+          "ptr": false
+        },
+        {
+          "const": false,
+          "dtype": {
+            "fields": [
+              {
+                "dtype": {
+                  "dtype": {
+                    "enumerators": [
+                      {
+                        "name": "El1"
+                      },
+                      {
+                        "name": "El2"
+                      }
+                    ],
+                    "size": 3,
+                    "type": "tuple"
+                  },
+                  "size": 2,
+                  "type": "tuple"
+                },
+                "name": "val"
+              }
+            ],
+            "type": "struct"
+          },
+          "name": "sArr",
+          "ptr": false
+        }
+      ],
+      "name": "_occa_kern_0"
+    }
+  ]
+}
