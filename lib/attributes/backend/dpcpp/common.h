@@ -1,7 +1,8 @@
+#pragma once
+
 #include "attributes/frontend/params/loop.h"
 
 #include <string>
-
 
 namespace clang {
 class Rewriter;

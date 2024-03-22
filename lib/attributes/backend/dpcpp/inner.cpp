@@ -2,7 +2,6 @@
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
-#include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 
@@ -36,9 +35,6 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
-
-    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
-  
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }

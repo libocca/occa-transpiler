@@ -6,9 +6,10 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "oklt/core/kernel_metadata.h"
-#include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+
+#include <oklt/core/kernel_metadata.h>
+#include <oklt/util/string_utils.h>
 
 #include <spdlog/spdlog.h>
 
@@ -125,8 +126,6 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         kernels.push_back(oklKernelInfo);
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
-
-        handleChildAttr(child.stmt, MAX_INNER_DIMS, s);
 
         std::stringstream out;
         if (n != 0) {

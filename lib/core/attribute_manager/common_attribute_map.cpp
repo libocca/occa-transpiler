@@ -2,10 +2,12 @@
 
 #include "core/attribute_manager/common_attribute_map.h"
 #include "core/transpiler_session/session_stage.h"
-#include "tl/expected.hpp"
+#include "core/utils/attributes.h"
 
 #include <clang/AST/Stmt.h>
+
 #include <system_error>
+#include <tl/expected.hpp>
 
 namespace oklt {
 using namespace clang;
@@ -24,15 +26,13 @@ HandleResult CommonAttributeMap::handleAttr(const Attr& attr,
                                             const Decl& decl,
                                             const std::any* params,
                                             SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
+    auto name = getOklAttrFullName(attr);
     auto it = _declHandlers.find(name);
     if (it != _declHandlers.end()) {
         return it->second.handle(attr, decl, params, stage);
     }
     return tl::make_unexpected(Error{std::error_code(),
-                                     util::fmt("Warning: no handle for attribute {} for node {} \n",
-                                               attr.getNormalizedFullName(),
-                                               decl.getDeclKindName())
+                                     util::fmt("Warning: no handle for attribute {} for node {} \n", name, decl.getDeclKindName())
                                          .value()});
 }
 
@@ -40,15 +40,13 @@ HandleResult CommonAttributeMap::handleAttr(const Attr& attr,
                                             const Stmt& stmt,
                                             const std::any* params,
                                             SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
+    auto name = getOklAttrFullName(attr);
     auto it = _stmtHandlers.find(name);
     if (it != _stmtHandlers.end()) {
         return it->second.handle(attr, stmt, params, stage);
     }
     return tl::make_unexpected(Error{std::error_code(),
-                                     util::fmt("Warning: no handle for attribute {} for node {} \n",
-                                               attr.getNormalizedFullName(),
-                                               stmt.getStmtClassName())
+                                     util::fmt("Warning: no handle for attribute {} for node {} \n", name, stmt.getStmtClassName())
                                          .value()});
 }
 

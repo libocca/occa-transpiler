@@ -1,6 +1,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
 #include <clang/Basic/CharInfo.h>
@@ -435,7 +436,7 @@ OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage) {
     auto& PP = stage.getCompiler().getPreprocessor();
     auto parser = AttrParamParser(attr, PP);
 
-    return parser.parseOKLAttr(attr.getNormalizedFullName());
+    return parser.parseOKLAttr(getOklAttrFullName(attr));
 }
 
 }  // namespace oklt

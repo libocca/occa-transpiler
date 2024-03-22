@@ -71,10 +71,10 @@ class AttributeManager {
     HandleResult handleNode(const clang::Decl& decl, SessionStage& stage);
     HandleResult handleNode(const clang::Stmt& stmt, SessionStage& stage);
 
-    tl::expected<std::set<const clang::Attr*>, Error> checkAttrs(const clang::Decl& decl,
-                                                                 SessionStage& stage);
-    tl::expected<std::set<const clang::Attr*>, Error> checkAttrs(const clang::Stmt& stmt,
-                                                                 SessionStage& stage);
+    tl::expected<std::vector<const clang::Attr*>, Error> checkAttrs(const clang::Decl& decl,
+                                                                    SessionStage& stage);
+    tl::expected<std::vector<const clang::Attr*>, Error> checkAttrs(const clang::Stmt& stmt,
+                                                                    SessionStage& stage);
 
    private:
     // INFO: here should not be the same named attributes in both

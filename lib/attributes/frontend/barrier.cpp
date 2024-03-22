@@ -1,14 +1,8 @@
+#include "params/barrier.h"
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/barrier.h"
-
-#include <oklt/util/string_utils.h>
-
-#include <clang/Basic/DiagnosticSema.h>
-#include <clang/Sema/Sema.h>
+#include "core/attribute_manager/parsed_attribute_info_base.h"
 
 namespace {
 
@@ -20,18 +14,17 @@ constexpr ParsedAttrInfo::Spelling BARRIER_ATTRIBUTE_SPELLINGS[] = {
     {ParsedAttr::AS_CXX11, BARRIER_ATTR_NAME},
     {ParsedAttr::AS_GNU, "okl_barrier"}};
 
-struct BarrierAttribute : public ParsedAttrInfo {
+struct BarrierAttribute : public ParsedAttrInfoBase {
     BarrierAttribute() {
+        Spellings = BARRIER_ATTRIBUTE_SPELLINGS;
         NumArgs = 1;
         OptArgs = 0;
-        Spellings = BARRIER_ATTRIBUTE_SPELLINGS;
-        AttrKind = clang::AttributeCommonInfo::AT_Suppress;
         IsStmt = true;
     }
 
-    bool diagAppertainsToStmt(clang::Sema& sema,
-                              const clang::ParsedAttr& attr,
-                              const clang::Stmt* stmt) const override {
+    bool diagAppertainsTo(clang::Sema& sema,
+                          const clang::ParsedAttr& attr,
+                          const clang::Stmt& stmt) const override {
         if (!isa<NullStmt>(stmt)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
                 << attr << attr.isDeclspecAttribute() << "empty statement";
@@ -40,9 +33,9 @@ struct BarrierAttribute : public ParsedAttrInfo {
         return true;
     }
 
-    bool diagAppertainsToDecl(clang::Sema& sema,
-                              const clang::ParsedAttr& attr,
-                              const clang::Decl* decl) const override {
+    bool diagAppertainsTo(clang::Sema& sema,
+                          const clang::ParsedAttr& attr,
+                          const clang::Decl& decl) const override {
         // INFO: fail for all decls
         sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
             << attr << attr.isDeclspecAttribute() << "empty statements";

@@ -1,13 +1,8 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
-
-#include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
-
-#include <clang/Basic/DiagnosticSema.h>
-#include <clang/Sema/ParsedAttr.h>
-#include <clang/Sema/Sema.h>
+#include "attributes/utils/parser_impl.hpp"
+#include "core/attribute_manager/parsed_attribute_info_base.h"
+#include "params/empty_params.h"
 
 namespace {
 
@@ -19,17 +14,16 @@ constexpr ParsedAttrInfo::Spelling RESTRICT_ATTRIBUTE_SPELLINGS[] = {
     {ParsedAttr::AS_CXX11, RESTRICT_ATTR_NAME},
     {ParsedAttr::AS_GNU, "okl_restrict"}};
 
-struct RestrictAttribute : public ParsedAttrInfo {
+struct RestrictAttribute : public ParsedAttrInfoBase {
     RestrictAttribute() {
+        Spellings = RESTRICT_ATTRIBUTE_SPELLINGS;
         NumArgs = 1;
         OptArgs = 0;
-        Spellings = RESTRICT_ATTRIBUTE_SPELLINGS;
-        AttrKind = clang::AttributeCommonInfo::AT_Annotate;
     }
 
-    bool diagAppertainsToDecl(clang::Sema& sema,
-                              const clang::ParsedAttr& attr,
-                              const clang::Decl* decl) const override {
+    bool diagAppertainsTo(clang::Sema& sema,
+                          const clang::ParsedAttr& attr,
+                          const clang::Decl& decl) const override {
         // INFO: this can to applied to following decl
         if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
@@ -45,7 +39,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
                 default:
                     return cast<VarDecl>(decl)->getType();
             }
-        }(decl);
+        }(&decl);
 
         if (!type->isPointerType() && !type->isArrayType()) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)

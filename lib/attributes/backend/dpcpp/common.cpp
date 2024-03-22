@@ -1,7 +1,8 @@
 #include "attributes/backend/dpcpp/common.h"
-#include <oklt/util/string_utils.h>
 #include "core/sema/okl_sema_ctx.h"
 #include "core/utils/range_to_string.h"
+
+#include <oklt/util/string_utils.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
 

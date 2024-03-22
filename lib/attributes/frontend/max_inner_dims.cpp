@@ -1,14 +1,8 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "core/attribute_manager/parsed_attribute_info_base.h"
 #include "params/loop.h"
-
-#include <oklt/util/string_utils.h>
-
-#include <clang/Basic/DiagnosticSema.h>
-#include <clang/Sema/ParsedAttr.h>
-#include <clang/Sema/Sema.h>
 
 namespace {
 using namespace clang;
@@ -19,18 +13,18 @@ constexpr ParsedAttrInfo::Spelling MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS[] = {
     {ParsedAttr::AS_CXX11, MAX_INNER_DIMS},
     {ParsedAttr::AS_GNU, "okl_max_inner_dims"}};
 
-struct MaxInnerDims : public ParsedAttrInfo {
+struct MaxInnerDims : public ParsedAttrInfoBase {
     MaxInnerDims() {
+        AttrKind = AttributeKind::MODIFIER;
+        Spellings = MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS;
         NumArgs = 1;
         OptArgs = 0;
-        Spellings = MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS;
-        AttrKind = clang::AttributeCommonInfo::AT_Suppress;
         IsStmt = true;
     }
 
-    bool diagAppertainsToStmt(clang::Sema& sema,
-                              const clang::ParsedAttr& attr,
-                              const clang::Stmt* stmt) const override {
+    bool diagAppertainsTo(clang::Sema& sema,
+                          const clang::ParsedAttr& attr,
+                          const clang::Stmt& stmt) const override {
         if (!isa<ForStmt>(stmt)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
                 << attr << attr.isDeclspecAttribute() << "for statement";
@@ -39,9 +33,9 @@ struct MaxInnerDims : public ParsedAttrInfo {
         return true;
     }
 
-    bool diagAppertainsToDecl(clang::Sema& sema,
-                              const clang::ParsedAttr& attr,
-                              const clang::Decl* decl) const override {
+    bool diagAppertainsTo(clang::Sema& sema,
+                          const clang::ParsedAttr& attr,
+                          const clang::Decl& decl) const override {
         // INFO: fail for all decls
         sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
             << attr << attr.isDeclspecAttribute() << "for statement";

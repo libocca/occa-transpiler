@@ -3,6 +3,7 @@
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attribute_store.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -56,7 +57,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
                                           const Decl& decl,
                                           const std::any* params,
                                           SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
+    auto name = getOklAttrFullName(attr);
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, decl, params, stage);
     }
@@ -74,7 +75,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
                                           const Stmt& stmt,
                                           const std::any* params,
                                           SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
+    auto name = getOklAttrFullName(attr);
     if (_commonAttrs.hasAttrHandler(name)) {
         return _commonAttrs.handleAttr(attr, stmt, params, stage);
     }
@@ -89,7 +90,7 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
 }
 
 ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
-    std::string name = attr.getNormalizedFullName();
+    auto name = getOklAttrFullName(attr);
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {
         auto params = ParseOKLAttr(attr, stage);
@@ -109,28 +110,25 @@ ParseResult AttributeManager::parseAttr(const Attr& attr,
     return EmptyParams{};
 }
 
-tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const Decl& decl,
-                                                                        SessionStage& stage) {
-    if (!decl.hasAttrs()) {
+tl::expected<std::vector<const Attr*>, Error> AttributeManager::checkAttrs(const Decl& decl,
+                                                                           SessionStage& stage) {
+    auto& attrStore = stage.tryEmplaceUserCtx<AttributeStore>(stage.getCompiler().getASTContext());
+    auto attrs = attrStore.get(decl);
+    if (attrs.empty()) {
         return {};
     }
 
-    const auto& attrs = decl.getAttrs();
-    std::set<const Attr*> collectedAttrs;
+    std::vector<const Attr*> ret;
+    ret.reserve(attrs.size());
 
-    // in case of multiple same attribute take the last one
+    std::set<const Attr*> uniqueAttrs;
     for (auto it = attrs.rbegin(); it != attrs.rend(); ++it) {
-        const auto& attr = *it;
-
+        auto attr = *it;
         if (!attr) {
             continue;
         }
 
-        if (!isOklAttribute(*attr)) {
-            continue;
-        }
-
-        auto name = attr->getNormalizedFullName();
+        auto name = getOklAttrFullName(*attr);
         if (!_commonAttrs.hasAttrHandler(name) && !_backendAttrs.hasAttrHandler(stage, name)) {
             // TODO report diag error
             SPDLOG_ERROR("{} attribute: {} for decl: {} doesn not have a registered handler",
@@ -141,7 +139,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
             return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
         }
 
-        auto [_, isNew] = collectedAttrs.insert(attr);
+        auto [_, isNew] = uniqueAttrs.insert(attr);
         if (!isNew) {
             // TODO convince OCCA community to specify such case as forbidden
             SPDLOG_ERROR("{} multi declaration of attribute: {} for decl: {}",
@@ -149,29 +147,32 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
                          name,
                          decl.getDeclKindName());
         }
+
+        ret.push_back(attr);
     }
 
-    return collectedAttrs;
+    return ret;
 }
 
-tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const Stmt& stmt,
-                                                                        SessionStage& stage) {
-    if (stmt.getStmtClass() != Stmt::AttributedStmtClass) {
+tl::expected<std::vector<const Attr*>, Error> AttributeManager::checkAttrs(const Stmt& stmt,
+                                                                           SessionStage& stage) {
+    auto& attrStore = stage.tryEmplaceUserCtx<AttributeStore>(stage.getCompiler().getASTContext());
+    auto attrs = attrStore.get(stmt);
+    if (attrs.empty()) {
         return {};
     }
 
-    const auto& attrs = cast<AttributedStmt>(stmt).getAttrs();
-    std::set<const Attr*> collectedAttrs;
-    for (const auto attr : attrs) {
+    std::vector<const Attr*> ret;
+    ret.reserve(attrs.size());
+
+    std::set<const Attr*> uniqueAttrs;
+    for (auto it = attrs.rbegin(); it != attrs.rend(); ++it) {
+        auto attr = *it;
         if (!attr) {
             continue;
         }
 
-        if (!isOklAttribute(*attr)) {
-            continue;
-        }
-
-        auto name = attr->getNormalizedFullName();
+        auto name = getOklAttrFullName(*attr);
         if (!_commonAttrs.hasAttrHandler(name) && !_backendAttrs.hasAttrHandler(stage, name)) {
             // TODO report diag error
             SPDLOG_ERROR("{} attribute: {} for stmt: {} does not have a registered handler",
@@ -181,7 +182,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const St
             return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
         }
 
-        auto [_, isNew] = collectedAttrs.insert(attr);
+        auto [_, isNew] = uniqueAttrs.insert(attr);
         if (!isNew) {
             // TODO convince OCCA community to specify such case as forbidden
             SPDLOG_ERROR("{} multi declaration of attribute: {} for stmt: {}",
@@ -189,8 +190,10 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const St
                          name,
                          stmt.getStmtClassName());
         }
+
+        ret.push_back(attr);
     }
 
-    return collectedAttrs;
+    return ret;
 }
 }  // namespace oklt

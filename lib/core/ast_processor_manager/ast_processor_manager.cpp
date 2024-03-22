@@ -1,5 +1,6 @@
 #include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
 
@@ -28,7 +29,7 @@ oklt::HandleResult runNodeHandler(KeyType key,
 }
 
 AstProcessorManager::AttrKeyType makeAttrKey(AstProcessorType procType, const clang::Attr* attr) {
-    return {procType, attr ? attr->getNormalizedFullName() : ""};
+    return {procType, attr ? getOklAttrFullName(*attr) : ""};
 }
 }  // namespace
 

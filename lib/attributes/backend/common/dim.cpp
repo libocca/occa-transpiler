@@ -2,7 +2,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
 #include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/attribute_manager/attribute_store.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 
@@ -29,16 +29,15 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
 tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
                                           const AttributedDim* params,
                                           SessionStage& stage) {
-    auto& ctx = stage.getCompiler().getASTContext();
     DimOrder dimOrder(params->dim.size());
     // Default dimensions order - 0, 1, ... n
     std::iota(dimOrder.begin(), dimOrder.end(), 0);
 
-    auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
-    auto attrs = attrTypeMap.get(ctx, var->getType());
+    auto& ctx = stage.getCompiler().getASTContext();
+    auto& attrStore = stage.tryEmplaceUserCtx<AttributeStore>(ctx);
+    auto attrs = attrStore.get(var->getType());
     for (const auto* attr : attrs) {
-        auto name = attr->getNormalizedFullName();
-        if (name != DIMORDER_ATTR_NAME) {
+        if (!attr || getOklAttrFullName(*attr) != DIMORDER_ATTR_NAME) {
             continue;
         }
 
@@ -54,6 +53,7 @@ tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
         dimOrder = attributedDimOrder->idx;
         break;
     }
+
     if (dimOrder.size() != params->dim.size()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] wrong number of arguments"});
     }
@@ -74,7 +74,6 @@ tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
 tl::expected<ExprVec, Error> validateDim(const RecoveryExpr& rec,
                                          const AttributedDim& params,
                                          SessionStage& s) {
-    auto& ctx = s.getCompiler().getASTContext();
     auto nDims = params.dim.size();
 
     auto missingDimErr = util::fmt("Missing dimensions, expected {} argument(s)", nDims).value();
@@ -100,7 +99,6 @@ tl::expected<ExprVec, Error> validateDim(const RecoveryExpr& rec,
 tl::expected<ExprVec, Error> validateDim(const CallExpr& expr,
                                          const AttributedDim& params,
                                          SessionStage& s) {
-    auto& ctx = s.getCompiler().getASTContext();
     auto nDims = params.dim.size();
 
     auto missingDimErr = util::fmt("Missing dimensions, expected {} argument(s)", nDims).value();
@@ -127,27 +125,29 @@ tl::expected<ExprVec, Error> validateDim(const CallExpr& expr,
     return expressions;
 }
 
-// TODO: maybe recursion would look better?
 std::string buildIndexCalculation(const ExprVec& dimVarArgs,
                                   const AttributedDim* params,
                                   const DimOrder& dimOrder,
                                   SessionStage& stage) {
-    auto& ctx = stage.getCompiler().getASTContext();
     auto& rewriter = stage.getRewriter();
     int nDims = params->dim.size();
     std::string indexCalculation;
+
     // Open brackets
     for (int dim = 0; dim < nDims - 1; ++dim) {
         auto idx = dimOrder[dim];
         auto dimVarArgStr = getLatestSourceText(*dimVarArgs[idx], rewriter);
         indexCalculation += util::fmt("{} + ({} * (", dimVarArgStr, params->dim[idx]).value();
     }
+
     auto idx = dimOrder[nDims - 1];
     indexCalculation += getLatestSourceText(*dimVarArgs[idx], rewriter);
+
     // Close brackets
     for (int i = 0; i < 2 * (nDims - 1); ++i) {
         indexCalculation += ")";
     }
+
     return indexCalculation;
 }
 

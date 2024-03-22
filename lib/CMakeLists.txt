@@ -174,7 +174,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp
-    core/attribute_manager/attributed_type_map.cpp
+    core/attribute_manager/attribute_store.cpp
+    core/attribute_manager/parsed_attribute_info_base.cpp
     core/attribute_manager/backend_attribute_map.cpp
     core/attribute_manager/common_attribute_map.cpp
     core/attribute_manager/implicit_handlers/implicit_handler_map.cpp
