@@ -23,6 +23,9 @@ void to_json(json& j, const DatatypeCategory& cat) {
         case DatatypeCategory::TUPLE:
             j = "tuple";
             break;
+        case DatatypeCategory::ENUM:
+            j = "enum";
+            break;
         default:
             j = "";
     }
@@ -40,6 +43,9 @@ void from_json(const json& j, DatatypeCategory& cat) {
     }
     if (j == "tuple") {
         cat = DatatypeCategory::TUPLE;
+    }
+    if (j == "enum") {
+        cat = DatatypeCategory::ENUM;
     }
 }
 
@@ -85,6 +91,16 @@ void to_json(json& j, const TupleElementDataType& tupleDtype) {
             j["dtype"]["type"] = tupleDtype.typeCategory;
             break;
         }
+        case DatatypeCategory::ENUM: {
+            std::vector<json> enumerators;
+            for (const auto& name : tupleDtype.enumNames) {
+                enumerators.push_back(json{
+                    {"name", name},
+                });
+            }
+            j["enumerators"] = enumerators;
+            break;
+        }
         default: {
             j["dtype"] = {{"name", tupleDtype.name}, {"type", tupleDtype.typeCategory}};
             break;
@@ -95,23 +111,33 @@ void to_json(json& j, const TupleElementDataType& tupleDtype) {
 void to_json(json& j, const DataType& dt) {
     switch (dt.typeCategory) {
         case DatatypeCategory::BUILTIN: {
-            j = json{{"name", dt.name}, {"type", dt.typeCategory}};
+            j = json{{"name", dt.name}};
             break;
         }
         case DatatypeCategory::STRUCT: {
-            j = json{{"type", dt.typeCategory}, {"fields", dt.fields}};
+            j = json{{"fields", dt.fields}};
             break;
         }
         case DatatypeCategory::TUPLE: {
             j = *dt.tupleElementDType;
-            j["type"] = dt.typeCategory;
+            break;
+        }
+        case DatatypeCategory::ENUM: {
+            std::vector<json> enumerators;
+            for (const auto& name : dt.enumNames) {
+                enumerators.push_back(json{
+                    {"name", name},
+                });
+            }
+            j["enumerators"] = enumerators;
             break;
         }
         default: {
-            j = json{{"type", dt.typeCategory}, {"bytes", dt.bytes}, {"name", "none"}};
+            j = json{{"bytes", dt.bytes}, {"name", "none"}};
             break;
         }
     }
+    j["type"] = dt.typeCategory;
 }
 
 void from_json(const json& j, DataType& dt) {
