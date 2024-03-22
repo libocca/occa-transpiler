@@ -20,17 +20,6 @@ enum struct DatatypeCategory {
 struct StructFieldInfo;
 struct TupleElementDataType;
 
-// TODO: fix code dublication with DataType
-struct TupleElementDataType {
-    int64_t tupleSize = -1;
-    DatatypeCategory typeCategory = DatatypeCategory::CUSTOM;
-    std::string name;                   // Used only for builtin and custom
-    std::list<StructFieldInfo> fields;  // Used only for struct element type
-    std::shared_ptr<TupleElementDataType> tupleElementDType =
-        nullptr;                         // Used only for tuple element type
-    std::vector<std::string> enumNames;  // Used only for enums
-};
-
 struct DataType {
     std::string name;
     DatatypeCategory typeCategory;
@@ -38,6 +27,11 @@ struct DataType {
     std::list<StructFieldInfo> fields;                        // used only for structs
     std::shared_ptr<TupleElementDataType> tupleElementDType;  // used only for tuples
     std::vector<std::string> enumNames;                       // Used only for enums
+};
+
+struct TupleElementDataType {
+    int64_t tupleSize = -1;
+    DataType elementDType;
 };
 
 struct StructFieldInfo {

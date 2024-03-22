@@ -34,14 +34,17 @@
               {
                 "dtype": {
                   "dtype": {
-                    "enumerators": [
-                      {
-                        "name": "El1"
-                      },
-                      {
-                        "name": "El2"
-                      }
-                    ],
+                    "dtype": {
+                      "enumerators": [
+                        {
+                          "name": "El1"
+                        },
+                        {
+                          "name": "El2"
+                        }
+                      ],
+                      "type": "enum"
+                    },
                     "size": 3,
                     "type": "tuple"
                   },
