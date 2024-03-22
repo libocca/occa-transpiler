@@ -95,6 +95,10 @@ tl::expected<DataType, std::error_code> toOklDataTypeImpl(const DeclType& var) {
 
     // Find correct unqualified type
     auto type = var.getType();
+    if (isa<ParmVarDecl>(var)) {
+        // This gets type of array before decay
+        type = dyn_cast<ParmVarDecl>(&var)->getOriginalType();
+    }
     auto baseType = getBaseType(type);
 
     std::string name = getTypeName(baseType);
