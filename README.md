@@ -10,7 +10,7 @@
 ## Build
 ### Setup llvm 
 ```bash
-wget https://github.com/opencollab/llvm-jenkins.debian.net/blob/master/llvm.sh
+wget https://raw.githubusercontent.com/opencollab/llvm-jenkins.debian.net/master/llvm.sh
 sudo ./llvm.sh 17 all
 rm llvm.sh
 ```
