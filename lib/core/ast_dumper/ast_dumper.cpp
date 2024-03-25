@@ -28,6 +28,9 @@ class ASTDumper : public ASTNodeTraverser<ASTDumper, TextNodeDumper> {
 
     TextNodeDumper& doGetNodeDelegate() { return _nodeDumper; }
 
+    // NOTE: Original ASTDumper behaves differently for FunctionTemplateDecl, ClassTemplateDecl and
+    // VarTemplateDecl. Therefore, we have to be similar.
+
     template <typename SpecializationDecl>
     void dumpTemplateDeclSpecialization(const SpecializationDecl* D,
                                         bool dumpExplicitInst,
