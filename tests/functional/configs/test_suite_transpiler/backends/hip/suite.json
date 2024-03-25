@@ -3,6 +3,6 @@
     "non_kernel_function.json",
     "tile.json",
     "inner_outer.json",
-  "max_inner_dims.json",
+    "max_inner_dims.json",
     "macro.json"
 ]
