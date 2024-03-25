@@ -76,6 +76,9 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
             }
             return std::string{buf.begin(), buf.end()};
         }(buf);
+
+        llvm::outs() << "header: " << fileName << "\n";
+        llvm::outs() <<  headers.fileMap[fileName] << "\n";
     }
 
     return headers;

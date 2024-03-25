@@ -44,6 +44,19 @@ SourceLocation findPreviousTokenKind(SourceLocation start,
     }
 }
 
+bool isHeaderGuardEx(StringRef name) {
+    // XXX last drastic check for header guard
+    //  header guard could be not the first and last line of source and clang fails to catch
+    //  this lets try simple check my naming convention
+    //  TODO add more complex check by catch ifndef/endif
+    if (name.ends_with("_H") || name.ends_with("_H_") || name.ends_with("_HPP") ||
+        name.ends_with("_HPP_")) {
+        return true;
+    }
+
+    return false;
+}
+
 class CondDirectiveCallbacks : public PPCallbacks {
    public:
     struct Result {
@@ -63,7 +76,7 @@ class CondDirectiveCallbacks : public PPCallbacks {
     void If(SourceLocation loc,
             SourceRange conditionRange,
             ConditionValueKind conditionValue) override {
-        if (sm.isInSystemHeader(conditionRange.getBegin())) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
         results.emplace_back(conditionRange, conditionValue);
@@ -73,7 +86,7 @@ class CondDirectiveCallbacks : public PPCallbacks {
               SourceRange conditionRange,
               ConditionValueKind conditionValue,
               SourceLocation ifLoc) override {
-        if (sm.isInSystemHeader(conditionRange.getBegin())) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
         results.emplace_back(conditionRange, conditionValue);
@@ -117,6 +130,15 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         if (!mi) {
             return;
         }
+
+        auto* id = macroNameTok.getIdentifierInfo();
+        if (!id) {
+            return;
+        }
+        if (isHeaderGuardEx(id->getName())) {
+            return;
+        }
+
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
                              std::string("if ") + (mi->isEnabled() ? "1" : "0"));
     }
@@ -144,6 +166,15 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         if (!mi) {
             return;
         }
+
+        auto* id = macroNameTok.getIdentifierInfo();
+        if (!id) {
+            return;
+        }
+        if (isHeaderGuardEx(id->getName())) {
+            return;
+        }
+
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
                              std::string("if ") + (mi->isEnabled() ? "0" : "1"));
     }
@@ -168,6 +199,7 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
 };
 
 class DefineDirectiveCallbacks : public PPCallbacks {
+   private:
    public:
     struct Result {
         std::string name;
@@ -193,6 +225,19 @@ class DefineDirectiveCallbacks : public PPCallbacks {
             return;
         }
 
+        auto* mi = md->getMacroInfo();
+        if (!mi) {
+            return;
+        }
+
+        if (mi->isUsedForHeaderGuard()) {
+            return;
+        }
+
+        if (isHeaderGuardEx(id->getName())) {
+            return;
+        }
+
         results.emplace_back(id->getName(), md);
     }
 
@@ -211,6 +256,14 @@ class DefineDirectiveCallbacks : public PPCallbacks {
 
         auto* mi = md.getMacroInfo();
         if (!mi) {
+            return;
+        }
+
+        if (mi->isUsedForHeaderGuard()) {
+            return;
+        }
+
+        if (isHeaderGuardEx(id->getName())) {
             return;
         }
 
