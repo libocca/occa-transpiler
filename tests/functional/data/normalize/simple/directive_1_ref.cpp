@@ -1,4 +1,4 @@
-#define MACRO_1 1
+
 
 [[okl::kernel("")]] void test([[okl::restrict("")]] int* aaa
 #if 1

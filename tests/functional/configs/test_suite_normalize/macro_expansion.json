@@ -12,5 +12,13 @@
             "source": "normalize/simple/me_first_token_is_kw.cpp"
         },
         "reference": "normalize/simple/me_first_token_is_kw_ref.cpp"
+    },
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/simple/macro_ifdef.cpp"
+        },
+        "reference": "normalize/simple/macro_ifdef_ref.cpp"
     }
+
 ]

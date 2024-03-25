@@ -1,4 +1,5 @@
-@directive("#define MACRO_1 1") @directive("#define __restrict_macro @restrict")
+@directive("#define MACRO_1 1")
+@directive("#define __restrict_macro @restrict")
 
     @kernel void test(__restrict_macro int* aaa
 #if MACRO_1
