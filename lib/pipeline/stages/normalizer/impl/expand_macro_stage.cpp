@@ -184,12 +184,12 @@ class DefineDirectiveCallbacks : public PPCallbacks {
     const SourceManager& sm;
 
     void MacroDefined(const Token& macroNameTok, const MacroDirective* md) override {
-        const auto* id = macroNameTok.getIdentifierInfo();
-        if (!id) {
+        if (sm.isInSystemHeader(macroNameTok.getLocation())) {
             return;
         }
 
-        if (sm.isInSystemHeader(md->getLocation())) {
+        const auto* id = macroNameTok.getIdentifierInfo();
+        if (!id) {
             return;
         }
 
@@ -200,6 +200,10 @@ class DefineDirectiveCallbacks : public PPCallbacks {
                       const MacroDefinition& md,
                       SourceRange range,
                       const MacroArgs* args) override {
+        if (sm.isInSystemHeader(macroNameTok.getLocation())) {
+            return;
+        }
+
         const auto* id = macroNameTok.getIdentifierInfo();
         if (!id) {
             return;
@@ -207,10 +211,6 @@ class DefineDirectiveCallbacks : public PPCallbacks {
 
         auto* mi = md.getMacroInfo();
         if (!mi) {
-            return;
-        }
-
-        if (sm.isInSystemHeader(mi->getDefinitionLoc())) {
             return;
         }
 
