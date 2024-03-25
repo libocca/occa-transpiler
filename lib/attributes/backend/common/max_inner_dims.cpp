@@ -24,16 +24,19 @@ HandleResult handleMaxInnerDimsStmtAttribute(const clang::Attr& a,
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
-    if (loopInfo && !loopInfo->parent && !params->size.empty()) {
-        OklLoopInfo::OptSizes sz = {1, 1, 1};
-        for (size_t i = 0; i < params->size.size(); ++i) {
-            auto s = params->size[i];
-            if (s > 0) {
-                sz[i] = s;
+    if (loopInfo && !loopInfo->parent) {
+        bool isValidLoop = !loopInfo->isTiled() && loopInfo->is(LoopType::Outer);
+        if (isValidLoop && !params->size.empty()) {
+            OklLoopInfo::OptSizes sz = {1, 1, 1};
+            for (size_t i = 0; i < params->size.size(); ++i) {
+                auto s = params->size[i];
+                if (s > 0) {
+                    sz[i] = s;
+                }
             }
-        }
 
-        loopInfo->overridenInnerSizes = sz;
+            loopInfo->overridenInnerSizes = sz;
+        }
     }
 
     removeAttribute(a, s);
