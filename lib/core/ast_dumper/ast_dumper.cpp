@@ -119,19 +119,16 @@ class ASTDumper : public ASTNodeTraverser<ASTDumper, TextNodeDumper> {
     }
 
     void VisitAnnotateAttr(const AnnotateAttr* A) {
-        Base::VisitAnnotateAttr(A);
         if (A && isOklAttribute(*A)) {
             _os << " " << A->getNormalizedFullName();
         }
     }
     void VisitAnnotateTypeAttr(const AnnotateTypeAttr* A) {
-        Base::VisitAnnotateTypeAttr(A);
         if (A && isOklAttribute(*A)) {
             _os << " " << A->getNormalizedFullName();
         }
     }
     void VisitSuppressAttr(const SuppressAttr* A) {
-        Base::VisitSuppressAttr(A);
         if (A && isOklAttribute(*A)) {
             _os << " " << A->getNormalizedFullName();
         }
