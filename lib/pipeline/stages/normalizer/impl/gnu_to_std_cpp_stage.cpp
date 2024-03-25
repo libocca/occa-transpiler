@@ -1,5 +1,6 @@
 #include <oklt/core/error.h>
 
+#include "core/ast_dumper/ast_dumper.h"
 #include "core/attribute_manager/attribute_store.h"
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
@@ -172,7 +173,7 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
     // declaration.
     void HandleTranslationUnit(ASTContext& ctx) override {
 #ifdef NORMALIZER_DEBUG_LOG
-        ctx.getTranslationUnitDecl()->dump(llvm::outs());
+        dump(ctx.getTranslationUnitDecl(), _stage);
 #endif
         TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
         _normalizer_visitor.TraverseDecl(decl);
