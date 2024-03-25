@@ -114,6 +114,8 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
 
     void Ifdef(SourceLocation loc, const Token& macroNameTok, const MacroDefinition& md) override {
         auto mi = getMacroInfoForUserMacro(loc, md);
+        if (!mi) {
+            return;
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
                              std::string("if ") + (mi->isEnabled() ? "1" : "0"));
     }
