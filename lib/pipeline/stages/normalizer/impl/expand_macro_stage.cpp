@@ -116,6 +116,7 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         auto mi = getMacroInfoForUserMacro(loc, md);
         if (!mi) {
             return;
+        }
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
                              std::string("if ") + (mi->isEnabled() ? "1" : "0"));
     }
