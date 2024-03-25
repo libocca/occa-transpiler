@@ -46,5 +46,16 @@
             "launcher": ""
         },
         "reference": "transpiler/common/kernel_metadata/kernel_metadata_enum_ref.json"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/kernel_metadata/struct_with_ptr_to_enum.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/kernel_metadata/struct_with_ptr_to_enum_ref.cpp"
     }
 ]
