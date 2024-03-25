@@ -12,8 +12,6 @@
 #include <any>
 
 namespace oklt {
-
-class ASTVisitor;
 class AttributeManager;
 struct TranspilerSession;
 

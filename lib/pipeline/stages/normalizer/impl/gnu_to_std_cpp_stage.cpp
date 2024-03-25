@@ -1,6 +1,6 @@
-#include <llvm-17/llvm/Support/raw_ostream.h>
 #include <oklt/core/error.h>
 
+#include "core/ast_dumper/ast_dumper.h"
 #include "core/attribute_manager/attribute_store.h"
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
@@ -171,7 +171,7 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
     // declaration.
     void HandleTranslationUnit(ASTContext& ctx) override {
         if (spdlog::get_level() == spdlog::level::trace) {
-            ctx.getTranslationUnitDecl()->dump(llvm::outs());
+            dump(ctx.getTranslationUnitDecl(), _stage);
         }
         TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
         _normalizer_visitor.TraverseDecl(decl);

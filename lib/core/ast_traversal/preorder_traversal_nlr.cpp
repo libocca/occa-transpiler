@@ -1,4 +1,5 @@
 #include "core/ast_traversal/preorder_traversal_nlr.h"
+#include "core/ast_dumper/ast_dumper.h"
 #include "core/ast_processor_manager/ast_processor_manager.h"
 
 #include "core/attribute_manager/attribute_manager.h"
@@ -255,6 +256,11 @@ bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
 
     auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
     tnodes.clear();
+
+#ifdef TRANSPILER_DEBUG_LOG
+    dump(translationUnitDecl, _stage);
+    // translationUnitDecl->dump(llvm::outs());
+#endif
 
     _tu = translationUnitDecl;
     return traverseNode(*this, translationUnitDecl, _procMng, _stage);
