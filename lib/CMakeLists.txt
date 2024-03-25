@@ -145,7 +145,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/nobarrier.cpp
 
-        core/ast_dumper/ast_dumper.cpp
+    core/ast_dumper/ast_dumper.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
