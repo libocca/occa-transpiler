@@ -210,7 +210,7 @@ class DefineDirectiveCallbacks : public PPCallbacks {
     };
 
     std::vector<Result> results;
-    std::vector<Token> emptyMacros;
+    std::vector<SourceRange> emptyMacros;
     DefineDirectiveCallbacks(const SourceManager& sm_)
         : sm(sm_) {}
     const SourceManager& sm;
@@ -271,7 +271,7 @@ class DefineDirectiveCallbacks : public PPCallbacks {
             return;
         }
 
-        emptyMacros.emplace_back(macroNameTok);
+        emptyMacros.emplace_back(SourceRange{macroNameTok.getLocation(), range.getEnd()});
     }
 };
 
@@ -401,7 +401,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
 
     // remove empty macros from source code
     for (const auto& em : defCallback->emptyMacros) {
-        rewriter.RemoveText({em.getLocation(), em.getLocation()});
+        rewriter.ReplaceText(em, "");
     }
 
     // macro can be under #if/#elif
