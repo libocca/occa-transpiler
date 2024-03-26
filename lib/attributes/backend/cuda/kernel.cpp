@@ -1,25 +1,17 @@
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_names.h>
+#include "attributes/attribute_names.h"
+#include "attributes/utils/cuda_subset/handle.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 namespace {
 using namespace oklt;
 
-bool parseKernelAttribute(const clang::Attr* a, SessionStage&) {
-  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
-  return true;
-}
+__attribute__((constructor)) void registerAttrBackend() {
+    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::CUDA, KERNEL_ATTR_NAME},
+        makeSpecificAttrHandle(cuda_subset::handleKernelAttribute));
 
-bool handleKernelAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
-  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
-  return true;
-}
-
-__attribute__((constructor)) void registerKernelHandler() {
-  auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-    {TRANSPILER_TYPE::CUDA, KERNEL_ATTR_NAME}, {parseKernelAttribute, handleKernelAttribute});
-
-  if (!ok) {
-    llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler\n";
-  }
+    if (!ok) {
+        llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler\n";
+    }
 }
 }  // namespace

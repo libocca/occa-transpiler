@@ -1,0 +1,9 @@
+[
+    {
+        "action": "normalizer",
+        "action_config": {
+            "source": "normalize/simple/tile_with_nested_parentness.cpp"
+        },
+        "reference": "normalize/simple/tile_with_nested_parentness_ref.cpp"
+    }
+]

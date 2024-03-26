@@ -1,23 +1,30 @@
 #pragma once
 
-#include <oklt/core/transpiler_session/transpiler_session.h>
-#include "okl_attr_marker.h"
+#include "core/transpiler_session/header_info.h"
+#include "core/transpiler_session/transpiler_session.h"
+#include "pipeline/stages/normalizer/impl/okl_attr_marker.h"
 
 #include <list>
+
 #include <tl/expected.hpp>
 
 namespace oklt {
 
 struct GnuToStdCppStageOutput {
-  std::string stdCppSrc;
+    std::string stdCppSrc;
+    TransformedFiles stdCppIncs;
+    SharedTranspilerSession session;
 };
 
 struct GnuToStdCppStageInput {
-  std::string gnuCppSrc;
-  std::list<OklAttrMarker> gnuMarkers;
-  std::list<OklAttrMarker> recoveryMarkers;
+    std::string gnuCppSrc;
+    TransformedFiles gnuCppIncs;
+    std::list<OklAttrMarker> gnuMarkers;
+    std::list<OklAttrMarker> recoveryMarkers;
+    SharedTranspilerSession session;
 };
 
-tl::expected<GnuToStdCppStageOutput, int> convertGnuToStdCppAttribute(GnuToStdCppStageInput input,
-                                                                      TranspilerSession& session);
+struct Error;
+using GnuToStdCppResult = tl::expected<GnuToStdCppStageOutput, std::vector<Error>>;
+GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input);
 }  // namespace oklt

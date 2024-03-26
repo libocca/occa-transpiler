@@ -1,20 +1,14 @@
-#include "oklt/core/attribute_manager/attr_decl_handler.h"
-#include "oklt/core/transpiler_session/transpiler_session.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 
 namespace oklt {
 using namespace clang;
 
-AttrDeclHandler::AttrDeclHandler(ParamsParserType pp, HandleType h)
-    : _paramsParser(std::move(pp)), _handler(std::move(h)) {}
-
-bool AttrDeclHandler::handle(const Attr* attr, const Decl* decl, SessionStage& session) {
-  if (parseParams(attr, session)) {
-    return _handler(attr, decl, session);
-  }
-  return false;
+HandleResult AttrDeclHandler::handle(const Attr& attr,
+                                     const Decl& decl,
+                                     const std::any* params,
+                                     SessionStage& stage) {
+    return _handler(attr, decl, params, stage);
 }
 
-bool AttrDeclHandler::parseParams(const Attr* attr, SessionStage& session) {
-  return _paramsParser(attr, session);
-}
 }  // namespace oklt

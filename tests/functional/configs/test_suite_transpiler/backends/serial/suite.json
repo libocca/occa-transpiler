@@ -1,0 +1,10 @@
+[
+  "tile.json",
+  "inner_outer.json",
+  "shared.json",
+  "restrict.json",
+  "atomic.json",
+  "barrier.json",
+  "exclusive.json",
+  "macro.json"
+]

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.26)
+
 project(occa-transpiler VERSION 0.0.1 LANGUAGES C CXX)
 
 option(TRANSPILER_TESTS "build transpiler library tests" ON)
-option(STATIC_LIBCLANG "Link to a statically compiled version of LLVM/libclang." ON)
 
 # Add custom modules path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -35,11 +35,7 @@ set(LLVM_REQUIRES_RTTI ON)
 
 include(AddLLVM)
 
-if (STATIC_LIBCLANG)
-    set(CLANG_LIBS libclang clangTooling)
-else()
-    set(CLANG_LIBS libclang clang-cpp)
-endif()
+set(CLANG_LIBS libclang clangTooling clangFrontendTool)
 
 add_subdirectory(lib)
 add_subdirectory(tool)
@@ -47,3 +43,29 @@ add_subdirectory(tool)
 if(TRANSPILER_TESTS)
    add_subdirectory(tests)
 endif()
+
+
+install(
+    TARGETS occa-transpiler
+    EXPORT oklt-config
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+    TARGETS occa-tool
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/oklt
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(
+    EXPORT oklt-config
+    NAMESPACE occa::
+    FILE oklt-targets.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/oklt)
+
+configure_file(cmake/oklt-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/oklt-config.cmake @ONLY)
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/oklt-config.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/oklt)

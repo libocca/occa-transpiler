@@ -1,0 +1,41 @@
+[
+  {
+    "const": true,
+    "dtype": {
+      "name": "int",
+      "type": "builtin"
+    },
+    "name": "entries",
+    "ptr": false
+  },
+  {
+    "const": false,
+    "dtype": {
+      "bytes": 0,
+      "name": "none",
+      "type": "custom"
+    },
+    "name": "a",
+    "ptr": true
+  },
+  {
+    "const": false,
+    "dtype": {
+      "bytes": 0,
+      "name": "none",
+      "type": "custom"
+    },
+    "name": "b",
+    "ptr": true
+  },
+  {
+    "const": false,
+    "dtype": {
+      "bytes": 0,
+      "name": "none",
+      "type": "custom"
+    },
+    "name": "ab",
+    "ptr": true
+  }
+]

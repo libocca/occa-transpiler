@@ -2,6 +2,7 @@ CPMAddPackage(
   googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG v1.13.0
+  OPTIONS "INSTALL_GTEST OFF" "INSTALL_GMOCK OFF"
 )
 
 CPMAddPackage(
@@ -28,6 +29,7 @@ set(TESTS_SOURCES
     common/data_directory.h
     common/data_directory.cpp
     generic_configurable_tests.cpp
+    internal/test_kernel_info.cpp
     main.cpp
 )
 
@@ -39,10 +41,6 @@ target_include_directories(occa-transpiler-tests
         ${CMAKE_SOURCE_DIR}/include
     )
 
-if (NOT STATIC_LIBCLANG)
-    llvm_config(occa-transpiler-tests USE_SHARED support)
-endif()
-
 target_compile_definitions(occa-transpiler-tests
        	PRIVATE
         ${LLVM_DEFINITIONS})
@@ -53,7 +51,6 @@ target_link_libraries(occa-transpiler-tests
         argparse
 	nlohmann_json::nlohmann_json
         occa-transpiler
-        ${CLANG_LIBS}
 )
 
 add_custom_command(TARGET occa-transpiler-tests POST_BUILD
@@ -63,6 +60,7 @@ add_custom_command(TARGET occa-transpiler-tests POST_BUILD
 
 gtest_discover_tests(
         occa-transpiler-tests
+        WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
         EXTRA_ARGS -s ./configs/test_suite_normalize -d data
         TEST_SUFFIX .noArgs
         TEST_LIST noArgsTests

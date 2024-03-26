@@ -1,0 +1,46 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/implicit/const_global_variable.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/implicit/const_global_variable_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/implicit/const_global_const_size_array.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/implicit/const_global_const_size_array_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/implicit/const_global_pointer.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/implicit/const_global_pointer_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/implicit/extern_const_global_array.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/implicit/extern_const_global_array_ref.cpp"
+    }
+]

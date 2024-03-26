@@ -1,71 +1,75 @@
-#include "oklt/core/transpiler_session/transpiler_session.h"
-#include "oklt/core/diag/diag_consumer.h"
-#include "oklt/core/utils/format.h"
+#include <oklt/core/error.h>
+#include <oklt/core/kernel_metadata.h>
 
-#include <clang/AST/ParentMapContext.h>
-#include <clang/Basic/SourceManager.h>
+#include "core/transpiler_session/transpiler_session.h"
+
+#include <clang/Basic/Diagnostic.h>
 
 namespace oklt {
-using namespace clang;
 
-TranspilerSession::TranspilerSession(TRANSPILER_TYPE backend)
-    : targetBackend(backend), transpiledCode() {}
-
-SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
-    : _session(session),
-      _compiler(compiler),
-      _rewriter(_compiler.getSourceManager(), _compiler.getLangOpts()) {}
-
-clang::CompilerInstance& SessionStage::getCompiler() {
-  return _compiler;
+SharedTranspilerSession TranspilerSession::make(UserInput input) {
+    return std::make_shared<TranspilerSession>(std::move(input));
 }
 
-clang::Rewriter& SessionStage::getRewriter() {
-  return _rewriter;
+SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::string sourceCode) {
+    return std::make_shared<TranspilerSession>(backend, sourceCode);
 }
 
-AttributeManager& SessionStage::getAttrManager() {
-  return AttributeManager::instance();
+TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
+    input.backend = backend;
+    input.sourceCode = std::move(sourceCode);
 }
 
-std::string SessionStage::getRewriterResult() {
-  auto* rewriteBuf = _rewriter.getRewriteBufferFor(_compiler.getSourceManager().getMainFileID());
-  if (!rewriteBuf || rewriteBuf->size() == 0) {
-    return "";
-  }
+TranspilerSession::TranspilerSession(UserInput input_)
+    : input(std::move(input_)) {}
 
-  return std::string{rewriteBuf->begin(), rewriteBuf->end()};
+void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
+    // TODO: Fixup sourceLocation
+    auto msg = message.getMessage();
+    auto loc = message.getLocation();
+
+    uint32_t lineNo = 0;
+    if (loc.isValid()) {
+        lineNo = message.getLocation().getLineNumber();
+    }
+
+    std::stringstream ss;
+    if (loc.isValid()) {
+        ss << "line " << lineNo << ": ";
+    }
+    ss << msg.str();
+    // TODO
+    //  create error category for syntax/semantic error/warning
+    if (message.getLevel() > clang::DiagnosticsEngine::Level::Warning) {
+        _errors.push_back(Error{std::error_code(), ss.str()});
+    } else {
+        _warnings.push_back(Warning{ss.str()});
+    }
 }
 
-TRANSPILER_TYPE SessionStage::getBackend() const {
-  return _session.targetBackend;
+bool setCurrentKernelInfo(KernelInfo* ki);
+[[nodiscard]] KernelInfo* getCurrentKernelInfo();
+void TranspilerSession::pushError(std::error_code ec, std::string desc) {
+    _errors.push_back(Error{ec, std::move(desc)});
 }
 
-void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
-  // TODO: Fixup sourceLocation
-  auto msg = message.getMessage();
-  auto lineNo = message.getLocation().getLineNumber();
-
-  std::stringstream ss;
-  ss << "line " << lineNo << ": ";
-  ss << msg.str();
-
-  _session.diagMessages.emplace_back(Error{ss.str()});
+void TranspilerSession::pushWarning(std::string desc) {
+    _warnings.push_back(Warning{std::move(desc)});
 }
 
-SessionStage* getStageFromASTContext(clang::ASTContext& ast) {
-  // NOTE:
-  // There are a few stable references/pointer that can point to our controlled classes and
-  // structures. getSourceManager().getFileManager -- Reference to FileManager. Initialized before
-  // CompilerInstance, exist only one. getDiagnostics().getClient() -- Pointer to
-  // DiagnosticConsumer. Initialized during ExecuteAction, can be multiplexed.
-
-  auto diag = dynamic_cast<DiagConsumer*>(ast.getDiagnostics().getClient());
-  if (!diag) {
-    return nullptr;
-  }
-
-  return &diag->getSession();
+const std::vector<Error>& TranspilerSession::getErrors() const {
+    return _errors;
 }
 
+std::vector<Error>& TranspilerSession::getErrors() {
+    return _errors;
+}
+
+const std::vector<Warning>& TranspilerSession::getWarnings() const {
+    return _warnings;
+}
+
+std::vector<Warning>& TranspilerSession::getWarnings() {
+    return _warnings;
+}
 }  // namespace oklt

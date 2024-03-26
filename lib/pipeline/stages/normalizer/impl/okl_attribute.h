@@ -3,12 +3,30 @@
 #include <clang/Basic/SourceLocation.h>
 
 namespace oklt {
+
+constexpr char OKL_ATTR_MARKER = '@';
+
 struct OklAttribute {
-  std::string raw;
-  std::string name;
-  std::string params;
-  clang::SourceLocation begin_loc;
-  std::vector<size_t> tok_indecies;
+    std::string raw;
+    std::string name;
+    std::string params;
+    std::vector<size_t> tok_indecies;
 };
+
+inline static std::string wrapAsSpecificGnuAttr(const OklAttribute& attr) {
+    if (attr.params.empty()) {
+        return "__attribute__((okl_" + attr.name + R"((")" + "" + "\")))";
+    }
+
+    return "__attribute__((okl_" + attr.name + R"((")" + attr.params + "\")))";
+}
+
+inline static std::string wrapAsSpecificCxxAttr(const OklAttribute& attr) {
+    if (attr.params.empty()) {
+        return "[[okl::" + attr.name + R"((")" + "" + "\")]]";
+    }
+
+    return "[[okl::" + attr.name + R"((")" + attr.params + "\")]]";
+}
 
 }  // namespace oklt

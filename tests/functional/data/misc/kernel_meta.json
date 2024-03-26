@@ -1,0 +1,41 @@
+{
+  "arguments": [
+    {
+      "const": true,
+      "dtype": {
+        "name": "int",
+        "type": "builtin"
+      },
+      "name": "entries",
+      "ptr": false
+    },
+    {
+      "const": true,
+      "dtype": {
+        "name": "float",
+        "type": "builtin"
+      },
+      "name": "a",
+      "ptr": true
+    },
+    {
+      "const": true,
+      "dtype": {
+        "name": "float",
+        "type": "builtin"
+      },
+      "name": "b",
+      "ptr": true
+    },
+    {
+      "const": false,
+      "dtype": {
+        "name": "float",
+        "type": "builtin"
+      },
+      "name": "ab",
+      "ptr": true
+    }
+  ],
+  "name": "_occa_addVectors_0"
+}

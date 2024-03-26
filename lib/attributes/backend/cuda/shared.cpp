@@ -1,25 +1,23 @@
-#include <oklt/core/attribute_manager/attribute_manager.h>
-#include <oklt/core/attribute_names.h>
+#include "attributes/attribute_names.h"
+#include "attributes/utils/cuda_subset/handle.h"
+#include "attributes/utils/default_handlers.h"
+#include "core/attribute_manager/attribute_manager.h"
 
 namespace {
 using namespace oklt;
 
-bool parseSharedAttribute(const clang::Attr* a, SessionStage&) {
-  llvm::outs() << "parse attribute: " << a->getNormalizedFullName() << '\n';
-  return true;
-}
+__attribute__((constructor)) void registerCUDASharedAttrBackend() {
+    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::CUDA, SHARED_ATTR_NAME},
+        makeSpecificAttrHandle(cuda_subset::handleSharedAttribute));
 
-bool handleSharedAttribute(const clang::Attr* a, const clang::Decl* d, SessionStage& s) {
-  llvm::outs() << "handle attribute: " << a->getNormalizedFullName() << '\n';
-  return true;
-}
+    // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
+    ok &= oklt::AttributeManager::instance().registerBackendHandler(
+        {TargetBackend::CUDA, SHARED_ATTR_NAME},
+        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
-__attribute__((constructor)) void registerSharedHandler() {
-  auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-    {TRANSPILER_TYPE::CUDA, SHARED_ATTR_NAME}, {parseSharedAttribute, handleSharedAttribute});
-
-  if (!ok) {
-    llvm::errs() << "failed to register " << SHARED_ATTR_NAME << " attribute handler\n";
-  }
+    if (!ok) {
+        llvm::errs() << "failed to register " << SHARED_ATTR_NAME << " attribute handler\n";
+    }
 }
 }  // namespace
