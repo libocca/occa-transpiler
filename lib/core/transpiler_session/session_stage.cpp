@@ -52,8 +52,17 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
     TransformedFiles headers;
     const auto& sm = _compiler.getSourceManager();
     auto mainFID = sm.getMainFileID();
+
+    // rewriter cache each include of the same header as separate buffer
+    // ensure that only first hopefully modified is taken
+    std::set<uint32_t> processedFID;
     for (auto it = _rewriter->buffer_begin(); it != _rewriter->buffer_end(); ++it) {
         const auto& [fid, buf] = *it;
+
+        // file
+        if (processedFID.count(fid.getSentinel().getHashValue())) {
+            continue;
+        }
 
         // sanity check
         if (fid.isInvalid()) {
@@ -76,9 +85,11 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
             }
             return std::string{buf.begin(), buf.end()};
         }(buf);
+        processedFID.insert(fid.getSentinel().getHashValue());
 
+        llvm::outs() << "fid: " << fid.getSentinel().getHashValue() << "\n";
         llvm::outs() << "header: " << fileName << "\n";
-        llvm::outs() <<  headers.fileMap[fileName] << "\n";
+        llvm::outs() << headers.fileMap[fileName] << "\n";
     }
 
     return headers;
