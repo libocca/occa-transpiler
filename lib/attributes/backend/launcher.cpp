@@ -233,7 +233,7 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
             secondMeta.condition.op = BinOp::Gt;
             break;
     }
-    if (sz.value_or(1024) >= 0) {
+    if (sz.value_or(1024) > 0) {
         secondMeta.range.end = "(" + firstMeta.var.name + " + " + loopInfo.tileSize + ")";
     } else {
         secondMeta.range.end = firstMeta.var.name;
