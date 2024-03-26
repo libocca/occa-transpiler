@@ -52,6 +52,10 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
     TransformedFiles headers;
     const auto& sm = _compiler.getSourceManager();
     auto mainFID = sm.getMainFileID();
+
+    // rewriter cache each include of the same header as separate buffer
+    // ensure that only first hopefully modified is taken
+    std::set<std::string> processedFID;
     for (auto it = _rewriter->buffer_begin(); it != _rewriter->buffer_end(); ++it) {
         const auto& [fid, buf] = *it;
 
@@ -70,12 +74,17 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
             continue;
         }
         auto fileName = fileEntry->getName().str();
+        if (processedFID.count(fileName)) {
+            continue;
+        }
+
         headers.fileMap[fileName] = [](const auto& buf) -> std::string {
             if (buf.size() == 0) {
                 return "";
             }
             return std::string{buf.begin(), buf.end()};
         }(buf);
+        processedFID.insert(fileName);
     }
 
     return headers;

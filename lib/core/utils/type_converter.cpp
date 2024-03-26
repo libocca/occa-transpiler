@@ -55,7 +55,12 @@ tl::expected<void, std::error_code> fillStructFields(std::list<StructFieldInfo>&
 }
 
 tl::expected<void, std::error_code> fillEnumNames(std::vector<std::string>& enumNames,
-                                                  const Type* type) {
+                                                  const Type* type_) {
+    const Type* type = type_;
+    if (type->isPointerType()) {
+        type = type->getPointeeType().getTypePtr();
+    }
+
     auto enumType = dyn_cast<EnumType>(type->getCanonicalTypeUnqualified());
     if (!enumType) {
         return tl::make_unexpected(std::error_code());
@@ -95,8 +100,7 @@ tl::expected<void, std::error_code> fillTupleElement(
 
 tl::expected<DataType, std::error_code> toOklDataTypeImpl(const QualType& type, ASTContext& ctx) {
     auto baseType = getBaseType(type);
-
-    std::string name = getTypeName(baseType);
+    auto name = getTypeName(baseType);
     auto anotherName =
         getTypeName(QualType(baseType.getTypePtr()->getUnqualifiedDesugaredType(), 0));
     auto typeCategory = toOklDatatypeCategory(type);
@@ -188,7 +192,12 @@ tl::expected<StructFieldInfo, std::error_code> toOklStructFieldInfo(const clang:
     if (isPointer(var)) {
         is_const = isConstPointer(var) || isPointerToConst(var);
     }
-    StructFieldInfo res{.dtype = toOklDataType(var).value(), .name = var.getNameAsString()};
+    auto dt = toOklDataType(var);
+    if(!dt) {
+        return tl::make_unexpected(dt.error());
+    }
+
+    StructFieldInfo res{.dtype = dt.value(), .name = var.getNameAsString()};
     return res;
 }
 

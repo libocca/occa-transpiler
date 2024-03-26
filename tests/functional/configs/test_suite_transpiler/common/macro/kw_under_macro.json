@@ -9,5 +9,16 @@
             "launcher": ""
         },
         "reference": "transpiler/common/macro/kw_under_macro_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/macro/empty_macro_with_arg.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/macro/empty_macro_with_arg_ref.cpp"
     }
 ]

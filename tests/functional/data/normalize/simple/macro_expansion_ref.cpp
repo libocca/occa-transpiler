@@ -1,7 +1,5 @@
 
 
-#define USE_THAT 12
-
 inline int fastMul(float a) {
     return a * 1.f;
 }
