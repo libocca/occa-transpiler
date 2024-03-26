@@ -42,5 +42,16 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/launcher/tile/outer_inner_regular_dec_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "launcher",
+      "source": "transpiler/backends/launcher/tile/bug_138.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/launcher/tile/bug_138_ref.cpp"
   }
 ]
