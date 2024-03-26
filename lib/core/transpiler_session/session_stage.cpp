@@ -74,7 +74,6 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
             continue;
         }
         auto fileName = fileEntry->getName().str();
-        // file
         if (processedFID.count(fileName)) {
             continue;
         }
@@ -86,9 +85,6 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
             return std::string{buf.begin(), buf.end()};
         }(buf);
         processedFID.insert(fileName);
-
-        llvm::outs() << "header: " << fileName << "\n";
-        llvm::outs() << headers.fileMap[fileName] << "\n";
     }
 
     return headers;
