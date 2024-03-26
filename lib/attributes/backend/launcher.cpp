@@ -204,7 +204,7 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
     // Prepare first loop
     auto firstMeta = LoopMetaData(loopInfo, r);
     firstMeta.var.name = getTiledVariableName(firstMeta);
-    if (sz.value_or(1024) > 1) {
+    if (sz.value_or(1024) > 0) {
         if (firstMeta.inc.val.empty()) {
             firstMeta.inc.val = loopInfo.tileSize;
             switch (firstMeta.inc.op.uo) {
@@ -233,7 +233,7 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
             secondMeta.condition.op = BinOp::Gt;
             break;
     }
-    if (sz.value_or(1024) > 1) {
+    if (sz.value_or(1024) > 0) {
         secondMeta.range.end = "(" + firstMeta.var.name + " + " + loopInfo.tileSize + ")";
     } else {
         secondMeta.range.end = firstMeta.var.name;
