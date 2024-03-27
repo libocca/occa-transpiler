@@ -8,8 +8,6 @@
 #include <clang/AST/Stmt.h>
 #include <spdlog/spdlog.h>
 
-#include <spdlog/spdlog.h>
-
 namespace {
 using namespace oklt;
 using namespace clang;

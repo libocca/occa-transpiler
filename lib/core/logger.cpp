@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 #include <tl/expected.hpp>
 
+#include <map>
 
 namespace {
 
@@ -10,32 +11,18 @@ tl::expected<spdlog::level::level_enum, std::string> parseLoggerLevel(std::strin
     std::transform(levelStr.begin(), levelStr.end(), levelStr.begin(), [](unsigned char c) {
         return std::tolower(c);
     });
+    static std::map<std::string, spdlog::level::level_enum> mapping{
+        {"trace", spdlog::level::trace},
+        {"debug", spdlog::level::debug},
+        {"info", spdlog::level::info},
+        {"warn", spdlog::level::warn},
+        {"err", spdlog::level::err},
+        {"critical", spdlog::level::critical}};
 
-    // TODO: magic_enum can hide these ifs
-    if (levelStr == "trace") {
-        return spdlog::level::trace;
+    if (!mapping.count(levelStr)) {
+        return tl::make_unexpected("Failed to parse logger level name");
     }
-
-    if (levelStr == "debug") {
-        return spdlog::level::debug;
-    }
-
-    if (levelStr == "info") {
-        return spdlog::level::info;
-    }
-
-    if (levelStr == "warn") {
-        return spdlog::level::warn;
-    }
-
-    if (levelStr == "err") {
-        return spdlog::level::err;
-    }
-
-    if (levelStr == "critical") {
-        return spdlog::level::critical;
-    }
-    return tl::make_unexpected("Failed to parse logger level name");
+    return mapping.at(levelStr);
 }
 
 __attribute__((constructor)) void initLogger() {

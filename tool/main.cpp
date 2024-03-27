@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
 std::string build_transpilation_output_filename(const std::filesystem::path& input_file_path) {
