@@ -26,7 +26,7 @@ tl::expected<spdlog::level::level_enum, std::string> parseLoggerLevel(std::strin
 }
 
 __attribute__((constructor)) void initLogger() {
-    auto log_level_env = std::getenv("OKL_LOGGER_LEVEL");
+    auto log_level_env = std::getenv("OKLT_LOG_LEVEL");
     auto log_level = spdlog::level::info;  // Default: info level
     if (log_level_env) {
         auto log_level_status = parseLoggerLevel(log_level_env);

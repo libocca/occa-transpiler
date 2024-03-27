@@ -51,7 +51,7 @@ Optional arguments:
 ```
 
 ### Logging
-Logging level can be set with `OKL_LOGGER_LEVEL` enviroment variable.
+Logging level can be set with `OKLT_LOG_LEVEL` enviroment variable.
 
 Possible values:
 - trace
