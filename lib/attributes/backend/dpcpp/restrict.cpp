@@ -5,6 +5,8 @@
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -13,6 +15,8 @@ const std::string RESTRICT_MODIFIER = "__restrict__";
 HandleResult handleRestrictAttribute(const clang::Attr& a,
                                      const clang::Decl& decl,
                                      SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@restrict] attribute");
+
     SourceLocation identifierLoc = decl.getLocation();
     std::string restrictText = " " + RESTRICT_MODIFIER + " ";
 
@@ -34,10 +38,6 @@ HandleResult handleRestrictAttribute(const clang::Attr& a,
     }(decl);
 
     std::string modifiedArgument = part1 + restrictText + ident;
-
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] DPCPP: Handle @restrict.\n";
-#endif
 
     s.getRewriter().ReplaceText({getAttrFullSourceRange(a).getBegin(), decl.getEndLoc()},
                                 part1 + restrictText + ident);

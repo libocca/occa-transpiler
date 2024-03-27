@@ -14,6 +14,7 @@
 #include <oklt/core/kernel_metadata.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
+#include <spdlog/spdlog.h>
 
 // #define OKL_LAUNCHER_RECURSIVE
 
@@ -353,10 +354,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     auto mainFileId = sm.getMainFileID();
     auto loc = sm.getLocForStartOfFile(mainFileId);
 
-#ifdef TRANSPILER_DEBUG_LOG
-    auto offset = sm.getFileOffset(d.getLocation());
-    llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
-#endif
+    SPDLOG_DEBUG("Handle translation unit");
 
     //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
     auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps;
@@ -368,9 +366,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
 HandleResult handleLauncherKernelAttribute(const Attr& a,
                                            const FunctionDecl& func,
                                            SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle attribute: {}", a.getNormalizedFullName());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();

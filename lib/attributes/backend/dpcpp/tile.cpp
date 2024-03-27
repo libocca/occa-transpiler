@@ -13,6 +13,8 @@
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -225,6 +227,8 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                                  const clang::ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@tile] attribute");
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
     }
@@ -248,14 +252,6 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
-
-#ifdef TRANSPILER_DEBUG_LOG
-    const auto& md = *loopInfo;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << ", name: " << md.var.name << ", initValue: " << md.range.start
-                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
-                 << ", isUnary: " << md.isUnary() << ")\n";
-#endif
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }

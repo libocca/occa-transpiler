@@ -5,6 +5,8 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -13,6 +15,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@inner] attribute");
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@inner params nullptr"});
     }
@@ -35,9 +38,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @inner attribute\n";
-#endif
+
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }

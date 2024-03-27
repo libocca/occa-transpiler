@@ -8,6 +8,12 @@ CPMAddPackage(
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
+CPMAddPackage(NAME spdlog
+  VERSION 1.13.0
+  GITHUB_REPOSITORY gabime/spdlog
+  OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
+
+
 add_executable(occa-tool
         main.cpp
 )
@@ -21,5 +27,8 @@ target_link_libraries(occa-tool
         PRIVATE
         occa-transpiler
         argparse
+        spdlog::spdlog_header_only
 )
 
+# Make sure that spdlog macro supports all logging levels
+target_compile_definitions(occa-tool PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)

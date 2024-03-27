@@ -1,5 +1,7 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -8,9 +10,7 @@ const std::string prefixExprText = "#pragma omp atomic\n";
 const std::string prefixCompoundText = "#pragma omp critical\n";
 
 HandleResult handleOPENMPAtomicAttribute(const Attr& a, const Stmt& stmt, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@atomic] attribute");
     auto& rewriter = s.getRewriter();
 
     SourceRange attrRange = getAttrFullSourceRange(a);

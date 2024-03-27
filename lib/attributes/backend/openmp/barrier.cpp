@@ -1,13 +1,13 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
 
 HandleResult handleOPENMPBarrierAttribute(const Attr& a, const NullStmt& stmt, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@barrier] attribute");
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());
     s.getRewriter().RemoveText(range);

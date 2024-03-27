@@ -14,6 +14,7 @@
 #include <clang/Lex/LiteralSupport.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+#include <spdlog/spdlog.h>
 
 #include <set>
 
@@ -70,10 +71,9 @@ bool replaceOklMacroAttribute(const OklAttribute& oklAttr,
 
     rewriter.InsertTextBefore(insertLoc, lit.GetString());
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "removed macro attr: " << oklAttr.name
-                 << " at loc: " << insertLoc.printToString(pp.getSourceManager()) << '\n';
-#endif
+    SPDLOG_DEBUG("Removed macro attr: {} at loc: {}",
+                 oklAttr.name,
+                 insertLoc.printToString(pp.getSourceManager()));
 
     return true;
 }
@@ -171,9 +171,7 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
         return tl::make_unexpected(std::vector<Error>{error});
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage OKL directive expansion, source:\n\n" << input.cppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage OKL directive expansion, source:\n\n{}", input.cppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
@@ -209,9 +207,7 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
         output.cppSrc = std::move(input_file);
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 0 Macro cpp source:\n\n" << output.cppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 0 Macro cpp souce:\n\n{}", output.cppSrc);
 
     return output;
 }

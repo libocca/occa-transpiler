@@ -21,6 +21,11 @@ std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx) {
         .str();
 }
 
+std::string getSourceText(const clang::Decl& decl) {
+    auto& ctx = decl.getASTContext();
+    return getSourceText(decl.getSourceRange(), ctx);
+}
+
 std::string prettyPrint(const clang::Stmt& stmt, clang::ASTContext& ctx) {
     std::string ret;
     llvm::raw_string_ostream os(ret);

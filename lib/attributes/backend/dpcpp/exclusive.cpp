@@ -6,6 +6,7 @@
 
 #include <clang/AST/Attr.h>
 #include <clang/AST/Stmt.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -13,9 +14,7 @@ using namespace clang;
 HandleResult handleExclusiveAttribute(const clang::Attr& a,
                                       const clang::Decl& decl,
                                       SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] handle attribute: @exclusive\n";
-#endif
+    SPDLOG_DEBUG("Handle [@exclusive] attribute");
     s.getRewriter().RemoveText(getAttrFullSourceRange(a));
     return defaultHandleExclusiveDeclAttribute(a, decl, s);
 }

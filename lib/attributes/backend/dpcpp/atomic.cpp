@@ -5,6 +5,8 @@
 #include "core/utils/range_to_string.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -96,9 +98,7 @@ HandleResult handleAtomicAttribute(const clang::Attr& attr,
         return tl::make_unexpected(newExpression.error());
     }
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @atomic.\n";
-#endif
+    SPDLOG_DEBUG("Handle [@atomic] attribute");
 
     SourceRange range(getAttrFullSourceRange(attr).getBegin(), stmt.getEndLoc());
     stage.getRewriter().ReplaceText(range, newExpression.value());

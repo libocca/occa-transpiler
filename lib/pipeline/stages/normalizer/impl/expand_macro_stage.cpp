@@ -13,6 +13,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 
@@ -367,10 +368,10 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
 
         // in case of macro with args take only macro name
         auto macroName = original->split('(').first;
-#ifdef NORMALIZER_DEBUG_LOG
-        llvm::outs() << "expansion at: " << expansionLoc.printToString(sm) << " inline macro "
-                     << original.value() << " by " << expanded.value() << '\n';
-#endif
+        SPDLOG_DEBUG("Expansion at: {} inline macro {} by {}",
+                     expansionLoc.printToString(sm),
+                     original.value(),
+                     expanded.value());
         // expand macro in source code
         rewriter.ReplaceText(expansionLoc, original->size(), expanded.value());
 
@@ -477,9 +478,7 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
         return tl::make_unexpected(std::vector<Error>{error});
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 0 OKL source:\n\n" << input.cppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.cppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
@@ -506,9 +505,7 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 1 inlined macros with OKL cpp source:\n\n" << output.cppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 1 inlined macros with OKL cpp source:\n\n{}", output.cppSrc);
 
     return output;
 }

@@ -5,6 +5,7 @@
 #include "core/utils/type_converter.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
+#include <spdlog/spdlog.h>
 namespace oklt::serial_subset {
 using namespace clang;
 
@@ -13,9 +14,7 @@ const std::string EXTERN_C = "extern \"C\"";
 }  // namespace
 
 HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& rewriter = s.getRewriter();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();

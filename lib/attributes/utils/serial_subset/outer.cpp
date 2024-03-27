@@ -4,6 +4,8 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::serial_subset {
 using namespace clang;
 
@@ -11,9 +13,8 @@ HandleResult handleOuterAttribute(const Attr& a,
                                   const ForStmt& stmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@outer] attribute");
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@outer params nullptr"});
     }

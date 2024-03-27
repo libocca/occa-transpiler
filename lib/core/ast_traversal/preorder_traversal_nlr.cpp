@@ -13,6 +13,7 @@
 #include <clang/FrontendTool/Utils.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/PreprocessorOptions.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -264,6 +265,7 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
     clang::TranslationUnitDecl* translationUnitDecl) {
     // traverse AST and generate sema metadata if required
     if (!_tu || _tu != translationUnitDecl) {
+        SPDLOG_INFO("Start AST traversal");
         if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
             return tl::make_unexpected(Error{{}, "error during AST traversing"});
         }
@@ -274,12 +276,14 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
     sema.getProgramMetaData().kernels.clear();
 
     // 1. generate transpiled code
+    SPDLOG_INFO("Apply transpilation");
     auto transpiledResult = generateTranspiledCode(_stage);
     if (!transpiledResult) {
         return tl::make_unexpected(transpiledResult.error());
     }
 
     // 2. generate build json
+    SPDLOG_INFO("Build metadata json");
     auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
     if (!transpiledMetaData) {
         return tl::make_unexpected(transpiledMetaData.error());

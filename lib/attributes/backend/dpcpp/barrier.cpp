@@ -6,6 +6,7 @@
 
 #include <clang/AST/Attr.h>
 #include <clang/AST/Stmt.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -13,9 +14,7 @@ using namespace clang;
 HandleResult handleBarrierAttribute(const clang::Attr& a,
                                     const clang::Stmt& stmt,
                                     SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] handle attribute: @barrier\n";
-#endif
+    SPDLOG_DEBUG("Handle [@barrier] attribute");
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());
     s.getRewriter().ReplaceText(range, dpcpp::SYNC_THREADS_BARRIER);

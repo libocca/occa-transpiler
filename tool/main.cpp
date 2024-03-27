@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
 
 std::string build_transpilation_output_filename(const std::filesystem::path& input_file_path) {
     std::string out_file = input_file_path.filename().stem().string() + "_transpiled" +
@@ -202,11 +204,11 @@ int main(int argc, char* argv[]) {
                                                userOutput.launcher.sourceCode);
                     oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadataJson);
                 }
-                std::cout << "Transpiling success : true" << std::endl;
+                SPDLOG_INFO("Transpiling success : true");
             } else {
-                std::cout << "Transpiling errors: " << std::endl;
+                SPDLOG_INFO("Transpiling success: false");
                 for (const auto& error : result.error()) {
-                    std::cout << error.desc << std::endl;
+                    SPDLOG_ERROR(error.desc);
                 }
             }
         }
