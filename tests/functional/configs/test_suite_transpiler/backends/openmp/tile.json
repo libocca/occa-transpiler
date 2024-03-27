@@ -42,5 +42,16 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/openmp/tile/outer_inner_regular_dec_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "openmp",
+      "source": "transpiler/backends/openmp/tile/bug_141.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/openmp/tile/bug_141_ref.cpp"
   }
 ]
