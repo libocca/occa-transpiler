@@ -15,9 +15,9 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "max_inner_dim"},
+    {ParsedAttr::AS_CXX11, "max_inner_dims"},
     {ParsedAttr::AS_CXX11, MAX_INNER_DIMS},
-    {ParsedAttr::AS_GNU, "okl_inner_dim"}};
+    {ParsedAttr::AS_GNU, "okl_max_inner_dims"}};
 
 struct MaxInnerDims : public ParsedAttrInfo {
     MaxInnerDims() {
