@@ -10,17 +10,17 @@ option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
 option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_types.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
+    ${ROOT_DIR}/include/oklt/core/ast_processor_types.h
+    ${ROOT_DIR}/include/oklt/core/target_backends.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_metadata.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_output.h
+    ${ROOT_DIR}/include/oklt/core/kernel_metadata.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/format.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer.h
+    ${ROOT_DIR}/include/oklt/pipeline/transpiler.h
+    ${ROOT_DIR}/include/oklt/util/format.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/nobarrier.cpp
