@@ -69,15 +69,27 @@ bool replaceOklMacroAttribute(const OklAttribute& oklAttr,
     }
 
     auto replacement = lit.GetString().str();
-    // in case of one line source code add new line character due to directive expand macro that
-    // actually will hide all source code
+
+    // in case of one line source code add new line character before and after directive expand to
+    // ensure source is not hidden by macro that could be inside of directive
     if (oklAttr.tok_indecies.back() != tokens.size()) {
-        FullSourceLoc attrLastToken(tokens[oklAttr.tok_indecies.back()].getLocation(),
-                                    pp.getSourceManager());
+        FullSourceLoc nextTokenAfterAttr(tokens[oklAttr.tok_indecies.back()].getLocation(),
+                                         pp.getSourceManager());
         FullSourceLoc nextTokenFullLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
                                        pp.getSourceManager());
-        if (attrLastToken.getExpansionLineNumber() == nextTokenFullLoc.getExpansionLineNumber()) {
+        if (nextTokenAfterAttr.getExpansionLineNumber() ==
+            nextTokenFullLoc.getExpansionLineNumber()) {
             replacement += '\n';
+        }
+    }
+    if (oklAttr.tok_indecies.front() != 0) {
+        FullSourceLoc prevTokenAfterAttr(tokens[oklAttr.tok_indecies.back()].getLocation(),
+                                         pp.getSourceManager());
+        FullSourceLoc nextTokenFullLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
+                                       pp.getSourceManager());
+        if (prevTokenAfterAttr.getExpansionLineNumber() ==
+            nextTokenFullLoc.getExpansionLineNumber()) {
+            replacement = '\n' + replacement;
         }
     }
 
