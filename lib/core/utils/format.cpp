@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include <spdlog/spdlog.h>
+
 using namespace clang;
 using namespace clang::tooling;
 
@@ -18,7 +20,7 @@ std::string format(std::string_view code) {
     Replacements replaces = format::reformat(style, code, ranges);
     auto changedCode = applyAllReplacements(code, replaces);
     if (!changedCode) {
-        llvm::errs() << toString(changedCode.takeError());
+        SPDLOG_ERROR("{}", toString(changedCode.takeError()));
         return {};
     }
     return changedCode.get();

@@ -37,7 +37,7 @@ __attribute__((constructor)) void registerAttrBackend() {
     ok = ok && oklt::AttributeManager::instance().registerCommonHandler(
                    DIMORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderStmtAttribute));
     if (!ok) {
-        llvm::errs() << "failed to register " << DIMORDER_ATTR_NAME << " attribute stmt handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIMORDER_ATTR_NAME);
     }
 }
 }  // namespace

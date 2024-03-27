@@ -165,7 +165,7 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
     // TODO refactor all stages/sub-stages to move communality into generic component and provide
     // facility for customization points.
     if (input.cppSrc.empty()) {
-        llvm::outs() << "input source string is empty\n";
+        SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});

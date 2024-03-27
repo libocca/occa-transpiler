@@ -261,8 +261,7 @@ __attribute__((constructor)) void registerDpcppTileAttrBackend() {
         {TargetBackend::DPCPP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleTileAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register" << TILE_ATTR_NAME
-                     << "attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", TILE_ATTR_NAME);
     }
 }
 }  // namespace

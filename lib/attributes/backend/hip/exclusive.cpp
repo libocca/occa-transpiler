@@ -3,6 +3,8 @@
 #include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -12,7 +14,7 @@ __attribute__((constructor)) void registerHIPExclusiveAttrBackend() {
         makeSpecificAttrHandle(cuda_subset::handleExclusiveAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME << " attribute handler\n";
+        SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 
     ok = oklt::AttributeManager::instance().registerBackendHandler(
@@ -20,7 +22,7 @@ __attribute__((constructor)) void registerHIPExclusiveAttrBackend() {
         makeSpecificAttrHandle(defaultHandleExclusiveStmtAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME << " attribute handler\n";
+        SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 }
 }  // namespace

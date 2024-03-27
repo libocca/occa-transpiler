@@ -26,8 +26,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         {TargetBackend::DPCPP, BARRIER_ATTR_NAME}, makeSpecificAttrHandle(handleBarrierAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << BARRIER_ATTR_NAME
-                     << " attribute handler (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", BARRIER_ATTR_NAME);
     }
 }
 }  // namespace

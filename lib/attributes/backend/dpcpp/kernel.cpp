@@ -154,7 +154,7 @@ __attribute__((constructor)) void registerKernelHandler() {
         {TargetBackend::DPCPP, KERNEL_ATTR_NAME}, makeSpecificAttrHandle(handleKernelAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);
     }
 }
 }  // namespace

@@ -111,8 +111,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         {TargetBackend::DPCPP, ATOMIC_ATTR_NAME}, makeSpecificAttrHandle(handleAtomicAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME
-                     << " attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);
     }
 }
 }  // namespace

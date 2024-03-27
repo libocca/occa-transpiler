@@ -1,5 +1,7 @@
 #include "attributes/backend/serial/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -9,7 +11,7 @@ __attribute__((constructor)) void registerOPENMPOuterHandler() {
         makeSpecificAttrHandle(serial_subset::handleOuterAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << OUTER_ATTR_NAME << " attribute handler (Serial)\n";
+        SPDLOG_ERROR("[SERIAL] Failed to register {} attribute handler", OUTER_ATTR_NAME);
     }
 }
 }  // namespace

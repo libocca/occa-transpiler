@@ -5,6 +5,8 @@
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::dpcpp {
 using namespace clang;
 

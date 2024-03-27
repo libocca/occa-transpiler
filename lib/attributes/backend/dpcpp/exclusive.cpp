@@ -8,6 +8,8 @@
 #include <clang/AST/Stmt.h>
 #include <spdlog/spdlog.h>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -29,8 +31,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         makeSpecificAttrHandle(defaultHandleExclusiveStmtAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME
-                     << " attribute handler (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 }
 }  // namespace

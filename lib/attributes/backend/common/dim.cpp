@@ -202,13 +202,13 @@ __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
         DIM_ATTR_NAME, makeSpecificAttrHandle(handleDimDeclAttribute));
     if (!ok) {
-        llvm::errs() << "failed to register " << DIM_ATTR_NAME << " attribute decl handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute decl handler", DIM_ATTR_NAME);
     }
 
     ok = oklt::AttributeManager::instance().registerCommonHandler(
         DIM_ATTR_NAME, makeSpecificAttrHandle(handleDimStmtAttribute));
     if (!ok) {
-        llvm::errs() << "failed to register " << DIM_ATTR_NAME << " attribute stmt handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ATTR_NAME);
     }
 }
 }  // namespace

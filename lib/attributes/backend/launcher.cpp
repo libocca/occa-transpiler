@@ -105,10 +105,11 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     kernelInfo.args.clear();
     kernelInfo.args.reserve(func.getNumParams() + 1);
 
-    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
-                                              .name = "deviceKernels",
-                                              .is_ptr = true});
+    kernelInfo.args.emplace_back(
+        ArgumentInfo{.is_const = false,
+                     .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
+                     .name = "deviceKernels",
+                     .is_ptr = true});
     out << util::fmt("{} {} {}", "occa::modeKernel_t", "**", "deviceKernels").value();
 
     for (auto p : func.parameters()) {
@@ -406,13 +407,13 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
 }
 
 __attribute__((constructor)) void registerLauncherHandler() {
-#define REG_ATTR_HANDLE(NAME, BODY)                                                             \
-    {                                                                                           \
-        auto ok = oklt::AttributeManager::instance().registerBackendHandler(                    \
-            {TargetBackend::_LAUNCHER, NAME}, BODY);                                            \
-        if (!ok) {                                                                              \
-            llvm::errs() << "failed to register " << NAME << " attribute handler (Launcher)\n"; \
-        }                                                                                       \
+#define REG_ATTR_HANDLE(NAME, BODY)                                                   \
+    {                                                                                 \
+        auto ok = oklt::AttributeManager::instance().registerBackendHandler(          \
+            {TargetBackend::_LAUNCHER, NAME}, BODY);                                  \
+        if (!ok) {                                                                    \
+            SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
+        }                                                                             \
     }
 
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
@@ -420,7 +421,7 @@ __attribute__((constructor)) void registerLauncherHandler() {
         makeSpecificImplicitHandle(handleLauncherTranslationUnit));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (Launcher)\n";
+        SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");
     }
 
     REG_ATTR_HANDLE(KERNEL_ATTR_NAME, makeSpecificAttrHandle(handleLauncherKernelAttribute));

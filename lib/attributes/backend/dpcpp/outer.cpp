@@ -45,7 +45,7 @@ __attribute__((constructor)) void registerDpcppOuterAttrBackend() {
         {TargetBackend::DPCPP, OUTER_ATTR_NAME}, makeSpecificAttrHandle(handleOuterAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register inner attribute handler\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", OUTER_ATTR_NAME);
     }
 }
 }  // namespace

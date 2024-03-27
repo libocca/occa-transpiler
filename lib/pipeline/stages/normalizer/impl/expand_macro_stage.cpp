@@ -356,13 +356,13 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
         auto expansionLoc = sm.getExpansionLoc(tok.getLocation());
         auto expanded = ctx->getExpandedText(expansionLoc);
         if (!expanded) {
-            llvm::outs() << "no expanded macro under: " << expansionLoc.printToString(sm) << '\n';
+            SPDLOG_WARN("No expanded macro under: {}", expansionLoc.printToString(sm));
             continue;
         }
 
         auto original = ctx->getOriginalText(expansionLoc);
         if (!original) {
-            llvm::outs() << "no original macro under: " << expansionLoc.printToString(sm) << '\n';
+            SPDLOG_WARN("no original macro under: {}", expansionLoc.printToString(sm));
             continue;
         }
 
@@ -472,7 +472,7 @@ namespace oklt {
 
 ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
     if (input.cppSrc.empty()) {
-        llvm::outs() << "input source string is empty\n";
+        SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});

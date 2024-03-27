@@ -2,6 +2,8 @@
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -11,7 +13,7 @@ __attribute__((constructor)) void registerHIPBarrierAttrBackend() {
         makeSpecificAttrHandle(cuda_subset::handleBarrierAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << BARRIER_ATTR_NAME << " attribute handler (HIP)\n";
+        SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", BARRIER_ATTR_NAME);
     }
 }
 }  // namespace

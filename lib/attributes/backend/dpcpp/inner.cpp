@@ -39,7 +39,6 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }
 
-
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
 
@@ -48,7 +47,7 @@ __attribute__((constructor)) void registerDpppInnerAttrBackend() {
         {TargetBackend::DPCPP, INNER_ATTR_NAME}, makeSpecificAttrHandle(handleInnerAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register tile attribute handler\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", INNER_ATTR_NAME);
     }
 }
 }  // namespace

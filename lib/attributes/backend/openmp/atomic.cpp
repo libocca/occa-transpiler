@@ -33,8 +33,7 @@ __attribute__((constructor)) void registerOPENMPAtomicHandler() {
         makeSpecificAttrHandle(handleOPENMPAtomicAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME
-                     << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);
     }
 }
 }  // namespace

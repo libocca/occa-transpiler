@@ -3,6 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -19,7 +20,7 @@ __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
         makeSpecificImplicitHandle(handleTranslationUnitDpcpp));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register implicit handler for translation unit");
     }
 }
 }  // namespace

@@ -215,7 +215,6 @@ bool traverseNode(TraversalType& traversal,
 
     // dispatch the next node
     if (!dispatchTraverseFunc(traversal, node)) {
-        stage.pushError(Error{.ec = std::error_code(), .desc = "traverse is stopped"});
         return false;
     }
 

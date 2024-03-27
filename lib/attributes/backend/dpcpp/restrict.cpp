@@ -50,8 +50,7 @@ __attribute__((constructor)) void registerCUDARestrictHandler() {
         makeSpecificAttrHandle(handleRestrictAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << RESTRICT_ATTR_NAME
-                     << " attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", RESTRICT_ATTR_NAME);
     }
 }
 }  // namespace

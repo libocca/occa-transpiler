@@ -1,5 +1,7 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -31,7 +33,7 @@ __attribute__((constructor)) void registerOPENMPOuterHandler() {
         makeSpecificAttrHandle(handleOPENMPOuterAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << OUTER_ATTR_NAME << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", OUTER_ATTR_NAME);
     }
 }
 }  // namespace

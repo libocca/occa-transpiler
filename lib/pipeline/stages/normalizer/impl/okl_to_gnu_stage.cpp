@@ -206,7 +206,7 @@ namespace oklt {
 
 OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     if (input.oklCppSrc.empty()) {
-        llvm::outs() << "input source string is empty\n";
+        SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});
