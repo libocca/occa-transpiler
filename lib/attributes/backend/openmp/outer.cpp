@@ -4,7 +4,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string prefixText = "#pragma omp parallel for\n";
+const std::string prefixText = "\n#pragma omp parallel for\n";
 
 HandleResult handleOPENMPOuterAttribute(const Attr& a,
                                         const ForStmt& stmt,

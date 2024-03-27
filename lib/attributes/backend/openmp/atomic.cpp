@@ -4,8 +4,8 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string prefixExprText = "#pragma omp atomic\n";
-const std::string prefixCompoundText = "#pragma omp critical\n";
+const std::string prefixExprText = "\n#pragma omp atomic\n";
+const std::string prefixCompoundText = "\n#pragma omp critical\n";
 
 HandleResult handleOPENMPAtomicAttribute(const Attr& a, const Stmt& stmt, SessionStage& s) {
 #ifdef TRANSPILER_DEBUG_LOG
