@@ -68,7 +68,32 @@ bool replaceOklMacroAttribute(const OklAttribute& oklAttr,
         return false;
     }
 
-    rewriter.InsertTextBefore(insertLoc, lit.GetString());
+    auto replacement = lit.GetString().str();
+
+    // in case of one line source code add new line character before and after directive expand to
+    // ensure source is not hidden by macro that could be inside of directive
+    if (oklAttr.tok_indecies.back() != tokens.size()) {
+        FullSourceLoc nextTokenAfterAttr(tokens[oklAttr.tok_indecies.back()].getLocation(),
+                                         pp.getSourceManager());
+        FullSourceLoc nextTokenFullLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
+                                       pp.getSourceManager());
+        if (nextTokenAfterAttr.getExpansionLineNumber() ==
+            nextTokenFullLoc.getExpansionLineNumber()) {
+            replacement += '\n';
+        }
+    }
+    if (oklAttr.tok_indecies.front() != 0) {
+        FullSourceLoc prevTokenAfterAttr(tokens[oklAttr.tok_indecies.back()].getLocation(),
+                                         pp.getSourceManager());
+        FullSourceLoc nextTokenFullLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
+                                       pp.getSourceManager());
+        if (prevTokenAfterAttr.getExpansionLineNumber() ==
+            nextTokenFullLoc.getExpansionLineNumber()) {
+            replacement = '\n' + replacement;
+        }
+    }
+
+    rewriter.InsertTextBefore(insertLoc, replacement);
 
 #ifdef NORMALIZER_DEBUG_LOG
     llvm::outs() << "removed macro attr: " << oklAttr.name
