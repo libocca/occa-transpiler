@@ -250,13 +250,13 @@ endif()
 
 target_include_directories(occa-transpiler
       PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${ROOT_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       PRIVATE
         ${LLVM_INCLUDE_DIRS}
         ${LIBCLANG_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/lib/
+        ${ROOT_DIR}/lib/
 )
 
 target_link_libraries(occa-transpiler
