@@ -1,12 +1,10 @@
 #pragma once
 
-#include <filesystem>
-#include <ostream>
-
-#include "tl/expected.hpp"
+#include <string>
+#include <tl/expected.hpp>
 
 namespace oklt {
-enum struct TargetBackend : unsigned char {
+enum struct TargetBackend {
     SERIAL,
     OPENMP,
     CUDA,
@@ -22,3 +20,8 @@ bool isHostCategory(TargetBackend backend);
 bool isDeviceCategory(TargetBackend backend);
 
 }  // namespace oklt
+
+template <>
+struct std::hash<oklt::TargetBackend> {
+    size_t operator()(const oklt::TargetBackend& t) const noexcept { return size_t(t); }
+};

@@ -3,6 +3,7 @@
 #include <oklt/core/ast_processor_types.h>
 #include <oklt/core/target_backends.h>
 
+#include <filesystem>
 #include <vector>
 
 namespace oklt {

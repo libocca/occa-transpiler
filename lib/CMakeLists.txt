@@ -146,6 +146,11 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
 
+    core/handler_manager/handler_manager.cpp
+    core/handler_manager/handler_manager.h
+    core/handler_manager/backend_registrar.h
+    core/handler_manager/details/hashMaker.h
+
     core/ast_processor_manager/ast_processor_manager.cpp
 
     core/ast_processors/okl_sema_processor/processor.cpp
