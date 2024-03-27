@@ -1,11 +1,13 @@
 #include <oklt/core/kernel_metadata.h>
 #include <oklt/util/string_utils.h>
 
+#include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/common.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "attributes/utils/kernel_utils.h"
 
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -13,7 +15,6 @@
 #include "core/utils/range_to_string.h"
 #include "tl/expected.hpp"
 
-#include <clang/AST/Decl.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 
 #include <functional>
@@ -107,6 +108,8 @@ HandleResult handleTileAttribute(const Attr& a,
     auto prefixCode =
         buildPreffixTiledCode(*loopInfo, &updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+
+    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
     if (loopInfo->shouldSync()) {
         suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
     }

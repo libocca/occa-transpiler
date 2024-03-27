@@ -1,7 +1,12 @@
 #include "attributes/utils/kernel_utils.h"
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 #include "oklt/core/kernel_metadata.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+
 #include "tl/expected.hpp"
+
+#include <clang/AST/ParentMapContext.h>
 
 namespace oklt {
 
@@ -32,4 +37,43 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) 
     // return tl::make_unexpected(
     // Error{OkltTranspilerErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
 }
+
+const clang::AttributedStmt* getAttributedStmt(const clang::Stmt& stmt, SessionStage& s) {
+    auto& ctx = s.getCompiler().getASTContext();
+    const auto parents = ctx.getParentMapContext().getParents(stmt);
+    if (parents.empty())
+        return nullptr;
+
+    return parents[0].get<clang::AttributedStmt>();
+}
+
+tl::expected<void, Error> handleChildAttr(const clang::Stmt& stmt,
+                                          std::string_view name,
+                                          SessionStage& s) {
+    auto* attributedStmt = getAttributedStmt(stmt, s);
+    if (!attributedStmt) {
+        return {};
+    }
+
+    auto& am = s.getAttrManager();
+    for (const auto* attr : attributedStmt->getAttrs()) {
+        if (!attr) {
+            continue;
+        }
+
+        if (attr->getNormalizedFullName() != name) {
+            continue;
+        }
+
+        auto params = am.parseAttr(*attr, s);
+        if (!params) {
+            return tl::make_unexpected(std::move(params.error()));
+        }
+
+        return am.handleAttr(*attr, stmt, &params.value(), s);
+    }
+
+    return {};
+}
+
 }  // namespace oklt

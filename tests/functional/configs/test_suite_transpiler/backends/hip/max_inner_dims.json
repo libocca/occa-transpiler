@@ -1,0 +1,13 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "hip",
+      "source": "transpiler/backends/hip/max_inner_loops/outer_inner_split_max.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/hip/max_inner_loops/outer_inner_split_max_ref.cpp"
+  }
+]
