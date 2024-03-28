@@ -34,7 +34,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/restrict.cpp
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
-        attributes/frontend/max_inner_dims.cpp
+    attributes/frontend/max_inner_dims.cpp
 
     # Backends common
     attributes/utils/parser.h
@@ -146,8 +146,8 @@ set (OCCA_TRANSPILER_SOURCES
     # sugar attribute
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
-        attributes/backend/common/max_inner_dims.cpp
-        attributes/backend/common/nobarrier.cpp
+    attributes/backend/common/max_inner_dims.cpp
+    attributes/backend/common/nobarrier.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 
