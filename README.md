@@ -49,3 +49,14 @@ Optional arguments:
   --normalize    should normalize before transpiling 
   -o, --output   optional output file [nargs=0..1] [default: ""]
 ```
+
+### Logging
+Logging level can be set with `OKLT_LOG_LEVEL` enviroment variable.
+
+Possible values:
+- trace
+- debug
+- info
+- warn
+- err
+- critical

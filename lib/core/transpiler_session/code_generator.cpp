@@ -14,6 +14,7 @@
 #include <clang/FrontendTool/Utils.h>
 #include <clang/Lex/PreprocessorOptions.h>
 
+#include <spdlog/spdlog.h>
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -55,10 +56,7 @@ HandleResult applyTranspilationToNode(const DynTypedNode& node, SessionStage& st
 HandleResult applyTranspilationToNode(const Attr* attr,
                                       const DynTypedNode& node,
                                       SessionStage& stage) {
-#ifdef OKL_SEMA_DEBUG_LOG
-    llvm::outs() << __PRETTY_FUNCTION__ << " node name: " << node.getNodeKind().asStringRef()
-                 << '\n';
-#endif
+    SPDLOG_TRACE("{} node name; {}", __PRETTY_FUNCTION__, node.getNodeKind().asStringRef());
     if (!attr) {
         return applyTranspilationToNode(node, stage);
     }
@@ -88,10 +86,7 @@ void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
         if (!SrcMgr::isSystem(dep.fileType)) {
             continue;
         }
-#ifdef OKL_SEMA_DEBUG_LOG
-        llvm::outs() << "remove system include " << dep.relativePath << " " << dep.fileName
-                     << " \n";
-#endif
+        SPDLOG_TRACE("remove system include {} {}", dep.relativePath, dep.fileName);
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});
     }
 }
@@ -214,10 +209,7 @@ tl::expected<std::string, Error> generateTranspiledCodeMetaData(SessionStage& st
     to_json(kernel_metadata, programMeta);
     auto kernelMetaData = kernel_metadata.dump(2);
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Program metadata: " << kernelMetaData << "\n";
-    util::writeFileAsStr("metadata.json", kernelMetaData);
-#endif
+    SPDLOG_DEBUG("Program metadata: {}", kernelMetaData);
 
     return kernelMetaData;
 }

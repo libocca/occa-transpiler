@@ -21,12 +21,4 @@ std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx) {
         .str();
 }
 
-std::string prettyPrint(const clang::Stmt& stmt, clang::ASTContext& ctx) {
-    std::string ret;
-    llvm::raw_string_ostream os(ret);
-    stmt.printPretty(os, nullptr, ctx.getPrintingPolicy());
-
-    return ret;
-}
-
 }  // namespace oklt

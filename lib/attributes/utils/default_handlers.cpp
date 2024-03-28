@@ -2,6 +2,8 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
+#include <spdlog/spdlog.h>
+
 namespace clang {
 class Stmt;
 }  // namespace clang
@@ -10,25 +12,20 @@ namespace oklt {
 class SessionStage;
 
 HandleResult emptyHandleStmtAttribute(const clang::Attr& a, const clang::Stmt&, SessionStage&) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called empty " << a.getNormalizedFullName() << " stmt handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty {} stmt handler", a.getNormalizedFullName());
     return {};
 }
 
 HandleResult emptyHandleDeclAttribute(const clang::Attr& a, const clang::Decl&, SessionStage&) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called empty " << a.getNormalizedFullName() << " decl handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
+
     return {};
 }
 
 HandleResult defaultHandleSharedStmtAttribute(const clang::Attr& a,
                                               const clang::Stmt& stmt,
                                               SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " stmt handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty {} stmt handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();
@@ -42,9 +39,7 @@ HandleResult defaultHandleSharedStmtAttribute(const clang::Attr& a,
 HandleResult defaultHandleExclusiveStmtAttribute(const clang::Attr& a,
                                                  const clang::Stmt& stmt,
                                                  SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " stmt handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty {} stmt handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();
@@ -58,9 +53,7 @@ HandleResult defaultHandleExclusiveStmtAttribute(const clang::Attr& a,
 HandleResult defaultHandleSharedDeclAttribute(const clang::Attr& a,
                                               const clang::Decl& d,
                                               SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " decl handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();
@@ -75,9 +68,7 @@ HandleResult defaultHandleSharedDeclAttribute(const clang::Attr& a,
 HandleResult defaultHandleExclusiveDeclAttribute(const clang::Attr& a,
                                                  const clang::Decl& d,
                                                  SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " decl handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();

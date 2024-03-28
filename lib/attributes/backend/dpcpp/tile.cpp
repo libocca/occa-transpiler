@@ -5,13 +5,15 @@
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
-#include "attributes/utils/cuda_subset/loop_code_gen.h"
+#include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"
 
 #include <clang/Rewrite/Core/Rewriter.h>
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -225,6 +227,8 @@ HandleResult handleTileAttribute(const clang::Attr& a,
                                  const clang::ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@tile] attribute");
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
     }
@@ -245,17 +249,12 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto prefixCode =
         buildPreffixTiledCode(*loopInfo, &updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+
+    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
+
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
-
-#ifdef TRANSPILER_DEBUG_LOG
-    const auto& md = *loopInfo;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << ", name: " << md.var.name << ", initValue: " << md.range.start
-                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
-                 << ", isUnary: " << md.isUnary() << ")\n";
-#endif
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }
@@ -265,8 +264,7 @@ __attribute__((constructor)) void registerDpcppTileAttrBackend() {
         {TargetBackend::DPCPP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleTileAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register" << TILE_ATTR_NAME
-                     << "attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", TILE_ATTR_NAME);
     }
 }
 }  // namespace

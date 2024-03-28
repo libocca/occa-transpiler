@@ -5,13 +5,12 @@
 #include "core/utils/attributes.h"
 #include "oklt/core/kernel_metadata.h"
 
+#include <spdlog/spdlog.h>
 namespace oklt::serial_subset {
 using namespace clang;
 
 HandleResult handleSharedAttribute(const Attr& a, const Decl& decl, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@shared] attribute");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();

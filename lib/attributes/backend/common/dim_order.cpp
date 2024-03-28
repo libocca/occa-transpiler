@@ -7,6 +7,7 @@
 #include "core/utils/range_to_string.h"
 
 #include <clang/AST/Expr.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -17,10 +18,8 @@ using DimOrder = std::vector<size_t>;
 HandleResult handleDimOrderDeclAttribute(const clang::Attr& a,
                                          const clang::Decl& decl,
                                          SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle @dimOrder decl: "
-                 << getSourceText(decl.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
-#endif
+    SPDLOG_DEBUG("Handle [@dimOrder] decl: {}",
+                 getSourceText(decl.getSourceRange(), decl.getASTContext()));
     removeAttribute(a, s);
     return {};
 }
@@ -28,9 +27,7 @@ HandleResult handleDimOrderDeclAttribute(const clang::Attr& a,
 HandleResult handleDimOrderStmtAttribute(const clang::Attr& a,
                                          const clang::Stmt& stmt,
                                          SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called empty stmt [@dimOrder] handler\n";
-#endif
+    SPDLOG_DEBUG("Called empty stmt [@dimOrder] handler");
     return {};
 }
 
@@ -41,7 +38,7 @@ __attribute__((constructor)) void registerAttrBackend() {
     ok = ok && oklt::AttributeManager::instance().registerCommonHandler(
                    DIMORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderStmtAttribute));
     if (!ok) {
-        llvm::errs() << "failed to register " << DIMORDER_ATTR_NAME << " attribute stmt handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIMORDER_ATTR_NAME);
     }
 }
 }  // namespace

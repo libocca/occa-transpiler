@@ -7,14 +7,15 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/DeclBase.h>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 const std::string SHARED_MODIFIER = "__shared__";
 }
 namespace oklt::cuda_subset {
 HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
     std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
 
     Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};

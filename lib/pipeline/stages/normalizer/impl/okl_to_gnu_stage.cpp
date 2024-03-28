@@ -13,6 +13,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+#include <spdlog/spdlog.h>
 
 #include <set>
 
@@ -54,6 +55,15 @@ OklAttrMarker makeOklAttrMarker(const Preprocessor& pp,
                     .col = pp.getSourceManager().getPresumedColumnNumber(loc)}};
 }
 
+SourceLocation findForKwLocBefore(const std::vector<Token> tokens, size_t start) {
+    for (size_t i = start; i != 0; --i) {
+        const auto& tok = tokens.at(i);
+        if (tok.is(tok::kw_for)) {
+            return tok.getLocation();
+        }
+    }
+    return SourceLocation();
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
@@ -70,12 +80,20 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
     auto insertLoc(tokens[oklAttr.tok_indecies.front()].getLocation());
 
-    // fix malformed C++ syntax like for(init;cond;step;@outer) to for(init;cond;step) and mark
-    // source location to fix it during AST traversal
+    // fix malformed C++ syntax like for(init;cond;step;@outer) to [[okl::outer]] for(init;cond;step)
+    // we assume that attribute is inside of for loop and 'for' keyword is definitely before attribute
     if (isProbablyOklSpecificForStmt(leftNeighbour, rightNeighbour)) {
         rewriter.ReplaceText(leftNeighbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
-        recovery_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, leftNeighbour.getLocation()));
+
+        auto forLoc = findForKwLocBefore(tokens, oklAttr.tok_indecies.front());
+        if (forLoc.isInvalid()) {
+            SPDLOG_ERROR("no kw_for is found before loc: {}\n",
+                         leftNeighbour.getLocation().printToString(pp.getSourceManager()));
+            return false;
+        }
+        auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
+        rewriter.InsertTextBefore(forLoc, gnuAttr);
     }
     // INFO: just replace directly with standard attribute
     // if it's originally at the beginning, or an in-place type attribute.
@@ -97,10 +115,9 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
         gnu_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, insertLoc));
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "removed attr: " << oklAttr.name
-                 << " at loc: " << insertLoc.printToString(pp.getSourceManager()) << '\n';
-#endif
+    SPDLOG_DEBUG("removed attr: {} at loc: {}",
+                 oklAttr.name,
+                 insertLoc.printToString(pp.getSourceManager()));
 
     return true;
 }
@@ -206,15 +223,13 @@ namespace oklt {
 
 OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     if (input.oklCppSrc.empty()) {
-        llvm::outs() << "input source string is empty\n";
+        SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 0 OKL source:\n\n" << input.oklCppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.oklCppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
@@ -250,9 +265,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
         output.gnuCppSrc = std::move(input_file);
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 1 GNU cpp source:\n\n" << output.gnuCppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 1 GNU cpp source:\n\n{}", output.gnuCppSrc);
 
     return output;
 }

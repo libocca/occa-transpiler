@@ -1,9 +1,12 @@
-#include <attributes/utils/code_gen.h>
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
+#include "attributes/utils/code_gen.h"
+#include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -13,6 +16,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@inner] attribute");
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@inner params nullptr"});
     }
@@ -32,12 +36,12 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+
+    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
+  
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @inner attribute\n";
-#endif
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
@@ -47,7 +51,7 @@ __attribute__((constructor)) void registerDpppInnerAttrBackend() {
         {TargetBackend::DPCPP, INNER_ATTR_NAME}, makeSpecificAttrHandle(handleInnerAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register tile attribute handler\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", INNER_ATTR_NAME);
     }
 }
 }  // namespace

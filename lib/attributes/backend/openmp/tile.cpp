@@ -1,10 +1,12 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string prefixText = "#pragma omp parallel for\n";
+const std::string prefixText = "\n#pragma omp parallel for\n";
 
 HandleResult handleOPENMPTileAttribute(const Attr& a,
                                        const ForStmt& stmt,
@@ -30,7 +32,7 @@ __attribute__((constructor)) void registerOPENMPSharedHandler() {
         {TargetBackend::OPENMP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleOPENMPTileAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << TILE_ATTR_NAME << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", TILE_ATTR_NAME);
     }
 }
 }  // namespace

@@ -2,6 +2,8 @@
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -11,7 +13,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         makeSpecificAttrHandle(cuda_subset::handleAtomicAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME << " attribute handler\n";
+        SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);
     }
 }
 }  // namespace

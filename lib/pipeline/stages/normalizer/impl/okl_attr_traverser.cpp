@@ -2,6 +2,7 @@
 #include "pipeline/stages/normalizer/error_codes.h"
 
 #include <llvm/Support/FormatVariadic.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace clang;
@@ -65,10 +66,10 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
             break;
         case OklAttributeParserState::ParseAttrName:
             if (token.isNot(tok::identifier)) {
-                llvm::outs() << "malformed okl attr params: " << token.getName() << '\n'
-                             << getTokenName(token.getKind()) << " "
-                             << token.getLocation().printToString(fsm.pp.getSourceManager())
-                             << '\n';
+                SPDLOG_ERROR("malformed okl attr params: {} {} {}",
+                             token.getName(),
+                             getTokenName(token.getKind()),
+                             token.getLocation().printToString(fsm.pp.getSourceManager()));
                 return FsmStepStatus::Error;
             }
 
@@ -134,14 +135,15 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                 return FsmStepStatus::TokenProcessed;
             }
 
-            llvm::outs() << "malformed token in attribute param list: " << token.getName() << '\n'
-                         << getTokenName(token.getKind()) << " "
-                         << token.getLocation().printToString(fsm.pp.getSourceManager()) << '\n';
+            SPDLOG_ERROR("malformed token in attribute param list: {} {} {}",
+                         token.getName(),
+                         getTokenName(token.getKind()),
+                         token.getLocation().printToString(fsm.pp.getSourceManager()));
             return FsmStepStatus::Error;
         default:
-            llvm::outs() << "malformed fsm condition in attribute param list\n"
-                         << getTokenName(token.getKind()) << " "
-                         << token.getLocation().printToString(fsm.pp.getSourceManager()) << '\n';
+            SPDLOG_ERROR("malformed token in attribute param list: {} {}",
+                         getTokenName(token.getKind()),
+                         token.getLocation().printToString(fsm.pp.getSourceManager()));
             return FsmStepStatus::Error;
     }
 
@@ -152,7 +154,7 @@ tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token
                                                          Preprocessor& pp,
                                                          OklAttrVisitor& visitor) {
     if (tokens.empty()) {
-        llvm::outs() << "no input tokens\n";
+        SPDLOG_CRITICAL("no input tokens");
         return tl::make_unexpected(
             makeError(OkltNormalizerErrorCode::NO_TOKENS_FROM_SOURCE, "no tokens in source"));
     }
@@ -171,9 +173,9 @@ tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token
         auto status = processTokenByFsm(fsm, processing_token);
 
         if (status == FsmStepStatus::Error) {
-            llvm::outs() << "error during parsing okl attr\n"
-                         << tokens[fsm.token_cursor].getLocation().printToString(
-                                pp.getSourceManager());
+            SPDLOG_CRITICAL(
+                "error during parsing okl attr: {}",
+                tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager()));
             return tl::make_unexpected(Error{
                 OkltNormalizerErrorCode::OKL_ATTR_PARSIN_ERR,
                 "error on token at: " +

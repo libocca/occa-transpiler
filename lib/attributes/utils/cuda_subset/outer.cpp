@@ -10,6 +10,8 @@
 
 #include <clang/AST/Decl.h>
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::cuda_subset {
 using namespace clang;
 
@@ -17,6 +19,8 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@outer] attribute");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -33,9 +37,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @outer attribute\n";
-#endif
+
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }
 

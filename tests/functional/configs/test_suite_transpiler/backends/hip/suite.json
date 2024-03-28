@@ -1,7 +1,10 @@
 [
     "const_global.json",
     "non_kernel_function.json",
+    "max_inner_dims.json",
     "tile.json",
     "inner_outer.json",
+    "barrier.json",
+    "nobarrier.json",
     "macro.json"
 ]

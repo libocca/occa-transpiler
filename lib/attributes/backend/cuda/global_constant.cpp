@@ -1,6 +1,8 @@
 #include "attributes/utils/replace_attribute.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -15,7 +17,7 @@ __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
         makeSpecificImplicitHandle(handleGlobalConstant));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global constant (CUDA)\n";
+        SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global constant");
     }
 }
 }  // namespace

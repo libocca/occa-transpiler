@@ -21,4 +21,8 @@ struct AttributedLoop {
     Axis axis = Axis::Auto;
 };
 
+struct AttributedLoopInnerSize {
+    std::array<int, N_AXIS> size = {-1, -1, -1};
+};
+
 }  // namespace oklt

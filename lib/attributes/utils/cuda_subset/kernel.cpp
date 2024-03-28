@@ -1,12 +1,17 @@
+#include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+
+#include <oklt/util/string_utils.h>
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace clang;
@@ -46,11 +51,7 @@ namespace oklt::cuda_subset {
 using namespace clang;
 
 HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @kernel attribute: return type: "
-                 << func.getReturnType().getAsString()
-                 << ", old kernel name: " << func.getNameAsString() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();
@@ -77,6 +78,8 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         kernels.push_back(oklKernelInfo.value());
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
+
+        handleChildAttr(child.stmt, MAX_INNER_DIMS, s);
 
         std::stringstream out;
         if (n != 0) {

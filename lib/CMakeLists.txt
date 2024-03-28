@@ -5,22 +5,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
-option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
-option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
-
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_types.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
+    ${ROOT_DIR}/include/oklt/core/ast_processor_types.h
+    ${ROOT_DIR}/include/oklt/core/target_backends.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_metadata.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_output.h
+    ${ROOT_DIR}/include/oklt/core/kernel_metadata.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/format.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer.h
+    ${ROOT_DIR}/include/oklt/pipeline/transpiler.h
+    ${ROOT_DIR}/include/oklt/util/format.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/nobarrier.cpp
@@ -34,6 +30,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/restrict.cpp
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
+    attributes/frontend/max_inner_dims.cpp
 
     # Backends common
     attributes/utils/parser.h
@@ -145,6 +142,8 @@ set (OCCA_TRANSPILER_SOURCES
     # sugar attribute
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
+    attributes/backend/common/max_inner_dims.cpp
+    attributes/backend/common/nobarrier.cpp
 
     core/handler_manager/handler_manager.cpp
     core/handler_manager/handler_manager.h
@@ -174,6 +173,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/kernel_metadata.cpp
 
     core/vfs/overlay_fs.cpp
+
+    core/logger.cpp
 
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
@@ -236,32 +237,28 @@ CPMAddPackage(NAME nlohmann_json
     GITHUB_REPOSITORY nlohmann/json
     OPTIONS "JSON_BuildTests OFF")
 
+CPMAddPackage(NAME spdlog
+  VERSION 1.13.0
+  GITHUB_REPOSITORY gabime/spdlog
+  OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
+
 set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED
      ${OCCA_TRANSPILER_SOURCES})
 
-if (NORMALIZER_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
-endif()
-
-if (OKL_SEMA_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DOKL_SEMA_DEBUG_LOG=1)
-endif()
-
-if (TRANSPILER_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DTRANSPILER_DEBUG_LOG=1)
-endif()
+# Make sure that spdlog macro supports all logging levels
+target_compile_definitions(occa-transpiler PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 
 target_include_directories(occa-transpiler
       PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${ROOT_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       PRIVATE
         ${LLVM_INCLUDE_DIRS}
         ${LIBCLANG_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/lib/
+        ${ROOT_DIR}/lib/
 )
 
 target_link_libraries(occa-transpiler
@@ -269,6 +266,7 @@ target_link_libraries(occa-transpiler
         $<BUILD_INTERFACE:tl::expected>
     PRIVATE
         $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>
+        $<BUILD_INTERFACE:spdlog::spdlog_header_only>
         ${CLANG_LIBS}
 )
 

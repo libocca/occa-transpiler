@@ -2,6 +2,8 @@
 #include "attributes/utils/cuda_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 __attribute__((constructor)) void registerHIPTileAttrBackend() {
@@ -10,7 +12,7 @@ __attribute__((constructor)) void registerHIPTileAttrBackend() {
         makeSpecificAttrHandle(cuda_subset::handleTileAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register tile attribute handler\n";
+        SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", TILE_ATTR_NAME);
     }
 }
 }  // namespace
