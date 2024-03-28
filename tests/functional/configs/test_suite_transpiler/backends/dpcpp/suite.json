@@ -6,7 +6,7 @@
     "shared.json",
     "restrict.json",
     "atomic.json",
-  "barrier.json",
-  "nobarrier.json",
+    "barrier.json",
+    "nobarrier.json",
     "macro.json"
 ]
