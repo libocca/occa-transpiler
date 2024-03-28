@@ -7,6 +7,7 @@
 
 #include <llvm/Support/raw_os_ostream.h>
 #include <oklt/core/error.h>
+#include <spdlog/spdlog.h>
 
 using namespace clang;
 
@@ -55,18 +56,22 @@ TranspilerSessionResult toSessionResult(GnuToStdCppStageOutput output) {
 }
 
 OklMacroResult runOklMacroAttrConverter(SharedTranspilerSession session) {
+    SPDLOG_INFO("Convert OKL macro attributes");
     return convertOklMacroAttribute(toOklMacroInput(session));
 }
 
 ExpandMacroResult runMacroExpander(OklMacroStageOutput output) {
+    SPDLOG_INFO("Expand macro");
     return expandMacro(toExpandMacroInput(output));
 }
 
 OklToGnuResult runOklToGnuConverter(ExpandMacroStageOutput output) {
+    SPDLOG_INFO("Convert OKL attributes to GNU attributes");
     return convertOklToGnuAttribute(toOkltoGnuInput(output));
 }
 
 GnuToStdCppResult runGnuToStdConverter(OklToGnuStageOutput output) {
+    SPDLOG_INFO("Convert GNU attributes to CPP attributes");
     return convertGnuToStdCppAttribute(toStdCppStageInput(output));
 }
 // Normalization is done in two steps:
@@ -103,6 +108,7 @@ TranspilerSessionResult applyGnuAttrBasedNormalization(SharedTranspilerSession s
 namespace oklt {
 
 TranspilerSessionResult runNormalizerStage(SharedTranspilerSession session) {
+    SPDLOG_INFO("Start normalization stage");
     return applyGnuAttrBasedNormalization(session);
 }
 }  // namespace oklt

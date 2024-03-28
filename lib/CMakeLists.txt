@@ -5,10 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
-option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
-option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
-
 set (OCCA_TRANSPILER_SOURCES
     ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_types.h
     ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
@@ -173,6 +169,8 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/vfs/overlay_fs.cpp
 
+    core/logger.cpp
+
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp
@@ -234,22 +232,18 @@ CPMAddPackage(NAME nlohmann_json
     GITHUB_REPOSITORY nlohmann/json
     OPTIONS "JSON_BuildTests OFF")
 
+CPMAddPackage(NAME spdlog
+  VERSION 1.13.0
+  GITHUB_REPOSITORY gabime/spdlog
+  OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
+
 set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED
      ${OCCA_TRANSPILER_SOURCES})
 
-if (NORMALIZER_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
-endif()
-
-if (OKL_SEMA_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DOKL_SEMA_DEBUG_LOG=1)
-endif()
-
-if (TRANSPILER_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DTRANSPILER_DEBUG_LOG=1)
-endif()
+# Make sure that spdlog macro supports all logging levels
+target_compile_definitions(occa-transpiler PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 
 target_include_directories(occa-transpiler
       PUBLIC
@@ -267,6 +261,7 @@ target_link_libraries(occa-transpiler
         $<BUILD_INTERFACE:tl::expected>
     PRIVATE
         $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>
+        $<BUILD_INTERFACE:spdlog::spdlog_header_only>
         ${CLANG_LIBS}
 )
 

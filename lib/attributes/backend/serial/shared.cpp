@@ -1,6 +1,8 @@
 #include "attributes/backend/serial/common.h"
 #include "attributes/utils/default_handlers.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -15,8 +17,7 @@ __attribute__((constructor)) void registerOPENMPSharedHandler() {
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << SHARED_ATTR_NAME
-                     << " attribute handler (Serial)\n";
+        SPDLOG_ERROR("[SERIAL] Failed to register {} attribute handler", SHARED_ATTR_NAME);
     }
 }
 }  // namespace

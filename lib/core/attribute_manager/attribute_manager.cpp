@@ -6,6 +6,8 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
+#include <spdlog/spdlog.h>
+
 namespace oklt {
 using namespace clang;
 
@@ -131,10 +133,10 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
         auto name = attr->getNormalizedFullName();
         if (!_commonAttrs.hasAttrHandler(name) && !_backendAttrs.hasAttrHandler(stage, name)) {
             // TODO report diag error
-            llvm::errs() << decl.getBeginLoc().printToString(
-                                decl.getASTContext().getSourceManager())
-                         << " attribute: " << name << " for decl: " << decl.getDeclKindName()
-                         << " does not have registered handler \n";
+            SPDLOG_ERROR("{} attribute: {} for decl: {} doesn not have a registered handler",
+                         decl.getBeginLoc().printToString(decl.getASTContext().getSourceManager()),
+                         name,
+                         decl.getDeclKindName());
 
             return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
         }
@@ -142,10 +144,10 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
         auto [_, isNew] = collectedAttrs.insert(attr);
         if (!isNew) {
             // TODO convince OCCA community to specify such case as forbidden
-            llvm::errs() << decl.getBeginLoc().printToString(
-                                decl.getASTContext().getSourceManager())
-                         << " multi declaration of attribute: " << name
-                         << " for decl: " << decl.getDeclKindName() << '\n';
+            SPDLOG_ERROR("{} multi declaration of attribute: {} for decl: {}",
+                         decl.getBeginLoc().printToString(decl.getASTContext().getSourceManager()),
+                         name,
+                         decl.getDeclKindName());
         }
     }
 
@@ -172,19 +174,20 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const St
         auto name = attr->getNormalizedFullName();
         if (!_commonAttrs.hasAttrHandler(name) && !_backendAttrs.hasAttrHandler(stage, name)) {
             // TODO report diag error
-            llvm::errs() << stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager())
-                         << " attribute: " << name << " for stmt: " << stmt.getStmtClassName()
-                         << " does not have registered handler \n";
-
+            SPDLOG_ERROR("{} attribute: {} for stmt: {} does not have a registered handler",
+                         stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager()),
+                         name,
+                         stmt.getStmtClassName());
             return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
         }
 
         auto [_, isNew] = collectedAttrs.insert(attr);
         if (!isNew) {
             // TODO convince OCCA community to specify such case as forbidden
-            llvm::errs() << stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager())
-                         << " multi declaration of attribute: " << name
-                         << " for stmt: " << stmt.getStmtClassName() << '\n';
+            SPDLOG_ERROR("{} multi declaration of attribute: {} for stmt: {}",
+                         stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager()),
+                         name,
+                         stmt.getStmtClassName());
         }
     }
 

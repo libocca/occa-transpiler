@@ -19,6 +19,8 @@
 
 #include <functional>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace clang;
 using namespace oklt;
@@ -93,6 +95,8 @@ HandleResult handleTileAttribute(const Attr& a,
                                  const ForStmt& forStmt,
                                  const TileParams* params,
                                  SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@tile] attribute");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -114,14 +118,6 @@ HandleResult handleTileAttribute(const Attr& a,
     if (loopInfo->shouldSync()) {
         suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
     }
-
-#ifdef TRANSPILER_DEBUG_LOG
-    const auto& md = *loopInfo;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << ", name: " << md.var.name << ", initValue: " << md.range.start
-                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
-                 << ", isUnary: " << md.isUnary() << ")\n";
-#endif
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
 }

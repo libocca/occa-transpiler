@@ -3,6 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -17,7 +18,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         {TargetBackend::CUDA, clang::Decl::Kind::TranslationUnit},
         makeSpecificImplicitHandle(handleTranslationUnit));
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (CUDA)\n";
+        SPDLOG_ERROR("[CUDA] Failed to register implicit handler for translation unit");
     }
 }
 }  // namespace

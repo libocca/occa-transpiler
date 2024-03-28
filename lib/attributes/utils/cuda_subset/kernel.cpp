@@ -11,6 +11,8 @@
 
 #include <oklt/util/string_utils.h>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace clang;
 using namespace oklt;
@@ -49,11 +51,7 @@ namespace oklt::cuda_subset {
 using namespace clang;
 
 HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @kernel attribute: return type: "
-                 << func.getReturnType().getAsString()
-                 << ", old kernel name: " << func.getNameAsString() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();

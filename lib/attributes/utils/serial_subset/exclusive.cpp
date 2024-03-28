@@ -6,6 +6,8 @@
 
 #include "oklt/core/kernel_metadata.h"
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::serial_subset {
 using namespace clang;
 
@@ -15,9 +17,8 @@ const std::string exlusiveExprText = "[_occa_exclusive_index]";
 }  // namespace
 
 HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (decl)");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
     if (!loopInfo) {
@@ -72,9 +73,8 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
 }
 
 HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (stmt)");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
     if (!loopInfo) {

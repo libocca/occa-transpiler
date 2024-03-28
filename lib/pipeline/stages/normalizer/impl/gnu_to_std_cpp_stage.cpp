@@ -1,3 +1,4 @@
+#include <llvm-17/llvm/Support/raw_ostream.h>
 #include <oklt/core/error.h>
 
 #include "core/diag/diag_consumer.h"
@@ -13,6 +14,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+#include <spdlog/spdlog.h>
 
 using namespace oklt;
 using namespace clang;
@@ -140,12 +142,9 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
         auto markerLoc = getMarkerSourceLoc(marker, _stage.getCompiler().getSourceManager());
         auto forParenRange = SourceRange(s->getBeginLoc(), s->getRParenLoc());
 
-#ifdef NORMALIZER_DEBUG_LOG
-        llvm::outs() << "for loc: "
-                     << forParenRange.printToString(_stage.getCompiler().getSourceManager())
-                     << "\nmarker loc: "
-                     << markerLoc.printToString(_stage.getCompiler().getSourceManager()) << '\n';
-#endif
+        SPDLOG_DEBUG("for loc: {} \nmarker loc: {}",
+                     forParenRange.printToString(_stage.getCompiler().getSourceManager()),
+                     markerLoc.printToString(_stage.getCompiler().getSourceManager()));
 
         // if marker is inside of loop source location range it indicates OKL loop that should be
         // decorated by attribute in marker
@@ -174,9 +173,9 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
     // Override the method that gets called for each parsed top-level
     // declaration.
     void HandleTranslationUnit(ASTContext& ctx) override {
-#ifdef NORMALIZER_DEBUG_LOG
-        ctx.getTranslationUnitDecl()->dump(llvm::outs());
-#endif
+        if (spdlog::get_level() == spdlog::level::trace) {
+            ctx.getTranslationUnitDecl()->dump(llvm::outs());
+        }
         TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
         _normalizer_visitor.TraverseDecl(decl);
     }
@@ -245,7 +244,7 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
 namespace oklt {
 GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
     if (input.gnuCppSrc.empty()) {
-        llvm::outs() << "input source string is empty\n";
+        SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});
@@ -278,9 +277,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 2 STD cpp source:\n\n" << output.stdCppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 2 STD cpp source:\n\n{}", output.stdCppSrc);
 
     return output;
 }

@@ -5,14 +5,15 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
 
 HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] DPCPP: Handle @shared.\n";
-#endif
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
 
     auto varName = var.getNameAsString();
     // Desugar since it is attributed (since it is @shared variable)
@@ -56,8 +57,7 @@ __attribute__((constructor)) void registerCUDASharedAttrBackend() {
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << SHARED_ATTR_NAME
-                     << " attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", SHARED_ATTR_NAME);
     }
 }
 }  // namespace

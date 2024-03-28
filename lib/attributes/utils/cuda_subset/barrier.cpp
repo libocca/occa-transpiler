@@ -6,6 +6,7 @@
 
 #include <clang/AST/Attr.h>
 #include <clang/AST/Stmt.h>
+#include <spdlog/spdlog.h>
 
 namespace oklt::cuda_subset {
 
@@ -13,9 +14,8 @@ oklt::HandleResult handleBarrierAttribute(const clang::Attr& attr,
                                           const clang::Stmt& stmt,
                                           const oklt::AttributedBarrier* params,
                                           SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@barrier] attribute");
+
     if (!params) {
         return tl::make_unexpected(
             makeError(OkltTranspilerErrorCode::INTERNAL_ERROR_PARAMS_NULL_OBJ,

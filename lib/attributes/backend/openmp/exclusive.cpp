@@ -2,6 +2,8 @@
 #include "attributes/utils/serial_subset/handle.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -14,8 +16,7 @@ __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
         makeSpecificAttrHandle(serial_subset::handleExclusiveDeclAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME
-                     << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 }
 }  // namespace

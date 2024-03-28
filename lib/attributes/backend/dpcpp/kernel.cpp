@@ -10,6 +10,8 @@
 #include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -59,18 +61,20 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     kernelInfo.args.clear();
     kernelInfo.args.reserve(func.getNumParams() + 2);
 
-    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
-                                              .name = "queue_",
-                                              .is_ptr = true});
+    kernelInfo.args.emplace_back(
+        ArgumentInfo{.is_const = false,
+                     .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
+                     .name = "queue_",
+                     .is_ptr = true});
     out << util::fmt("{} {} {}", "sycl::queue", "*", "queue_").value();
 
     out << ", ";
 
-    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
-                                              .name = "range_",
-                                              .is_ptr = true});
+    kernelInfo.args.emplace_back(
+        ArgumentInfo{.is_const = false,
+                     .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
+                     .name = "range_",
+                     .is_ptr = true});
     out << util::fmt("{} {} {}", "sycl::nd_range<3>", "*", "range_").value();
     if (func.getNumParams() > 0) {
         out << ", ";
@@ -94,11 +98,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
 HandleResult handleKernelAttribute(const clang::Attr& a,
                                    const clang::FunctionDecl& func,
                                    SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @kernel attribute (DPCPP backend): return type: "
-                 << func.getReturnType().getAsString()
-                 << ", old kernel name: " << func.getNameAsString() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& rewriter = s.getRewriter();
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -156,7 +156,7 @@ __attribute__((constructor)) void registerKernelHandler() {
         {TargetBackend::DPCPP, KERNEL_ATTR_NAME}, makeSpecificAttrHandle(handleKernelAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << KERNEL_ATTR_NAME << " attribute handler (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);
     }
 }
 }  // namespace

@@ -12,6 +12,8 @@
 
 #include <clang/AST/Stmt.h>
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::cuda_subset {
 using namespace clang;
 
@@ -19,6 +21,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
                                   const clang::ForStmt& forStmt,
                                   const AttributedLoop* params,
                                   SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@inner] attribute");
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -40,10 +43,6 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     if (loopInfo->shouldSync()) {
         suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
     }
-
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @inner attribute\n";
-#endif
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
 }

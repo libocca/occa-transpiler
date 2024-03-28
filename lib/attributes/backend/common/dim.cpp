@@ -6,6 +6,7 @@
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 
+#include <spdlog/spdlog.h>
 #include <numeric>
 
 namespace {
@@ -18,11 +19,8 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
                                     const clang::Decl& decl,
                                     const AttributedDim* params,
                                     SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle @dim decl: "
-                 << getSourceText(decl.getSourceRange(), s.getCompiler().getASTContext()) << "\n";
-#endif
-
+    SPDLOG_DEBUG("Handle [@dim] decl: {}",
+                 getSourceText(decl.getSourceRange(), decl.getASTContext()));
     s.getRewriter().RemoveText(getAttrFullSourceRange(a));
     return {};
 }
@@ -160,15 +158,9 @@ HandleResult handleDimStmtAttribute(const clang::Attr& a,
     if (!isa<RecoveryExpr, CallExpr>(stmt)) {
         return {};
     }
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle @dim stmt: "
-                 << getSourceText(stmt.getSourceRange(), stage.getCompiler().getASTContext())
-                 << " with params: ";
-    for (const auto& dim : params->dim) {
-        llvm::outs() << dim << ", ";
-    }
-    llvm::outs() << "\n";
-#endif
+
+    SPDLOG_DEBUG("Handle [@dim] stmt: {}",
+                 getSourceText(stmt.getSourceRange(), stage.getCompiler().getASTContext()));
 
     auto& ctx = stage.getCompiler().getASTContext();
 
@@ -210,13 +202,13 @@ __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
         DIM_ATTR_NAME, makeSpecificAttrHandle(handleDimDeclAttribute));
     if (!ok) {
-        llvm::errs() << "failed to register " << DIM_ATTR_NAME << " attribute decl handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute decl handler", DIM_ATTR_NAME);
     }
 
     ok = oklt::AttributeManager::instance().registerCommonHandler(
         DIM_ATTR_NAME, makeSpecificAttrHandle(handleDimStmtAttribute));
     if (!ok) {
-        llvm::errs() << "failed to register " << DIM_ATTR_NAME << " attribute stmt handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ATTR_NAME);
     }
 }
 }  // namespace

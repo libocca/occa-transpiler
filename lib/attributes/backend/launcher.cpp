@@ -14,6 +14,7 @@
 #include <oklt/core/kernel_metadata.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
+#include <spdlog/spdlog.h>
 
 // #define OKL_LAUNCHER_RECURSIVE
 
@@ -104,10 +105,11 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     kernelInfo.args.clear();
     kernelInfo.args.reserve(func.getNumParams() + 1);
 
-    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
-                                              .name = "deviceKernels",
-                                              .is_ptr = true});
+    kernelInfo.args.emplace_back(
+        ArgumentInfo{.is_const = false,
+                     .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
+                     .name = "deviceKernels",
+                     .is_ptr = true});
     out << util::fmt("{} {} {}", "occa::modeKernel_t", "**", "deviceKernels").value();
 
     for (auto p : func.parameters()) {
@@ -353,10 +355,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     auto mainFileId = sm.getMainFileID();
     auto loc = sm.getLocForStartOfFile(mainFileId);
 
-#ifdef TRANSPILER_DEBUG_LOG
-    auto offset = sm.getFileOffset(d.getLocation());
-    llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
-#endif
+    SPDLOG_DEBUG("Handle translation unit");
 
     //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
     auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps;
@@ -368,9 +367,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
 HandleResult handleLauncherKernelAttribute(const Attr& a,
                                            const FunctionDecl& func,
                                            SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle attribute: {}", a.getNormalizedFullName());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();
@@ -410,13 +407,13 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
 }
 
 __attribute__((constructor)) void registerLauncherHandler() {
-#define REG_ATTR_HANDLE(NAME, BODY)                                                             \
-    {                                                                                           \
-        auto ok = oklt::AttributeManager::instance().registerBackendHandler(                    \
-            {TargetBackend::_LAUNCHER, NAME}, BODY);                                            \
-        if (!ok) {                                                                              \
-            llvm::errs() << "failed to register " << NAME << " attribute handler (Launcher)\n"; \
-        }                                                                                       \
+#define REG_ATTR_HANDLE(NAME, BODY)                                                   \
+    {                                                                                 \
+        auto ok = oklt::AttributeManager::instance().registerBackendHandler(          \
+            {TargetBackend::_LAUNCHER, NAME}, BODY);                                  \
+        if (!ok) {                                                                    \
+            SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
+        }                                                                             \
     }
 
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
@@ -424,7 +421,7 @@ __attribute__((constructor)) void registerLauncherHandler() {
         makeSpecificImplicitHandle(handleLauncherTranslationUnit));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (Launcher)\n";
+        SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");
     }
 
     REG_ATTR_HANDLE(KERNEL_ATTR_NAME, makeSpecificAttrHandle(handleLauncherKernelAttribute));
