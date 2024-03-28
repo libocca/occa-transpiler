@@ -247,6 +247,7 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
+
     if (loopInfo->shouldSync()) {
         suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
