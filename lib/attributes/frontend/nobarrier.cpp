@@ -32,9 +32,9 @@ struct NoBarrierAttribute : public ParsedAttrInfo {
     bool diagAppertainsToStmt(clang::Sema& sema,
                               const clang::ParsedAttr& attr,
                               const clang::Stmt* stmt) const override {
-        if (!isa<NullStmt>(stmt)) {
+        if (!isa<ForStmt>(stmt)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-                << attr << attr.isDeclspecAttribute() << "empty statement";
+                << attr << attr.isDeclspecAttribute() << "for statement";
             return false;
         }
         return true;
