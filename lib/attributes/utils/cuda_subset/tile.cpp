@@ -110,6 +110,7 @@ HandleResult handleTileAttribute(const Attr& a,
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
+
     if (loopInfo->shouldSync()) {
         suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
     }
