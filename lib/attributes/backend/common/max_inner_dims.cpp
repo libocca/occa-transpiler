@@ -4,7 +4,8 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
-#include "core/utils/range_to_string.h"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -14,10 +15,7 @@ HandleResult handleMaxInnerDimsStmtAttribute(const clang::Attr& a,
                                              const clang::ForStmt& forStmt,
                                              const AttributedLoopInnerSize* params,
                                              SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
-
+    SPDLOG_DEBUG("Handle [@max_inner_dims] attribute");
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@max_inner_dims params nullptr"});
     }
@@ -46,8 +44,9 @@ HandleResult handleMaxInnerDimsStmtAttribute(const clang::Attr& a,
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
         MAX_INNER_DIMS, makeSpecificAttrHandle(handleMaxInnerDimsStmtAttribute));
+
     if (!ok) {
-        llvm::errs() << "failed to register " << MAX_INNER_DIMS << " attribute decl handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute handler", MAX_INNER_DIMS);
     }
 }
 }  // namespace

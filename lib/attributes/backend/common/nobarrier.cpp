@@ -3,7 +3,8 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
-#include "core/utils/range_to_string.h"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -12,10 +13,7 @@ using namespace clang;
 HandleResult handleNoBarrierStmtAttribute(const clang::Attr& a,
                                           const clang::ForStmt& forStmt,
                                           SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
-
+    SPDLOG_DEBUG("Handle [@nobarrier] attribute");
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -32,8 +30,9 @@ HandleResult handleNoBarrierStmtAttribute(const clang::Attr& a,
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
         NOBARRIER_ATTR_NAME, makeSpecificAttrHandle(handleNoBarrierStmtAttribute));
+
     if (!ok) {
-        llvm::errs() << "failed to register " << NOBARRIER_ATTR_NAME << " attribute stmt handler\n";
+        SPDLOG_ERROR("Failed to register {} attribute handler", NOBARRIER_ATTR_NAME);
     }
 }
 }  // namespace
