@@ -1,5 +1,3 @@
-#include <oklt/core/kernel_metadata.h>
-
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
@@ -12,6 +10,8 @@
 #include "core/utils/range_to_string.h"
 #include "core/utils/type_converter.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+
+#include <oklt/core/kernel_metadata.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <spdlog/spdlog.h>
