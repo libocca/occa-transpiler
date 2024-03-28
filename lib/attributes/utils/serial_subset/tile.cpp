@@ -11,6 +11,7 @@
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
+#include <spdlog/spdlog.h>
 namespace oklt::serial_subset {
 using namespace clang;
 
@@ -140,6 +141,8 @@ HandleResult handleTileAttribute(const Attr& a,
                                  const ForStmt& stmt,
                                  const TileParams* params,
                                  SessionStage& s) {
+    SPDLOG_DEBUG("Handle [@tile] attribute");
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
     }
@@ -149,14 +152,6 @@ HandleResult handleTileAttribute(const Attr& a,
     if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo->var.typeName << ", name: " << loopInfo->var.name
-                 << ", initValue: " << loopInfo->range.start
-                 << "), Cond(rhsExpr: " << loopInfo->range.end
-                 << "), Inc(rhsInc: " << loopInfo->inc.val << ", isUnary: " << loopInfo->isUnary()
-                 << ")\n";
-#endif
 
     removeAttribute(a, s);
 

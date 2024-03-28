@@ -2,6 +2,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 
 #include <clang/AST/DeclCXX.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -18,7 +19,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         makeSpecificImplicitHandle(handleHIPCXXRecord));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global function (CUDA)\n";
+        SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");
     }
 }
 }  // namespace

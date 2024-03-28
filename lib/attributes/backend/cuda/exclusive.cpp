@@ -3,6 +3,8 @@
 #include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -15,7 +17,7 @@ __attribute__((constructor)) void registerCUDAExclusiveAttrBackend() {
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME << " attribute handler\n";
+        SPDLOG_ERROR("[CUDA] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 }
 }  // namespace

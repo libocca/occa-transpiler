@@ -1,5 +1,7 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -9,8 +11,7 @@ __attribute__((constructor)) void registerOPENMPKernelHandler() {
         makeSpecificAttrHandle(serial_subset::handleKernelAttribute));
 
     if (!ok) {
-        llvm::errs() << "failed to register " << KERNEL_ATTR_NAME
-                     << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);
     }
 }
 }  // namespace

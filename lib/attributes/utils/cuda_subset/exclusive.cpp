@@ -6,13 +6,13 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/DeclBase.h>
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::cuda_subset {
 HandleResult handleExclusiveAttribute(const clang::Attr& attr,
                                       const clang::Decl& decl,
                                       SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << attr.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@exclusive] attribute");
 
     stage.getRewriter().RemoveText(getAttrFullSourceRange(attr));
     return defaultHandleExclusiveDeclAttribute(attr, decl, stage);

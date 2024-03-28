@@ -13,6 +13,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
+#include <spdlog/spdlog.h>
 
 #include <set>
 
@@ -97,10 +98,9 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
         gnu_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, insertLoc));
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "removed attr: " << oklAttr.name
-                 << " at loc: " << insertLoc.printToString(pp.getSourceManager()) << '\n';
-#endif
+    SPDLOG_DEBUG("removed attr: {} at loc: {}",
+                 oklAttr.name,
+                 insertLoc.printToString(pp.getSourceManager()));
 
     return true;
 }
@@ -206,15 +206,13 @@ namespace oklt {
 
 OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     if (input.oklCppSrc.empty()) {
-        llvm::outs() << "input source string is empty\n";
+        SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 0 OKL source:\n\n" << input.oklCppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.oklCppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
@@ -250,9 +248,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
         output.gnuCppSrc = std::move(input_file);
     }
 
-#ifdef NORMALIZER_DEBUG_LOG
-    llvm::outs() << "stage 1 GNU cpp source:\n\n" << output.gnuCppSrc << '\n';
-#endif
+    SPDLOG_DEBUG("stage 1 GNU cpp source:\n\n{}", output.gnuCppSrc);
 
     return output;
 }

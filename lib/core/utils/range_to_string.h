@@ -9,12 +9,12 @@ namespace clang {
 class ASTContext;
 class Expr;
 class Stmt;
+class Decl;
 }  // namespace clang
 
 namespace oklt {
 std::string getSourceText(const clang::SourceRange& range, clang::ASTContext& ctx);
 std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx);
-std::string prettyPrint(const clang::Stmt& stmt, clang::ASTContext& ctx);
 
 template <typename NodeType>
 std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter) {

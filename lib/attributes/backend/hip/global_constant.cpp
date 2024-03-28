@@ -1,6 +1,8 @@
 #include "attributes/utils/replace_attribute.h"
 #include "core/attribute_manager/attribute_manager.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 
@@ -15,7 +17,7 @@ __attribute__((constructor)) void registeHIPGlobalConstantHandler() {
         makeSpecificImplicitHandle(handleHIPGlobalConstant));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global constant (HIP)\n";
+        SPDLOG_ERROR("[HIP] Failed to register implicit handler for global constant");
     }
 }
 }  // namespace

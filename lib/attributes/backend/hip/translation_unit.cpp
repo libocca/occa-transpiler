@@ -3,6 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
@@ -19,7 +20,7 @@ __attribute__((constructor)) void registerAttrBackend() {
         makeSpecificImplicitHandle(handleTranslationUnit));
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";
+        SPDLOG_ERROR("[HIP] Failed to register implicit handler for translation unit");
     }
 }
 }  // namespace

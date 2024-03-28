@@ -10,6 +10,8 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <oklt/util/format.h>
 
+#include <spdlog/spdlog.h>
+
 using namespace llvm;
 using namespace clang;
 using namespace clang::tooling;
@@ -17,6 +19,7 @@ using namespace clang::tooling;
 namespace oklt {
 
 TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
+    SPDLOG_INFO("Start transpilation stage");
     auto& input = session->input;
 
     Twine tool_name = "okl-transpiler";
@@ -44,16 +47,14 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
                                      tool_name,
                                      std::make_shared<PCHContainerOperations>());
 
-// TODO make reporting of warnings as runtime option
-#ifdef TRANSPILER_DEBUG_LOG
+    // TODO make reporting of warnings as runtime option
     const auto& warnings = session->getWarnings();
     if (!warnings.empty()) {
-        llvm::outs() << "tranpilation warnings:\n";
+        SPDLOG_INFO("Transpilation warnings: ");
         for (const auto& w : warnings) {
-            llvm::outs() << w.desc << "\n";
+            SPDLOG_WARN("{}", w.desc);
         }
     }
-#endif
     if (!ret || !session->getErrors().empty()) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }
@@ -64,9 +65,7 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
         session->output.launcher.sourceCode = oklt::format(session->output.launcher.sourceCode);
     }
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "stage 3 cpp source:\n\n" << session->output.kernel.sourceCode << '\n';
-#endif
+    SPDLOG_DEBUG("stage 3 cpp source:\n\n{}", session->output.kernel.sourceCode);
 
     return session;
 }

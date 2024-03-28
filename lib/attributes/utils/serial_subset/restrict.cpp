@@ -3,6 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
+#include <spdlog/spdlog.h>
 namespace oklt::serial_subset {
 using namespace clang;
 
@@ -13,9 +14,7 @@ const std::string restrictText = "__restrict__ ";
 HandleResult handleRestrictAttribute(const clang::Attr& a,
                                      const clang::Decl& decl,
                                      SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+    SPDLOG_DEBUG("Handle [@restrict] attribute");
 
     removeAttribute(a, s);
     s.getRewriter().InsertTextBefore(decl.getLocation(), restrictText);
