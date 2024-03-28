@@ -92,8 +92,8 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
                          leftNeighbour.getLocation().printToString(pp.getSourceManager()));
             return false;
         }
-        auto cppAttr = wrapAsSpecificCxxAttr(oklAttr);
-        rewriter.InsertTextBefore(forLoc, cppAttr);
+        auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
+        rewriter.InsertTextBefore(forLoc, gnuAttr);
     }
     // INFO: just replace directly with standard attribute
     // if it's originally at the beginning, or an in-place type attribute.
