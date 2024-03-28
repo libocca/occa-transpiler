@@ -216,7 +216,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
     Twine file_name("main_kernel.cpp");
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
+    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I.", "-ferror-limit=0"};
 
     auto input_file = std::move(input.oklCppSrc);
 

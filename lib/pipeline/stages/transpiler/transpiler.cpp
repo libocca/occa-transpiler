@@ -26,7 +26,7 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     // INFO: hot fix for *.okl extention
     std::string rawFileName = "main_kernel.cpp";
     Twine file_name(rawFileName);
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
+    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I.", "-ferror-limit=0"};
 
     for (const auto& define : input.defines) {
         std::string def = "-D" + define;

@@ -252,7 +252,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
 
     Twine tool_name = "okl-transpiler-normalization-to-cxx";
     Twine file_name("main_kernel.cpp");
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
+    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I.", "-ferror-limit=0"};
 
     auto input_file = std::move(input.gnuCppSrc);
     GnuToStdCppStageOutput output = {.session = input.session};
