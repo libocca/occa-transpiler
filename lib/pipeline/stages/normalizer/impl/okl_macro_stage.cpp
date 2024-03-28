@@ -74,22 +74,20 @@ bool replaceOklMacroAttribute(const OklAttribute& oklAttr,
     // in case of one line source code add new line character before and after directive expand to
     // ensure source is not hidden by macro that could be inside of directive
     if (oklAttr.tok_indecies.back() != tokens.size()) {
-        FullSourceLoc nextTokenAfterAttr(tokens[oklAttr.tok_indecies.back()].getLocation(),
-                                         pp.getSourceManager());
-        FullSourceLoc nextTokenFullLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
-                                       pp.getSourceManager());
-        if (nextTokenAfterAttr.getExpansionLineNumber() ==
-            nextTokenFullLoc.getExpansionLineNumber()) {
+        FullSourceLoc attrLastTokLoc(tokens[oklAttr.tok_indecies.back()].getLocation(),
+                                     pp.getSourceManager());
+        FullSourceLoc nextTokLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
+                                 pp.getSourceManager());
+        if (attrLastTokLoc.getExpansionLineNumber() == nextTokLoc.getExpansionLineNumber()) {
             replacement += '\n';
         }
     }
     if (oklAttr.tok_indecies.front() != 0) {
-        FullSourceLoc prevTokenAfterAttr(tokens[oklAttr.tok_indecies.back()].getLocation(),
-                                         pp.getSourceManager());
-        FullSourceLoc nextTokenFullLoc(tokens[oklAttr.tok_indecies.back() + 1].getLocation(),
-                                       pp.getSourceManager());
-        if (prevTokenAfterAttr.getExpansionLineNumber() ==
-            nextTokenFullLoc.getExpansionLineNumber()) {
+        FullSourceLoc attrFirtTokLoc(tokens[oklAttr.tok_indecies.front()].getLocation(),
+                                     pp.getSourceManager());
+        FullSourceLoc prevTokLoc(tokens[oklAttr.tok_indecies.front() - 1].getLocation(),
+                                 pp.getSourceManager());
+        if (attrFirtTokLoc.getExpansionLineNumber() == prevTokLoc.getExpansionLineNumber()) {
             replacement = '\n' + replacement;
         }
     }
