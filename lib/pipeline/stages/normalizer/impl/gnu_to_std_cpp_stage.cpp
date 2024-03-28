@@ -142,7 +142,7 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
         auto markerLoc = getMarkerSourceLoc(marker, _stage.getCompiler().getSourceManager());
         auto forParenRange = SourceRange(s->getBeginLoc(), s->getRParenLoc());
 
-        SPDLOG_DEBUG("for loc: {} \nmarker loc: {}",
+        SPDLOG_DEBUG("for loc: {} marker loc: {}",
                      forParenRange.printToString(_stage.getCompiler().getSourceManager()),
                      markerLoc.printToString(_stage.getCompiler().getSourceManager()));
 
