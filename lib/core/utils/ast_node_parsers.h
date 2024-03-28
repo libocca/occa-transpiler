@@ -15,7 +15,7 @@ namespace oklt {
 struct Error;
 class SessionStage;
 
-tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr& a,
+tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr* a,
                                               const clang::ForStmt& s,
                                               SessionStage& stage);
 }  // namespace oklt

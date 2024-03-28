@@ -4,6 +4,8 @@
 #include <oklt/util/string_utils.h>
 
 #include "core/attribute_manager/result.h"
+#include "core/transpiler_session/session_stage.h"
+#include "core/utils/range_to_string.h"
 #include "util/type_traits.h"
 
 #include <clang/AST/Attr.h>
@@ -14,7 +16,7 @@
 
 namespace oklt {
 
-class SessionStage;
+// class SessionStage;
 class OklSemaCtx;
 
 class AstProcessorManager {
@@ -120,6 +122,31 @@ HandleType makeSpecificSemaXXXHandle(Handler& handler) {
     }};
 };
 
+// TODO: maybe remove dublication with makeSpecificSemaXXXHandle
+template <typename Handler, typename NodeType, typename HandleType>
+HandleType makeDefaultSemaXXXHandle(Handler& handler) {
+    using ExprType = typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
+    constexpr size_t n_arguments = func_num_arguments<Handler>::value;
+
+    return HandleType{[&handler, n_arguments](const clang::Attr*,
+                                              const NodeType& node,
+                                              OklSemaCtx& sema,
+                                              SessionStage& stage) -> HandleResult {
+        static_assert(n_arguments == HANDLE_NUM_OF_ARGS, "Handler must have 4 arguments");
+        const auto localNode = clang::dyn_cast_or_null<ExprType>(&node);
+        if (!localNode) {
+            auto text = getSourceText(node.getSourceRange(), stage.getCompiler().getASTContext());
+            auto baseNodeTypeName = typeid(NodeType).name();
+            auto handleNodeTypeName = typeid(ExprType).name();
+            return tl::make_unexpected(
+                Error{{},
+                      util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
+                          .value()});
+        }
+        return handler(nullptr, *localNode, sema, stage);
+    }};
+};
+
 }  // namespace detail
 
 template <typename Handler>
@@ -135,6 +162,22 @@ auto makeSpecificSemaHandle(Handler& handler) {
         return detail::makeSpecificSemaXXXHandle<Handler,
                                                  clang::Stmt,
                                                  AstProcessorManager::StmtHandleType>(handler);
+    }
+}
+
+template <typename Handler>
+auto makeDefaultSemaHandle(Handler& handler) {
+    using DeclOrStmt = typename std::remove_const_t<
+        typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>>;
+
+    if constexpr (std::is_base_of_v<clang::Decl, DeclOrStmt>) {
+        return detail::makeDefaultSemaXXXHandle<Handler,
+                                                clang::Decl,
+                                                AstProcessorManager::DeclHandleType>(handler);
+    } else {
+        return detail::makeDefaultSemaXXXHandle<Handler,
+                                                clang::Stmt,
+                                                AstProcessorManager::StmtHandleType>(handler);
     }
 }
 

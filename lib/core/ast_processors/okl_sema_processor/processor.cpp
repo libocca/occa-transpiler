@@ -44,5 +44,12 @@ __attribute__((constructor)) void registerOklSemaProcessor() {
         StmtHandle{.preAction = makeSpecificSemaHandle(preValidateOklForLoop),
                    .postAction = makeSpecificSemaHandle(postValidateOklForLoop)});
     assert(ok);
+
+    // ok = mng.registerDefaultHandle(
+    //     {AstProcessorType::OKL_WITH_SEMA},
+    //     StmtHandle{.preAction = makeDefaultSemaHandle(preValidateOklForLoopWithoutAttribute),
+    //                .postAction = makeDefaultSemaHandle(postValidateOklForLoopWithoutAttribute)});
+
+    // assert(ok);
 }
 }  // namespace

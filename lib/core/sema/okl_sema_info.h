@@ -33,7 +33,7 @@ struct OklLoopInfo {
         bool allNullOpts();
     };
 
-    const clang::Attr& attr;
+    const clang::Attr* attr;
     const clang::ForStmt& stmt;
     LoopTypes type = {LoopType::Regular};
     Axises axis = {Axis::Auto};
@@ -106,6 +106,7 @@ struct OklKernelInfo {
     explicit OklKernelInfo(const clang::FunctionDecl& decl)
         : decl(std::ref(decl)){};
     const std::reference_wrapper<const clang::FunctionDecl> decl;
-    std::list<OklLoopInfo> children = {};
+    std::list<OklLoopInfo*> topLevelOuterLoops = {};
+    std::list<OklLoopInfo> topLevelLoops = {};
 };
 }  // namespace oklt

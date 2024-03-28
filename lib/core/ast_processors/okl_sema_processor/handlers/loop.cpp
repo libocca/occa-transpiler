@@ -20,7 +20,19 @@ HandleResult preValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    auto ok = sema.startParsingAttributedForLoop(attr, stmt, &params.value(), stage);
+    auto ok = sema.startParsingAttributedForLoop(&attr, stmt, &params.value(), stage);
+    if (!ok) {
+        return tl::make_unexpected(std::move(ok.error()));
+    }
+
+    return ok;
+}
+
+HandleResult preValidateOklForLoopWithoutAttribute(const Attr*,
+                                                   const ForStmt& stmt,
+                                                   OklSemaCtx& sema,
+                                                   SessionStage& stage) {
+    auto ok = sema.startParsingAttributedForLoop(nullptr, stmt, nullptr, stage);
     if (!ok) {
         return tl::make_unexpected(std::move(ok.error()));
     }
@@ -37,7 +49,20 @@ HandleResult postValidateOklForLoop(const Attr& attr,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    auto ok = sema.stopParsingAttributedForLoop(attr, stmt, &params.value());
+    auto ok = sema.stopParsingAttributedForLoop(&attr, stmt, &params.value());
+    if (!ok) {
+        // make appropriate error code
+        return tl::make_unexpected(std::move(ok.error()));
+    }
+
+    return ok;
+}
+
+HandleResult postValidateOklForLoopWithoutAttribute(const Attr*,
+                                                    const clang::ForStmt& stmt,
+                                                    OklSemaCtx& sema,
+                                                    SessionStage& stage) {
+    auto ok = sema.stopParsingAttributedForLoop(nullptr, stmt, nullptr);
     if (!ok) {
         // make appropriate error code
         return tl::make_unexpected(std::move(ok.error()));
