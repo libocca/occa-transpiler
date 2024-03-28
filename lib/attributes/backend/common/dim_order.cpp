@@ -18,7 +18,8 @@ using DimOrder = std::vector<size_t>;
 HandleResult handleDimOrderDeclAttribute(const clang::Attr& a,
                                          const clang::Decl& decl,
                                          SessionStage& s) {
-    SPDLOG_DEBUG("Handle [@dimOrder] decl: {}", getSourceText(decl));
+    SPDLOG_DEBUG("Handle [@dimOrder] decl: {}",
+                 getSourceText(decl.getSourceRange(), decl.getASTContext()));
     removeAttribute(a, s);
     return {};
 }

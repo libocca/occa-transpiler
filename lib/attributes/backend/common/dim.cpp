@@ -20,7 +20,8 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
                                     const clang::Decl& decl,
                                     const AttributedDim* params,
                                     SessionStage& s) {
-    SPDLOG_DEBUG("Handle [@dim] decl: {}", getSourceText(decl));
+    SPDLOG_DEBUG("Handle [@dim] decl: {}",
+                 getSourceText(decl.getSourceRange(), decl.getASTContext()));
     s.getRewriter().RemoveText(getAttrFullSourceRange(a));
     return {};
 }

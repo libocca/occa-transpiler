@@ -15,8 +15,6 @@ class Decl;
 namespace oklt {
 std::string getSourceText(const clang::SourceRange& range, clang::ASTContext& ctx);
 std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx);
-std::string getSourceText(const clang::Decl& decl);
-std::string prettyPrint(const clang::Stmt& stmt, clang::ASTContext& ctx);
 
 template <typename NodeType>
 std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter) {
