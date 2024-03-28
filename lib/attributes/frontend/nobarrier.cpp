@@ -16,6 +16,7 @@ constexpr ParsedAttrInfo::Spelling NOBARRIER_ATTRIBUTE_SPELLINGS[] = {
 
 struct NoBarrierAttribute : public ParsedAttrInfoBase {
     NoBarrierAttribute() {
+        AttrKind = AttributeKind::MODIFIER;
         Spellings = NOBARRIER_ATTRIBUTE_SPELLINGS;
         NumArgs = 1;
         OptArgs = 0;

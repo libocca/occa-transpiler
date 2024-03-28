@@ -257,10 +257,9 @@ bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
     auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
     tnodes.clear();
 
-#ifdef TRANSPILER_DEBUG_LOG
-    dump(translationUnitDecl, _stage);
-    // translationUnitDecl->dump(llvm::outs());
-#endif
+    if (spdlog::get_level() == spdlog::level::trace) {
+        dump(translationUnitDecl, _stage);
+    }
 
     _tu = translationUnitDecl;
     return traverseNode(*this, translationUnitDecl, _procMng, _stage);
