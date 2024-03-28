@@ -6,17 +6,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_types.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
+    ${ROOT_DIR}/include/oklt/core/ast_processor_types.h
+    ${ROOT_DIR}/include/oklt/core/target_backends.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_metadata.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_output.h
+    ${ROOT_DIR}/include/oklt/core/kernel_metadata.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/format.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer.h
+    ${ROOT_DIR}/include/oklt/pipeline/transpiler.h
+    ${ROOT_DIR}/include/oklt/util/format.h
 
     attributes/frontend/barrier.cpp
     attributes/frontend/nobarrier.cpp
@@ -247,13 +247,13 @@ target_compile_definitions(occa-transpiler PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_
 
 target_include_directories(occa-transpiler
       PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${ROOT_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       PRIVATE
         ${LLVM_INCLUDE_DIRS}
         ${LIBCLANG_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/lib/
+        ${ROOT_DIR}/lib/
 )
 
 target_link_libraries(occa-transpiler
