@@ -1,0 +1,13 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "dpcpp",
+      "source": "transpiler/backends/dpcpp/nobarrier/nobarrier_builtin.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/dpcpp/nobarrier/nobarrier_builtin_ref.cpp"
+  }
+]
