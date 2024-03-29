@@ -44,26 +44,27 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-TEST_CASES=(
-    'backends/hip'
-    'backends/cuda'
-    'backends/dpcpp'
-    'backends/openmp'
-    'backends/serial'
-    'backends/launcher'
-    'common/dim'
-    'common/kernel_metadata'
-    'common/macro'
+readarray -d '' TEST_SUITES < <(find $SUITES_PATH -name "suite.json" -print0)
+
+SKIP_LIST=(
+    'includes'
 )
 
-for case in "${TEST_CASES[@]}"; do
-    EXEC="$TEST_BINARY --suite $SUITES_PATH/$case --data_root $DATA_ROOT"
+for suite in "${TEST_SUITES[@]}"; do
+    test_dir=$(realpath $(dirname $suite))
+    test_name=$(basename $test_dir)
+
+    # If this suite is in skip list, skip it
+    if [[ " ${SKIP_LIST[*]} " =~ [[:space:]]${test_name}[[:space:]] ]]; then
+        continue
+    fi
+
+    EXEC="$TEST_BINARY --suite $test_dir --data_root $DATA_ROOT"
     if [[ $VERBOSE ]]; then
         echo "[VERBOSE] Run $EXEC"
     fi
     eval $EXEC
-    if [ $? -ne 0 ]  # stop if test failed
-    then
+    if [ $? -ne 0 ]; then # stop if test failed
         exit 1
     fi
 done
