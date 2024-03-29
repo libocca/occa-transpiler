@@ -223,7 +223,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
     assert(_parsingKernInfo);
     auto loopTypeAxis = getLoopAxisType(params);
 
-    // TODO: currentlu missing diagnostic on at least one [@outer] loop must be present
+    // TODO: currently missing diagnostic on at least one [@outer] loop must be present
     auto reg = isRegular(loopTypeAxis);
     auto* currentLoop = _parsingKernInfo->currentLoop;
     auto isTopLevel = static_cast<bool>(currentLoop);  // for readibility

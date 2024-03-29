@@ -34,8 +34,8 @@ HandleResult preValidateOklForLoopWithoutAttribute(const Attr* attr,
                                                    const ForStmt& stmt,
                                                    OklSemaCtx& sema,
                                                    SessionStage& stage) {
-    // Process only not attributed for statements
-    if (attr) {
+    // Process only not attributed for statements in kernel methods
+    if (attr || !sema.isParsingOklKernel()) {
         return {};
     }
 
@@ -72,8 +72,8 @@ HandleResult postValidateOklForLoopWithoutAttribute(const Attr* attr,
                                                     const clang::ForStmt& stmt,
                                                     OklSemaCtx& sema,
                                                     SessionStage& stage) {
-    // Process only not attributed for statements
-    if (attr) {
+    // Process only not attributed for statements in kernel methods
+    if (attr || !sema.isParsingOklKernel()) {
         return {};
     }
 
