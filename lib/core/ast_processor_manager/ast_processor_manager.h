@@ -4,8 +4,6 @@
 #include <oklt/util/string_utils.h>
 
 #include "core/attribute_manager/result.h"
-#include "core/transpiler_session/session_stage.h"
-#include "core/utils/range_to_string.h"
 #include "util/type_traits.h"
 
 #include <clang/AST/Attr.h>
@@ -16,7 +14,7 @@
 
 namespace oklt {
 
-// class SessionStage;
+class SessionStage;
 class OklSemaCtx;
 
 class AstProcessorManager {
@@ -135,7 +133,6 @@ HandleType makeDefaultSemaXXXHandle(Handler& handler) {
         static_assert(n_arguments == HANDLE_NUM_OF_ARGS, "Handler must have 4 arguments");
         const auto localNode = clang::dyn_cast_or_null<ExprType>(&node);
         if (!localNode) {
-            auto text = getSourceText(node.getSourceRange(), stage.getCompiler().getASTContext());
             auto baseNodeTypeName = typeid(NodeType).name();
             auto handleNodeTypeName = typeid(ExprType).name();
             return tl::make_unexpected(

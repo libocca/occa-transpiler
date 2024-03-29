@@ -223,12 +223,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
     assert(_parsingKernInfo);
     auto loopTypeAxis = getLoopAxisType(params);
 
-    // if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopTypeAxis.types)) {
-    //     return tl::make_unexpected(Error{
-    //         .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer]
-    //         for-loop"});
-    // }
-
+    // TODO: currentlu missing diagnostic on at least one [@outer] loop must be present
     auto reg = isRegular(loopTypeAxis);
     auto* currentLoop = _parsingKernInfo->currentLoop;
     auto isTopLevel = static_cast<bool>(currentLoop);  // for readibility
@@ -239,7 +234,6 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
         }
         return _parsingKernInfo->topLevelLoops;
     }();
-    // auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->topLevelLoops;
     LoopTypes parentType{LoopType::Regular};
     if (currentLoop) {
         parentType = currentLoop->type;
