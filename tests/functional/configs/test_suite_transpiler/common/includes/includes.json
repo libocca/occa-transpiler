@@ -8,6 +8,19 @@
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/includes/ref_kernel.cpp"
+        "reference": "transpiler/common/includes/kernel_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/includes/bug_165.cpp",
+            "includes": [
+                "data/transpiler/common/includes"
+            ],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/includes/bug_165_ref.cpp"
     }
 ]
