@@ -394,6 +394,9 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
 
     size_t n = 0;
     for (auto* loop : kernelInfo.topLevelOuterLoops) {
+        if (!loop) {
+            continue;
+        }
         removeAttribute(*loop->attr, s);
 
         auto body = getRootLoopBody(func, *loop, n, s);

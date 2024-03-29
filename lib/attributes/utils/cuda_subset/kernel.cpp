@@ -72,6 +72,9 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
     auto startPos = getAttrFullSourceRange(a).getBegin();
     size_t n = 0;
     for (auto* child : kernelInfo.topLevelOuterLoops) {
+        if (!child) {
+            continue;
+        }
         kernels.push_back(oklKernelInfo.value());
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);

@@ -122,6 +122,9 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     size_t n = 0;
     auto startPos = getAttrFullSourceRange(a).getBegin();
     for (auto* child : kernelInfo.topLevelOuterLoops) {
+        if (!child) {
+            continue;
+        }
         kernels.push_back(oklKernelInfo);
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
