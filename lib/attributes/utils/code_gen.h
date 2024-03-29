@@ -23,7 +23,7 @@ HandleResult replaceAttributedLoop(const clang::Attr& a,
                                    const clang::ForStmt& f,
                                    const std::string& prefixCode,
                                    const std::string& suffixCode,
-                                   const std::string& endingCode,
+                                   const std::string& afterRBraceCode,
                                    SessionStage& s,
                                    bool insertInside = false);
 }  // namespace oklt
