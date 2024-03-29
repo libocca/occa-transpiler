@@ -33,8 +33,8 @@ _occa_function2_0(sycl::queue *queue_, sycl::nd_range<3> *range_) {
         {
           int j = (0) + item.get_local_id(2);
           shm[i] = j;
-          item_.barrier(sycl::access::fence_space::local_space);
         }
+        item_.barrier(sycl::access::fence_space::local_space);
         // sync should be here
         {
           int j = (0) + item.get_local_id(2);
@@ -61,8 +61,8 @@ _occa_function3_0(sycl::queue *queue_, sycl::nd_range<3> *range_) {
           {
             int j = (0) + item.get_local_id(2);
             shm[i] = j;
-            item_.barrier(sycl::access::fence_space::local_space);
           }
+          item_.barrier(sycl::access::fence_space::local_space);
           // sync should be here
         }
       }

@@ -54,6 +54,16 @@ HandleResult replaceAttributedLoop(const Attr& a,
                                    const std::string& suffixCode,
                                    SessionStage& s,
                                    bool insertInside) {
+    return replaceAttributedLoop(a, f, prefixCode, suffixCode, "", s, insertInside);
+}
+
+HandleResult replaceAttributedLoop(const Attr& a,
+                                   const ForStmt& f,
+                                   const std::string& prefixCode,
+                                   const std::string& suffixCode,
+                                   const std::string& afterCode,
+                                   SessionStage& s,
+                                   bool insertInside) {
     auto& rewriter = s.getRewriter();
 
     rewriter.RemoveText(getAttrFullSourceRange(a));
@@ -75,6 +85,10 @@ HandleResult replaceAttributedLoop(const Attr& a,
     } else {
         rewriter.ReplaceText(SourceRange{f.getForLoc(), f.getRParenLoc()}, prefixCode);
         rewriter.InsertText(f.getEndLoc(), suffixCode, true, true);
+    }
+
+    if (!afterCode.empty()) {
+        rewriter.InsertText(f.getEndLoc().getLocWithOffset(1), afterCode);
     }
 
     return {};

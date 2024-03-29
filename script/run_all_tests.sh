@@ -50,6 +50,7 @@ TEST_CASES=(
     'backends/dpcpp'
     'backends/openmp'
     'backends/serial'
+    'backends/launcher'
     'common/dim'
     'common/kernel_metadata'
     'common/macro'
@@ -61,4 +62,8 @@ for case in "${TEST_CASES[@]}"; do
         echo "[VERBOSE] Run $EXEC"
     fi
     eval $EXEC
+    if [ $? -ne 0 ]  # stop if test failed
+    then
+        exit 1
+    fi
 done

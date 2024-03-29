@@ -19,4 +19,11 @@ HandleResult replaceAttributedLoop(const clang::Attr& a,
                                    const std::string& suffixCode,
                                    SessionStage& s,
                                    bool insertInside = false);
+HandleResult replaceAttributedLoop(const clang::Attr& a,
+                                   const clang::ForStmt& f,
+                                   const std::string& prefixCode,
+                                   const std::string& suffixCode,
+                                   const std::string& endingCode,
+                                   SessionStage& s,
+                                   bool insertInside = false);
 }  // namespace oklt

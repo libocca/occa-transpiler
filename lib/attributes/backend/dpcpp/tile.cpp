@@ -249,11 +249,13 @@ HandleResult handleTileAttribute(const clang::Attr& a,
     auto prefixCode =
         buildPreffixTiledCode(*loopInfo, &updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+    std::string afterCode = "";
+
     if (loopInfo->shouldSync()) {
-        suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";";
+        afterCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterCode, s);
 }
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {

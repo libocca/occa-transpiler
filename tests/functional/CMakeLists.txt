@@ -17,6 +17,11 @@ CPMAddPackage(NAME nlohmann_json
     GITHUB_REPOSITORY nlohmann/json
     OPTIONS "JSON_BuildTests OFF")
 
+CPMAddPackage(NAME spdlog
+  VERSION 1.13.0
+  GITHUB_REPOSITORY gabime/spdlog
+  OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
+
 add_library(GTest::GTest INTERFACE IMPORTED)
 target_link_libraries(GTest::GTest INTERFACE gtest)
 
@@ -46,11 +51,12 @@ target_compile_definitions(occa-transpiler-tests
         ${LLVM_DEFINITIONS})
 
 target_link_libraries(occa-transpiler-tests
-        PRIVATE
+      PRIVATE
         GTest::GTest
         argparse
-	nlohmann_json::nlohmann_json
+	      nlohmann_json::nlohmann_json
         occa-transpiler
+        spdlog::spdlog_header_only
 )
 
 add_custom_command(TARGET occa-transpiler-tests POST_BUILD
