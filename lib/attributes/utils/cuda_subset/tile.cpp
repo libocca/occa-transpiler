@@ -112,14 +112,14 @@ HandleResult handleTileAttribute(const Attr& a,
     auto prefixCode =
         buildPreffixTiledCode(*loopInfo, &updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+    std::string afterRBraceCode = "";
+    if (loopInfo->shouldSync()) {
+        afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
+    }
 
     handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
 
-    if (loopInfo->shouldSync()) {
-        suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
-    }
-
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s);
 }
 
 }  // namespace oklt::cuda_subset

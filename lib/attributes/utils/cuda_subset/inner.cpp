@@ -37,13 +37,13 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+    std::string afterRBraceCode = "";
+    if (loopInfo->shouldSync()) {
+        afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
+    }
 
     handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
 
-    if (loopInfo->shouldSync()) {
-        suffixCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
-    }
-
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s, true);
 }
 }  // namespace oklt::cuda_subset

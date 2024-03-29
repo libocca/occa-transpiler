@@ -19,8 +19,8 @@ extern "C" __global__ __launch_bounds__(10) void _occa_function2_0() {
     {
       int j = (0) + threadIdx.x;
       shm[i] = j;
-      __syncthreads();
     }
+    __syncthreads();
     // sync should be here
     {
       int j = (0) + threadIdx.x;
@@ -40,8 +40,8 @@ extern "C" __global__ __launch_bounds__(10) void _occa_function3_0() {
       {
         int j = (0) + threadIdx.x;
         shm[i] = j;
-        __syncthreads();
       }
+      __syncthreads();
       // sync should be here
     }
   }

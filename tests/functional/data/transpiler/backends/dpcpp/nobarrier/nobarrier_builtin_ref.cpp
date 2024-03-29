@@ -13,8 +13,8 @@ extern "C" [[sycl::reqd_work_group_size(1, 1, 10)]] void _occa_hello_kern_0(
                 {
                     int j = (0) + item.get_local_id(2);
                     shm[j] = j;
-                    item_.barrier(sycl::access::fence_space::local_space);
                 }
+                item_.barrier(sycl::access::fence_space::local_space);
                 {
                     int j = (0) + item.get_local_id(2);
                     shm[j] = j;
@@ -22,8 +22,8 @@ extern "C" [[sycl::reqd_work_group_size(1, 1, 10)]] void _occa_hello_kern_0(
                 {
                     int j = (0) + item.get_local_id(2);
                     shm[j] = j;
-                    item_.barrier(sycl::access::fence_space::local_space);
                 }
+                item_.barrier(sycl::access::fence_space::local_space);
                 {
                     int j = (0) + item.get_local_id(2);
                     shm[j] = j;

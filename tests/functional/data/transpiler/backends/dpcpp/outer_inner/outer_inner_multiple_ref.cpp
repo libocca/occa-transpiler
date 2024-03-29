@@ -40,8 +40,8 @@ extern "C" void _occa_addVectors_0(sycl::queue *queue_,
               }
               ab[i] = add(a[i], b[k]);
             }
-            item_.barrier(sycl::access::fence_space::local_space);
           }
+          item_.barrier(sycl::access::fence_space::local_space);
           {
             int _occa_tiled_j = (0) + (((4) * 1) * item.get_local_id(0));
             {
@@ -55,8 +55,8 @@ extern "C" void _occa_addVectors_0(sycl::queue *queue_,
                 }
               }
             }
-            item_.barrier(sycl::access::fence_space::local_space);
           }
+          item_.barrier(sycl::access::fence_space::local_space);
           {
             int j = (0) + ((1) * item.get_local_id(0));
             shm[j] = 0;

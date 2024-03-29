@@ -126,7 +126,7 @@ HandleType makeDefaultSemaXXXHandle(Handler& handler) {
     using ExprType = typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
     constexpr size_t n_arguments = func_num_arguments<Handler>::value;
 
-    return HandleType{[&handler, n_arguments](const clang::Attr*,
+    return HandleType{[&handler, n_arguments](const clang::Attr* attr,
                                               const NodeType& node,
                                               OklSemaCtx& sema,
                                               SessionStage& stage) -> HandleResult {
@@ -140,7 +140,7 @@ HandleType makeDefaultSemaXXXHandle(Handler& handler) {
                       util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
                           .value()});
         }
-        return handler(nullptr, *localNode, sema, stage);
+        return handler(attr, *localNode, sema, stage);
     }};
 };
 

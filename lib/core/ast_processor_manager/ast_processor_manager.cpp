@@ -16,15 +16,17 @@ oklt::HandleResult runNodeHandler(KeyType key,
                                   GenKeyType gen_key,
                                   GenMapType& gen_map,
                                   ActionFunc action) {
+    // Handle attributed
     auto it = attr_map.find(key);
-    if (it == attr_map.end()) {
-        auto gen_it = gen_map.find(gen_key);
-        if (gen_it == gen_map.end()) {
-            return {};
-        }
+    if (it != attr_map.end()) {
+        return action(it->second);
+    }
+
+    auto gen_it = gen_map.find(gen_key);
+    if (gen_it != gen_map.end()) {
         return action(gen_it->second);
     }
-    return action(it->second);
+    return {};
 }
 
 AstProcessorManager::AttrKeyType makeAttrKey(AstProcessorType procType, const clang::Attr* attr) {

@@ -36,14 +36,14 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
     auto prefixCode = dpcpp::buildInnerOuterLoopIdxLine(
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
-
-    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
-  
+    std::string afterRBraceCode = "";
     if (loopInfo->shouldSync()) {
-        suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
+        afterRBraceCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
+    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
+
+    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s, true);
 }
 
 __attribute__((constructor)) void registerDpppInnerAttrBackend() {
