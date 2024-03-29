@@ -47,14 +47,14 @@ target_include_directories(occa-transpiler-tests
     )
 
 target_compile_definitions(occa-transpiler-tests
-       	PRIVATE
+	PRIVATE
         ${LLVM_DEFINITIONS})
 
 target_link_libraries(occa-transpiler-tests
-      PRIVATE
+        PRIVATE
         GTest::GTest
         argparse
-	      nlohmann_json::nlohmann_json
+	nlohmann_json::nlohmann_json
         occa-transpiler
         spdlog::spdlog_header_only
 )
