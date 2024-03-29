@@ -7,11 +7,44 @@
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 
 #include <clang/AST/AST.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace clang;
 using namespace oklt;
 
+namespace {
+HandleResult semaDefaultPre(const clang::Attr*,
+                            const clang::Stmt& stmt,
+                            OklSemaCtx& sema,
+                            SessionStage& stage) {
+    switch (stmt.getStmtClass()) {
+        case clang::Stmt::ForStmtClass: {
+            auto& forStmt = *dyn_cast<ForStmt>(&stmt);
+            return preValidateOklForLoopWithoutAttribute(nullptr, forStmt, sema, stage);
+        }
+        default: {
+        }
+    }
+    return {};
+}
+
+HandleResult semaDefaultPost(const clang::Attr*,
+                             const clang::Stmt& stmt,
+                             OklSemaCtx& sema,
+                             SessionStage& stage) {
+    switch (stmt.getStmtClass()) {
+        case clang::Stmt::ForStmtClass: {
+            auto& forStmt = *dyn_cast<ForStmt>(&stmt);
+            return postValidateOklForLoopWithoutAttribute(nullptr, forStmt, sema, stage);
+        }
+        default: {
+        }
+    }
+    return {};
+}
+
+}  // namespace
 __attribute__((constructor)) void registerOklSemaProcessor() {
     auto& mng = AstProcessorManager::instance();
     using DeclHandle = AstProcessorManager::DeclNodeHandle;
@@ -45,11 +78,11 @@ __attribute__((constructor)) void registerOklSemaProcessor() {
                    .postAction = makeSpecificSemaHandle(postValidateOklForLoop)});
     assert(ok);
 
-    // ok = mng.registerDefaultHandle(
-    //     {AstProcessorType::OKL_WITH_SEMA},
-    //     StmtHandle{.preAction = makeDefaultSemaHandle(preValidateOklForLoopWithoutAttribute),
-    //                .postAction = makeDefaultSemaHandle(postValidateOklForLoopWithoutAttribute)});
+    ok =
+        mng.registerDefaultHandle({AstProcessorType::OKL_WITH_SEMA},
+                                  StmtHandle{.preAction = makeDefaultSemaHandle(semaDefaultPre),
+                                             .postAction = makeDefaultSemaHandle(semaDefaultPost)});
 
-    // assert(ok);
+    assert(ok);
 }
 }  // namespace

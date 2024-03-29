@@ -125,6 +125,7 @@ bool isTopLevelAttributed(const LoopAxisTypes& axisTypes,
         if (!currLoop->isRegular()) {
             return false;
         }
+        currLoop = currLoop->parent;
     }
     return true;
 }
