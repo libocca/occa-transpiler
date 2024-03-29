@@ -2,6 +2,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 
 #include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 #include "params/loop.h"
 
 #include <oklt/util/string_utils.h>

@@ -4,6 +4,7 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 #include "params/empty_params.h"
 
 #include <clang/Basic/DiagnosticSema.h>
