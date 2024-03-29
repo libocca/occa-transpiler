@@ -4,6 +4,7 @@
 
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
