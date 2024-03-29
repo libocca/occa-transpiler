@@ -1,4 +1,3 @@
-#include <llvm/Support/raw_ostream.h>
 #include <oklt/core/error.h>
 
 #include "core/diag/diag_consumer.h"
