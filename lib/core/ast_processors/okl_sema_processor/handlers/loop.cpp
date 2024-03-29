@@ -30,10 +30,15 @@ HandleResult preValidateOklForLoop(const Attr& attr,
     return ok;
 }
 
-HandleResult preValidateOklForLoopWithoutAttribute(const Attr*,
+HandleResult preValidateOklForLoopWithoutAttribute(const Attr* attr,
                                                    const ForStmt& stmt,
                                                    OklSemaCtx& sema,
                                                    SessionStage& stage) {
+    // Process only not attributed for statements
+    if (attr) {
+        return {};
+    }
+
     SPDLOG_DEBUG("[Sema] Prevalidate loop without attribute");
 
     auto ok = sema.startParsingAttributedForLoop(nullptr, stmt, nullptr, stage);
@@ -63,10 +68,15 @@ HandleResult postValidateOklForLoop(const Attr& attr,
     return ok;
 }
 
-HandleResult postValidateOklForLoopWithoutAttribute(const Attr*,
+HandleResult postValidateOklForLoopWithoutAttribute(const Attr* attr,
                                                     const clang::ForStmt& stmt,
                                                     OklSemaCtx& sema,
                                                     SessionStage& stage) {
+    // Process only not attributed for statements
+    if (attr) {
+        return {};
+    }
+
     SPDLOG_DEBUG("[Sema] Postvalidate loop without attribute");
 
     auto ok = sema.stopParsingAttributedForLoop(nullptr, stmt, nullptr);

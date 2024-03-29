@@ -8,6 +8,10 @@
 
 namespace oklt {
 
+// Original OCCA takes only first loops branch. Correct implementation should find the biggest
+//  sizes among all branches
+// #define LEGACY_INNER_SIZES_CALCULATION
+
 [[nodiscard]] bool OklLoopInfo::shouldSync() {
     // 1. There should be shared memory usage somewhere inside loop
     if (!sharedInfo.used) {
@@ -200,6 +204,12 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
     }
 
     OklLoopInfo::OptSizes ret{1, 1, 1};
+
+#ifdef LEGACY_INNER_SIZES_CALCULATION
+    if (!children.empty()) {
+        ret = children.front().getInnerSizes();
+    }
+#else
     size_t prevProd = 0;
     for (auto& child : children) {
         auto currSizes = child.getInnerSizes();
@@ -209,6 +219,8 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
         }
         prevProd = prod;
     }
+#endif
+
     if (has(LoopType::Inner)) {
         for (size_t i = 0; i < type.size(); ++i) {
             if (type[i] == LoopType::Inner) {
@@ -269,6 +281,9 @@ bool OklLoopInfo::updateAutoWithSpecificAxis() {
     } else {
         if (axis[0] != Axis::Auto) {
             return true;
+        }
+        if (parent == nullptr) {
+            int a = 0;
         }
         auto height = getHeightSameType(type[0]);
         if (height > MAX_AXIS_SZ) {

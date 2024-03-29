@@ -1,10 +1,12 @@
 [
   "tile.json",
   "inner_outer.json",
+  "max_inner_dims.json",
   "shared.json",
   "restrict.json",
   "atomic.json",
   "barrier.json",
+  "nobarrier.json",
   "exclusive.json",
   "macro.json"
 ]

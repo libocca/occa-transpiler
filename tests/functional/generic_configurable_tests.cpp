@@ -12,7 +12,7 @@
 #include <nlohmann/json.hpp>
 
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
+#include <spdlog/fmt/fmt.h>
 
 #include <fstream>
 
@@ -141,11 +141,14 @@ TEST_P(GenericTest, OCCATests) {
                     std::string formatedReference = oklt::format(reference);
                     std::string normalizedSource =
                         oklt::format(normalizeResult.value().normalized.sourceCode);
-                    SPDLOG_INFO("Compare {} with generated normalized source", referencePath.string());
-                    EXPECT_EQ(formatedReference, normalizedSource);
+                    EXPECT_EQ(formatedReference, normalizedSource)
+                        << fmt::format("Failed compare {} with generated normalized source",
+                                       referencePath.string());
                 } else {
-                    SPDLOG_INFO("Compare {} with generated normalization metadataJson", referencePath.string());
-                    EXPECT_EQ(reference, normalizeResult.value().normalized.metadataJson);
+                    EXPECT_EQ(reference, normalizeResult.value().normalized.metadataJson)
+                        << fmt::format(
+                               "Failed compare {} with generated normalization metadataJson",
+                               referencePath.string());
                 }
 
             } break;
@@ -173,11 +176,13 @@ TEST_P(GenericTest, OCCATests) {
                     std::string formatedReference = oklt::format(reference);
                     std::string transpiledSource =
                         oklt::format(transpileResult.value().kernel.sourceCode);
-                    SPDLOG_INFO("Compare {} with generated transpiled", referencePath.string());
-                    EXPECT_EQ(formatedReference, transpiledSource);
+                    EXPECT_EQ(formatedReference, transpiledSource) << fmt::format(
+                        "Failed compare {} with generated normalization metadataJson",
+                        referencePath.string());
                 } else {
-                    SPDLOG_INFO("Compare {} with generated kernel metadataJson", referencePath.string());
-                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson);
+                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson)
+                        << fmt::format("Failed compare {} with generated kernel metadataJson",
+                                       referencePath.string());
                 }
             } break;
             case Action::NORMALIZE_AND_TRANSPILE: {
@@ -204,11 +209,13 @@ TEST_P(GenericTest, OCCATests) {
                     std::string formatedReference = oklt::format(reference);
                     std::string transpiledSource =
                         oklt::format(transpileResult.value().kernel.sourceCode);
-                    SPDLOG_INFO("Compare {} with generated normalized and transpiled", referencePath.string());
-                    EXPECT_EQ(formatedReference, transpiledSource);
+                    EXPECT_EQ(formatedReference, transpiledSource)
+                        << fmt::format("Failed compare {} with generated normalized and transpiled",
+                                       referencePath.string());
                 } else {
-                    SPDLOG_INFO("Compare {} with generated kernel metadataJson", referencePath.string());
-                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson);
+                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson)
+                        << fmt::format("Failed compare {} with generated kernel metadataJson",
+                                       referencePath.string());
                 }
             } break;
         }

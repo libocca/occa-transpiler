@@ -55,6 +55,15 @@ OklAttrMarker makeOklAttrMarker(const Preprocessor& pp,
                     .col = pp.getSourceManager().getPresumedColumnNumber(loc)}};
 }
 
+SourceLocation findForKwLocBefore(const std::vector<Token> tokens, size_t start) {
+    for (size_t i = start; i != 0; --i) {
+        const auto& tok = tokens.at(i);
+        if (tok.is(tok::kw_for)) {
+            return tok.getLocation();
+        }
+    }
+    return SourceLocation();
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
@@ -71,12 +80,20 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
     auto insertLoc(tokens[oklAttr.tok_indecies.front()].getLocation());
 
-    // fix malformed C++ syntax like for(init;cond;step;@outer) to for(init;cond;step) and mark
-    // source location to fix it during AST traversal
+    // fix malformed C++ syntax like for(init;cond;step;@outer) to [[okl::outer]] for(init;cond;step)
+    // we assume that attribute is inside of for loop and 'for' keyword is definitely before attribute
     if (isProbablyOklSpecificForStmt(leftNeighbour, rightNeighbour)) {
         rewriter.ReplaceText(leftNeighbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
-        recovery_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, leftNeighbour.getLocation()));
+
+        auto forLoc = findForKwLocBefore(tokens, oklAttr.tok_indecies.front());
+        if (forLoc.isInvalid()) {
+            SPDLOG_ERROR("no kw_for is found before loc: {}\n",
+                         leftNeighbour.getLocation().printToString(pp.getSourceManager()));
+            return false;
+        }
+        auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
+        rewriter.InsertTextBefore(forLoc, gnuAttr);
     }
     // INFO: just replace directly with standard attribute
     // if it's originally at the beginning, or an in-place type attribute.

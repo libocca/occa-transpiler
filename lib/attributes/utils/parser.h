@@ -6,6 +6,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace clang {
@@ -100,8 +101,8 @@ class OKLAttrParam {
 
 struct OKLParsedAttr {
     explicit OKLParsedAttr() = default;
-    explicit OKLParsedAttr(const std::string_view name)
-        : name(name){};
+    explicit OKLParsedAttr(std::string name)
+        : name(std::move(name)){};
 
     std::string name;
 
@@ -113,13 +114,13 @@ struct OKLParsedAttr {
     template <typename... T>
     [[nodiscard]] bool isa(size_t n);
 
-    std::map<std::string_view, OKLAttrParam> kwargs;
+    std::map<std::string, OKLAttrParam> kwargs;
     template <typename T = OKLAttrParam>
-    [[nodiscard]] std::optional<T> get(std::string_view k);
+    [[nodiscard]] std::optional<T> get(const std::string& k);
     template <typename T = OKLAttrParam>
-    [[nodiscard]] T get(std::string_view k, T&& u);
+    [[nodiscard]] T get(const std::string& k, T&& u);
     template <typename... T>
-    [[nodiscard]] bool isa(std::string_view k);
+    [[nodiscard]] bool isa(const std::string& k);
 };
 
 OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage);

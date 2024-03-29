@@ -346,7 +346,7 @@ class AttrParamParser {
                         break;
                     }
 
-                    ret.kwargs.insert_or_assign(name, v.value());
+                    ret.kwargs.insert_or_assign(name.str(), v.value());
                     isParsed = true;
                 }
             }

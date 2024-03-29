@@ -1,12 +1,15 @@
+#include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/kernel_utils.h"
 #include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attributed_type_map.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "oklt/util/string_utils.h"
 #include "pipeline/stages/transpiler/error_codes.h"
+
+#include <oklt/util/string_utils.h>
 
 #include <spdlog/spdlog.h>
 
@@ -78,6 +81,8 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         kernels.push_back(oklKernelInfo.value());
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
+
+        handleChildAttr(child->stmt, MAX_INNER_DIMS, s);
 
         std::stringstream out;
         if (n != 0) {
