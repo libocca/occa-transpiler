@@ -122,7 +122,10 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
 
     size_t n = 0;
     auto startPos = getAttrFullSourceRange(a).getBegin();
-    for (auto& child : kernelInfo.children) {
+    for (auto* child : kernelInfo.topLevelOuterLoops) {
+        if (!child) {
+            continue;
+        }
         kernels.push_back(oklKernelInfo);
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
@@ -132,15 +135,15 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
             out << suffixCode;
             out << "}\n\n";
         }
-        out << getFunctionAttributesStr(func, &child);
+        out << getFunctionAttributesStr(func, child);
         out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
         out << SUBMIT_QUEUE;
 
-        auto endPos = getAttrFullSourceRange(child.attr).getBegin().getLocWithOffset(-1);
+        auto endPos = getAttrFullSourceRange(*child->attr).getBegin().getLocWithOffset(-1);
         rewriter.ReplaceText(SourceRange{startPos, endPos}, out.str());
 
-        auto body = dyn_cast_or_null<CompoundStmt>(child.stmt.getBody());
-        startPos = (body ? body->getEndLoc() : child.stmt.getRParenLoc()).getLocWithOffset(1);
+        auto body = dyn_cast_or_null<CompoundStmt>(child->stmt.getBody());
+        startPos = (body ? body->getEndLoc() : child->stmt.getRParenLoc()).getLocWithOffset(1);
 
         ++n;
     }

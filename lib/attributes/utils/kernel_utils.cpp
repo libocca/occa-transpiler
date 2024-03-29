@@ -11,7 +11,7 @@
 namespace oklt {
 
 tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) {
-    auto& topOuterLoops = kernelInfo.children;
+    auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
     if (topOuterLoops.empty()) {
         return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
                                          "[@kernel] requires at least one [@outer] for-loop"});
@@ -19,8 +19,8 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) 
 
     size_t nMissingInner = 0;
     for (auto& loop : topOuterLoops) {
-        if (!loop.is(LoopType::Outer, LoopType::Inner) &&
-            !loop.getFirstAttributedChild(
+        if (!loop->is(LoopType::Outer, LoopType::Inner) &&
+            !loop->getFirstAttributedChild(
                 [](OklLoopInfo& info) { return info.has(LoopType::Inner); })) {
             ++nMissingInner;
         }

@@ -42,7 +42,7 @@ LoopAxisTypes getLoopAxisType(const std::any* param) {
 }
 
 tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
-                                                 const clang::Attr& attr,
+                                                 const clang::Attr* attr,
                                                  LoopAxisTypes loopTypeAxis,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo,
                                                  SessionStage& stage) {
@@ -104,6 +104,30 @@ bool isLegalLoopLevel(LoopTypes childTypes, LoopTypes parentTypes = {LoopType::R
 
 bool isLegalTopLoopLevel(LoopTypes loopType) {
     return loopType.front() == LoopType::Outer;
+}
+
+bool isRegular(const LoopAxisTypes& axisTypes) {
+    for (auto& type : axisTypes.types) {
+        if (type != LoopType::Regular) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isTopLevelAttributed(const LoopAxisTypes& axisTypes,
+                          const OklSemaCtx::ParsedKernelInfo& parsedKernelInfo) {
+    if (isRegular(axisTypes)) {
+        return false;
+    }
+    auto* currLoop = parsedKernelInfo.currentLoop;
+    while (currLoop) {
+        if (!currLoop->isRegular()) {
+            return false;
+        }
+        currLoop = currLoop->parent;
+    }
+    return true;
 }
 
 }  // namespace
@@ -192,20 +216,24 @@ void OklSemaCtx::setLoopInfo(OklLoopInfo* loopInfo) {
     }
 }
 
-tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang::Attr& attr,
+tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang::Attr* attr,
                                                                     const clang::ForStmt& stmt,
                                                                     const std::any* params,
                                                                     SessionStage& stage) {
     assert(_parsingKernInfo);
     auto loopTypeAxis = getLoopAxisType(params);
 
-    if (!_parsingKernInfo->currentLoop && !isLegalTopLoopLevel(loopTypeAxis.types)) {
-        return tl::make_unexpected(Error{
-            .ec = std::error_code(), .desc = "[@kernel] requires at least one [@outer] for-loop"});
-    }
-
+    // TODO: currentlu missing diagnostic on at least one [@outer] loop must be present
+    auto reg = isRegular(loopTypeAxis);
     auto* currentLoop = _parsingKernInfo->currentLoop;
-    auto& children = currentLoop ? currentLoop->children : _parsingKernInfo->children;
+    auto isTopLevel = static_cast<bool>(currentLoop);  // for readibility
+
+    auto& children = [&]() -> std::list<OklLoopInfo>& {
+        if (isTopLevel) {
+            return currentLoop->children;
+        }
+        return _parsingKernInfo->topLevelLoops;
+    }();
     LoopTypes parentType{LoopType::Regular};
     if (currentLoop) {
         parentType = currentLoop->type;
@@ -218,10 +246,13 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
     }
 
     return makeOklLoopInfo(stmt, attr, loopTypeAxis, *_parsingKernInfo, stage)
-        .and_then([&children, this](auto&& loopInfo) -> tl::expected<void, Error> {
+        .and_then([&](auto&& loopInfo) -> tl::expected<void, Error> {
             children.emplace_back(loopInfo);
 
             auto& child = children.back();
+            if (isTopLevelAttributed(loopTypeAxis, *_parsingKernInfo)) {
+                _parsingKernInfo->topLevelOuterLoops.push_back(&child);
+            }
             child.parent = _parsingKernInfo->currentLoop;
             _parsingKernInfo->currentLoop = &child;
             _parsingKernInfo->loopMap.emplace(&child.stmt, &child);
@@ -229,7 +260,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
         });
 }
 
-tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::Attr& attr,
+tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::Attr* attr,
                                                                    const clang::ForStmt& stmt,
                                                                    const std::any* params) {
     assert(_parsingKernInfo);

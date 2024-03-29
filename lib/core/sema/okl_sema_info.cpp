@@ -18,13 +18,13 @@ namespace oklt {
     if (!(is(LoopType::Inner) || is(LoopType::Inner, LoopType::Inner))) {
         return false;
     }
-    auto* parent = getAttributedParent();
-    if (!parent || parent->has(LoopType::Inner)) {
+    auto* p = parent;
+    if (!p || p->has(LoopType::Inner)) {
         return false;
     }
 
-    // 3. Should not be the last @inner loop
-    if (&parent->children.back() == this) {
+    // 3. Should not be the last @inner loop (if parent is Outer)
+    if ((p->type.back() == LoopType::Outer) && &p->children.back() == this) {
         return false;
     }
 

@@ -268,7 +268,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
         // NOTE: Tile is a special case
         if (child->isTiled()) {
             auto& am = s.getAttrManager();
-            auto params = std::any_cast<TileParams>(am.parseAttr(child->attr, s).value());
+            auto params = std::any_cast<TileParams>(am.parseAttr(*child->attr, s).value());
 
             auto [firstMeta, secondMeta] = splitTileAttr(*child, r);
             //  if (metadata.type.size() > 0)
@@ -393,13 +393,16 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     rewriter.ReplaceText(paramsRange, paramStr);
 
     size_t n = 0;
-    for (auto& loop : kernelInfo.children) {
-        removeAttribute(loop.attr, s);
+    for (auto* loop : kernelInfo.topLevelOuterLoops) {
+        if (!loop) {
+            continue;
+        }
+        removeAttribute(*loop->attr, s);
 
-        auto body = getRootLoopBody(func, loop, n, s);
+        auto body = getRootLoopBody(func, *loop, n, s);
         // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
-        rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
-        rewriter.ReplaceText(loop.stmt.getBody()->getSourceRange(), body);
+        rewriter.RemoveText(SourceRange{loop->stmt.getForLoc(), loop->stmt.getRParenLoc()});
+        rewriter.ReplaceText(loop->stmt.getBody()->getSourceRange(), body);
         ++n;
     }
 

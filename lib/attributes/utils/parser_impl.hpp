@@ -1,7 +1,6 @@
 #pragma once
 
 #include "attributes/utils/parser.h"
-#include "parser.h"
 #include "util/type_traits.h"
 
 #include <llvm/ADT/APFloat.h>
