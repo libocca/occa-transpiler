@@ -7,11 +7,34 @@
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 
 #include <clang/AST/AST.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace clang;
 using namespace oklt;
 
+namespace {
+HandleResult semaDefaultPre(const Attr*,
+                            const clang::Stmt& stmt,
+                            OklSemaCtx& sema,
+                            SessionStage& stage) {
+    if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
+        return preValidateOklForLoopWithoutAttribute(nullptr, *forStmt, sema, stage);
+    }
+    return {};
+}
+
+HandleResult semaDefaultPost(const Attr*,
+                             const clang::Stmt& stmt,
+                             OklSemaCtx& sema,
+                             SessionStage& stage) {
+    if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
+        return postValidateOklForLoopWithoutAttribute(nullptr, *forStmt, sema, stage);
+    }
+    return {};
+}
+
+}  // namespace
 __attribute__((constructor)) void registerOklSemaProcessor() {
     auto& mng = AstProcessorManager::instance();
     using DeclHandle = AstProcessorManager::DeclNodeHandle;
@@ -43,6 +66,13 @@ __attribute__((constructor)) void registerOklSemaProcessor() {
         {AstProcessorType::OKL_WITH_SEMA, INNER_ATTR_NAME},
         StmtHandle{.preAction = makeSpecificSemaHandle(preValidateOklForLoop),
                    .postAction = makeSpecificSemaHandle(postValidateOklForLoop)});
+    assert(ok);
+
+    ok =
+        mng.registerDefaultHandle({AstProcessorType::OKL_WITH_SEMA},
+                                  StmtHandle{.preAction = makeDefaultSemaHandle(semaDefaultPre),
+                                             .postAction = makeDefaultSemaHandle(semaDefaultPost)});
+
     assert(ok);
 }
 }  // namespace
