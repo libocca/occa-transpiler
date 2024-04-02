@@ -17,6 +17,7 @@ namespace oklt {
 struct Error;
 struct Warning;
 struct TranspilerSession;
+class SessionStage;
 
 using SharedTranspilerSession = std::shared_ptr<TranspilerSession>;
 
@@ -27,7 +28,7 @@ struct TranspilerSession {
     explicit TranspilerSession(TargetBackend backend, std::string sourceCode);
     explicit TranspilerSession(UserInput input);
 
-    void pushDiagnosticMessage(clang::StoredDiagnostic& message);
+    void pushDiagnosticMessage(clang::StoredDiagnostic& message, SessionStage& stage);
 
     void pushError(std::error_code ec, std::string desc);
     void pushWarning(std::string desc);

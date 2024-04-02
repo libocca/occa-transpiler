@@ -99,7 +99,7 @@ AstProcessorType SessionStage::getAstProccesorType() const {
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
-    _session.pushDiagnosticMessage(message);
+    _session.pushDiagnosticMessage(message, *this);
 }
 
 void SessionStage::pushError(std::error_code ec, std::string desc) {
@@ -108,6 +108,17 @@ void SessionStage::pushError(std::error_code ec, std::string desc) {
 
 void SessionStage::pushError(const Error& err) {
     _session.pushError(err.ec, std::move(err.desc));
+}
+
+void SessionStage::pushError(const Error& err, const SourceRange& range) {
+    // Diagnostic diag(&getCompiler().getDiagnostics(), err.desc);
+    StoredDiagnostic sd(DiagnosticsEngine::Level::Error,
+                        0,
+                        err.desc,
+                        FullSourceLoc(range.getBegin(), getCompiler().getSourceManager()),
+                        ArrayRef<CharSourceRange>{},
+                        ArrayRef<FixItHint>{});
+    _session.pushDiagnosticMessage(sd, *this);
 }
 
 void SessionStage::pushWarning(std::string desc) {

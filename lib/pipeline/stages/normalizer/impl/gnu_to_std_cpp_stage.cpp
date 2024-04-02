@@ -250,7 +250,8 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
     }
 
     Twine tool_name = "okl-transpiler-normalization-to-cxx";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.gnuCppSrc);
@@ -271,7 +272,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
             std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
             input_file,
             args,
-            file_name,
+            cppFileName,
             tool_name)) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
     }

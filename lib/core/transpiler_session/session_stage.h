@@ -44,6 +44,7 @@ class SessionStage {
     void pushDiagnosticMessage(clang::StoredDiagnostic& message);
     void pushError(std::error_code ec, std::string desc);
     void pushError(const Error& err);
+    void pushError(const Error& err, const clang::SourceRange& range);
     void pushWarning(std::string desc);
 
     inline bool hasUserCtx(const std::string& key) {

@@ -72,6 +72,7 @@ HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionS
         sema.setLoopInfo(tnode.li);
         auto result = applyTranspilationToNode(tnode.attr, tnode.node, stage);
         if (!result) {
+            stage.pushError(result.error(), tnode.node.getSourceRange());
             return tl::make_unexpected(result.error());
         }
     }

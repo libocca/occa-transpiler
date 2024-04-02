@@ -232,7 +232,8 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.oklCppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.oklCppSrc);
@@ -253,7 +254,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
         std::make_unique<OklToGnuAttributeNormalizerAction>(input, output),
         input_file,
         args,
-        file_name,
+        cppFileName,
         tool_name);
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));

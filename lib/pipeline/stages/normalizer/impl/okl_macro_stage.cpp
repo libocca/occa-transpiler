@@ -197,7 +197,8 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
     SPDLOG_DEBUG("stage OKL directive expansion, source:\n\n{}", input.cppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.cppSrc);
@@ -218,7 +219,7 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
         std::make_unique<OklMacroAttributeNormalizerAction>(input, output),
         input_file,
         args,
-        file_name,
+        cppFileName,
         tool_name);
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));

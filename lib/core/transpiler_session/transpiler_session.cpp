@@ -1,9 +1,12 @@
 #include <oklt/core/error.h>
 #include <oklt/core/kernel_metadata.h>
 
+#include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
 
 #include <clang/Basic/Diagnostic.h>
+
+#include <clang/Frontend/TextDiagnostic.h>
 
 namespace oklt {
 
@@ -23,27 +26,20 @@ TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCo
 TranspilerSession::TranspilerSession(UserInput input_)
     : input(std::move(input_)) {}
 
-void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
-    // TODO: Fixup sourceLocation
-    auto msg = message.getMessage();
-    auto loc = message.getLocation();
+void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& message,
+                                              SessionStage& stage) {
+    std::string formattedDiagnostics;
+    llvm::raw_string_ostream os(formattedDiagnostics);
+    clang::TextDiagnostic testDiagnostic(
+        os, stage.getCompiler().getLangOpts(), &stage.getCompiler().getDiagnosticOpts());
 
-    uint32_t lineNo = 0;
-    if (loc.isValid()) {
-        lineNo = message.getLocation().getLineNumber();
-    }
+    testDiagnostic.emitStoredDiagnostic(message);
 
-    std::stringstream ss;
-    if (loc.isValid()) {
-        ss << "line " << lineNo << ": ";
-    }
-    ss << msg.str();
-    // TODO
     //  create error category for syntax/semantic error/warning
     if (message.getLevel() > clang::DiagnosticsEngine::Level::Warning) {
-        _errors.push_back(Error{std::error_code(), ss.str()});
+        _errors.push_back(Error{std::error_code(), formattedDiagnostics});
     } else {
-        _warnings.push_back(Warning{ss.str()});
+        _warnings.push_back(Warning{formattedDiagnostics});
     }
 }
 
