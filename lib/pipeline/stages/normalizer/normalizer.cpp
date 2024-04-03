@@ -41,7 +41,6 @@ GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
     return {.gnuCppSrc = std::move(output.gnuCppSrc),
             .gnuCppIncs = std::move(output.gnuCppIncs),
             .gnuMarkers = std::move(output.gnuMarkers),
-            .recoveryMarkers = std::move(output.recoveryMarkers),
             .session = output.session};
 }
 

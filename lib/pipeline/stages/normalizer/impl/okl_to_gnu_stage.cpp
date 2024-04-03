@@ -68,7 +68,6 @@ SourceLocation findForKwLocBefore(const std::vector<Token> tokens, size_t start)
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
 bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
-                              std::list<OklAttrMarker>& recovery_markers,
                               const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
@@ -80,8 +79,9 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
     auto insertLoc(tokens[oklAttr.tok_indecies.front()].getLocation());
 
-    // fix malformed C++ syntax like for(init;cond;step;@outer) to [[okl::outer]] for(init;cond;step)
-    // we assume that attribute is inside of for loop and 'for' keyword is definitely before attribute
+    // fix malformed C++ syntax like for(init;cond;step;@outer) to [[okl::outer]]
+    // for(init;cond;step) we assume that attribute is inside of for loop and 'for' keyword is
+    // definitely before attribute
     if (isProbablyOklSpecificForStmt(leftNeighbour, rightNeighbour)) {
         rewriter.ReplaceText(leftNeighbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
@@ -187,8 +187,7 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
             pp,
             [this, &rewriter](
                 const OklAttribute& attr, const std::vector<Token>& tokens, Preprocessor& pp) {
-                replaceOklByGnuAttribute(
-                    _output.gnuMarkers, _output.recoveryMarkers, attr, tokens, pp, rewriter);
+                replaceOklByGnuAttribute(_output.gnuMarkers, attr, tokens, pp, rewriter);
                 return true;
             });
         if (!result) {
