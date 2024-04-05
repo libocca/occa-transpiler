@@ -58,6 +58,36 @@ bool isHeaderGuardEx(StringRef name) {
     return false;
 }
 
+size_t countRangeLines(const SourceRange& range, const SourceManager& sm) {
+    auto lines = sm.getExpansionLineNumber(range.getEnd());
+    lines -= sm.getExpansionLineNumber(range.getBegin());
+    return lines;
+}
+
+void removeCommentAfterDirective(std::list<SourceRange>& comments,
+                                 const SourceLocation& directiveLoc,
+                                 const SourceManager& sm,
+                                 Rewriter& rewriter) {
+    FullSourceLoc directiveFullLoc(directiveLoc, sm);
+    for (auto it = comments.begin(); it != comments.end(); ++it) {
+        FullSourceLoc commentFullLoc(it->getBegin(), sm);
+
+        auto commentLineNumber = commentFullLoc.getLineNumber();
+        auto directiveLineNumber = directiveFullLoc.getLineNumber();
+
+        if (commentLineNumber > directiveLineNumber) {
+            break;
+        }
+        if (commentLineNumber != directiveLineNumber) {
+            continue;
+        }
+
+        auto lines = countRangeLines(*it, sm);
+        rewriter.ReplaceText(*it, std::string(lines, '\n'));
+        comments.erase(it++);
+    }
+}
+
 class CondDirectiveCallbacks : public PPCallbacks {
    public:
     struct Result {
@@ -197,6 +227,13 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         }
         results.emplace_back(SourceRange{loc, conditionRange.getEnd()}, std::string("elif 0"));
     }
+
+    void Endif(SourceLocation loc, SourceLocation IfLoc) override {
+        if (sm.isInSystemHeader(loc)) {
+            return;
+        }
+        results.emplace_back(SourceRange{loc, loc.getLocWithOffset(5)}, std::string("endif"));
+    }
 };
 
 class DefineDirectiveCallbacks : public PPCallbacks {
@@ -276,6 +313,15 @@ class DefineDirectiveCallbacks : public PPCallbacks {
     }
 };
 
+struct CommentDeleter : public CommentHandler {
+    std::list<SourceRange> comments;
+
+    bool HandleComment(Preprocessor&, SourceRange commentRange) override {
+        comments.emplace_back(commentRange);
+        return false;
+    }
+};
+
 std::list<Token> lexMacroToken(Preprocessor& pp) {
     std::list<Token> macros;
     while (true) {
@@ -337,6 +383,9 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     pp.EnterMainSourceFile();
     auto& rewriter = stage.getRewriter();
 
+    auto commentDeleter = std::make_unique<CommentDeleter>();
+    pp.addCommentHandler(commentDeleter.get());
+
     auto macros = lexMacroToken(pp);
 
     // do macro expansion
@@ -395,9 +444,11 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
 
         auto hashLoc = findPreviousTokenKind(
             mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
-        auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
-        lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
+        auto lines = countRangeLines({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, sm);
         rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, std::string(lines, '\n'));
+
+        FullSourceLoc macroFullLoc(hashLoc, sm);
+        removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
     }
 
     // remove empty macros from source code
@@ -413,8 +464,12 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
             continue;
         }
 
-        rewriter.ReplaceText(sm.getExpansionRange(c.conditionRange),
+        auto condExpanionRange = sm.getExpansionRange(c.conditionRange);
+        rewriter.ReplaceText(condExpanionRange,
                              c.conditionValue == PPCallbacks::CVK_True ? "1" : "0");
+        // remove comment behind the macro if such exists
+        FullSourceLoc macroFullLoc(condExpanionRange.getBegin(), sm);
+        removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
     }
 
     // macro can be under #ifdef/#elifdef etc
@@ -422,6 +477,8 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     // context free true/false
     for (auto& c : defCondCallback->results) {
         rewriter.ReplaceText(c.range, c.replacement);
+        FullSourceLoc macroFullLoc(c.range.getBegin(), sm);
+        removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
     }
 }
 
@@ -510,3 +567,4 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
     return output;
 }
 }  // namespace oklt
+

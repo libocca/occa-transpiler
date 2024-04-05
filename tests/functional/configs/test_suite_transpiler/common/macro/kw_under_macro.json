@@ -25,6 +25,17 @@
         "action": "normalize_and_transpile",
         "action_config": {
             "backend": "cuda",
+            "source": "transpiler/common/macro/directive_with_comments.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/macro/directive_with_comments_ref.cpp"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
             "source": "transpiler/common/macro/empty_macro_with_arg.cpp",
             "includes": [],
             "defs": [],
