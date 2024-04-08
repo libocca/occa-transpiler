@@ -86,7 +86,6 @@ std::string getTokenLine(const Token& tok, const Preprocessor& pp) {
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
 bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
-                              std::list<OklAttrMarker>& recovery_markers,
                               const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
@@ -236,13 +235,7 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
             pp,
             [this, &rewriter](
                 const OklAttribute& attr, const std::vector<Token>& tokens, Preprocessor& pp) {
-                replaceOklByGnuAttribute(_output.gnuMarkers,
-                                         _output.recoveryMarkers,
-                                         attr,
-                                         tokens,
-                                         pp,
-                                         rewriter,
-                                         _session);
+                replaceOklByGnuAttribute(_output.gnuMarkers, attr, tokens, pp, rewriter, _session);
                 return true;
             });
         if (!result) {

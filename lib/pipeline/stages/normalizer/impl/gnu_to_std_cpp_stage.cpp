@@ -128,34 +128,6 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
         return RecursiveASTVisitor<GnuToCppAttrNormalizer>::TraverseAttributedStmt(as);
     }
 
-    // Special visitor for attribute inside in 'for loop' statement
-    bool VisitForStmt(ForStmt* s) {
-        assert(s != nullptr && "ForStmt is null");
-        assert(_input != nullptr && "input is null");
-
-        if (_input->recoveryMarkers.empty()) {
-            return true;
-        }
-
-        const auto& marker = _input->recoveryMarkers.front();
-        auto markerLoc = getMarkerSourceLoc(marker, _stage.getCompiler().getSourceManager());
-        auto forParenRange = SourceRange(s->getBeginLoc(), s->getRParenLoc());
-
-        SPDLOG_DEBUG("for loc: {} marker loc: {}",
-                     forParenRange.printToString(_stage.getCompiler().getSourceManager()),
-                     markerLoc.printToString(_stage.getCompiler().getSourceManager()));
-
-        // if marker is inside of loop source location range it indicates OKL loop that should be
-        // decorated by attribute in marker
-        if (forParenRange.getBegin() <= markerLoc && markerLoc <= forParenRange.getEnd()) {
-            _stage.getRewriter().InsertTextBefore(forParenRange.getBegin(),
-                                                  wrapAsSpecificCxxAttr(marker.attr));
-            _input->recoveryMarkers.pop_front();
-        }
-
-        return true;
-    }
-
    private:
     const Attr* _lastProccesedAttr{nullptr};
     SessionStage& _stage;
