@@ -64,6 +64,19 @@ std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
     return errorMsg;
 }
 
+std::string getErrorMessage(clang::StoredDiagnostic& diag, SessionStage& stage) {
+    diag = substituteOriginalColumnIfNeeded(diag, stage);
+
+    std::string errorMsg;
+    llvm::raw_string_ostream os(errorMsg);
+    clang::TextDiagnostic testDiagnostic(
+        os, stage.getCompiler().getLangOpts(), &stage.getCompiler().getDiagnosticOpts());
+
+    testDiagnostic.emitStoredDiagnostic(diag);
+    errorMsg = substituteOriginalLineIfNeeded(diag, errorMsg, stage);
+    return errorMsg;
+}
+
 }  // namespace
 
 SharedTranspilerSession TranspilerSession::make(UserInput input) {
@@ -83,16 +96,7 @@ TranspilerSession::TranspilerSession(UserInput input_)
     : input(std::move(input_)) {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& diag, SessionStage& stage) {
-    diag = substituteOriginalColumnIfNeeded(diag, stage);
-
-    std::string errorMsg;
-    llvm::raw_string_ostream os(errorMsg);
-    clang::TextDiagnostic testDiagnostic(
-        os, stage.getCompiler().getLangOpts(), &stage.getCompiler().getDiagnosticOpts());
-
-    testDiagnostic.emitStoredDiagnostic(diag);
-    errorMsg = substituteOriginalLineIfNeeded(diag, errorMsg, stage);
-
+    auto errorMsg = getErrorMessage(diag, stage);
     //  create error category for syntax/semantic error/warning
     if (diag.getLevel() > clang::DiagnosticsEngine::Level::Warning) {
         _errors.push_back(Error{std::error_code(), errorMsg});

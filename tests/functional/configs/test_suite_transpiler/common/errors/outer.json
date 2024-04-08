@@ -1,0 +1,38 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/outer_too_big_dimensions.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/outer_too_big_dimensions.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/outer_too_much_arguments.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/outer_too_much_arguments.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/outer_applied_to_decl.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/outer_applied_to_decl.err"
+    }
+]
