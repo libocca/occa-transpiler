@@ -5,6 +5,7 @@
 #include <oklt/core/transpiler_session/user_output.h>
 
 #include "core/transpiler_session/header_info.h"
+#include "core/transpiler_session/original_source_mapper.h"
 
 #include <clang/Rewrite/Core/DeltaTree.h>
 
@@ -41,6 +42,8 @@ struct TranspilerSession {
     [[nodiscard]] const std::vector<Warning>& getWarnings() const;
     std::vector<Warning>& getWarnings();
 
+    [[nodiscard]] OriginalSourceMapper& getOriginalSourceMapper();
+
     // TODO add methods for user input/output
     UserInput input;
     UserOutput output;
@@ -51,11 +54,8 @@ struct TranspilerSession {
    private:
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
+    OriginalSourceMapper _sourceMapper;
 
-   public:
-    // Modified line number -> Original source line
-    std::map<uint32_t, std::string> originalLines;
-    // New attribute begin offset -> column in the original line
-    std::map<std::pair<clang::FileID, uint32_t>, uint32_t> attrOffsetToOriginalCol;
+
 };
 }  // namespace oklt

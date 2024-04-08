@@ -151,18 +151,8 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
         _normalizer_visitor.TraverseDecl(decl);
 
         // Update attribute offset to original column mapping with current dtree
-        if (auto* dtreeRewriter = dynamic_cast<DtreeRewriterProxy*>(&_stage.getRewriter())) {
-            auto& dtrees = dtreeRewriter->getDeltaTrees();
-            std::map<std::pair<clang::FileID, uint32_t>, uint32_t> attrOffsetToOriginalCol;
-            auto& tsession = _stage.getSession();
-            for (const auto [fidPrevNewOffset, col] : tsession.attrOffsetToOriginalCol) {
-                auto [fid, prevNewOffset] = fidPrevNewOffset;
-                auto newOffset = dtrees.getNewOffset(fid, prevNewOffset);
-                attrOffsetToOriginalCol[{fid, newOffset}] = col;
-                SPDLOG_DEBUG("attribute offset: {}, original column: {}", newOffset, col);
-            }
-            tsession.attrOffsetToOriginalCol = attrOffsetToOriginalCol;
-        } else {
+        if (!_stage.getSession().getOriginalSourceMapper().updateAttributeColumns(
+                _stage.getRewriter())) {
             SPDLOG_ERROR("GNU to STD attribute stage expected Rewriter with DeltaTrees");
         }
     }

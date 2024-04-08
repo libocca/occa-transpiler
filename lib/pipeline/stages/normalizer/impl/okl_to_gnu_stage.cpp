@@ -102,10 +102,9 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     auto attrLineNumber = getTokenLineNumber(attrBegToken, pp);
 
     // Insert original line to the originalLines mapping if needed
+    auto& mapper = session.getOriginalSourceMapper();
     auto attrLine = getTokenLine(attrBegToken, pp);
-    if (session.originalLines.count(attrLineNumber) == 0) {
-        session.originalLines.insert(std::make_pair(attrLineNumber, attrLine));
-    }
+    mapper.addOriginalLine(attrLineNumber, attrLine);
 
     auto leftNeighbour = getLeftNeigbour(oklAttr, tokens);
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
@@ -154,12 +153,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     }
 
     // Save offset to original column mapping
-    if (auto* dtreeRewriter = dynamic_cast<DtreeRewriterProxy*>(&rewriter)) {
-        auto& dtrees = dtreeRewriter->getDeltaTrees();
-        auto newOklAttrOffset = dtrees.getNewOffset(insertLoc);
-        auto fid = rewriter.getSourceMgr().getFileID(insertLoc);
-        session.attrOffsetToOriginalCol[std::make_pair(fid, newOklAttrOffset)] = oklAttrColNumber;
-    } else {
+    if (!mapper.addAttributeColumn(insertLoc, oklAttrColNumber, rewriter)) {
         SPDLOG_ERROR("OKL to GNU attribute stage expected Rewriter with DeltaTrees");
     }
 

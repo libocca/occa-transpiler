@@ -118,12 +118,8 @@ void SessionStage::pushError(const Error& err, const SourceRange& arange) {
     auto& SM = getCompiler().getSourceManager();
     auto begLoc = arange.getBegin();
 
-    StoredDiagnostic sd(DiagnosticsEngine::Level::Error,
-                        0,
-                        err.desc,
-                        FullSourceLoc(begLoc, SM),
-                        ArrayRef<CharSourceRange>{},
-                        ArrayRef<FixItHint>{});
+    StoredDiagnostic sd(
+        DiagnosticsEngine::Level::Error, 0, err.desc, FullSourceLoc(begLoc, SM), {}, {});
     _session.pushDiagnosticMessage(sd, *this);
 }
 

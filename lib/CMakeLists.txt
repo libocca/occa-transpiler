@@ -192,6 +192,7 @@ set (OCCA_TRANSPILER_SOURCES
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
     core/transpiler_session/code_generator.cpp
+    core/transpiler_session/original_source_mapper.cpp
 
     core/target_backends.cpp
 
