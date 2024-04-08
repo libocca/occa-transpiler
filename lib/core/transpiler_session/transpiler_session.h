@@ -6,6 +6,9 @@
 
 #include "core/transpiler_session/header_info.h"
 
+#include <clang/Rewrite/Core/DeltaTree.h>
+
+#include <map>
 #include <vector>
 
 namespace clang {
@@ -48,5 +51,11 @@ struct TranspilerSession {
    private:
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
+
+   public:
+    // Modified line number -> Original source line
+    std::map<uint32_t, std::string> originalLines;
+    // New attribute begin offset -> column in the original line
+    std::map<std::pair<clang::FileID, uint32_t>, uint32_t> attrOffsetToOriginalCol;
 };
 }  // namespace oklt

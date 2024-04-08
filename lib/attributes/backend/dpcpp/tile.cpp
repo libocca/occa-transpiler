@@ -26,7 +26,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter) {
+                                             oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = dpcpp::getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -61,7 +61,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter) {
+                                             oklt::Rewriter& rewriter) {
     static_cast<void>(params);
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = dpcpp::getIdxVariable(loop);
@@ -92,7 +92,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                          const AttributedLoop& regularLoop,
                                          const TileParams* params,
                                          int& openedScopeCounter,
-                                         clang::Rewriter& rewriter) {
+                                         oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
@@ -118,7 +118,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                           const AttributedLoop& regularLoop,
                                           const TileParams* params,
                                           int& openedScopeCounter,
-                                          clang::Rewriter& rewriter) {
+                                          oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
@@ -167,12 +167,11 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const TileParams* params,
                              const LoopOrder& ord,
                              int& openedScopeCounter,
-                             clang::Rewriter& rewriter) {
-    // TODO: this logic should be based on first or second loop, not inner/outer/regular
+                             oklt::Rewriter& rewriter) {
     static std::map<
         std::tuple<LoopType, LoopOrder>,
         std::function<std::string(
-            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, clang::Rewriter&)>>
+            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, oklt::Rewriter&)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
@@ -188,14 +187,13 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
 std::string buildCheckLine(const OklLoopInfo& forLoop,
                            const TileParams* tileParams,
                            int& openedScopeCounter,
-                           clang::Rewriter& rewriter) {
+                           oklt::Rewriter& rewriter) {
     if (!tileParams->check) {
         return "";
     }
 
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
-    // TODO: parse cmp operator
     auto res = util::fmt("if ({} {} {})",
                          forLoop.var.name,
                          cmpStr,
@@ -211,11 +209,10 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
     return res;
 }
 
-// TODO: add check handling
 std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
                                   const TileParams* tileParams,
                                   int& openedScopeCounter,
-                                  clang::Rewriter& rewriter) {
+                                  oklt::Rewriter& rewriter) {
     std::string res;
     res += buildLoopIdxLine(forLoop, tileParams, LoopOrder::First, openedScopeCounter, rewriter);
     res += buildLoopIdxLine(forLoop, tileParams, LoopOrder::Second, openedScopeCounter, rewriter);

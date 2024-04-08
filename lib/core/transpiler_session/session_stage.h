@@ -4,10 +4,11 @@
 #include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
+#include "core/rewriter/rewriter_proxy.h"
 #include "core/transpiler_session/header_info.h"
+#include "core/rewriter/rewriter_fabric.h"
 
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 
 #include <any>
 
@@ -22,7 +23,9 @@ struct TranspilerSession;
 //       that is built for current session with set of interested attribute handlers
 class SessionStage {
    public:
-    explicit SessionStage(TranspilerSession& session, clang::CompilerInstance& compiler);
+    explicit SessionStage(TranspilerSession& session,
+                          clang::CompilerInstance& compiler,
+                          RewriterProxyType rwType = RewriterProxyType::Original);
     ~SessionStage() = default;
 
     const TranspilerSession& getSession() const { return _session; }
@@ -31,7 +34,7 @@ class SessionStage {
 
     clang::CompilerInstance& getCompiler();
 
-    clang::Rewriter& getRewriter();
+    oklt::Rewriter& getRewriter();
     std::string getRewriterResultForMainFile();
     TransformedFiles getRewriterResultForHeaders();
 
@@ -77,7 +80,8 @@ class SessionStage {
     AstProcessorType _astProcType;
 
     clang::CompilerInstance& _compiler;
-    std::unique_ptr<clang::Rewriter> _rewriter;
+    // std::unique_ptr<oklt::Rewriter> _rewriter;
+    std::unique_ptr<oklt::Rewriter> _rewriter;
 
     // XXX discuss key
     std::map<std::string, std::any> _userCtxMap;

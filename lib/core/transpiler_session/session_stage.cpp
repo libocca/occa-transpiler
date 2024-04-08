@@ -3,25 +3,28 @@
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/transpiler_session.h"
 
+#include <spdlog/spdlog.h>
+
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
 
 namespace oklt {
 using namespace clang;
 
-SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
+SessionStage::SessionStage(TranspilerSession& session,
+                           CompilerInstance& compiler,
+                           RewriterProxyType rwType)
     : _session(session),
       _compiler(compiler),
       _backend(session.input.backend),
       _astProcType(session.input.astProcType),
-      _rewriter(std::make_unique<clang::Rewriter>(_compiler.getSourceManager(),
-                                                  _compiler.getLangOpts())) {}
+      _rewriter(makeRewriterProxy(_compiler.getSourceManager(), _compiler.getLangOpts(), rwType)) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
     return _compiler;
 }
 
-clang::Rewriter& SessionStage::getRewriter() {
+oklt::Rewriter& SessionStage::getRewriter() {
     return *_rewriter.get();
 }
 
@@ -31,7 +34,7 @@ AttributeManager& SessionStage::getAttrManager() {
 
 void SessionStage::setLauncherMode() {
     _rewriter =
-        std::make_unique<clang::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
+        std::make_unique<oklt::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
     _backend = TargetBackend::_LAUNCHER;
 }
 
@@ -110,12 +113,15 @@ void SessionStage::pushError(const Error& err) {
     _session.pushError(err.ec, std::move(err.desc));
 }
 
-void SessionStage::pushError(const Error& err, const SourceRange& range) {
+void SessionStage::pushError(const Error& err, const SourceRange& arange) {
     // Diagnostic diag(&getCompiler().getDiagnostics(), err.desc);
+    auto& SM = getCompiler().getSourceManager();
+    auto begLoc = arange.getBegin();
+
     StoredDiagnostic sd(DiagnosticsEngine::Level::Error,
                         0,
                         err.desc,
-                        FullSourceLoc(range.getBegin(), getCompiler().getSourceManager()),
+                        FullSourceLoc(begLoc, SM),
                         ArrayRef<CharSourceRange>{},
                         ArrayRef<FixItHint>{});
     _session.pushDiagnosticMessage(sd, *this);

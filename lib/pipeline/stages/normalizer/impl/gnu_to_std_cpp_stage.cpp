@@ -1,6 +1,7 @@
 #include <oklt/core/error.h>
 
 #include "core/diag/diag_consumer.h"
+#include "core/rewriter/impl/dtree_rewriter_proxy.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/vfs/overlay_fs.h"
@@ -11,7 +12,6 @@
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
 
@@ -21,11 +21,11 @@ using namespace clang;
 namespace {
 struct AttrNormalizerCtx {
     ASTContext* astCtx;
-    Rewriter* rewriter;
+    oklt::Rewriter* rewriter;
     std::list<OklAttrMarker> markers;
 };
 
-void removeAttr(Rewriter& rewriter, const Attr& attr) {
+void removeAttr(oklt::Rewriter& rewriter, const Attr& attr) {
     auto arange = getAttrFullSourceRange(attr);
     rewriter.RemoveText(arange);
 }
@@ -177,6 +177,22 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
         }
         TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
         _normalizer_visitor.TraverseDecl(decl);
+
+        // Update attribute offset to original column mapping with current dtree
+        if (auto* dtreeRewriter = dynamic_cast<DtreeRewriterProxy*>(&_stage.getRewriter())) {
+            auto& dtrees = dtreeRewriter->getDeltaTrees();
+            std::map<std::pair<clang::FileID, uint32_t>, uint32_t> attrOffsetToOriginalCol;
+            auto& tsession = _stage.getSession();
+            for (const auto [fidPrevNewOffset, col] : tsession.attrOffsetToOriginalCol) {
+                auto [fid, prevNewOffset] = fidPrevNewOffset;
+                auto newOffset = dtrees.getNewOffset(fid, prevNewOffset);
+                attrOffsetToOriginalCol[{fid, newOffset}] = col;
+                SPDLOG_DEBUG("attribute offset: {}, original column: {}", newOffset, col);
+            }
+            tsession.attrOffsetToOriginalCol = attrOffsetToOriginalCol;
+        } else {
+            SPDLOG_ERROR("GNU to STD attribute stage expected Rewriter with DeltaTrees");
+        }
     }
 
    private:
@@ -195,7 +211,8 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
    protected:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                           llvm::StringRef in_file) override {
-        _stage = std::make_unique<SessionStage>(_session, compiler);
+        _stage =
+            std::make_unique<SessionStage>(_session, compiler, RewriterProxyType::WithDeltaTree);
         if (!_stage->setUserCtx("input", &_input)) {
             _stage->pushError(std::error_code(),
                               "failed to set user ctx for GnuToStdCppAttributeNormalizerAction");

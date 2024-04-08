@@ -11,7 +11,6 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Analysis/MacroExpansionContext.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
 

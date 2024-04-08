@@ -171,6 +171,13 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/logger.cpp
 
+    core/rewriter/delta/delta_trees.cpp
+
+    core/rewriter/impl/dtree_rewriter_proxy.cpp
+    core/rewriter/impl/empty_rewriter_proxy.cpp
+    core/rewriter/rewriter_proxy.cpp
+    core/rewriter/rewriter_fabric.cpp
+
     core/attribute_manager/attr_decl_handler.cpp
     core/attribute_manager/attr_stmt_handler.cpp
     core/attribute_manager/attribute_manager.cpp

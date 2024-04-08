@@ -12,7 +12,6 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/LiteralSupport.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
 
@@ -39,7 +38,7 @@ bool isProbablyMacroAttr(const OklAttribute& attr, const std::vector<Token>& tok
     return true;
 }
 
-void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, Rewriter& rewriter) {
+void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, oklt::Rewriter& rewriter) {
     // remove OKL specific attribute in source code
     SourceLocation attrLocStart(tokens[attr.tok_indecies.front()].getLocation());
     SourceLocation attrLocEnd(tokens[attr.tok_indecies.back()].getLastLoc());
@@ -53,7 +52,7 @@ void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, R
 bool replaceOklMacroAttribute(const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
-                              Rewriter& rewriter) {
+                              oklt::Rewriter& rewriter) {
     if (!isProbablyMacroAttr(oklAttr, tokens)) {
         return true;
     }
