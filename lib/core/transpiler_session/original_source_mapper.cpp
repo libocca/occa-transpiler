@@ -6,11 +6,11 @@
 #include <clang/AST/AST.h>
 
 namespace oklt {
-bool OriginalSourceMapper::addOriginalLine(uint32_t lineNumber, const std::string& line) {
-    if (_originalLines.count(lineNumber) != 0) {
+bool OriginalSourceMapper::addOriginalLine(FiDUintPair fidLineNumber, const std::string& line) {
+    if (_originalLines.count(fidLineNumber) != 0) {
         return false;
     }
-    _originalLines.insert(std::make_pair(lineNumber, line));
+    _originalLines.insert(std::make_pair(fidLineNumber, line));
 
     return true;
 }
@@ -33,7 +33,7 @@ bool OriginalSourceMapper::addAttributeColumn(clang::SourceLocation loc,
     return false;
 }
 
-bool OriginalSourceMapper::updateAttributeOffset(std::pair<clang::FileID, uint32_t> prevFidOffset,
+bool OriginalSourceMapper::updateAttributeOffset(FiDUintPair prevFidOffset,
                                                  clang::SourceLocation newLoc,
                                                  oklt::Rewriter& rewriter,
                                                  uint32_t addOffset) {

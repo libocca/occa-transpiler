@@ -61,8 +61,9 @@ uint32_t getTokenOffset(const Token& tok, const Preprocessor& pp) {
     return pp.getSourceManager().getFileOffset(tok.getLocation());
 }
 
-uint32_t getTokenLineNumber(const Token& tok, const Preprocessor& pp) {
-    return pp.getSourceManager().getSpellingLineNumber(tok.getLocation());
+std::pair<FileID, uint32_t> getTokenFidLineNumber(const Token& tok, const Preprocessor& pp) {
+    return {pp.getSourceManager().getFileID(tok.getLocation()),
+            pp.getSourceManager().getSpellingLineNumber(tok.getLocation())};
 }
 
 uint32_t gettokenColNumber(const Token& tok, const Preprocessor& pp) {
@@ -71,8 +72,7 @@ uint32_t gettokenColNumber(const Token& tok, const Preprocessor& pp) {
 
 std::string getTokenLine(const Token& tok, const Preprocessor& pp) {
     auto& SM = pp.getSourceManager();
-    clang::FileID fileID = SM.getFileID(tok.getLocation());
-    auto lineNumber = getTokenLineNumber(tok, pp);
+    auto [fileID, lineNumber] = getTokenFidLineNumber(tok, pp);
     llvm::StringRef bufferData = SM.getBufferData(fileID);
     auto locStart = SM.translateLineCol(fileID, lineNumber, 1);
     auto startOffset = SM.getFileOffset(locStart);
@@ -100,12 +100,12 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     }
     auto oklAttrOffset = getTokenOffset(attrBegToken, pp);
     auto oklAttrColNumber = gettokenColNumber(attrBegToken, pp);
-    auto attrLineNumber = getTokenLineNumber(attrBegToken, pp);
+    auto attrFidLine = getTokenFidLineNumber(attrBegToken, pp);
 
     // Insert original line to the originalLines mapping if needed
     auto& mapper = session.getOriginalSourceMapper();
     auto attrLine = getTokenLine(attrBegToken, pp);
-    mapper.addOriginalLine(attrLineNumber, attrLine);
+    mapper.addOriginalLine(attrFidLine, attrLine);
 
     auto leftNeighbour = getLeftNeigbour(oklAttr, tokens);
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
@@ -156,7 +156,8 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     }
 
     // Save offset to original column mapping
-    if (!mapper.addAttributeColumn(insertLoc, oklAttrColNumber, rewriter, attrOffsetFromBeginToName)) {
+    if (!mapper.addAttributeColumn(
+            insertLoc, oklAttrColNumber, rewriter, attrOffsetFromBeginToName)) {
         SPDLOG_ERROR("OKL to GNU attribute stage expected Rewriter with DeltaTrees");
     }
 

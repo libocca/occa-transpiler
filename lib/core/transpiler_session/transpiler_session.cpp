@@ -44,10 +44,12 @@ std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
                                            SessionStage& stage) {
     auto& originalLines = stage.getSession().getOriginalSourceMapper().getOriginalLines();
     auto errLoc = diag.getLocation();
+    auto errFid = stage.getCompiler().getSourceManager().getFileID(errLoc);
     auto errRow = stage.getCompiler().getSourceManager().getSpellingLineNumber(errLoc);
+    auto errFidRow = std::make_pair(errFid, errRow);
     // Substitute original line if possible
-    if (originalLines.find(errRow) != originalLines.end()) {
-        auto originalLine = originalLines.at(errRow);
+    if (originalLines.find(errFidRow) != originalLines.end()) {
+        auto originalLine = originalLines.at(errFidRow);
         auto lineMsgPrefix = fmt::format("{} | ", errRow);
         auto newLineMsg = lineMsgPrefix + originalLine;
 
