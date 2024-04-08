@@ -109,8 +109,6 @@ void DeltaTrees::AddReplaceDelta(clang::DeltaTree& dtree, unsigned OrigOffset, i
 int DeltaTrees::getRangeSize(clang::SourceRange range) const {
     assert(_SM != nullptr && "DeltaTrees::_SM is nullptr");
     assert(_LO != nullptr && "DeltaTrees::_LO is nullptr");
-    // if (!isRewritable(Range.getBegin()) || !isRewritable(Range.getEnd()))
-    //     return -1;
     clang::CharSourceRange cRange = clang::CharSourceRange::getTokenRange(range);
 
     auto [StartFileID, StartOff] = _SM->getDecomposedLoc(cRange.getBegin());

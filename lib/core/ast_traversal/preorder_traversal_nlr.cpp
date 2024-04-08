@@ -8,6 +8,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
+#include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
 #include <clang/FrontendTool/Utils.h>
@@ -143,6 +144,8 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPreActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
+            auto range = getAttrFullSourceRange(*attr);
+            stage.pushError(result.error(), range);
             return result;
         }
     }
@@ -166,6 +169,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     if (attrs.empty()) {
         auto result = procMng.runPostActionNodeHandle(procType, nullptr, node, sema, stage);
         if (!result) {
+            stage.pushError(result.error(), node.getSourceRange());
             return result;
         }
         if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
@@ -178,6 +182,8 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPostActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
+            auto range = getAttrFullSourceRange(*attr);
+            stage.pushError(result.error(), range);
             return result;
         }
         transpilationAccumulator.push_back(TranspilationNode{
@@ -198,10 +204,10 @@ bool traverseNode(TraversalType& traversal,
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto procType = stage.getAstProccesorType();
-    auto range = node->getSourceRange();
 
     auto attrsResult = getNodeAttrs(*node, stage);
     if (!attrsResult) {
+        auto range = node->getSourceRange();
         stage.pushError(std::move(attrsResult.error()), range);
         return false;
     }
@@ -210,7 +216,7 @@ bool traverseNode(TraversalType& traversal,
     auto result = runFromRootToLeaves(
         traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
     if (!result) {
-        stage.pushError(std::move(result.error()), range);
+        // runFromRootToLeaves pushes erros, since it knows which attribute handle failed
         return false;
     }
 
@@ -222,7 +228,7 @@ bool traverseNode(TraversalType& traversal,
     result = runFromLeavesToRoot(
         traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
     if (!result) {
-        stage.pushError(std::move(result.error()), range);
+        // runFromLeavesToRoot pushes erros, since it knows which attribute handle failed
         return false;
     }
 
