@@ -1,5 +1,6 @@
 #include <oklt/core/error.h>
 
+#include "attributes/attribute_names.h"
 #include "core/diag/diag_consumer.h"
 #include "core/rewriter/impl/dtree_rewriter_proxy.h"
 #include "core/transpiler_session/session_stage.h"
@@ -64,8 +65,13 @@ void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& sta
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
     assert(lastProccesedAttr);
+    auto& SM = stage.getCompiler().getSourceManager();
+    auto& mapper = stage.getSession().getOriginalSourceMapper();
     for (auto* attr : e.getAttrs()) {
+        auto attrBegLoc = attr->getRange().getBegin();
+        auto prevFidAttrOffset = SM.getDecomposedLoc(attrBegLoc);
         if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
+            mapper.updateAttributeOffset(prevFidAttrOffset, attrBegLoc, stage.getRewriter());
             continue;
         }
 
@@ -83,8 +89,14 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProcc
         }
 
         removeAttr(stage.getRewriter(), *attr);
+        auto newAttrLoc = e.getBeginLoc();
+
         insertNormalizedAttr(e, *targetAttr, stage);
         *lastProccesedAttr = attr;
+
+        // Add offset, since after removal of GNU, it will point at the beginning of attribute
+        mapper.updateAttributeOffset(
+            prevFidAttrOffset, newAttrLoc, stage.getRewriter(), CXX_ATTRIBUTE_BEGIN_TO_NAME_OFFSET);
     }
 
     return true;
@@ -149,12 +161,6 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
         }
         TranslationUnitDecl* decl = ctx.getTranslationUnitDecl();
         _normalizer_visitor.TraverseDecl(decl);
-
-        // Update attribute offset to original column mapping with current dtree
-        if (!_stage.getSession().getOriginalSourceMapper().updateAttributeColumns(
-                _stage.getRewriter())) {
-            SPDLOG_ERROR("GNU to STD attribute stage expected Rewriter with DeltaTrees");
-        }
     }
 
    private:

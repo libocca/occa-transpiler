@@ -16,29 +16,44 @@ bool OriginalSourceMapper::addOriginalLine(uint32_t lineNumber, const std::strin
 }
 bool OriginalSourceMapper::addAttributeColumn(clang::SourceLocation loc,
                                               uint32_t col,
-                                              oklt::Rewriter& rewriter) {
+                                              oklt::Rewriter& rewriter,
+                                              uint32_t addOffset) {
     if (auto* dtreeRewriter = dynamic_cast<DtreeRewriterProxy*>(&rewriter)) {
         auto& dtrees = dtreeRewriter->getDeltaTrees();
-        auto newOklAttrOffset = dtrees.getNewOffset(loc);
+        auto newOklAttrOffset = dtrees.getNewOffset(loc) + addOffset;
         auto fid = rewriter.getSourceMgr().getFileID(loc);
         _attrOffsetToOriginalCol[std::make_pair(fid, newOklAttrOffset)] = col;
+        SPDLOG_DEBUG("Insert (fid: {} attr offset: {}) -> col: {}",
+                     fid.getHashValue(),
+                     newOklAttrOffset,
+                     col);
         return true;
     }
 
     return false;
 }
 
-bool OriginalSourceMapper::updateAttributeColumns(oklt::Rewriter& rewriter) {
+bool OriginalSourceMapper::updateAttributeOffset(std::pair<clang::FileID, uint32_t> prevFidOffset,
+                                                 clang::SourceLocation newLoc,
+                                                 oklt::Rewriter& rewriter,
+                                                 uint32_t addOffset) {
     if (auto* dtreeRewriter = dynamic_cast<DtreeRewriterProxy*>(&rewriter)) {
         auto& dtrees = dtreeRewriter->getDeltaTrees();
-        AttributeColumns newAttrOffsetToOriginalCol;
-        for (const auto [fidPrevNewOffset, col] : _attrOffsetToOriginalCol) {
-            auto [fid, prevNewOffset] = fidPrevNewOffset;
-            auto newOffset = dtrees.getNewOffset(fid, prevNewOffset);
-            newAttrOffsetToOriginalCol[{fid, newOffset}] = col;
-            SPDLOG_DEBUG("attribute offset: {}, original column: {}", newOffset, col);
+        if (_attrOffsetToOriginalCol.find(prevFidOffset) == _attrOffsetToOriginalCol.end()) {
+            return false;
         }
-        _attrOffsetToOriginalCol = newAttrOffsetToOriginalCol;
+
+        auto col = _attrOffsetToOriginalCol.at(prevFidOffset);
+        _attrOffsetToOriginalCol.erase(prevFidOffset);
+        auto newOffset = dtrees.getNewOffset(newLoc) + addOffset;
+        auto fid = prevFidOffset.first;
+        _attrOffsetToOriginalCol[{fid, newOffset}] = col;
+        SPDLOG_DEBUG("Update fid: {}, attribute offset {} -> {}, col: {}",
+                     fid.getHashValue(),
+                     prevFidOffset.second,
+                     newOffset,
+                     col);
+
         return true;
     }
     return false;

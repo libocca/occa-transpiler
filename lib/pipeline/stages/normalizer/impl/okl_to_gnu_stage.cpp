@@ -1,5 +1,6 @@
 #include <oklt/core/error.h>
 
+#include "attributes/attribute_names.h"
 #include "core/rewriter/impl/dtree_rewriter_proxy.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/vfs/overlay_fs.h"
@@ -113,6 +114,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     SourceLocation attrLocStart(tokens[oklAttr.tok_indecies.front()].getLocation());
     SourceLocation attrLocEnd(tokens[oklAttr.tok_indecies.back()].getLastLoc());
     SourceRange attrSrcRange(attrLocStart, attrLocEnd);
+    int attrOffsetFromBeginToName = GNU_ATTRIBUTE_BEGIN_TO_NAME_OFFSET;  // 2 for CXX, 15 for GNU
 
     // fix malformed C++ syntax like for(init;cond;step;@outer) to [[okl::outer]]
     // for(init;cond;step) we assume that attribute is inside of for loop and 'for' keyword is
@@ -136,6 +138,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     // if it's originally at the beginning, or an in-place type attribute.
     else if (isProbablyAtBeginnigOfExpr(leftNeighbour, rightNeighbour)) {
         auto cppAttr = wrapAsSpecificCxxAttr(oklAttr);
+        attrOffsetFromBeginToName = CXX_ATTRIBUTE_BEGIN_TO_NAME_OFFSET;
         rewriter.ReplaceText(attrSrcRange, cppAttr);
     }
     // INFO: attribute is not at the beginning of expr so wrap it as GNU.
@@ -153,7 +156,7 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     }
 
     // Save offset to original column mapping
-    if (!mapper.addAttributeColumn(insertLoc, oklAttrColNumber, rewriter)) {
+    if (!mapper.addAttributeColumn(insertLoc, oklAttrColNumber, rewriter, attrOffsetFromBeginToName)) {
         SPDLOG_ERROR("OKL to GNU attribute stage expected Rewriter with DeltaTrees");
     }
 

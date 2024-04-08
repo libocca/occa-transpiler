@@ -14,4 +14,7 @@ constexpr const char NOBARRIER_ATTR_NAME[] = "okl::nobarrier";
 constexpr const char EXCLUSIVE_ATTR_NAME[] = "okl::exclusive";
 constexpr const char ATOMIC_ATTR_NAME[] = "okl::atomic";
 constexpr const char MAX_INNER_DIMS[] = "okl::max_inner_dims";
+
+const int CXX_ATTRIBUTE_BEGIN_TO_NAME_OFFSET = 2;
+const int GNU_ATTRIBUTE_BEGIN_TO_NAME_OFFSET = 15;
 }  // namespace oklt

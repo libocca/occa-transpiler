@@ -8,7 +8,6 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
-#include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
 #include <clang/FrontendTool/Utils.h>
@@ -144,8 +143,7 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPreActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
-            auto range = getAttrFullSourceRange(*attr);
-            stage.pushError(result.error(), range);
+            stage.pushError(result.error(), attr->getRange());
             return result;
         }
     }
@@ -182,8 +180,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPostActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
-            auto range = getAttrFullSourceRange(*attr);
-            stage.pushError(result.error(), range);
+            stage.pushError(result.error(), attr->getRange());
             return result;
         }
         transpilationAccumulator.push_back(TranspilationNode{

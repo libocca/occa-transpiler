@@ -21,23 +21,19 @@ clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic
     auto [fid, offset] = SM.getDecomposedExpansionLoc(errLoc);
     auto& attrOffsetToOriginalCol = session.getOriginalSourceMapper().getAttrOffsetToOriginalCol();
 
-    // FIXME: Temporary hack to catch errors from frontend: location is pointing at attribute name,
-    // not start (len("[[") == 2)
-    std::array<uint32_t, 2> offsets{offset, offset - 2};
-    for (const auto& currOffset : offsets) {
-        auto fidOffset = std::make_pair(fid, currOffset);
-        if (attrOffsetToOriginalCol.find(fidOffset) != attrOffsetToOriginalCol.end()) {
-            auto col = attrOffsetToOriginalCol.at(fidOffset);
-            SPDLOG_DEBUG("Error col: {}, current offset: {}", col, fidOffset.second);
+    auto fidOffset = std::make_pair(fid, offset);
+    if (attrOffsetToOriginalCol.find(fidOffset) != attrOffsetToOriginalCol.end()) {
+        auto col = attrOffsetToOriginalCol.at(fidOffset);
+        SPDLOG_DEBUG(
+            "Substitute error for attribute at offset {} column to: {}", fidOffset.second, col);
 
-            // Create new loc with same line, but new col
-            auto line = SM.getSpellingLineNumber(errLoc);
-            errLoc = SM.translateLineCol(fidOffset.first, line, col);
+        // Create new loc with same line, but new col
+        auto line = SM.getSpellingLineNumber(errLoc);
+        errLoc = SM.translateLineCol(fidOffset.first, line, col);
 
-            clang::StoredDiagnostic sd(
-                diag.getLevel(), 0, diag.getMessage(), clang::FullSourceLoc(errLoc, SM), {}, {});
-            return sd;
-        }
+        clang::StoredDiagnostic sd(
+            diag.getLevel(), 0, diag.getMessage(), clang::FullSourceLoc(errLoc, SM), {}, {});
+        return sd;
     }
 
     return diag;
@@ -59,6 +55,7 @@ std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
         if (msgPrefixIdx != std::string::npos) {
             auto endIdx = errorMsg.find("\n", msgPrefixIdx);
             errorMsg.replace(msgPrefixIdx, endIdx - msgPrefixIdx, newLineMsg);
+            SPDLOG_DEBUG("Substitute original line for row: {}", errRow);
         }
     }
     return errorMsg;

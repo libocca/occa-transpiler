@@ -21,8 +21,14 @@ class OriginalSourceMapper {
     OriginalSourceMapper() = default;
 
     bool addOriginalLine(uint32_t lineNumber, const std::string& line);
-    bool addAttributeColumn(clang::SourceLocation loc, uint32_t col, oklt::Rewriter& rewriter);
-    bool updateAttributeColumns(oklt::Rewriter& rewriter);
+    bool addAttributeColumn(clang::SourceLocation loc,
+                            uint32_t col,
+                            oklt::Rewriter& rewriter,
+                            uint32_t addOffset = 0);
+    bool updateAttributeOffset(std::pair<clang::FileID, uint32_t> prevFidOffset,
+                               clang::SourceLocation newLoc,
+                               oklt::Rewriter& rewriter,
+                               uint32_t addOffset = 0);
 
     const OriginalLines& getOriginalLines();
     const AttributeColumns& getAttrOffsetToOriginalCol();

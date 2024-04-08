@@ -61,8 +61,8 @@ unsigned DeltaTrees::getNewOffset(clang::SourceLocation loc, bool afterInserts) 
 
     auto dtreeIt = _dtrees.find(fid);
     if (dtreeIt == _dtrees.end()) {
-        SPDLOG_WARN("DeltaTrees::getNewOffset called for unknown file");
-        return 0;
+        SPDLOG_DEBUG("DeltaTrees::getNewOffset called for unknown file: {}", fid.getHashValue());
+        return offset;
     }
 
     return getMappedOffset(dtreeIt->second, offset, afterInserts);
@@ -76,8 +76,8 @@ unsigned DeltaTrees::getNewOffset(clang::FileID fid, uint32_t offset, bool after
 unsigned DeltaTrees::getNewOffset(clang::FileID fid, uint32_t offset, bool afterInserts) const {
     auto dtreeIt = _dtrees.find(fid);
     if (dtreeIt == _dtrees.end()) {
-        SPDLOG_WARN("DeltaTrees::getNewOffset called for unknown file");
-        return 0;
+        SPDLOG_DEBUG("DeltaTrees::getNewOffset called for unknown file: {}", fid.getHashValue());
+        return offset;
     }
 
     return getMappedOffset(dtreeIt->second, offset, afterInserts);

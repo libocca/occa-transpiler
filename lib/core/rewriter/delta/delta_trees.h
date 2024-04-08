@@ -28,6 +28,8 @@ class DeltaTrees {
     unsigned getNewOffset(clang::FileID fid, uint32_t offset, bool afterInserts = false);
     unsigned getNewOffset(clang::FileID fid, uint32_t offset, bool afterInserts = false) const;
 
+    int getRangeSize(clang::SourceRange range) const;
+
    private:
     clang::DeltaTree& getTree(clang::FileID fid);
 
@@ -38,7 +40,4 @@ class DeltaTrees {
     void AddInsertDelta(clang::DeltaTree& dtree, unsigned OrigOffset, int Change);
 
     void AddReplaceDelta(clang::DeltaTree& dtree, unsigned OrigOffset, int Change);
-
-   public:
-    int getRangeSize(clang::SourceRange range) const;
 };
