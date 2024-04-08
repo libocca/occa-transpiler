@@ -117,7 +117,7 @@ HandleResult handleTileAttribute(const Attr& a,
         afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
     }
 
-    handleChildAttr(forStmt, NOBARRIER_ATTR_NAME, s);
+    handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
 
     return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s);
 }

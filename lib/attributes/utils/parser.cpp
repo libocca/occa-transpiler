@@ -2,17 +2,22 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "core/transpiler_session/session_stage.h"
 
+#include <clang/Basic/TargetInfo.h>
 #include <clang/AST/Attr.h>
 #include <clang/Basic/CharInfo.h>
+#include <clang/Basic/TargetInfo.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/LiteralSupport.h>
 #include <clang/Lex/Preprocessor.h>
+
 #include <llvm/ADT/StringExtras.h>
 
 namespace {
 using namespace oklt;
 using namespace clang;
 using namespace llvm;
+
+const std::string OKL_ATTRIBUTE_PREFIX = "okl_";
 
 struct BraceCounter {
     unsigned short paren = 0;
@@ -295,8 +300,7 @@ class AttrParamParser {
             return std::nullopt;
         }
 
-        auto name = std::string("okl::") + TokIt->getRawIdentifier().str();
-
+        auto name = OKL_ATTRIBUTE_PREFIX + TokIt->getRawIdentifier().str();
         auto buffer = StringRef(rawStart, SM.getCharacterData(TokIt->getEndLoc()) - rawStart);
 
         ++TokIt;

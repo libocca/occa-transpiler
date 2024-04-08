@@ -19,11 +19,11 @@ set (OCCA_TRANSPILER_SOURCES
     ${ROOT_DIR}/include/oklt/util/format.h
 
     attributes/frontend/barrier.cpp
-    attributes/frontend/nobarrier.cpp
+    attributes/frontend/no_barrier.cpp
     attributes/frontend/exclusive.cpp
     attributes/frontend/atomic.cpp
     attributes/frontend/dim.cpp
-    attributes/frontend/dimOrder.cpp
+    attributes/frontend/dim_order.cpp
     attributes/frontend/inner.cpp
     attributes/frontend/kernel.cpp
     attributes/frontend/outer.cpp
@@ -143,7 +143,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
     attributes/backend/common/max_inner_dims.cpp
-    attributes/backend/common/nobarrier.cpp
+    attributes/backend/common/no_barrier.cpp
 
     core/ast_processor_manager/ast_processor_manager.cpp
 

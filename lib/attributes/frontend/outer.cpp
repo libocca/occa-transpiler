@@ -1,11 +1,9 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/loop.h"
+#include "attributes/frontend/params/loop.h"
 
-#include <oklt/util/string_utils.h>
+#include "core/attribute_manager/attribute_manager.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -17,9 +15,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling OUTER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "outer"},
     {ParsedAttr::AS_CXX11, OUTER_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_outer"}};
+    {ParsedAttr::AS_GNU, OUTER_ATTR_NAME}};
 
 struct OuterAttribute : public ParsedAttrInfo {
     OuterAttribute() {

@@ -33,12 +33,12 @@ HandleResult handleDimOrderStmtAttribute(const clang::Attr& a,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        DIMORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderDeclAttribute));
+        DIM_ORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderDeclAttribute));
 
     ok = ok && oklt::AttributeManager::instance().registerCommonHandler(
-                   DIMORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderStmtAttribute));
+                   DIM_ORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderStmtAttribute));
     if (!ok) {
-        SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIMORDER_ATTR_NAME);
+        SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ORDER_ATTR_NAME);
     }
 }
 }  // namespace
