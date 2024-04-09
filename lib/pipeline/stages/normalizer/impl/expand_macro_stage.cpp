@@ -72,10 +72,13 @@ void removeCommentAfterDirective(std::list<SourceRange>& comments,
     for (auto it = comments.begin(); it != comments.end(); ++it) {
         FullSourceLoc commentFullLoc(it->getBegin(), sm);
 
+        if (commentFullLoc.getFileID() != directiveFullLoc.getFileID()) {
+            continue;
+        }
+
         auto commentLineNumber = commentFullLoc.getLineNumber();
         auto directiveLineNumber = directiveFullLoc.getLineNumber();
 
-        SPDLOG_INFO("macro line: {} comment: line: {}", directiveLineNumber, commentLineNumber);
         if (commentLineNumber > directiveLineNumber) {
             break;
         }
@@ -188,6 +191,17 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
 
     void Ifndef(SourceLocation loc, const Token& macroNameTok, const MacroDefinition& md) override {
         if (sm.isInSystemHeader(loc)) {
+            return;
+        }
+
+        auto* mi = md.getMacroInfo();
+        if (!mi) {
+            results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
+                                 std::string("if ") + (isEnabled(loc, md) ? "0" : "1"));
+            return;
+        }
+
+        if (md.getMacroInfo()->isUsedForHeaderGuard()) {
             return;
         }
 
@@ -458,7 +472,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     // macro can be under #if/#elif
     // in such case expansion ctx does not work so just replace macro dependent condition by
     // context free true/false
-    for (auto& c : condCallback->results) {
+    for (const auto& c : condCallback->results) {
         if (c.conditionValue == PPCallbacks::CVK_NotEvaluated) {
             continue;
         }
@@ -474,7 +488,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     // macro can be under #ifdef/#elifdef etc
     // in such case expansion ctx does not work so just replace macro dependent condition by
     // context free true/false
-    for (auto& c : defCondCallback->results) {
+    for (const auto& c : defCondCallback->results) {
         rewriter.ReplaceText(c.range, c.replacement);
         FullSourceLoc macroFullLoc(c.range.getBegin(), sm);
         removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
