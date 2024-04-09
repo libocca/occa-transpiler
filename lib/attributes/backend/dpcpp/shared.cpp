@@ -11,9 +11,8 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionStage& s) {
+HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
-
 
     auto varName = var.getNameAsString();
     // Desugar since it is attributed (since it is @shared variable)
@@ -44,7 +43,7 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     s.getRewriter().ReplaceText(range, newDeclaration);
 
-    return defaultHandleSharedDeclAttribute(a, var, s);
+    return defaultHandleSharedDeclAttribute(s, var, a);
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {

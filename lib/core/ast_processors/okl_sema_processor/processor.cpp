@@ -14,22 +14,22 @@ using namespace clang;
 using namespace oklt;
 
 namespace {
-HandleResult semaDefaultPre(const Attr* attr,
-                            const clang::Stmt& stmt,
+HandleResult semaDefaultPre(SessionStage& stage,
                             OklSemaCtx& sema,
-                            SessionStage& stage) {
+                            const clang::Stmt& stmt,
+                            const Attr* attr) {
     if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
-        return preValidateOklForLoopWithoutAttribute(attr, *forStmt, sema, stage);
+        return preValidateOklForLoopWithoutAttribute(stage, sema, *forStmt, attr);
     }
     return {};
 }
 
-HandleResult semaDefaultPost(const Attr* attr,
-                             const clang::Stmt& stmt,
+HandleResult semaDefaultPost(SessionStage& stage,
                              OklSemaCtx& sema,
-                             SessionStage& stage) {
+                             const clang::Stmt& stmt,
+                             const Attr* attr) {
     if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
-        return postValidateOklForLoopWithoutAttribute(attr, *forStmt, sema, stage);
+        return postValidateOklForLoopWithoutAttribute(stage, sema, *forStmt, attr);
     }
     return {};
 }

@@ -9,7 +9,7 @@
 namespace oklt::serial_subset {
 using namespace clang;
 
-HandleResult handleSharedAttribute(const Attr& a, const Decl& decl, SessionStage& s) {
+HandleResult handleSharedAttribute(SessionStage& s, const Decl& decl, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -29,8 +29,8 @@ HandleResult handleSharedAttribute(const Attr& a, const Decl& decl, SessionStage
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
-    removeAttribute(a, s);
-    return defaultHandleSharedDeclAttribute(a, decl, s);
+    removeAttribute(s, a);
+    return defaultHandleSharedDeclAttribute(s, decl, a);
 }
 
 }  // namespace oklt::serial_subset

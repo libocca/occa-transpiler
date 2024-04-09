@@ -244,10 +244,10 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
     return {firstMeta, secondMeta};
 }
 
-std::string getRootLoopBody(const FunctionDecl& decl,
+std::string getRootLoopBody(SessionStage& s,
+                            const FunctionDecl& decl,
                             OklLoopInfo& loopInfo,
-                            size_t loopNo,
-                            SessionStage& s) {
+                            size_t loopNo) {
     std::stringstream out;
     auto& r = s.getRewriter();
 
@@ -268,7 +268,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
         // NOTE: Tile is a special case
         if (child->isTiled()) {
             auto& am = s.getAttrManager();
-            auto params = std::any_cast<TileParams>(am.parseAttr(*child->attr, s).value());
+            auto params = std::any_cast<TileParams>(am.parseAttr(s, *child->attr).value());
 
             auto [firstMeta, secondMeta] = splitTileAttr(*child, r);
             //  if (metadata.type.size() > 0)
@@ -350,7 +350,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
     return out.str();
 }
 
-HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
+HandleResult handleLauncherTranslationUnit(SessionStage& s, const TranslationUnitDecl& d) {
     auto& sm = s.getCompiler().getSourceManager();
     auto mainFileId = sm.getMainFileID();
     auto loc = sm.getLocForStartOfFile(mainFileId);
@@ -364,10 +364,9 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
 
     return {};
 }
-
-HandleResult handleLauncherKernelAttribute(const Attr& a,
+HandleResult handleLauncherKernelAttribute(SessionStage& s,
                                            const FunctionDecl& func,
-                                           SessionStage& s) {
+                                           const Attr& a) {
     SPDLOG_DEBUG("Handle attribute: {}", a.getNormalizedFullName());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -398,9 +397,9 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
         if (!loop) {
             continue;
         }
-        removeAttribute(*loop->attr, s);
+        removeAttribute(s, *loop->attr);
 
-        auto body = getRootLoopBody(func, *loop, n, s);
+        auto body = getRootLoopBody(s, func, *loop, n);
         // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
         rewriter.RemoveText(SourceRange{loop->stmt.getForLoc(), loop->stmt.getRParenLoc()});
         rewriter.ReplaceText(loop->stmt.getBody()->getSourceRange(), body);

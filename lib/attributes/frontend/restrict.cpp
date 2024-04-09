@@ -58,9 +58,9 @@ struct RestrictAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseRestrictAttrParams(const clang::Attr& attr,
-                                    OKLParsedAttr& data,
-                                    SessionStage& stage) {
+ParseResult parseRestrictAttrParams(SessionStage& stage,
+                                    const clang::Attr& attr,
+                                    OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@atomic] does not take arguments"});
     }

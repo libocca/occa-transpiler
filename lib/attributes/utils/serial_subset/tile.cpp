@@ -137,10 +137,10 @@ std::string buildCheckString(const ForStmt& stmt,
 
 }  // namespace
 
-HandleResult handleTileAttribute(const Attr& a,
+HandleResult handleTileAttribute(SessionStage& s,
                                  const ForStmt& stmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+                                 const Attr& a,
+                                 const TileParams* params) {
     SPDLOG_DEBUG("Handle [@tile] attribute");
 
     if (!params) {
@@ -153,7 +153,7 @@ HandleResult handleTileAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
 
     auto& rewriter = s.getRewriter();
 

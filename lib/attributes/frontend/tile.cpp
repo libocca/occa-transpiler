@@ -48,7 +48,7 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
+ParseResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
     TileParams ret = {};
     if (data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects at least one argument"});
@@ -73,7 +73,7 @@ ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, Ses
         }
 
         auto subAttr = data.get<OKLParsedAttr>(i).value();
-        auto loop = stage.getAttrManager().parseAttr(attr, subAttr, stage);
+        auto loop = stage.getAttrManager().parseAttr(stage, attr, subAttr);
         if (!loop) {
             return tl::make_unexpected(loop.error());
         }

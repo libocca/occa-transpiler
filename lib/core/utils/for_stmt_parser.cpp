@@ -60,9 +60,9 @@ bool EvaluateAsSizeT(const Expr* E, llvm::APSInt& Into, const ASTContext& ctx) {
 }  // namespace
 
 namespace oklt {
-tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr* a,
+tl::expected<OklLoopInfo, Error> parseForStmt(SessionStage& stage,
                                               const clang::ForStmt& s,
-                                              SessionStage& stage) {
+                                              const clang::Attr* a) {
     auto& ctx = stage.getCompiler().getASTContext();
     OklLoopInfo ret{.attr = a, .stmt = s};
     const Expr *start, *end = nullptr;
@@ -184,9 +184,9 @@ tl::expected<OklLoopInfo, Error> parseForStmt(const clang::Attr* a,
     // Ugly way to retireve tile size
     if (a) {
         auto& am = stage.getAttrManager();
-        auto params = am.parseAttr(*a, stage);
+        auto params = am.parseAttr(stage, *a);
         if (params && params->type() == typeid(TileParams)) {
-            ret.tileSize = std::any_cast<TileParams>(am.parseAttr(*a, stage).value()).tileSize;
+            ret.tileSize = std::any_cast<TileParams>(am.parseAttr(stage, *a).value()).tileSize;
         }
     }
 

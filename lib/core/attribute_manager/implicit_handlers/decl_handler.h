@@ -13,12 +13,12 @@ class SessionStage;
 
 class DeclHandler {
    public:
-    using HandleType = std::function<HandleResult(const clang::Decl&, SessionStage&)>;
+    using HandleType = std::function<HandleResult(SessionStage&, const clang::Decl&)>;
 
     explicit DeclHandler(HandleType h);
     ~DeclHandler() = default;
 
-    HandleResult operator()(const clang::Decl&, SessionStage& stage);
+    HandleResult operator()(SessionStage& stage, const clang::Decl&);
 
    private:
     HandleType _handler;

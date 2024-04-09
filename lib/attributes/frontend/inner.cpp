@@ -48,9 +48,9 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseInnerAttrParams(const clang::Attr& attr,
-                                 OKLParsedAttr& data,
-                                 SessionStage& stage) {
+ParseResult parseInnerAttrParams(SessionStage& stage,
+                                 const clang::Attr& attr,
+                                 OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@inner] does not take kwargs"});
     }

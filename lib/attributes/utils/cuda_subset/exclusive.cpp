@@ -9,12 +9,12 @@
 #include <spdlog/spdlog.h>
 
 namespace oklt::cuda_subset {
-HandleResult handleExclusiveAttribute(const clang::Attr& attr,
+HandleResult handleExclusiveAttribute(SessionStage& stage,
                                       const clang::Decl& decl,
-                                      SessionStage& stage) {
+                                      const clang::Attr& attr) {
     SPDLOG_DEBUG("Handle [@exclusive] attribute");
 
     stage.getRewriter().RemoveText(getAttrFullSourceRange(attr));
-    return defaultHandleExclusiveDeclAttribute(attr, decl, stage);
+    return defaultHandleExclusiveDeclAttribute(stage, decl, attr);
 }
 }  // namespace oklt::cuda_subset

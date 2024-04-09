@@ -12,9 +12,9 @@ using namespace oklt;
 using namespace clang;
 const std::string RESTRICT_MODIFIER = "__restrict__ ";
 
-HandleResult handleRestrictAttribute(const clang::Attr& a,
+HandleResult handleRestrictAttribute(SessionStage& s,
                                      const clang::Decl& decl,
-                                     SessionStage& s) {
+                                     const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@restrict] attribute");
     removeAttribute(a, s);
     s.getRewriter().InsertTextBefore(decl.getLocation(), RESTRICT_MODIFIER);

@@ -63,46 +63,46 @@ bool AstProcessorManager::registerSpecificNodeHandle(AttrKeyType key, StmtNodeHa
 }
 
 HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                         const clang::Attr* attr,
-                                                         const Decl& decl,
+                                                         SessionStage& stage,
                                                          OklSemaCtx& sema,
-                                                         SessionStage& stage) {
+                                                         const clang::Decl& decl,
+                                                         const clang::Attr* attr) {
     return runNodeHandler(
         makeAttrKey(procType, attr), _declHandlers, procType, _defaultDeclHandlers, [&](auto h) {
-            return h.preAction(attr, decl, sema, stage);
+            return h.preAction(stage, sema, decl, attr);
         });
 }
 
 HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                          const clang::Attr* attr,
-                                                          const Decl& decl,
+                                                          SessionStage& stage,
                                                           OklSemaCtx& sema,
-                                                          SessionStage& stage) {
+                                                          const clang::Decl& decl,
+                                                          const clang::Attr* attr) {
     return runNodeHandler(
         makeAttrKey(procType, attr), _declHandlers, procType, _defaultDeclHandlers, [&](auto h) {
-            return h.postAction(attr, decl, sema, stage);
+            return h.postAction(stage, sema, decl, attr);
         });
 }
 
 HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                         const clang::Attr* attr,
-                                                         const Stmt& stmt,
+                                                         SessionStage& stage,
                                                          OklSemaCtx& sema,
-                                                         SessionStage& stage) {
+                                                         const clang::Stmt& stmt,
+                                                         const clang::Attr* attr) {
     return runNodeHandler(
         makeAttrKey(procType, attr), _stmtHandlers, procType, _defaultStmtHandlers, [&](auto h) {
-            return h.preAction(attr, stmt, sema, stage);
+            return h.preAction(stage, sema, stmt, attr);
         });
 }
 
 HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                          const clang::Attr* attr,
-                                                          const Stmt& stmt,
+                                                          SessionStage& stage,
                                                           OklSemaCtx& sema,
-                                                          SessionStage& stage) {
+                                                          const clang::Stmt& stmt,
+                                                          const clang::Attr* attr) {
     return runNodeHandler(
         makeAttrKey(procType, attr), _stmtHandlers, procType, _defaultStmtHandlers, [&](auto h) {
-            return h.postAction(attr, stmt, sema, stage);
+            return h.postAction(stage, sema, stmt, attr);
         });
 }
 }  // namespace oklt

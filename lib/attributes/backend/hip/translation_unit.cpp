@@ -12,8 +12,8 @@ using namespace oklt;
 using namespace clang;
 
 const std::string HIP_RT_INC = "<hip/hip_runtime.h>";
-HandleResult handleTU(const TranslationUnitDecl& d, SessionStage& s) {
-    return handleTranslationUnit(d, s, {HIP_RT_INC});
+HandleResult handleTU(SessionStage& s, const TranslationUnitDecl& d) {
+    return handleTranslationUnit(s, d, {HIP_RT_INC});
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

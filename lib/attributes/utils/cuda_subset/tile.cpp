@@ -88,10 +88,10 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleTileAttribute(const Attr& a,
-                                 const ForStmt& forStmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+HandleResult handleTileAttribute(SessionStage& s,
+                                 const clang::ForStmt& forStmt,
+                                 const clang::Attr& a,
+                                 const TileParams* params) {
     SPDLOG_DEBUG("Handle [@tile] attribute");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -116,7 +116,7 @@ HandleResult handleTileAttribute(const Attr& a,
 
     handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, false);
 }
 
 }  // namespace oklt::cuda_subset

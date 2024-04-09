@@ -8,10 +8,10 @@ using namespace clang;
 
 const std::string prefixText = "\n#pragma omp parallel for\n";
 
-HandleResult handleOPENMPOuterAttribute(const Attr& a,
+HandleResult handleOPENMPOuterAttribute(SessionStage& s,
                                         const ForStmt& stmt,
-                                        const AttributedLoop* params,
-                                        SessionStage& s) {
+                                        const Attr& a,
+                                        const AttributedLoop* params) {
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
@@ -24,7 +24,7 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
         s.getRewriter().InsertText(stmt.getBeginLoc(), prefixText, false, true);
     }
 
-    return serial_subset::handleOuterAttribute(a, stmt, params, s);
+    return serial_subset::handleOuterAttribute(s, stmt, a, params);
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {

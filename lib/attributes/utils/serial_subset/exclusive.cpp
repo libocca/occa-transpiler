@@ -16,7 +16,7 @@ const std::string outerLoopText = "\nint _occa_exclusive_index;";
 const std::string exlusiveExprText = "[_occa_exclusive_index]";
 }  // namespace
 
-HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, SessionStage& s) {
+HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, const Attr& a) {
     SPDLOG_DEBUG("Handle [@exclusive] attribute (decl)");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -69,10 +69,10 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
         rewriter.InsertTextAfter(decl.getEndLoc().getLocWithOffset(1), "}");
     }
 
-    return defaultHandleExclusiveDeclAttribute(a, decl, s);
+    return defaultHandleExclusiveDeclAttribute(s, decl, a);
 }
 
-HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr, SessionStage& s) {
+HandleResult handleExclusiveExprAttribute(SessionStage& s, const DeclRefExpr& expr, const Attr& a) {
     SPDLOG_DEBUG("Handle [@exclusive] attribute (stmt)");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -84,7 +84,7 @@ HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr
 
     auto loc = expr.getLocation().getLocWithOffset(expr.getNameInfo().getAsString().size());
     s.getRewriter().InsertTextAfter(loc, exlusiveExprText);
-    return defaultHandleExclusiveStmtAttribute(a, expr, s);
+    return defaultHandleExclusiveStmtAttribute(s, expr, a);
 }
 
 }  // namespace oklt::serial_subset

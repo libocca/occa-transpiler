@@ -50,7 +50,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, oklt::Rewriter& r) {
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
+HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, const Attr& a) {
     SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();

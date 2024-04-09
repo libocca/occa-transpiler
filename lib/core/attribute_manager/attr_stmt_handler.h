@@ -13,7 +13,7 @@ class SessionStage;
 class AttrStmtHandler {
    public:
     using HandleType = std::function<
-        HandleResult(const clang::Attr&, const clang::Stmt&, const std::any*, SessionStage&)>;
+        HandleResult(SessionStage&, const clang::Stmt&, const clang::Attr&, const std::any*)>;
 
     explicit AttrStmtHandler(HandleType h)
         : _handler(std::move(h)) {}
@@ -21,10 +21,10 @@ class AttrStmtHandler {
     AttrStmtHandler(AttrStmtHandler&&) = default;
     ~AttrStmtHandler() = default;
 
-    HandleResult handle(const clang::Attr& attr,
+    HandleResult handle(SessionStage& stage,
                         const clang::Stmt&,
-                        const std::any* params,
-                        SessionStage& stage);
+                        const clang::Attr& attr,
+                        const std::any* params);
 
    private:
     HandleType _handler;

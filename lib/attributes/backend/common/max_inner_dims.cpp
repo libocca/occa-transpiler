@@ -11,10 +11,10 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleMaxInnerDimsStmtAttribute(const clang::Attr& a,
+HandleResult handleMaxInnerDimsStmtAttribute(SessionStage& s,
                                              const clang::ForStmt& forStmt,
-                                             const AttributedLoopInnerSize* params,
-                                             SessionStage& s) {
+                                             const clang::Attr& a,
+                                             const AttributedLoopInnerSize* params) {
     SPDLOG_DEBUG("Handle [@max_inner_dims] attribute");
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@max_inner_dims params nullptr"});
@@ -37,7 +37,7 @@ HandleResult handleMaxInnerDimsStmtAttribute(const clang::Attr& a,
         }
     }
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     return {};
 }
 

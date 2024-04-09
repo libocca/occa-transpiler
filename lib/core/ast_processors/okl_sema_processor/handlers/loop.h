@@ -12,25 +12,25 @@ class SessionStage;
 class OklSemaCtx;
 
 // validator and translator for OKL attributed for loop
-HandleResult preValidateOklForLoop(const clang::Attr&,
-                                   const clang::ForStmt&,
+HandleResult preValidateOklForLoop(SessionStage&,
                                    OklSemaCtx& sema,
-                                   SessionStage&);
+                                   const clang::ForStmt&,
+                                   const clang::Attr&);
 
-HandleResult preValidateOklForLoopWithoutAttribute(const clang::Attr*,
-                                                   const clang::ForStmt&,
+HandleResult preValidateOklForLoopWithoutAttribute(SessionStage&,
                                                    OklSemaCtx& sema,
-                                                   SessionStage&);
+                                                   const clang::ForStmt&,
+                                                   const clang::Attr*);
 
-HandleResult postValidateOklForLoop(const clang::Attr&,
-                                    const clang::ForStmt&,
+HandleResult postValidateOklForLoop(SessionStage&,
                                     OklSemaCtx& sema,
-                                    SessionStage&);
+                                    const clang::ForStmt&,
+                                    const clang::Attr&);
 
-HandleResult postValidateOklForLoopWithoutAttribute(const clang::Attr*,
-                                                    const clang::ForStmt&,
+HandleResult postValidateOklForLoopWithoutAttribute(SessionStage&,
                                                     OklSemaCtx& sema,
-                                                    SessionStage&);
+                                                    const clang::ForStmt&,
+                                                    const clang::Attr*);
 
 }  // namespace oklt
    // namespace oklt

@@ -6,10 +6,6 @@
 
 #include <spdlog/spdlog.h>
 
-namespace oklt {
-class SessionStage;
-}
-
 namespace {
 using namespace oklt;
 using namespace clang;
@@ -26,8 +22,8 @@ std::vector<std::string_view> getBackendHeader(SessionStage& s) {
     return {CUDA_RT_INC, CUDA_PL_PRIM_INC};
 }
 
-HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
-    return handleTranslationUnit(d, s, getBackendHeader(s));
+HandleResult handleTranslationUnit(SessionStage& s, const TranslationUnitDecl& d) {
+    return handleTranslationUnit(s, d, getBackendHeader(s));
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

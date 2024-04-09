@@ -10,9 +10,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleNoBarrierStmtAttribute(const clang::Attr& a,
+HandleResult handleNoBarrierStmtAttribute(SessionStage& s,
                                           const clang::ForStmt& forStmt,
-                                          SessionStage& s) {
+                                          const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@nobarrier] attribute");
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
@@ -23,7 +23,7 @@ HandleResult handleNoBarrierStmtAttribute(const clang::Attr& a,
 
     loopInfo->sharedInfo.used = false;
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     return {};
 }
 

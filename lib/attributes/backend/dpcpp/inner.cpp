@@ -12,10 +12,10 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleInnerAttribute(const clang::Attr& a,
+HandleResult handleInnerAttribute(SessionStage& s,
                                   const clang::ForStmt& forStmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const clang::Attr& a,
+                                  const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@inner] attribute");
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@inner params nullptr"});
@@ -43,7 +43,7 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
 
     handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s, true);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, true);
 }
 
 __attribute__((constructor)) void registerDpppInnerAttrBackend() {

@@ -7,8 +7,8 @@ using namespace clang;
 StmtHandler::StmtHandler(HandleType h)
     : _handler(std::move(h)) {}
 
-HandleResult StmtHandler::operator()(const clang::Stmt& stmt, SessionStage& stage) {
-    return _handler(stmt, stage);
+HandleResult StmtHandler::operator()(SessionStage& stage, const clang::Stmt& stmt) {
+    return _handler(stage, stmt);
 }
 
 }  // namespace oklt

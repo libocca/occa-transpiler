@@ -15,10 +15,10 @@
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleOuterAttribute(const clang::Attr& a,
+HandleResult handleOuterAttribute(SessionStage& s,
                                   const clang::ForStmt& forStmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const clang::Attr& a,
+                                  const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@outer] attribute");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -37,8 +37,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, prefixCode, true);
 }
 
 }  // namespace oklt::cuda_subset

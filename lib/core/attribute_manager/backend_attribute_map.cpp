@@ -16,30 +16,30 @@ bool BackendAttributeMap::registerHandler(KeyType key, AttrStmtHandler handler) 
     return ret.second;
 }
 
-HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
-                                             const Decl& decl,
-                                             const std::any* params,
-                                             SessionStage& stage) {
+HandleResult BackendAttributeMap::handleAttr(SessionStage& stage,
+                                             const clang::Decl& decl,
+                                             const clang::Attr& attr,
+                                             const std::any* params) {
     std::string name = attr.getNormalizedFullName();
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, name));
     if (it == _declHandlers.end()) {
         return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
     }
-    return it->second.handle(attr, decl, params, stage);
+    return it->second.handle(stage, decl, attr, params);
 }
 
-HandleResult BackendAttributeMap::handleAttr(const Attr& attr,
-                                             const Stmt& stmt,
-                                             const std::any* params,
-                                             SessionStage& stage) {
+HandleResult BackendAttributeMap::handleAttr(SessionStage& stage,
+                                             const clang::Stmt& stmt,
+                                             const clang::Attr& attr,
+                                             const std::any* params) {
     std::string name = attr.getNormalizedFullName();
     auto backend = stage.getBackend();
     auto it = _stmtHandlers.find(std::make_tuple(backend, name));
     if (it == _stmtHandlers.end()) {
         return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
     }
-    return it->second.handle(attr, stmt, params, stage);
+    return it->second.handle(stage, stmt, attr, params);
 }
 
 bool BackendAttributeMap::hasAttrHandler(SessionStage& stage, const std::string& name) {

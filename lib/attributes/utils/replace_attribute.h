@@ -20,21 +20,22 @@ namespace oklt {
 
 class SessionStage;
 
-HandleResult handleGlobalConstant(const clang::VarDecl& decl,
-                                  SessionStage& s,
+HandleResult handleGlobalConstant(SessionStage& s,
+                                  const clang::VarDecl& decl,
                                   const std::string& qualifier);
 
-HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
-                                  SessionStage& s,
+
+HandleResult handleGlobalFunction(SessionStage& s,
+                                  const clang::FunctionDecl& decl,
                                   const std::string& funcQualifier);
 
-HandleResult handleCXXRecord(const clang::CXXRecordDecl&, SessionStage&, const std::string&);
-HandleResult handleCXXRecord(const clang::ClassTemplatePartialSpecializationDecl&,
-                             SessionStage&,
+HandleResult handleCXXRecord(SessionStage&, const clang::CXXRecordDecl&, const std::string&);
+HandleResult handleCXXRecord(SessionStage&,
+                             const clang::ClassTemplatePartialSpecializationDecl&,
                              const std::string&);
 
-HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
-                                   SessionStage& s,
+HandleResult handleTranslationUnit(SessionStage& s,
+                                   const clang::TranslationUnitDecl& decl,
                                    std::vector<std::string_view> headers,
                                    std::vector<std::string_view> ns = {});
 }  // namespace oklt

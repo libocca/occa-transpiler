@@ -9,7 +9,7 @@ using namespace clang;
 const std::string prefixExprText = "\n#pragma omp atomic\n";
 const std::string prefixCompoundText = "\n#pragma omp critical\n";
 
-HandleResult handleOPENMPAtomicAttribute(const Attr& a, const Stmt& stmt, SessionStage& s) {
+HandleResult handleOPENMPAtomicAttribute(SessionStage& s, const Stmt& stmt, const Attr& a) {
     SPDLOG_DEBUG("Handle [@atomic] attribute");
     auto& rewriter = s.getRewriter();
 

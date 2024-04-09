@@ -65,12 +65,12 @@ tl::expected<void, Error> handleChildAttr(const clang::Stmt& stmt,
             continue;
         }
 
-        auto params = am.parseAttr(*attr, s);
+        auto params = am.parseAttr(s, *attr);
         if (!params) {
             return tl::make_unexpected(std::move(params.error()));
         }
 
-        return am.handleAttr(*attr, stmt, &params.value(), s);
+        return am.handleAttr(s, stmt, *attr, &params.value());
     }
 
     return {};

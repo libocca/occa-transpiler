@@ -15,12 +15,12 @@ class SessionStage;
 
 class StmtHandler {
    public:
-    using HandleType = std::function<HandleResult(const clang::Stmt&, SessionStage&)>;
+    using HandleType = std::function<HandleResult(SessionStage&, const clang::Stmt&)>;
 
     explicit StmtHandler(HandleType h);
     ~StmtHandler() = default;
 
-    HandleResult operator()(const clang::Stmt&, SessionStage& stage);
+    HandleResult operator()(SessionStage& stage, const clang::Stmt&);
 
    private:
     HandleType _handler;

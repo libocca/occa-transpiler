@@ -8,8 +8,8 @@ using namespace oklt;
 
 const std::string CUDA_FUNCTION_QUALIFIER = "__device__";
 
-HandleResult handleCudaGlobalFunction(const clang::FunctionDecl& d, SessionStage& s) {
-    return handleGlobalFunction(d, s, CUDA_FUNCTION_QUALIFIER);
+HandleResult handleCudaGlobalFunction(SessionStage& s, const clang::FunctionDecl& d) {
+    return handleGlobalFunction(s, d, CUDA_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

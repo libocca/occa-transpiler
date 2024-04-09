@@ -96,9 +96,9 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     return r.getRewrittenText(typeLoc.getParensRange());
 }
 
-HandleResult handleKernelAttribute(const clang::Attr& a,
+HandleResult handleKernelAttribute(SessionStage& s,
                                    const clang::FunctionDecl& func,
-                                   SessionStage& s) {
+                                   const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& rewriter = s.getRewriter();

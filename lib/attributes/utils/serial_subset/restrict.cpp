@@ -11,12 +11,12 @@ namespace {
 const std::string restrictText = "__restrict__ ";
 }  // namespace
 
-HandleResult handleRestrictAttribute(const clang::Attr& a,
+HandleResult handleRestrictAttribute(SessionStage& s,
                                      const clang::Decl& decl,
-                                     SessionStage& s) {
+                                     const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@restrict] attribute");
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     s.getRewriter().InsertTextBefore(decl.getLocation(), restrictText);
     return {};
 }

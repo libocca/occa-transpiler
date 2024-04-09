@@ -14,7 +14,7 @@ bool ImplicitHandlerMap::registerHandler(KeyType key, StmtHandler handler) {
     return ret.second;
 }
 
-HandleResult ImplicitHandlerMap::operator()(const Decl& decl, SessionStage& stage) {
+HandleResult ImplicitHandlerMap::operator()(SessionStage& stage, const Decl& decl) {
     auto backend = stage.getBackend();
     auto it = _declHandlers.find(std::make_tuple(backend, decl.getKind()));
 
@@ -24,10 +24,10 @@ HandleResult ImplicitHandlerMap::operator()(const Decl& decl, SessionStage& stag
         return {};
     }
 
-    return it->second(decl, stage);
+    return it->second(stage, decl);
 }
 
-HandleResult ImplicitHandlerMap::operator()(const Stmt& stmt, SessionStage& stage) {
+HandleResult ImplicitHandlerMap::operator()(SessionStage& stage, const Stmt& stmt) {
     auto backend = stage.getBackend();
     auto it = _stmtHandlers.find(std::make_tuple(backend, stmt.getStmtClass()));
 
@@ -37,7 +37,7 @@ HandleResult ImplicitHandlerMap::operator()(const Stmt& stmt, SessionStage& stag
         return {};
     }
 
-    return it->second(stmt, stage);
+    return it->second(stage, stmt);
 }
 
 }  // namespace oklt

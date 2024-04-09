@@ -18,35 +18,35 @@ class SessionStage;
 }
 
 namespace oklt::serial_subset {
-HandleResult handleTileAttribute(const clang::Attr&,
+HandleResult handleTileAttribute(SessionStage&,
                                  const clang::ForStmt&,
-                                 const TileParams*,
-                                 SessionStage&);
-HandleResult handleInnerAttribute(const clang::Attr&,
+                                 const clang::Attr&,
+                                 const TileParams*);
+HandleResult handleInnerAttribute(SessionStage&,
                                   const clang::ForStmt&,
-                                  const AttributedLoop* params,
-                                  SessionStage&);
-HandleResult handleOuterAttribute(const clang::Attr&,
+                                  const clang::Attr&,
+                                  const AttributedLoop* params);
+HandleResult handleOuterAttribute(SessionStage&,
                                   const clang::ForStmt&,
-                                  const AttributedLoop* params,
-                                  SessionStage&);
+                                  const clang::Attr&,
+                                  const AttributedLoop* params);
 
-HandleResult handleKernelAttribute(const clang::Attr&, const clang::FunctionDecl&, SessionStage&);
-HandleResult handleSharedAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
-HandleResult handleRestrictAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
+HandleResult handleKernelAttribute(SessionStage&, const clang::FunctionDecl&, const clang::Attr&);
+HandleResult handleSharedAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleRestrictAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 
-HandleResult handleExclusiveDeclAttribute(const clang::Attr&, const clang::VarDecl&, SessionStage&);
-HandleResult handleExclusiveExprAttribute(const clang::Attr&,
+HandleResult handleExclusiveDeclAttribute(SessionStage&, const clang::VarDecl&, const clang::Attr&);
+HandleResult handleExclusiveExprAttribute(SessionStage&,
                                           const clang::DeclRefExpr&,
-                                          SessionStage&);
+                                          const clang::Attr&);
 
-HandleResult handleEmptyDeclAttribute(const clang::Attr&,
+HandleResult handleEmptyDeclAttribute(SessionStage&,
                                       const clang::Decl&,
-                                      const std::any*,
-                                      SessionStage&);
-HandleResult handleEmptyStmtAttribute(const clang::Attr&,
+                                      const clang::Attr&,
+                                      const std::any*);
+HandleResult handleEmptyStmtAttribute(SessionStage&,
                                       const clang::Stmt&,
-                                      const std::any*,
-                                      SessionStage&);
+                                      const clang::Attr&,
+                                      const std::any*);
 
 }  // namespace oklt::serial_subset

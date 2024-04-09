@@ -11,9 +11,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-tl::expected<std::string, Error> buildBinOp(const BinaryOperator& binOp,
+tl::expected<std::string, Error> buildBinOp(SessionStage& stage,
                                             const Attr& attr,
-                                            SessionStage& stage) {
+                                            const BinaryOperator& binOp) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto left = getSourceText(*binOp.getLHS(), ctx);
     auto right = getSourceText(*binOp.getRHS(), ctx);
@@ -28,9 +28,9 @@ tl::expected<std::string, Error> buildBinOp(const BinaryOperator& binOp,
         right);
 }
 
-tl::expected<std::string, Error> buildUnOp(const UnaryOperator& unOp,
+tl::expected<std::string, Error> buildUnOp(SessionStage& stage,
                                            const Attr& attr,
-                                           SessionStage& stage) {
+                                           const UnaryOperator& unOp) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto expr = getSourceText(*unOp.getSubExpr(), ctx);
     auto op = unOp.getOpcodeStr(unOp.getOpcode()).str();
@@ -43,9 +43,9 @@ tl::expected<std::string, Error> buildUnOp(const UnaryOperator& unOp,
         op);
 }
 
-tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
+tl::expected<std::string, Error> buildCXXCopyOp(SessionStage& stage,
                                                 const Attr& attr,
-                                                SessionStage& stage) {
+                                                const CXXOperatorCallExpr& op) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto numArgs = op.getNumArgs();
     if (op.getOperator() != OverloadedOperatorKind::OO_Equal || numArgs != 2) {
@@ -74,22 +74,22 @@ tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
         rigthStr);
 }
 
-HandleResult handleAtomicAttribute(const clang::Attr& attr,
+HandleResult handleAtomicAttribute(SessionStage& stage,
                                    const clang::Stmt& stmt,
-                                   SessionStage& stage) {
+                                   const clang::Attr& attr) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto newExpression = [&]() -> tl::expected<std::string, Error> {
         if (isa<BinaryOperator>(stmt)) {
             const BinaryOperator* binOp = cast<BinaryOperator>(&stmt);
-            return buildBinOp(*binOp, attr, stage);
+            return buildBinOp(stage, attr, *binOp);
         }
         if (isa<UnaryOperator>(stmt)) {
             const UnaryOperator* unOp = cast<UnaryOperator>(&stmt);
-            return buildUnOp(*unOp, attr, stage);
+            return buildUnOp(stage, attr, *unOp);
         }
         if (isa<CXXOperatorCallExpr>(stmt)) {
             const CXXOperatorCallExpr* op = cast<CXXOperatorCallExpr>(&stmt);
-            return buildCXXCopyOp(*op, attr, stage);
+            return buildCXXCopyOp(stage, attr, *op);
         }
 
         return getSourceText(*dyn_cast<Expr>(&stmt), ctx);

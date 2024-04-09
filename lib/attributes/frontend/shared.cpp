@@ -112,9 +112,9 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseSharedAttrParams(const clang::Attr& attr,
-                                  OKLParsedAttr& data,
-                                  SessionStage& stage) {
+ParseResult parseSharedAttrParams(SessionStage& stage,
+                                  const clang::Attr& attr,
+                                  OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@shared] does not take arguments"});
     }

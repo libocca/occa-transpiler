@@ -13,17 +13,17 @@ namespace oklt {
 std::string getCondCompStr(const BinOp& bo);
 std::string getUnaryStr(const UnOp& uo, const std::string& var);
 std::string buildCloseScopes(int& openedScopeCounter);
-HandleResult replaceAttributedLoop(const clang::Attr& a,
+HandleResult replaceAttributedLoop(SessionStage& s,
                                    const clang::ForStmt& f,
-                                   const std::string& prefixCode,
+                                   const clang::Attr& a,
                                    const std::string& suffixCode,
-                                   SessionStage& s,
-                                   bool insertInside = false);
-HandleResult replaceAttributedLoop(const clang::Attr& a,
-                                   const clang::ForStmt& f,
                                    const std::string& prefixCode,
+                                   bool insertInside);
+HandleResult replaceAttributedLoop(SessionStage& s,
+                                   const clang::ForStmt& f,
+                                   const clang::Attr& a,
                                    const std::string& suffixCode,
                                    const std::string& afterRBraceCode,
-                                   SessionStage& s,
-                                   bool insertInside = false);
+                                   const std::string& prefixCode,
+                                   bool insertInside);
 }  // namespace oklt

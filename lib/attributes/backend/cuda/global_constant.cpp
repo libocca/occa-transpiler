@@ -6,9 +6,9 @@
 namespace {
 using namespace oklt;
 
-HandleResult handleGlobalConstant(const clang::VarDecl& decl, oklt::SessionStage& s) {
+HandleResult handleGlobalConstant(oklt::SessionStage& s, const clang::VarDecl& decl) {
     const std::string CUDA_CONST_QUALIFIER = "__constant__";
-    return oklt::handleGlobalConstant(decl, s, CUDA_CONST_QUALIFIER);
+    return oklt::handleGlobalConstant(s, decl, CUDA_CONST_QUALIFIER);
 }
 
 __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {

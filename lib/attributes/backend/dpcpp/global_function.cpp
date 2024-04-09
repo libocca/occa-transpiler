@@ -6,9 +6,9 @@
 namespace {
 using namespace oklt;
 
-HandleResult handleGlobalFunctionDpcpp(const clang::FunctionDecl& decl, oklt::SessionStage& s) {
+HandleResult handleGlobalFunctionDpcpp(oklt::SessionStage& s, const clang::FunctionDecl& decl) {
     const std::string HIP_FUNCTION_QUALIFIER = "SYCL_EXTERNAL";
-    return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
+    return oklt::handleGlobalFunction(s, decl, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {

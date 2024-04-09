@@ -1,5 +1,6 @@
 #include "attributes/utils/replace_attribute.h"
 #include "attributes/attribute_names.h"
+#include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
@@ -47,8 +48,8 @@ oklt::HandleResult handleCXXRecordImpl(const T& node,
 namespace oklt {
 using namespace clang;
 
-HandleResult handleGlobalConstant(const clang::VarDecl& decl,
-                                  SessionStage& s,
+HandleResult handleGlobalConstant(SessionStage& s,
+                                  const clang::VarDecl& decl,
                                   const std::string& qualifier) {
 
     // skip decl with invalid soucce location
@@ -90,8 +91,8 @@ HandleResult handleGlobalConstant(const clang::VarDecl& decl,
     return {};
 }
 
-HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
-                                  SessionStage& s,
+HandleResult handleGlobalFunction(SessionStage& s,
+                                  const clang::FunctionDecl& decl,
                                   const std::string& funcQualifier) {
     // skip built in functions or with invalid soucce location
     if (decl.getLocation().isInvalid() || decl.isInlineBuiltinDeclaration()) {
@@ -121,8 +122,8 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
     return {};
 }
 
-HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
-                             SessionStage& s,
+HandleResult handleCXXRecord(SessionStage& s,
+                             const clang::CXXRecordDecl& cxxRecord,
                              const std::string& modifier) {
     if (cxxRecord.isImplicit()) {
         return {};
@@ -131,14 +132,14 @@ HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
     return handleCXXRecordImpl(cxxRecord, s.getRewriter(), modifier);
 }
 
-HandleResult handleCXXRecord(const clang::ClassTemplatePartialSpecializationDecl& cxxRecord,
-                             SessionStage& s,
+HandleResult handleCXXRecord(SessionStage& s,
+                             const clang::ClassTemplatePartialSpecializationDecl& cxxRecord,
                              const std::string& modifier) {
     return handleCXXRecordImpl(cxxRecord, s.getRewriter(), modifier);
 }
 
-HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
-                                   SessionStage& s,
+HandleResult handleTranslationUnit(SessionStage& s,
+                                   const clang::TranslationUnitDecl& decl,
                                    std::vector<std::string_view> headers,
                                    std::vector<std::string_view> ns) {
     SPDLOG_DEBUG("Handle translation unit");

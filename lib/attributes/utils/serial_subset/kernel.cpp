@@ -13,7 +13,7 @@ namespace {
 const std::string EXTERN_C = "extern \"C\"";
 }  // namespace
 
-HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
+HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, const Attr& a) {
     SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& rewriter = s.getRewriter();

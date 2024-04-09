@@ -44,25 +44,25 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
-HandleResult AttributeManager::handleNode(const Stmt& stmt, SessionStage& stage) {
-    return _implicitHandlers(stmt, stage);
+HandleResult AttributeManager::handleNode(SessionStage& stage, const Stmt& stmt) {
+    return _implicitHandlers(stage, stmt);
 }
 
-HandleResult AttributeManager::handleNode(const Decl& decl, SessionStage& stage) {
-    return _implicitHandlers(decl, stage);
+HandleResult AttributeManager::handleNode(SessionStage& stage, const Decl& decl) {
+    return _implicitHandlers(stage, decl);
 }
 
-HandleResult AttributeManager::handleAttr(const Attr& attr,
+HandleResult AttributeManager::handleAttr(SessionStage& stage,
                                           const Decl& decl,
-                                          const std::any* params,
-                                          SessionStage& stage) {
+                                          const Attr& attr,
+                                          const std::any* params) {
     std::string name = attr.getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
-        return _commonAttrs.handleAttr(attr, decl, params, stage);
+        return _commonAttrs.handleAttr(stage, decl, attr, params);
     }
 
     if (_backendAttrs.hasAttrHandler(stage, name)) {
-        return _backendAttrs.handleAttr(attr, decl, params, stage);
+        return _backendAttrs.handleAttr(stage, decl, attr, params);
     }
 
     // TODO: Uncomment after multi-handle added
@@ -70,17 +70,17 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
     return {};
 }
 
-HandleResult AttributeManager::handleAttr(const Attr& attr,
+HandleResult AttributeManager::handleAttr(SessionStage& stage,
                                           const Stmt& stmt,
-                                          const std::any* params,
-                                          SessionStage& stage) {
+                                          const Attr& attr,
+                                          const std::any* params) {
     std::string name = attr.getNormalizedFullName();
     if (_commonAttrs.hasAttrHandler(name)) {
-        return _commonAttrs.handleAttr(attr, stmt, params, stage);
+        return _commonAttrs.handleAttr(stage, stmt, attr, params);
     }
 
     if (_backendAttrs.hasAttrHandler(stage, name)) {
-        return _backendAttrs.handleAttr(attr, stmt, params, stage);
+        return _backendAttrs.handleAttr(stage, stmt, attr, params);
     }
 
     // TODO: Uncomment after multi-handle added
@@ -88,29 +88,29 @@ HandleResult AttributeManager::handleAttr(const Attr& attr,
     return {};
 }
 
-ParseResult AttributeManager::parseAttr(const Attr& attr, SessionStage& stage) {
+ParseResult AttributeManager::parseAttr(SessionStage& stage, const Attr& attr) {
     std::string name = attr.getNormalizedFullName();
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {
-        auto params = ParseOKLAttr(attr, stage);
-        return it->second(attr, params, stage);
+        auto params = ParseOKLAttr(stage, attr);
+        return it->second(stage, attr, params);
     }
 
     return EmptyParams{};
 }
 
-ParseResult AttributeManager::parseAttr(const Attr& attr,
-                                        OKLParsedAttr& params,
-                                        SessionStage& stage) {
+ParseResult AttributeManager::parseAttr(SessionStage& stage,
+                                        const Attr& attr,
+                                        OKLParsedAttr& params) {
     auto it = _attrParsers.find(params.name);
     if (it != _attrParsers.end()) {
-        return it->second(attr, params, stage);
+        return it->second(stage, attr, params);
     }
     return EmptyParams{};
 }
 
-tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const Decl& decl,
-                                                                        SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionStage& stage,
+                                                                        const Decl& decl) {
     if (!decl.hasAttrs()) {
         return {};
     }
@@ -154,8 +154,8 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
     return collectedAttrs;
 }
 
-tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const Stmt& stmt,
-                                                                        SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionStage& stage,
+                                                                        const Stmt& stmt) {
     if (stmt.getStmtClass() != Stmt::AttributedStmtClass) {
         return {};
     }

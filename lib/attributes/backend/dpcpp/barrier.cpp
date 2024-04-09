@@ -11,9 +11,9 @@
 namespace {
 using namespace oklt;
 using namespace clang;
-HandleResult handleBarrierAttribute(const clang::Attr& a,
+HandleResult handleBarrierAttribute(SessionStage& s,
                                     const clang::Stmt& stmt,
-                                    SessionStage& s) {
+                                    const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@barrier] attribute");
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());

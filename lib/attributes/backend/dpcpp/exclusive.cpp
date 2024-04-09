@@ -11,12 +11,12 @@
 namespace {
 using namespace oklt;
 using namespace clang;
-HandleResult handleExclusiveAttribute(const clang::Attr& a,
+HandleResult handleExclusiveAttribute(SessionStage& s,
                                       const clang::Decl& decl,
-                                      SessionStage& s) {
+                                      const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@exclusive] attribute");
     s.getRewriter().RemoveText(getAttrFullSourceRange(a));
-    return defaultHandleExclusiveDeclAttribute(a, decl, s);
+    return defaultHandleExclusiveDeclAttribute(s, decl, a);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

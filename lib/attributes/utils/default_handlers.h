@@ -12,24 +12,24 @@ class Stmt;
 namespace oklt {
 class SessionStage;
 
-HandleResult emptyHandleStmtAttribute(const clang::Attr&, const clang::Stmt&, SessionStage&);
+HandleResult emptyHandleStmtAttribute(SessionStage&, const clang::Stmt&, const clang::Attr&);
 
-HandleResult emptyHandleDeclAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
+HandleResult emptyHandleDeclAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 
-HandleResult defaultHandleSharedStmtAttribute(const clang::Attr&,
+HandleResult defaultHandleSharedStmtAttribute(SessionStage&,
                                               const clang::Stmt&,
-                                              SessionStage&);
+                                              const clang::Attr&);
 
-HandleResult defaultHandleExclusiveStmtAttribute(const clang::Attr&,
+HandleResult defaultHandleExclusiveStmtAttribute(SessionStage&,
                                                  const clang::Stmt&,
-                                                 SessionStage&);
+                                                 const clang::Attr&);
 
-HandleResult defaultHandleSharedDeclAttribute(const clang::Attr&,
+HandleResult defaultHandleSharedDeclAttribute(SessionStage&,
                                               const clang::Decl&,
-                                              SessionStage&);
+                                              const clang::Attr&);
 
-HandleResult defaultHandleExclusiveDeclAttribute(const clang::Attr&,
+HandleResult defaultHandleExclusiveDeclAttribute(SessionStage&,
                                                  const clang::Decl&,
-                                                 SessionStage&);
+                                                 const clang::Attr&);
 
 }  // namespace oklt

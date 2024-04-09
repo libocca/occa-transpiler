@@ -6,9 +6,9 @@
 namespace {
 using namespace oklt;
 
-HandleResult handleHIPGlobalFunction(const clang::FunctionDecl& decl, oklt::SessionStage& s) {
+HandleResult handleHIPGlobalFunction(oklt::SessionStage& s, const clang::FunctionDecl& decl) {
     const std::string HIP_FUNCTION_QUALIFIER = "__device__";
-    return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
+    return oklt::handleGlobalFunction(s, decl, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerHIPKernelHandler() {

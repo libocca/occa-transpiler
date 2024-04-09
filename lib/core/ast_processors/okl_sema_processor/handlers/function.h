@@ -12,14 +12,14 @@ namespace oklt {
 class SessionStage;
 class OklSemaCtx;
 
-HandleResult preValidateOklKernel(const clang::Attr& attr,
-                                  const clang::FunctionDecl& fd,
+HandleResult preValidateOklKernel(SessionStage& stage,
                                   OklSemaCtx& sema,
-                                  SessionStage& stage);
-HandleResult postValidateOklKernel(const clang::Attr& attr,
-                                   const clang::FunctionDecl& fd,
+                                  const clang::FunctionDecl& fd,
+                                  const clang::Attr& attr);
+HandleResult postValidateOklKernel(SessionStage& stage,
                                    OklSemaCtx& sema,
-                                   SessionStage& stage);
+                                   const clang::FunctionDecl& fd,
+                                   const clang::Attr& attr);
 
 }  // namespace oklt
    // namespace oklt

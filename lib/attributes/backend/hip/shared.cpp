@@ -13,7 +13,7 @@ __attribute__((constructor)) void registerCUDASharedAttrBackend() {
         {TargetBackend::HIP, SHARED_ATTR_NAME},
         makeSpecificAttrHandle(cuda_subset::handleSharedAttribute));
 
-    // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
+    // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
         {TargetBackend::HIP, SHARED_ATTR_NAME},
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));

@@ -26,8 +26,8 @@ class ImplicitHandlerMap {
 
     bool hasHandler(KeyType key) { return _declHandlers.count(key) || _stmtHandlers.count(key); }
 
-    HandleResult operator()(const clang::Decl& decl, SessionStage& stage);
-    HandleResult operator()(const clang::Stmt& stmt, SessionStage& stage);
+    HandleResult operator()(SessionStage& stage, const clang::Decl& decl);
+    HandleResult operator()(SessionStage& stage, const clang::Stmt& stmt);
 
    private:
     DeclHandlers _declHandlers;

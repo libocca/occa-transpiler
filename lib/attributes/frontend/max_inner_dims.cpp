@@ -47,7 +47,7 @@ struct MaxInnerDims : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseMaxInnerDims(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
+ParseResult parseMaxInnerDims(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@max_inner_dims] does not take kwargs"});
     }

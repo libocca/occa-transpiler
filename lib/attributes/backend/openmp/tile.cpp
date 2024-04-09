@@ -8,10 +8,10 @@ using namespace clang;
 
 const std::string prefixText = "\n#pragma omp parallel for\n";
 
-HandleResult handleOPENMPTileAttribute(const Attr& a,
+HandleResult handleOPENMPTileAttribute(SessionStage& s,
                                        const ForStmt& stmt,
-                                       const TileParams* params,
-                                       SessionStage& s) {
+                                       const Attr& a,
+                                       const TileParams* params) {
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
@@ -24,7 +24,7 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
         s.getRewriter().InsertText(stmt.getBeginLoc(), prefixText, false, true);
     }
 
-    return serial_subset::handleTileAttribute(a, stmt, params, s);
+    return serial_subset::handleTileAttribute(s, stmt, a, params);
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {

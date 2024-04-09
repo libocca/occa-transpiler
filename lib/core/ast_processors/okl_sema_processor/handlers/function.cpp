@@ -10,10 +10,10 @@
 namespace oklt {
 using namespace clang;
 
-HandleResult preValidateOklKernel(const Attr& attr,
-                                  const FunctionDecl& fd,
+HandleResult preValidateOklKernel(SessionStage& stage,
                                   OklSemaCtx& sema,
-                                  SessionStage& stage) {
+                                  const clang::FunctionDecl& fd,
+                                  const clang::Attr& attr) {
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
         //  make appropriate error code
@@ -29,10 +29,10 @@ HandleResult preValidateOklKernel(const Attr& attr,
     return {};
 }
 
-HandleResult postValidateOklKernel(const Attr& attr,
-                                   const FunctionDecl& fd,
+HandleResult postValidateOklKernel(SessionStage& stage,
                                    OklSemaCtx& sema,
-                                   SessionStage& stage) {
+                                   const clang::FunctionDecl& fd,
+                                   const clang::Attr& attr) {
     // stop parsing of current kernel info and reset internal state of sema
     sema.stopParsingKernelInfo();
 

@@ -48,21 +48,21 @@ std::string buildCloseScopes(int& openedScopeCounter) {
     return res;
 }
 
-HandleResult replaceAttributedLoop(const Attr& a,
+HandleResult replaceAttributedLoop(SessionStage& s,
                                    const ForStmt& f,
-                                   const std::string& prefixCode,
+                                   const Attr& a,
                                    const std::string& suffixCode,
-                                   SessionStage& s,
+                                   const std::string& prefixCode,
                                    bool insertInside) {
-    return replaceAttributedLoop(a, f, prefixCode, suffixCode, "", s, insertInside);
+    return replaceAttributedLoop(s, f, a, suffixCode, "", prefixCode, insertInside);
 }
 
-HandleResult replaceAttributedLoop(const Attr& a,
+HandleResult replaceAttributedLoop(SessionStage& s,
                                    const ForStmt& f,
-                                   const std::string& prefixCode,
+                                   const Attr& a,
                                    const std::string& suffixCode,
                                    const std::string& afterRBraceCode,
-                                   SessionStage& s,
+                                   const std::string& prefixCode,
                                    bool insertInside) {
     auto& rewriter = s.getRewriter();
 

@@ -6,7 +6,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleOPENMPBarrierAttribute(const Attr& a, const NullStmt& stmt, SessionStage& s) {
+HandleResult handleOPENMPBarrierAttribute(SessionStage& s, const NullStmt& stmt, const Attr& a) {
     SPDLOG_DEBUG("Handle [@barrier] attribute");
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());

@@ -18,14 +18,14 @@ class CommonAttributeMap {
     bool registerHandler(std::string name, AttrDeclHandler handler);
     bool registerHandler(std::string name, AttrStmtHandler handler);
 
-    HandleResult handleAttr(const clang::Attr& attr,
+    HandleResult handleAttr(SessionStage& stage,
                             const clang::Decl& decl,
-                            const std::any* params,
-                            SessionStage& stage);
-    HandleResult handleAttr(const clang::Attr& attr,
+                            const clang::Attr& attr,
+                            const std::any* params);
+    HandleResult handleAttr(SessionStage& stage,
                             const clang::Stmt& stmt,
-                            const std::any* params,
-                            SessionStage& stage);
+                            const clang::Attr& attr,
+                            const std::any* params);
 
     bool hasAttrHandler(const std::string& name);
 

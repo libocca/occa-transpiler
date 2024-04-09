@@ -20,58 +20,58 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult applyTranspilationToAttrNode(const Attr& attr,
+HandleResult applyTranspilationToAttrNode(SessionStage& stage,
                                           const DynTypedNode& node,
-                                          SessionStage& stage) {
+                                          const Attr& attr) {
     auto& am = stage.getAttrManager();
-    auto params = am.parseAttr(attr, stage);
+    auto params = am.parseAttr(stage, attr);
     if (!params) {
         return tl::make_unexpected(std::move(params.error()));
     }
 
     if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(node.getNodeKind())) {
-        return am.handleAttr(attr, *node.get<Decl>(), &params.value(), stage);
+        return am.handleAttr(stage, *node.get<Decl>(), attr, &params.value());
     }
 
     if (ASTNodeKind::getFromNodeKind<Stmt>().isBaseOf(node.getNodeKind())) {
-        return am.handleAttr(attr, *node.get<Stmt>(), &params.value(), stage);
+        return am.handleAttr(stage, *node.get<Stmt>(), attr, &params.value());
     }
 
     return tl::make_unexpected(
         Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().str()});
 }
 
-HandleResult applyTranspilationToNode(const DynTypedNode& node, SessionStage& stage) {
+HandleResult applyTranspilationToNode(SessionStage& stage, const DynTypedNode& node) {
     if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(node.getNodeKind())) {
-        return AttributeManager::instance().handleNode(*node.get<Decl>(), stage);
+        return AttributeManager::instance().handleNode(stage, *node.get<Decl>());
     }
 
     if (ASTNodeKind::getFromNodeKind<Stmt>().isBaseOf(node.getNodeKind())) {
-        return AttributeManager::instance().handleNode(*node.get<Stmt>(), stage);
+        return AttributeManager::instance().handleNode(stage, *node.get<Stmt>());
     }
 
     return tl::make_unexpected(
         Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().str()});
 }
 
-HandleResult applyTranspilationToNode(const Attr* attr,
+HandleResult applyTranspilationToNode(SessionStage& stage,
                                       const DynTypedNode& node,
-                                      SessionStage& stage) {
+                                      const Attr* attr) {
     SPDLOG_TRACE("{} node name; {}", __PRETTY_FUNCTION__, node.getNodeKind().asStringRef());
     if (!attr) {
-        return applyTranspilationToNode(node, stage);
+        return applyTranspilationToNode(stage, node);
     }
 
-    return applyTranspilationToAttrNode(*attr, node, stage);
+    return applyTranspilationToAttrNode(stage, node, *attr);
 }
 
-HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionStage& stage) {
+HandleResult applyTranspilationToNodes(SessionStage& stage, const TranspilationNodes& nodes) {
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     for (const auto& tnode : nodes) {
         // set appropriate parsed KernelInfo and LoopInfo as active for current node
         sema.setParsedKernelInfo(tnode.ki);
         sema.setLoopInfo(tnode.li);
-        auto result = applyTranspilationToNode(tnode.attr, tnode.node, stage);
+        auto result = applyTranspilationToNode(stage, tnode.node, tnode.attr);
         if (!result) {
             result.error().ctx = tnode.attr ? tnode.attr->getRange() : SourceRange();
             return result;
@@ -82,7 +82,7 @@ HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionS
 }
 
 // remove system header to avoid insertion of them during fusion of final transpiled kernel
-void removeSystemHeaders(const HeaderDepsInfo& deps, SessionStage& stage) {
+void removeSystemHeaders(SessionStage& stage, const HeaderDepsInfo& deps) {
     auto& rewriter = stage.getRewriter();
     for (const auto& dep : deps.topLevelDeps) {
         if (!SrcMgr::isSystem(dep.fileType)) {
@@ -105,8 +105,8 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     return inputs;
 }
 
-tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inputs,
-                                                    SessionStage& stage) {
+tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
+                                                    const TransformedFiles& inputs) {
     auto invocation = std::make_shared<CompilerInvocation>();
 
     auto& ppOutOpt = invocation->getPreprocessorOutputOpts();
@@ -177,12 +177,12 @@ std::string restoreSystemAndBackendHeaders(std::string& input, const HeaderDepsI
     return input;
 }
 
-tl::expected<std::string, Error> fuseIncludeDeps(const HeaderDepsInfo& deps, SessionStage& stage) {
-    removeSystemHeaders(deps, stage);
+tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const HeaderDepsInfo& deps) {
+    removeSystemHeaders(stage, deps);
 
     auto inputs = gatherTransformedFiles(stage);
 
-    auto preprocessedResult = preprocessedInputs(inputs, stage);
+    auto preprocessedResult = preprocessedInputs(stage, inputs);
     if (!preprocessedResult) {
         return preprocessedResult;
     }
@@ -195,13 +195,13 @@ tl::expected<std::string, Error> fuseIncludeDeps(const HeaderDepsInfo& deps, Ses
 namespace oklt {
 tl::expected<std::string, Error> generateTranspiledCode(SessionStage& stage) {
     const auto& nodes = stage.tryEmplaceUserCtx<TranspilationNodes>();
-    auto result = applyTranspilationToNodes(nodes, stage);
+    auto result = applyTranspilationToNodes(stage, nodes);
     if (!result) {
         return tl::make_unexpected(std::move(result.error()));
     }
 
     const auto& deps = stage.tryEmplaceUserCtx<HeaderDepsInfo>();
-    auto finalResult = fuseIncludeDeps(deps, stage);
+    auto finalResult = fuseIncludeDeps(stage, deps);
     if (!finalResult) {
         return finalResult;
     }

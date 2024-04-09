@@ -15,18 +15,18 @@ using namespace clang;
 using ExprVec = std::vector<const Expr*>;
 using DimOrder = std::vector<size_t>;
 
-HandleResult handleDimOrderDeclAttribute(const clang::Attr& a,
+HandleResult handleDimOrderDeclAttribute(SessionStage& s,
                                          const clang::Decl& decl,
-                                         SessionStage& s) {
+                                         const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@dimOrder] decl: {}",
                  getSourceText(decl.getSourceRange(), decl.getASTContext()));
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     return {};
 }
 
-HandleResult handleDimOrderStmtAttribute(const clang::Attr& a,
+HandleResult handleDimOrderStmtAttribute(SessionStage& s,
                                          const clang::Stmt& stmt,
-                                         SessionStage& s) {
+                                         const clang::Attr& a) {
     SPDLOG_DEBUG("Called empty stmt [@dimOrder] handler");
     return {};
 }

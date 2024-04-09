@@ -11,14 +11,14 @@ using namespace oklt;
 
 const std::string HIP_FUNCTION_QUALIFIER = "__device__";
 
-HandleResult handleClassRecord(const clang::CXXRecordDecl& d, SessionStage& s) {
-    return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
+HandleResult handleClassRecord(SessionStage& s, const clang::CXXRecordDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
 HandleResult handleClassTemplateSpecialization(
-    const clang::ClassTemplateSpecializationDecl& d,
-    SessionStage& s) {
-    return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
+    SessionStage& s,
+    const clang::ClassTemplateSpecializationDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
