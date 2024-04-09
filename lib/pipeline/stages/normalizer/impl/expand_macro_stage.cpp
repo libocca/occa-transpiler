@@ -75,6 +75,7 @@ void removeCommentAfterDirective(std::list<SourceRange>& comments,
         auto commentLineNumber = commentFullLoc.getLineNumber();
         auto directiveLineNumber = directiveFullLoc.getLineNumber();
 
+        SPDLOG_INFO("macro line: {} comment: line: {}", directiveLineNumber, commentLineNumber);
         if (commentLineNumber > directiveLineNumber) {
             break;
         }
@@ -126,19 +127,13 @@ class CondDirectiveCallbacks : public PPCallbacks {
 
 class DefCondDirectiveCallbacks : public PPCallbacks {
    private:
-    MacroInfo* getMacroInfoForUserMacro(SourceLocation loc, const MacroDefinition& md) {
-        if (sm.isInSystemHeader(loc)) {
-            return nullptr;
-        }
+    bool isEnabled(SourceLocation loc, const MacroDefinition& md) {
         auto* mi = md.getMacroInfo();
         if (!mi) {
-            return nullptr;
-        }
-        if (mi->isUsedForHeaderGuard()) {
-            return nullptr;
+            return false;
         }
 
-        return mi;
+        return mi->isEnabled();
     }
 
    public:
@@ -157,8 +152,7 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
     const SourceManager& sm;
 
     void Ifdef(SourceLocation loc, const Token& macroNameTok, const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
 
@@ -171,18 +165,18 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         }
 
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("if ") + (mi->isEnabled() ? "1" : "0"));
+                             std::string("if ") + (isEnabled(loc, md) ? "1" : "0"));
     }
 
     void Elifdef(SourceLocation loc,
                  const Token& macroNameTok,
                  const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
+
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("elif ") + (mi->isEnabled() ? "1" : "0"));
+                             std::string("elif ") + (isEnabled(loc, md) ? "1" : "0"));
     }
 
     void Elifdef(SourceLocation loc, SourceRange conditionRange, SourceLocation ifLoc) override {
@@ -193,8 +187,7 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
     }
 
     void Ifndef(SourceLocation loc, const Token& macroNameTok, const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
 
@@ -207,18 +200,18 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         }
 
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("if ") + (mi->isEnabled() ? "0" : "1"));
+                             std::string("if ") + (isEnabled(loc, md) ? "0" : "1"));
     }
 
     void Elifndef(SourceLocation loc,
                   const Token& macroNameTok,
                   const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
+
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("elif ") + (mi->isEnabled() ? "0" : "1"));
+                             std::string("elif ") + (isEnabled(loc, md) ? "0" : "1"));
     }
 
     void Elifndef(SourceLocation loc, SourceRange conditionRange, SourceLocation IfLoc) override {
@@ -315,8 +308,14 @@ class DefineDirectiveCallbacks : public PPCallbacks {
 
 struct CommentDeleter : public CommentHandler {
     std::list<SourceRange> comments;
+    const SourceManager& sm;
+    CommentDeleter(const SourceManager& sm)
+        : sm(sm) {}
 
     bool HandleComment(Preprocessor&, SourceRange commentRange) override {
+        if (sm.isInSystemHeader(commentRange.getBegin())) {
+            return false;
+        }
         comments.emplace_back(commentRange);
         return false;
     }
@@ -383,7 +382,7 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     pp.EnterMainSourceFile();
     auto& rewriter = stage.getRewriter();
 
-    auto commentDeleter = std::make_unique<CommentDeleter>();
+    auto commentDeleter = std::make_unique<CommentDeleter>(sm);
     pp.addCommentHandler(commentDeleter.get());
 
     auto macros = lexMacroToken(pp);
