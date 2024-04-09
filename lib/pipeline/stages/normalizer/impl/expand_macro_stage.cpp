@@ -196,12 +196,9 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
 
         auto* mi = md.getMacroInfo();
         if (!mi) {
-            results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                                 std::string("if ") + (isEnabled(loc, md) ? "0" : "1"));
             return;
         }
-
-        if (md.getMacroInfo()->isUsedForHeaderGuard()) {
+        if (mi->isUsedForHeaderGuard()) {
             return;
         }
 
