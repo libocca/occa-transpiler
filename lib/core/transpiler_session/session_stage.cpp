@@ -110,17 +110,24 @@ void SessionStage::pushError(std::error_code ec, std::string desc) {
 }
 
 void SessionStage::pushError(const Error& err) {
-    _session.pushError(err.ec, std::move(err.desc));
-}
+    // Exit if no message available
+    if (err.message.empty()) {
+        return;
+    }
 
-void SessionStage::pushError(const Error& err, const SourceRange& arange) {
-    // Diagnostic diag(&getCompiler().getDiagnostics(), err.desc);
-    auto& SM = getCompiler().getSourceManager();
-    auto begLoc = arange.getBegin();
+    // If there is source range info, we can generate diagnostic to generate properly formatted
+    // error message
+    if (err.ctx.has_value() && err.ctx.type() == typeid(clang::SourceRange)) {
+        auto range = std::any_cast<clang::SourceRange>(err.ctx);
+        auto begLoc = range.getBegin();
+        auto& SM = getCompiler().getSourceManager();
+        StoredDiagnostic sd(
+            DiagnosticsEngine::Level::Error, 0, err.message, FullSourceLoc(begLoc, SM), {}, {});
+        _session.pushDiagnosticMessage(sd, *this);
+        return;
+    }
 
-    StoredDiagnostic sd(
-        DiagnosticsEngine::Level::Error, 0, err.desc, FullSourceLoc(begLoc, SM), {}, {});
-    _session.pushDiagnosticMessage(sd, *this);
+    _session.pushError(err.ec, std::move(err.message));
 }
 
 void SessionStage::pushWarning(std::string desc) {

@@ -143,7 +143,7 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPreActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
-            stage.pushError(result.error(), attr->getRange());
+            result.error().ctx = attr->getRange();
             return result;
         }
     }
@@ -167,7 +167,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     if (attrs.empty()) {
         auto result = procMng.runPostActionNodeHandle(procType, nullptr, node, sema, stage);
         if (!result) {
-            stage.pushError(result.error(), node.getSourceRange());
+            result.error().ctx = node.getSourceRange();
             return result;
         }
         if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
@@ -180,7 +180,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPostActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
-            stage.pushError(result.error(), attr->getRange());
+            result.error().ctx = attr->getRange();
             return result;
         }
         transpilationAccumulator.push_back(TranspilationNode{
@@ -199,33 +199,38 @@ bool traverseNode(TraversalType& traversal,
         return true;
     }
 
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto procType = stage.getAstProccesorType();
+    auto result = [&]() -> HandleResult {
+        auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+        auto procType = stage.getAstProccesorType();
 
-    auto attrsResult = getNodeAttrs(*node, stage);
-    if (!attrsResult) {
-        auto range = node->getSourceRange();
-        stage.pushError(std::move(attrsResult.error()), range);
-        return false;
-    }
+        auto attrsResult = getNodeAttrs(*node, stage);
+        if (!attrsResult) {
+            attrsResult.error().ctx = node->getSourceRange();
+            return tl::make_unexpected(attrsResult.error());
+        }
 
-    const auto& attrNode = tryGetAttrNode(*node);
-    auto result = runFromRootToLeaves(
-        traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        const auto& attrNode = tryGetAttrNode(*node);
+        auto result = runFromRootToLeaves(
+            traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        if (!result) {
+            return result;
+        }
+
+        // dispatch the next node
+        if (!dispatchTraverseFunc(traversal, node)) {
+            return tl::make_unexpected(Error{});
+        }
+
+        result = runFromLeavesToRoot(
+            traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        if (!result) {
+            return result;
+        }
+        return {};
+    }();
+
     if (!result) {
-        // runFromRootToLeaves pushes erros, since it knows which attribute handle failed
-        return false;
-    }
-
-    // dispatch the next node
-    if (!dispatchTraverseFunc(traversal, node)) {
-        return false;
-    }
-
-    result = runFromLeavesToRoot(
-        traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
-    if (!result) {
-        // runFromLeavesToRoot pushes erros, since it knows which attribute handle failed
+        stage.pushError(result.error());
         return false;
     }
 
@@ -270,7 +275,6 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
     if (!_tu || _tu != translationUnitDecl) {
         SPDLOG_INFO("Start AST traversal");
         if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-            _stage.pushError(Error{{}, "error during AST traversing"});
             return tl::make_unexpected(Error{{}, "error during AST traversing"});
         }
     }
@@ -290,7 +294,6 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
     SPDLOG_INFO("Build metadata json");
     auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
     if (!transpiledMetaData) {
-        _stage.pushError(transpiledMetaData.error());
         return tl::make_unexpected(transpiledMetaData.error());
     }
 

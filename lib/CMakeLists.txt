@@ -174,7 +174,6 @@ set (OCCA_TRANSPILER_SOURCES
     core/rewriter/delta/delta_trees.cpp
 
     core/rewriter/impl/dtree_rewriter_proxy.cpp
-    core/rewriter/impl/empty_rewriter_proxy.cpp
     core/rewriter/rewriter_proxy.cpp
     core/rewriter/rewriter_fabric.cpp
 

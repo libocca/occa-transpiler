@@ -18,12 +18,12 @@ HandleResult preValidateOklKernel(const Attr& attr,
         // TODO nested okl kernel function
         //  make appropriate error code
         return tl::make_unexpected(
-            Error{.ec = std::error_code(), .desc = "nested OKL kernels are illegal"});
+            Error{.ec = std::error_code(), .message = "nested OKL kernels are illegal"});
     }
 
     if (!sema.startParsingOklKernel(fd)) {
         return tl::make_unexpected(
-            Error{.ec = std::error_code(), .desc = "nested OKL kernels are illegal"});
+            Error{.ec = std::error_code(), .message = "nested OKL kernels are illegal"});
     }
 
     return {};

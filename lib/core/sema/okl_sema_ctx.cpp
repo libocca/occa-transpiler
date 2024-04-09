@@ -242,7 +242,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
     if (!isLegalLoopLevel(loopTypeAxis.types, parentType)) {
         return tl::make_unexpected(
             Error{.ec = std::error_code(),
-                  .desc = "Cannot have [@inner] loop outside of an [@outer] loop"});
+                  .message = "Cannot have [@inner] loop outside of an [@outer] loop"});
     }
 
     return makeOklLoopInfo(stmt, attr, loopTypeAxis, *_parsingKernInfo, stage)

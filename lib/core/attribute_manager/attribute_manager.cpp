@@ -138,7 +138,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const De
                          name,
                          decl.getDeclKindName());
 
-            return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
+            return tl::make_unexpected(Error{.ec = std::error_code(), .message = "no handler"});
         }
 
         auto [_, isNew] = collectedAttrs.insert(attr);
@@ -178,7 +178,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(const St
                          stmt.getBeginLoc().printToString(stage.getCompiler().getSourceManager()),
                          name,
                          stmt.getStmtClassName());
-            return tl::make_unexpected(Error{.ec = std::error_code(), .desc = "no handler"});
+            return tl::make_unexpected(Error{.ec = std::error_code(), .message = "no handler"});
         }
 
         auto [_, isNew] = collectedAttrs.insert(attr);
