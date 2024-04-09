@@ -15,21 +15,19 @@ using namespace oklt;
 
 namespace {
 HandleResult semaDefaultPre(SessionStage& stage,
-                            OklSemaCtx& sema,
                             const clang::Stmt& stmt,
                             const Attr* attr) {
     if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
-        return preValidateOklForLoopWithoutAttribute(stage, sema, *forStmt, attr);
+        return preValidateOklForLoopWithoutAttribute(stage, *forStmt, attr);
     }
     return {};
 }
 
 HandleResult semaDefaultPost(SessionStage& stage,
-                             OklSemaCtx& sema,
                              const clang::Stmt& stmt,
                              const Attr* attr) {
     if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
-        return postValidateOklForLoopWithoutAttribute(stage, sema, *forStmt, attr);
+        return postValidateOklForLoopWithoutAttribute(stage, *forStmt, attr);
     }
     return {};
 }

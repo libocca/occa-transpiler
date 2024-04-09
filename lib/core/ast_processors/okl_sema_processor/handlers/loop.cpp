@@ -13,15 +13,15 @@ namespace oklt {
 using namespace clang;
 
 HandleResult preValidateOklForLoop(SessionStage& stage,
-                                   OklSemaCtx& sema,
                                    const ForStmt& stmt,
                                    const Attr& attr) {
-    SPDLOG_DEBUG("[Sema] Prevalidate loop with attribute {}", attr.getNormalizedFullName());
+    SPDLOG_DEBUG("[Sema] Pre validate loop with attribute {}", attr.getNormalizedFullName());
     auto params = stage.getAttrManager().parseAttr(stage, attr);
     if (!params) {
         return tl::make_unexpected(std::move(params.error()));
     }
 
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto ok = sema.startParsingAttributedForLoop(stage, stmt, &attr, &params.value());
     if (!ok) {
         return tl::make_unexpected(std::move(ok.error()));
@@ -31,15 +31,19 @@ HandleResult preValidateOklForLoop(SessionStage& stage,
 }
 
 HandleResult preValidateOklForLoopWithoutAttribute(SessionStage& stage,
-                                                   OklSemaCtx& sema,
                                                    const ForStmt& stmt,
                                                    const Attr* attr) {
     // Process only not attributed for statements in kernel methods
-    if (attr || !sema.isParsingOklKernel()) {
+    if (attr) {
         return {};
     }
 
-    SPDLOG_DEBUG("[Sema] Prevalidate loop without attribute");
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    if (!sema.isParsingOklKernel()) {
+        return {};
+    }
+
+    SPDLOG_DEBUG("[Sema] Pre validate loop without attribute");
 
     auto ok = sema.startParsingAttributedForLoop(stage, stmt, nullptr, nullptr);
     if (!ok) {
@@ -50,15 +54,15 @@ HandleResult preValidateOklForLoopWithoutAttribute(SessionStage& stage,
 }
 
 HandleResult postValidateOklForLoop(SessionStage& stage,
-                                    OklSemaCtx& sema,
                                     const clang::ForStmt& stmt,
                                     const Attr& attr) {
-    SPDLOG_DEBUG("[Sema] postValidate loop with attribute {}", attr.getNormalizedFullName());
+    SPDLOG_DEBUG("[Sema] Post validate loop with attribute {}", attr.getNormalizedFullName());
     auto params = stage.getAttrManager().parseAttr(stage, attr);
     if (!params) {
         return tl::make_unexpected(std::move(params.error()));
     }
 
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto ok = sema.stopParsingAttributedForLoop(stmt, &attr, &params.value());
     if (!ok) {
         // make appropriate error code
@@ -69,15 +73,19 @@ HandleResult postValidateOklForLoop(SessionStage& stage,
 }
 
 HandleResult postValidateOklForLoopWithoutAttribute(SessionStage& stage,
-                                                    OklSemaCtx& sema,
                                                     const clang::ForStmt& stmt,
                                                     const Attr* attr) {
     // Process only not attributed for statements in kernel methods
-    if (attr || !sema.isParsingOklKernel()) {
+    if (attr) {
         return {};
     }
 
-    SPDLOG_DEBUG("[Sema] Postvalidate loop without attribute");
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+    if (!sema.isParsingOklKernel()) {
+        return {};
+    }
+
+    SPDLOG_DEBUG("[Sema] Post validate loop without attribute");
 
     auto ok = sema.stopParsingAttributedForLoop(stmt, nullptr, nullptr);
     if (!ok) {

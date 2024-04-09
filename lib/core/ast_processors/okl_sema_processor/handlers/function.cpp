@@ -11,9 +11,9 @@ namespace oklt {
 using namespace clang;
 
 HandleResult preValidateOklKernel(SessionStage& stage,
-                                  OklSemaCtx& sema,
                                   const clang::FunctionDecl& fd,
                                   const clang::Attr& attr) {
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
         //  make appropriate error code
@@ -30,10 +30,10 @@ HandleResult preValidateOklKernel(SessionStage& stage,
 }
 
 HandleResult postValidateOklKernel(SessionStage& stage,
-                                   OklSemaCtx& sema,
                                    const clang::FunctionDecl& fd,
                                    const clang::Attr& attr) {
     // stop parsing of current kernel info and reset internal state of sema
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     sema.stopParsingKernelInfo();
 
     return {};

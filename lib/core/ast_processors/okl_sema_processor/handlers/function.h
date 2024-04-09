@@ -13,11 +13,9 @@ class SessionStage;
 class OklSemaCtx;
 
 HandleResult preValidateOklKernel(SessionStage& stage,
-                                  OklSemaCtx& sema,
                                   const clang::FunctionDecl& fd,
                                   const clang::Attr& attr);
 HandleResult postValidateOklKernel(SessionStage& stage,
-                                   OklSemaCtx& sema,
                                    const clang::FunctionDecl& fd,
                                    const clang::Attr& attr);
 

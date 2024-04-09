@@ -13,22 +13,18 @@ class OklSemaCtx;
 
 // validator and translator for OKL attributed for loop
 HandleResult preValidateOklForLoop(SessionStage&,
-                                   OklSemaCtx& sema,
                                    const clang::ForStmt&,
                                    const clang::Attr&);
 
 HandleResult preValidateOklForLoopWithoutAttribute(SessionStage&,
-                                                   OklSemaCtx& sema,
                                                    const clang::ForStmt&,
                                                    const clang::Attr*);
 
 HandleResult postValidateOklForLoop(SessionStage&,
-                                    OklSemaCtx& sema,
                                     const clang::ForStmt&,
                                     const clang::Attr&);
 
 HandleResult postValidateOklForLoopWithoutAttribute(SessionStage&,
-                                                    OklSemaCtx& sema,
                                                     const clang::ForStmt&,
                                                     const clang::Attr*);
 
