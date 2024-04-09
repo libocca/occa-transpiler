@@ -55,7 +55,5 @@ struct TranspilerSession {
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
     OriginalSourceMapper _sourceMapper;
-
-
 };
 }  // namespace oklt

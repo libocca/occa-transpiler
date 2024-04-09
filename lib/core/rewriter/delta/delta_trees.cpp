@@ -114,8 +114,9 @@ int DeltaTrees::getRangeSize(clang::SourceRange range) const {
     auto [StartFileID, StartOff] = _SM->getDecomposedLoc(cRange.getBegin());
     auto [EndFileID, EndOff] = _SM->getDecomposedLoc(cRange.getEnd());
 
-    if (StartFileID != EndFileID)
+    if (StartFileID != EndFileID) {
         return -1;
+    }
 
     // If edits have been made to this buffer, the delta between the range may
     // have changed.
@@ -128,8 +129,9 @@ int DeltaTrees::getRangeSize(clang::SourceRange range) const {
 
     // Adjust the end offset to the end of the last token, instead of being the
     // start of the last token if this is a token range.
-    if (cRange.isTokenRange())
+    if (cRange.isTokenRange()) {
         EndOff += clang::Lexer::MeasureTokenLength(cRange.getEnd(), *_SM, *_LO);
+    }
 
     auto res = EndOff - StartOff;
     return res;
