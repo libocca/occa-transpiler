@@ -12,7 +12,6 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/LiteralSupport.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
 
@@ -39,7 +38,7 @@ bool isProbablyMacroAttr(const OklAttribute& attr, const std::vector<Token>& tok
     return true;
 }
 
-void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, Rewriter& rewriter) {
+void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, oklt::Rewriter& rewriter) {
     // remove OKL specific attribute in source code
     SourceLocation attrLocStart(tokens[attr.tok_indecies.front()].getLocation());
     SourceLocation attrLocEnd(tokens[attr.tok_indecies.back()].getLastLoc());
@@ -53,7 +52,7 @@ void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, R
 bool replaceOklMacroAttribute(const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
-                              Rewriter& rewriter) {
+                              oklt::Rewriter& rewriter) {
     if (!isProbablyMacroAttr(oklAttr, tokens)) {
         return true;
     }
@@ -114,7 +113,7 @@ std::vector<Token> fetchTokens(Preprocessor& pp) {
         if (tok.is(tok::unknown)) {
             // Check for '@' symbol
             auto spelling = pp.getSpelling(tok);
-            if (spelling.empty() || spelling[0] != OKL_ATTR_MARKER) {
+            if (spelling.empty() || spelling[0] != OKL_ATTR_NATIVE_MARKER) {
                 break;
             }
             tok.setKind(tok::at);
@@ -197,7 +196,8 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
     SPDLOG_DEBUG("stage OKL directive expansion, source:\n\n{}", input.cppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.cppSrc);
@@ -218,7 +218,7 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
         std::make_unique<OklMacroAttributeNormalizerAction>(input, output),
         input_file,
         args,
-        file_name,
+        cppFileName,
         tool_name);
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));

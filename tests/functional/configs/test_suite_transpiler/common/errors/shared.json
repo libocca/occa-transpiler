@@ -1,0 +1,14 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/shared_not_between_outer_inner.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/shared_not_between_outer_inner.err"
+    }
+]

@@ -70,7 +70,7 @@ struct LoopMetaData {
         };
     };
 
-    explicit LoopMetaData(const OklLoopInfo& l, const Rewriter& r) {
+    explicit LoopMetaData(const OklLoopInfo& l, const oklt::Rewriter& r) {
         type = l.type;
         var.type = l.var.typeName;
         var.name = l.var.name;
@@ -200,7 +200,7 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
 }
 #endif
 
-std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const Rewriter& r) {
+std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const oklt::Rewriter& r) {
     auto sz = util::parseStrTo<size_t>(loopInfo.tileSize);
 
     // Prepare first loop

@@ -40,7 +40,6 @@ OklToGnuStageInput toOkltoGnuInput(ExpandMacroStageOutput& output) {
 GnuToStdCppStageInput toStdCppStageInput(OklToGnuStageOutput& output) {
     return {.gnuCppSrc = std::move(output.gnuCppSrc),
             .gnuCppIncs = std::move(output.gnuCppIncs),
-            .gnuMarkers = std::move(output.gnuMarkers),
             .session = output.session};
 }
 

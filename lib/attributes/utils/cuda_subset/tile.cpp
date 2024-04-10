@@ -29,14 +29,13 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const TileParams* params,
                              const LoopOrder& ord,
                              int& openedScopeCounter,
-                             clang::Rewriter& rewriter) {
+                             oklt::Rewriter& rewriter) {
     using namespace oklt::cuda_subset;
 
-    // TODO: this logic should be based on first or second loop, not inner/outer/regular
     static std::map<
         std::tuple<LoopType, LoopOrder>,
         std::function<std::string(
-            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, clang::Rewriter&)>>
+            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, oklt::Rewriter&)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, tile::buildIinnerOuterLoopIdxLineFirst},
@@ -52,13 +51,12 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
 std::string buildCheckLine(const OklLoopInfo& forLoop,
                            const TileParams* params,
                            int& openedScopeCounter,
-                           clang::Rewriter& rewriter) {
+                           oklt::Rewriter& rewriter) {
     if (!params->check) {
         return "";
     }
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
-    // TODO: parse cmp operator
     auto res = util::fmt("if ({} {} {})",
                          forLoop.var.name,
                          cmpStr,
@@ -74,11 +72,10 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
     return res;
 }
 
-// TODO: add check handling
 std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
                                   const TileParams* params,
                                   int& openedScopeCounter,
-                                  clang::Rewriter& rewriter) {
+                                  oklt::Rewriter& rewriter) {
     std::string res;
     res += buildLoopIdxLine(forLoop, params, LoopOrder::First, openedScopeCounter, rewriter);
     res += buildLoopIdxLine(forLoop, params, LoopOrder::Second, openedScopeCounter, rewriter);

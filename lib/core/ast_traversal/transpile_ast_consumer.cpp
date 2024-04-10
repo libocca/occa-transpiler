@@ -41,7 +41,6 @@ void TranspileASTConsumer::HandleTranslationUnit(ASTContext& context) {
 
         auto result = t->applyAstProcessor(tu);
         if (!result) {
-            _stage.pushError(result.error());
             return;
         }
 

@@ -127,7 +127,6 @@ tl::expected<ExprVec, Error> validateDim(const CallExpr& expr,
     return expressions;
 }
 
-// TODO: maybe recursion would look better?
 std::string buildIndexCalculation(const ExprVec& dimVarArgs,
                                   const AttributedDim* params,
                                   const DimOrder& dimOrder,

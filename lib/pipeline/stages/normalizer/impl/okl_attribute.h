@@ -1,11 +1,8 @@
 #pragma once
-
+#include "attributes/attribute_names.h"
 #include <clang/Basic/SourceLocation.h>
 
 namespace oklt {
-
-constexpr char OKL_ATTR_MARKER = '@';
-const std::string OKL_ATTR_PREFIX = "okl_";
 
 struct OklAttribute {
     std::string raw;

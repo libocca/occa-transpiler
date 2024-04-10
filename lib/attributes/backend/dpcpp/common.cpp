@@ -31,7 +31,7 @@ std::string getIdxVariable(const AttributedLoop& loop) {
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
                                        int& openedScopeCounter,
-                                       clang::Rewriter& rewriter) {
+                                       oklt::Rewriter& rewriter) {
     static_cast<void>(openedScopeCounter);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";

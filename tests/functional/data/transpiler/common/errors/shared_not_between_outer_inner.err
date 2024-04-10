@@ -1,0 +1,3 @@
+shared_not_between_outer_inner.cpp:2:5: error: Must define [@shared] variables between [@outer] and [@inner] loops
+    2 |     @shared int shm[10];
+      |     ^

@@ -203,11 +203,11 @@ int main(int argc, char* argv[]) {
                                                userOutput.launcher.sourceCode);
                     oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadataJson);
                 }
-                SPDLOG_INFO("Transpiling success : true");
+                SPDLOG_INFO("Transpilation success");
             } else {
-                SPDLOG_INFO("Transpiling success: false");
+                SPDLOG_ERROR("Transpilation failed");
                 for (const auto& error : result.error()) {
-                    SPDLOG_ERROR(error.desc);
+                    std::cerr << error.desc << "\n";
                 }
             }
         }

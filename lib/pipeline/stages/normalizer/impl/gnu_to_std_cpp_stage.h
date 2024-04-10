@@ -2,9 +2,6 @@
 
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/transpiler_session.h"
-#include "pipeline/stages/normalizer/impl/okl_attr_marker.h"
-
-#include <list>
 
 #include <tl/expected.hpp>
 
@@ -19,7 +16,6 @@ struct GnuToStdCppStageOutput {
 struct GnuToStdCppStageInput {
     std::string gnuCppSrc;
     TransformedFiles gnuCppIncs;
-    std::list<OklAttrMarker> gnuMarkers;
     SharedTranspilerSession session;
 };
 

@@ -7,25 +7,20 @@
 
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
+#include "pipeline/stages/normalizer/impl/okl_attribute.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
+
+namespace {
 
 using namespace oklt;
 using namespace clang;
 
-namespace {
-struct AttrNormalizerCtx {
-    ASTContext* astCtx;
-    Rewriter* rewriter;
-    std::list<OklAttrMarker> markers;
-};
-
-void removeAttr(Rewriter& rewriter, const Attr& attr) {
+void removeAttr(oklt::Rewriter& rewriter, const Attr& attr) {
     auto arange = getAttrFullSourceRange(attr);
     rewriter.RemoveText(arange);
 }
@@ -64,8 +59,13 @@ void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& sta
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
     assert(lastProccesedAttr);
+    auto& sm = stage.getCompiler().getSourceManager();
+    auto& mapper = stage.getSession().getOriginalSourceMapper();
     for (auto* attr : e.getAttrs()) {
-        if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
+        auto attrBegLoc = attr->getRange().getBegin();
+        auto prevFidAttrOffset = sm.getDecomposedLoc(attrBegLoc);
+        if (attr->isCXX11Attribute()) {
+            mapper.updateAttributeOffset(prevFidAttrOffset, attrBegLoc, stage.getRewriter());
             continue;
         }
 
@@ -83,19 +83,21 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProcc
         }
 
         removeAttr(stage.getRewriter(), *attr);
+        auto newAttrLoc = e.getBeginLoc();
+
         insertNormalizedAttr(e, *targetAttr, stage);
         *lastProccesedAttr = attr;
+
+        // Add offset, since after removal of GNU, it will point at the beginning of attribute
+        mapper.updateAttributeOffset(
+            prevFidAttrOffset, newAttrLoc, stage.getRewriter(), CXX_ATTRIBUTE_BEGIN_TO_NAME_OFFSET);
     }
 
     return true;
 }
 
-SourceLocation getMarkerSourceLoc(const OklAttrMarker& marker, const SourceManager& srcMng) {
-    return srcMng.translateLineCol(srcMng.getMainFileID(), marker.loc.line, marker.loc.col);
-}
-
-// Traverse AST and normalize GMU attributes and fix markers to standard C++ attribute
-// representation
+// Traverse AST and convert GNU attributes and to standard C++ attribute
+// syntax and unified source location
 class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer> {
    public:
     explicit GnuToCppAttrNormalizer(SessionStage& stage)
@@ -167,7 +169,8 @@ struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
    protected:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                           llvm::StringRef in_file) override {
-        _stage = std::make_unique<SessionStage>(_session, compiler);
+        _stage =
+            std::make_unique<SessionStage>(_session, compiler, RewriterProxyType::WithDeltaTree);
         if (!_stage->setUserCtx("input", &_input)) {
             _stage->pushError(std::error_code(),
                               "failed to set user ctx for GnuToStdCppAttributeNormalizerAction");
@@ -222,7 +225,8 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
     }
 
     Twine tool_name = "okl-transpiler-normalization-to-cxx";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.gnuCppSrc);
@@ -243,7 +247,7 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
             std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
             input_file,
             args,
-            file_name,
+            cppFileName,
             tool_name)) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
     }

@@ -5,8 +5,6 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/vfs/overlay_fs.h"
 
-#include <memory>
-
 namespace oklt {
 
 using namespace clang;
@@ -29,6 +27,7 @@ std::unique_ptr<ASTConsumer> TranspileFrontendAction::CreateASTConsumer(Compiler
 
         compiler.getPreprocessor().addPPCallbacks(std::move(callback));
     }
+    compiler.getDiagnostics().setShowColors(true);
 
     return std::move(astConsumer);
 }
