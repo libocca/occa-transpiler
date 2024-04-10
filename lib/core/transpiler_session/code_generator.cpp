@@ -120,6 +120,8 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     // set options from parent compiler
     invocation->getHeaderSearchOpts() = stage.getCompiler().getHeaderSearchOpts();
     invocation->getPreprocessorOpts() = stage.getCompiler().getPreprocessorOpts();
+    // TODO get this info from user input aka json prop file
+    invocation->getDiagnosticOpts().Warnings = {"no-extra-tokens", "no-invalid-pp-token"};
 
     invocation->getFrontendOpts().Inputs.push_back(
         FrontendInputFile("okl_kernel.cpp", Language::CXX));

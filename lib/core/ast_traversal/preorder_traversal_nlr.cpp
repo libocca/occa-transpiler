@@ -187,12 +187,30 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     return {};
 }
 
+template <typename NodeType>
+bool skipNode(const NodeType& n, SessionStage& s) {
+    const auto& sm = s.getCompiler().getSourceManager();
+    if (sm.isInSystemHeader(n.getBeginLoc())) {
+        return true;
+    }
+
+    if (sm.isInSystemMacro(n.getBeginLoc())) {
+        return true;
+    }
+
+    return false;
+}
+
 template <typename TraversalType, typename NodeType>
 bool traverseNode(TraversalType& traversal,
                   NodeType* node,
                   AstProcessorManager& procMng,
                   SessionStage& stage) {
     if (node == nullptr) {
+        return true;
+    }
+
+    if (skipNode(*node, stage)) {
         return true;
     }
 

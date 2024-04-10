@@ -55,7 +55,9 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
     auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
 
-    SPDLOG_DEBUG("Handle global function '{}'", decl.getNameAsString());
+    SPDLOG_DEBUG("Handle global function '{}' at {}",
+                 decl.getNameAsString(),
+                 decl.getLocation().printToString(s.getCompiler().getSourceManager()));
 
     s.getRewriter().InsertTextBefore(loc, spacedModifier);
 
@@ -65,13 +67,6 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
 HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
                              SessionStage& s,
                              const std::string& qualifier) {
-    const auto& sm = s.getCompiler().getSourceManager();
-    // TODO move the logic to ast traversal to be common for all handlers
-    // skip system headers
-    if (SrcMgr::isSystem(sm.getFileCharacteristic(cxxRecord.getLocation()))) {
-        return {};
-    }
-
     auto spacedModifier = qualifier + " ";
 
     // for all explicit constructors/methods add qualifier
