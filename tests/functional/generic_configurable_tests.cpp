@@ -97,7 +97,7 @@ void compareError(const std::string& sourceFilePath, const oklt::UserResult& res
     EXPECT_EQ(res.error().empty(), refErrorMessage.empty())
         << "No error when expected, or vice versa";
     auto normalizeError = res.error().front();
-    auto errorMessage = normalizeError.message;
+    auto errorMessage = normalizeError.desc;
 
     // Since path to file in error message depends on pwd, we have to replace it with just filename
     // Error must start with sourceFilePath
@@ -194,7 +194,7 @@ TEST_P(GenericTest, OCCATests) {
                 if (!transpileResult && cmp != Compare::ERROR_MESSAGE) {
                     std::string error;
                     for (const auto& e : transpileResult.error()) {
-                        error += e.message + "\n";
+                        error += e.desc + "\n";
                     }
                     EXPECT_TRUE(false) << "File: " << conf.source << std::endl
                                        << "Transpile error:" << error << std::endl;
@@ -240,7 +240,7 @@ TEST_P(GenericTest, OCCATests) {
                 if (!transpileResult && cmp != Compare::ERROR_MESSAGE) {
                     std::string error;
                     for (const auto& e : transpileResult.error()) {
-                        error += e.message + "\n";
+                        error += e.desc + "\n";
                     }
                     EXPECT_TRUE(false) << "File: " << conf.source << std::endl
                                        << "Normalize & Transpile error:" << error << std::endl;

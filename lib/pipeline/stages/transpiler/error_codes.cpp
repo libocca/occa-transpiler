@@ -43,6 +43,6 @@ std::error_code make_error_code(OkltTranspilerErrorCode e) {
 
 namespace oklt {
 Error makeError(OkltTranspilerErrorCode ec, std::string desc) {
-    return {.ec = make_error_code(ec), .message = std::move(desc)};
+    return {.ec = make_error_code(ec), .desc = std::move(desc)};
 }
 }  // namespace oklt

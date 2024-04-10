@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
             if (!result) {
                 std::cout << "Normalization errors: " << std::endl;
                 for (const auto& error : result.error()) {
-                    std::cout << error.message << std::endl;
+                    std::cout << error.desc << std::endl;
                 }
                 std::cout << "err to normalize file " << input << '\n';
                 return 1;
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
             } else {
                 SPDLOG_ERROR("Transpilation failed");
                 for (const auto& error : result.error()) {
-                    std::cerr << error.message << "\n";
+                    std::cerr << error.desc << "\n";
                 }
             }
         }

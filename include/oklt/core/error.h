@@ -8,7 +8,7 @@ namespace oklt {
 
 struct Error {
     std::error_code ec;
-    std::string message;
+    std::string desc;
     std::any ctx;
 };
 

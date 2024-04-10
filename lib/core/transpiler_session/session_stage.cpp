@@ -111,7 +111,7 @@ void SessionStage::pushError(std::error_code ec, std::string desc) {
 
 void SessionStage::pushError(const Error& err) {
     // Exit if no message available
-    if (err.message.empty()) {
+    if (err.desc.empty()) {
         return;
     }
 
@@ -122,12 +122,12 @@ void SessionStage::pushError(const Error& err) {
         auto begLoc = range.getBegin();
         auto& SM = getCompiler().getSourceManager();
         StoredDiagnostic sd(
-            DiagnosticsEngine::Level::Error, 0, err.message, FullSourceLoc(begLoc, SM), {}, {});
+            DiagnosticsEngine::Level::Error, 0, err.desc, FullSourceLoc(begLoc, SM), {}, {});
         _session.pushDiagnosticMessage(sd, *this);
         return;
     }
 
-    _session.pushError(err.ec, std::move(err.message));
+    _session.pushError(err.ec, std::move(err.desc));
 }
 
 void SessionStage::pushWarning(std::string desc) {

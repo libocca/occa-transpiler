@@ -25,7 +25,7 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
         return tl::make_unexpected(Error{
-            .ec = std::error_code(), .message = "@outer: failed to fetch loop meta data from sema"});
+            .ec = std::error_code(), .desc = "@outer: failed to fetch loop meta data from sema"});
     }
 
     auto updatedParams = *params;

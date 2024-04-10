@@ -33,6 +33,6 @@ std::error_code make_error_code(OkltNormalizerErrorCode e) {
 
 namespace oklt {
 Error makeError(OkltNormalizerErrorCode ec, std::string desc) {
-    return {.ec = make_error_code(ec), .message = std::move(desc)};
+    return {.ec = make_error_code(ec), .desc = std::move(desc)};
 }
 }  // namespace oklt

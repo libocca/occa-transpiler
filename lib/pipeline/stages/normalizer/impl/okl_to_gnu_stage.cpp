@@ -237,7 +237,7 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
                 return true;
             });
         if (!result) {
-            _session.pushError(result.error().ec, result.error().message);
+            _session.pushError(result.error().ec, result.error().desc);
             return false;
         }
 
