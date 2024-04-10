@@ -27,7 +27,9 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     // INFO: hot fix for *.okl extention
     auto cppFileNamePath = input.sourcePath;
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
+
+    // TODO get this info from user input aka json prop file
+    std::vector<std::string> args = {"-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I."};
 
     for (const auto& define : input.defines) {
         std::string def = "-D" + define;

@@ -57,6 +57,40 @@ bool isHeaderGuardEx(StringRef name) {
     return false;
 }
 
+size_t countRangeLines(const SourceRange& range, const SourceManager& sm) {
+    auto lines = sm.getExpansionLineNumber(range.getEnd());
+    lines -= sm.getExpansionLineNumber(range.getBegin());
+    return lines;
+}
+
+void removeCommentAfterDirective(std::list<SourceRange>& comments,
+                                 const SourceLocation& directiveLoc,
+                                 const SourceManager& sm,
+                                 oklt::Rewriter& rewriter) {
+    FullSourceLoc directiveFullLoc(directiveLoc, sm);
+    for (auto it = comments.begin(); it != comments.end(); ++it) {
+        FullSourceLoc commentFullLoc(it->getBegin(), sm);
+
+        if (commentFullLoc.getFileID() != directiveFullLoc.getFileID()) {
+            continue;
+        }
+
+        auto commentLineNumber = commentFullLoc.getLineNumber();
+        auto directiveLineNumber = directiveFullLoc.getLineNumber();
+
+        if (commentLineNumber > directiveLineNumber) {
+            break;
+        }
+        if (commentLineNumber != directiveLineNumber) {
+            continue;
+        }
+
+        auto lines = countRangeLines(*it, sm);
+        rewriter.ReplaceText(*it, std::string(lines, '\n'));
+        comments.erase(it++);
+    }
+}
+
 class CondDirectiveCallbacks : public PPCallbacks {
    public:
     struct Result {
@@ -95,19 +129,13 @@ class CondDirectiveCallbacks : public PPCallbacks {
 
 class DefCondDirectiveCallbacks : public PPCallbacks {
    private:
-    MacroInfo* getMacroInfoForUserMacro(SourceLocation loc, const MacroDefinition& md) {
-        if (sm.isInSystemHeader(loc)) {
-            return nullptr;
-        }
+    bool isEnabled(SourceLocation loc, const MacroDefinition& md) {
         auto* mi = md.getMacroInfo();
         if (!mi) {
-            return nullptr;
-        }
-        if (mi->isUsedForHeaderGuard()) {
-            return nullptr;
+            return false;
         }
 
-        return mi;
+        return mi->isEnabled();
     }
 
    public:
@@ -126,8 +154,7 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
     const SourceManager& sm;
 
     void Ifdef(SourceLocation loc, const Token& macroNameTok, const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
 
@@ -140,18 +167,18 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         }
 
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("if ") + (mi->isEnabled() ? "1" : "0"));
+                             std::string("if ") + (isEnabled(loc, md) ? "1" : "0"));
     }
 
     void Elifdef(SourceLocation loc,
                  const Token& macroNameTok,
                  const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
+
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("elif ") + (mi->isEnabled() ? "1" : "0"));
+                             std::string("elif ") + (isEnabled(loc, md) ? "1" : "0"));
     }
 
     void Elifdef(SourceLocation loc, SourceRange conditionRange, SourceLocation ifLoc) override {
@@ -162,8 +189,15 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
     }
 
     void Ifndef(SourceLocation loc, const Token& macroNameTok, const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
+        if (sm.isInSystemHeader(loc)) {
+            return;
+        }
+
+        auto* mi = md.getMacroInfo();
         if (!mi) {
+            return;
+        }
+        if (mi->isUsedForHeaderGuard()) {
             return;
         }
 
@@ -176,18 +210,18 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
         }
 
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("if ") + (mi->isEnabled() ? "0" : "1"));
+                             std::string("if ") + (isEnabled(loc, md) ? "0" : "1"));
     }
 
     void Elifndef(SourceLocation loc,
                   const Token& macroNameTok,
                   const MacroDefinition& md) override {
-        auto mi = getMacroInfoForUserMacro(loc, md);
-        if (!mi) {
+        if (sm.isInSystemHeader(loc)) {
             return;
         }
+
         results.emplace_back(SourceRange{loc, macroNameTok.getLocation()},
-                             std::string("elif ") + (mi->isEnabled() ? "0" : "1"));
+                             std::string("elif ") + (isEnabled(loc, md) ? "0" : "1"));
     }
 
     void Elifndef(SourceLocation loc, SourceRange conditionRange, SourceLocation IfLoc) override {
@@ -195,6 +229,13 @@ class DefCondDirectiveCallbacks : public PPCallbacks {
             return;
         }
         results.emplace_back(SourceRange{loc, conditionRange.getEnd()}, std::string("elif 0"));
+    }
+
+    void Endif(SourceLocation loc, SourceLocation IfLoc) override {
+        if (sm.isInSystemHeader(loc)) {
+            return;
+        }
+        results.emplace_back(SourceRange{loc, loc.getLocWithOffset(5)}, std::string("endif"));
     }
 };
 
@@ -275,6 +316,21 @@ class DefineDirectiveCallbacks : public PPCallbacks {
     }
 };
 
+struct CommentDeleter : public CommentHandler {
+    std::list<SourceRange> comments;
+    const SourceManager& sm;
+    CommentDeleter(const SourceManager& sm)
+        : sm(sm) {}
+
+    bool HandleComment(Preprocessor&, SourceRange commentRange) override {
+        if (sm.isInSystemHeader(commentRange.getBegin())) {
+            return false;
+        }
+        comments.emplace_back(commentRange);
+        return false;
+    }
+};
+
 std::list<Token> lexMacroToken(Preprocessor& pp) {
     std::list<Token> macros;
     while (true) {
@@ -336,6 +392,9 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     pp.EnterMainSourceFile();
     auto& rewriter = stage.getRewriter();
 
+    auto commentDeleter = std::make_unique<CommentDeleter>(sm);
+    pp.addCommentHandler(commentDeleter.get());
+
     auto macros = lexMacroToken(pp);
 
     // do macro expansion
@@ -394,9 +453,11 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
 
         auto hashLoc = findPreviousTokenKind(
             mi->getDefinitionLoc(), sm, pp.getLangOpts(), tok::TokenKind::hash);
-        auto lines = sm.getExpansionLineNumber(mi->getDefinitionEndLoc());
-        lines -= sm.getExpansionLineNumber(mi->getDefinitionLoc());
+        auto lines = countRangeLines({mi->getDefinitionLoc(), mi->getDefinitionEndLoc()}, sm);
         rewriter.ReplaceText({hashLoc, mi->getDefinitionEndLoc()}, std::string(lines, '\n'));
+
+        FullSourceLoc macroFullLoc(hashLoc, sm);
+        removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
     }
 
     // remove empty macros from source code
@@ -407,20 +468,26 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     // macro can be under #if/#elif
     // in such case expansion ctx does not work so just replace macro dependent condition by
     // context free true/false
-    for (auto& c : condCallback->results) {
+    for (const auto& c : condCallback->results) {
         if (c.conditionValue == PPCallbacks::CVK_NotEvaluated) {
             continue;
         }
 
-        rewriter.ReplaceText(sm.getExpansionRange(c.conditionRange),
+        auto condExpanionRange = sm.getExpansionRange(c.conditionRange);
+        rewriter.ReplaceText(condExpanionRange,
                              c.conditionValue == PPCallbacks::CVK_True ? "1" : "0");
+        // remove comment behind the macro if such exists
+        FullSourceLoc macroFullLoc(condExpanionRange.getBegin(), sm);
+        removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
     }
 
     // macro can be under #ifdef/#elifdef etc
     // in such case expansion ctx does not work so just replace macro dependent condition by
     // context free true/false
-    for (auto& c : defCondCallback->results) {
+    for (const auto& c : defCondCallback->results) {
         rewriter.ReplaceText(c.range, c.replacement);
+        FullSourceLoc macroFullLoc(c.range.getBegin(), sm);
+        removeCommentAfterDirective(commentDeleter->comments, macroFullLoc, sm, rewriter);
     }
 }
 
