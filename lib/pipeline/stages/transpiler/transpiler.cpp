@@ -4,6 +4,7 @@
 #include "core/transpiler_session/session_result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
+#include "tl/expected.hpp"
 
 #include <clang/Tooling/Tooling.h>
 
@@ -24,8 +25,8 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
 
     Twine tool_name = "okl-transpiler";
     // INFO: hot fix for *.okl extention
-    std::string rawFileName = "main_kernel.cpp";
-    Twine file_name(rawFileName);
+    auto cppFileNamePath = input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
     // TODO get this info from user input aka json prop file
     std::vector<std::string> args = {"-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I."};
@@ -45,7 +46,7 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     bool ret = runToolOnCodeWithArgs(std::make_unique<oklt::TranspileFrontendAction>(*session),
                                      code,
                                      args,
-                                     file_name,
+                                     cppFileName,
                                      tool_name,
                                      std::make_shared<PCHContainerOperations>());
 
@@ -54,7 +55,7 @@ TranspilerSessionResult runTranspilerStage(SharedTranspilerSession session) {
     if (!warnings.empty()) {
         SPDLOG_INFO("Transpilation warnings: ");
         for (const auto& w : warnings) {
-            SPDLOG_WARN("{}", w.desc);
+            llvm::outs() << w.desc << "\n";
         }
     }
     if (!ret || !session->getErrors().empty()) {

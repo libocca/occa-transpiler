@@ -35,7 +35,7 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
                                  const OklLoopInfo& forLoop,
                                  [[maybe_unused]] const TileParams* params,
                                  size_t& parenCnt,
-                                 clang::Rewriter& rewriter) {
+                                 oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
@@ -70,7 +70,7 @@ std::string buildSecondLoopString(const ForStmt& stmt,
                                   const OklLoopInfo& forLoop,
                                   const TileParams* params,
                                   size_t& parenCnt,
-                                  clang::Rewriter& rewriter) {
+                                  oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
@@ -118,7 +118,7 @@ std::string buildCheckString(const ForStmt& stmt,
                              const OklLoopInfo& forLoop,
                              [[maybe_unused]] const TileParams* params,
                              size_t& parenCnt,
-                             clang::Rewriter& rewriter) {
+                             oklt::Rewriter& rewriter) {
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
     auto ret = util::fmt("if ({} {} {})",

@@ -11,7 +11,6 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Analysis/MacroExpansionContext.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
 
@@ -67,7 +66,7 @@ size_t countRangeLines(const SourceRange& range, const SourceManager& sm) {
 void removeCommentAfterDirective(std::list<SourceRange>& comments,
                                  const SourceLocation& directiveLoc,
                                  const SourceManager& sm,
-                                 Rewriter& rewriter) {
+                                 oklt::Rewriter& rewriter) {
     FullSourceLoc directiveFullLoc(directiveLoc, sm);
     for (auto it = comments.begin(); it != comments.end(); ++it) {
         FullSourceLoc commentFullLoc(it->getBegin(), sm);
@@ -548,7 +547,9 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
     SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.cppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
+
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.cppSrc);
@@ -566,7 +567,7 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
 
     ExpandMacroStageOutput output = {.session = input.session};
     auto ok = tooling::runToolOnCodeWithArgs(
-        std::make_unique<MacroExpander>(input, output), input_file, args, file_name, tool_name);
+        std::make_unique<MacroExpander>(input, output), input_file, args, cppFileName, tool_name);
 
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));
@@ -577,4 +578,3 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
     return output;
 }
 }  // namespace oklt
-

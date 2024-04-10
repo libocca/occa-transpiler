@@ -8,6 +8,7 @@
 
 #include "core/attribute_manager/attribute_manager.h"
 
+#include "core/utils/attributes.h"
 #include "core/vfs/overlay_fs.h"
 
 #include <clang/AST/Attr.h>
@@ -72,7 +73,8 @@ HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionS
         sema.setLoopInfo(tnode.li);
         auto result = applyTranspilationToNode(tnode.attr, tnode.node, stage);
         if (!result) {
-            return tl::make_unexpected(result.error());
+            result.error().ctx = tnode.attr->getRange();
+            return result;
         }
     }
 

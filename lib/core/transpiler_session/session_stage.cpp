@@ -3,25 +3,28 @@
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/transpiler_session.h"
 
+#include <spdlog/spdlog.h>
+
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
 
 namespace oklt {
 using namespace clang;
 
-SessionStage::SessionStage(TranspilerSession& session, CompilerInstance& compiler)
+SessionStage::SessionStage(TranspilerSession& session,
+                           CompilerInstance& compiler,
+                           RewriterProxyType rwType)
     : _session(session),
       _compiler(compiler),
       _backend(session.input.backend),
       _astProcType(session.input.astProcType),
-      _rewriter(std::make_unique<clang::Rewriter>(_compiler.getSourceManager(),
-                                                  _compiler.getLangOpts())) {}
+      _rewriter(makeRewriterProxy(_compiler.getSourceManager(), _compiler.getLangOpts(), rwType)) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
     return _compiler;
 }
 
-clang::Rewriter& SessionStage::getRewriter() {
+oklt::Rewriter& SessionStage::getRewriter() {
     return *_rewriter.get();
 }
 
@@ -31,7 +34,7 @@ AttributeManager& SessionStage::getAttrManager() {
 
 void SessionStage::setLauncherMode() {
     _rewriter =
-        std::make_unique<clang::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
+        std::make_unique<oklt::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
     _backend = TargetBackend::_LAUNCHER;
 }
 
@@ -99,7 +102,7 @@ AstProcessorType SessionStage::getAstProccesorType() const {
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {
-    _session.pushDiagnosticMessage(message);
+    _session.pushDiagnosticMessage(message, *this);
 }
 
 void SessionStage::pushError(std::error_code ec, std::string desc) {
@@ -107,6 +110,23 @@ void SessionStage::pushError(std::error_code ec, std::string desc) {
 }
 
 void SessionStage::pushError(const Error& err) {
+    // Exit if no message available
+    if (err.desc.empty()) {
+        return;
+    }
+
+    // If there is source range info, we can generate diagnostic to generate properly formatted
+    // error message
+    if (err.ctx.has_value() && err.ctx.type() == typeid(clang::SourceRange)) {
+        auto range = std::any_cast<clang::SourceRange>(err.ctx);
+        auto begLoc = range.getBegin();
+        auto& SM = getCompiler().getSourceManager();
+        StoredDiagnostic sd(
+            DiagnosticsEngine::Level::Error, 0, err.desc, FullSourceLoc(begLoc, SM), {}, {});
+        _session.pushDiagnosticMessage(sd, *this);
+        return;
+    }
+
     _session.pushError(err.ec, std::move(err.desc));
 }
 

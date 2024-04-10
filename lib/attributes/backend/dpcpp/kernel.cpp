@@ -1,5 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/kernel_utils.h"
+#include "core/rewriter/rewriter_proxy.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
@@ -55,7 +56,7 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
     return out.str();
 }
 
-std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo, Rewriter& r) {
+std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo, oklt::Rewriter& r) {
     std::stringstream out;
 
     kernelInfo.args.clear();

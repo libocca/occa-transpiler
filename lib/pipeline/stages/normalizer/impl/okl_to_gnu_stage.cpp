@@ -1,5 +1,7 @@
 #include <oklt/core/error.h>
 
+#include "attributes/attribute_names.h"
+#include "core/rewriter/impl/dtree_rewriter_proxy.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/vfs/overlay_fs.h"
 
@@ -11,11 +13,8 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Analysis/MacroExpansionContext.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
-
-#include <set>
 
 namespace {
 
@@ -39,17 +38,10 @@ Token getRightNeigbour(const OklAttribute& attr, const std::vector<Token>& token
                                                      : Token();
 }
 
-void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, Rewriter& rewriter) {
-    // remove OKL specific attribute in source code
-    SourceLocation attrLocStart(tokens[attr.tok_indecies.front()].getLocation());
-    SourceLocation attrLocEnd(tokens[attr.tok_indecies.back()].getLastLoc());
-    SourceRange attrSrcRange(attrLocStart, attrLocEnd);
-    rewriter.RemoveText(attrSrcRange);
-}
-
 OklAttrMarker makeOklAttrMarker(const Preprocessor& pp,
                                 const OklAttribute& oklAtr,
                                 const SourceLocation loc) {
+    auto isValid = loc.isValid();
     return {.attr = oklAtr,
             .loc = {.line = pp.getSourceManager().getPresumedLineNumber(loc),
                     .col = pp.getSourceManager().getPresumedColumnNumber(loc)}};
@@ -64,6 +56,33 @@ SourceLocation findForKwLocBefore(const std::vector<Token> tokens, size_t start)
     }
     return SourceLocation();
 }
+
+uint32_t getTokenOffset(const Token& tok, const Preprocessor& pp) {
+    return pp.getSourceManager().getFileOffset(tok.getLocation());
+}
+
+std::pair<FileID, uint32_t> getTokenFidLineNumber(const Token& tok, const Preprocessor& pp) {
+    return {pp.getSourceManager().getFileID(tok.getLocation()),
+            pp.getSourceManager().getSpellingLineNumber(tok.getLocation())};
+}
+
+uint32_t gettokenColNumber(const Token& tok, const Preprocessor& pp) {
+    return pp.getSourceManager().getSpellingColumnNumber(tok.getLocation());
+}
+
+std::string getTokenLine(const Token& tok, const Preprocessor& pp) {
+    auto& SM = pp.getSourceManager();
+    auto [fileID, lineNumber] = getTokenFidLineNumber(tok, pp);
+    llvm::StringRef bufferData = SM.getBufferData(fileID);
+    auto locStart = SM.translateLineCol(fileID, lineNumber, 1);
+    auto startOffset = SM.getFileOffset(locStart);
+    auto endOffset = bufferData.find('\n', startOffset);  // FIXME: is that portable?
+    if (endOffset == llvm::StringRef::npos) {
+        endOffset = bufferData.size();
+    }
+    return std::string(bufferData.substr(startOffset, endOffset - startOffset));
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
@@ -71,13 +90,31 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
                               const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
-                              Rewriter& rewriter) {
+                              oklt::Rewriter& rewriter,
+                              TranspilerSession& session) {
     // TODO log each modification to adjust marker line col coordinate accordingly
-    removeOklAttr(tokens, oklAttr, rewriter);
+    auto& attrBegToken = tokens[oklAttr.tok_indecies.front()];
+    if (attrBegToken.getLocation().isInvalid()) {
+        SPDLOG_ERROR("Invalid attribute token location");
+        return false;
+    }
+    auto oklAttrOffset = getTokenOffset(attrBegToken, pp);
+    auto oklAttrColNumber = gettokenColNumber(attrBegToken, pp);
+    auto attrFidLine = getTokenFidLineNumber(attrBegToken, pp);
+
+    // Insert original line to the originalLines mapping if needed
+    auto& mapper = session.getOriginalSourceMapper();
+    auto attrLine = getTokenLine(attrBegToken, pp);
+    mapper.addOriginalLine(attrFidLine, attrLine);
 
     auto leftNeighbour = getLeftNeigbour(oklAttr, tokens);
     auto rightNeighbour = getRightNeigbour(oklAttr, tokens);
     auto insertLoc(tokens[oklAttr.tok_indecies.front()].getLocation());
+
+    SourceLocation attrLocStart(tokens[oklAttr.tok_indecies.front()].getLocation());
+    SourceLocation attrLocEnd(tokens[oklAttr.tok_indecies.back()].getLastLoc());
+    SourceRange attrSrcRange(attrLocStart, attrLocEnd);
+    int attrOffsetFromBeginToName = GNU_ATTRIBUTE_BEGIN_TO_NAME_OFFSET;  // 2 for CXX, 15 for GNU
 
     // fix malformed C++ syntax like for(init;cond;step;@outer) to [[okl::outer]]
     // for(init;cond;step) we assume that attribute is inside of for loop and 'for' keyword is
@@ -94,12 +131,15 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
         }
         auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
         rewriter.InsertTextBefore(forLoc, gnuAttr);
+        rewriter.RemoveText(attrSrcRange);
+        insertLoc = forLoc;
     }
     // INFO: just replace directly with standard attribute
     // if it's originally at the beginning, or an in-place type attribute.
     else if (isProbablyAtBeginnigOfExpr(leftNeighbour, rightNeighbour)) {
         auto cppAttr = wrapAsSpecificCxxAttr(oklAttr);
-        rewriter.InsertTextBefore(insertLoc, cppAttr);
+        attrOffsetFromBeginToName = CXX_ATTRIBUTE_BEGIN_TO_NAME_OFFSET;
+        rewriter.ReplaceText(attrSrcRange, cppAttr);
     }
     // INFO: attribute is not at the beginning of expr so wrap it as GNU.
     // GNU attribute has more diversity for locations (and it's a nightmare for parser and AST to
@@ -111,8 +151,14 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     // error will be generated by clang AST parser
     else {
         auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
-        rewriter.InsertTextBefore(insertLoc, gnuAttr);
+        rewriter.ReplaceText(attrSrcRange, gnuAttr);
         gnu_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, insertLoc));
+    }
+
+    // Save offset to original column mapping
+    if (!mapper.addAttributeColumn(
+            insertLoc, oklAttrColNumber, rewriter, attrOffsetFromBeginToName)) {
+        SPDLOG_ERROR("OKL to GNU attribute stage expected Rewriter with DeltaTrees");
     }
 
     SPDLOG_DEBUG("removed attr: {} at loc: {}",
@@ -179,7 +225,7 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
             return false;
         }
 
-        SessionStage stage{_session, compiler};
+        SessionStage stage{_session, compiler, RewriterProxyType::WithDeltaTree};
         auto& rewriter = stage.getRewriter();
 
         auto result = visitOklAttributes(
@@ -187,7 +233,7 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
             pp,
             [this, &rewriter](
                 const OklAttribute& attr, const std::vector<Token>& tokens, Preprocessor& pp) {
-                replaceOklByGnuAttribute(_output.gnuMarkers, attr, tokens, pp, rewriter);
+                replaceOklByGnuAttribute(_output.gnuMarkers, attr, tokens, pp, rewriter, _session);
                 return true;
             });
         if (!result) {
@@ -231,7 +277,8 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
     SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.oklCppSrc);
 
     Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    Twine file_name("main_kernel.cpp");
+    auto cppFileNamePath = input.session->input.sourcePath;
+    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
     std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
 
     auto input_file = std::move(input.oklCppSrc);
@@ -252,7 +299,7 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
         std::make_unique<OklToGnuAttributeNormalizerAction>(input, output),
         input_file,
         args,
-        file_name,
+        cppFileName,
         tool_name);
     if (!ok) {
         return tl::make_unexpected(std::move(output.session->getErrors()));

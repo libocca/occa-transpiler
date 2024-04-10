@@ -143,6 +143,7 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPreActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
+            result.error().ctx = attr->getRange();
             return result;
         }
     }
@@ -166,6 +167,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     if (attrs.empty()) {
         auto result = procMng.runPostActionNodeHandle(procType, nullptr, node, sema, stage);
         if (!result) {
+            result.error().ctx = node.getSourceRange();
             return result;
         }
         if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
@@ -178,6 +180,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPostActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
+            result.error().ctx = attr->getRange();
             return result;
         }
         transpilationAccumulator.push_back(TranspilationNode{
@@ -214,32 +217,38 @@ bool traverseNode(TraversalType& traversal,
         return true;
     }
 
-    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto procType = stage.getAstProccesorType();
+    auto result = [&]() -> HandleResult {
+        auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
+        auto procType = stage.getAstProccesorType();
 
-    auto attrsResult = getNodeAttrs(*node, stage);
-    if (!attrsResult) {
-        stage.pushError(std::move(attrsResult.error()));
-        return false;
-    }
+        auto attrsResult = getNodeAttrs(*node, stage);
+        if (!attrsResult) {
+            attrsResult.error().ctx = node->getSourceRange();
+            return tl::make_unexpected(attrsResult.error());
+        }
 
-    const auto& attrNode = tryGetAttrNode(*node);
-    auto result = runFromRootToLeaves(
-        traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        const auto& attrNode = tryGetAttrNode(*node);
+        auto result = runFromRootToLeaves(
+            traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        if (!result) {
+            return result;
+        }
+
+        // dispatch the next node
+        if (!dispatchTraverseFunc(traversal, node)) {
+            return tl::make_unexpected(Error{});
+        }
+
+        result = runFromLeavesToRoot(
+            traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        if (!result) {
+            return result;
+        }
+        return {};
+    }();
+
     if (!result) {
-        stage.pushError(std::move(result.error()));
-        return false;
-    }
-
-    // dispatch the next node
-    if (!dispatchTraverseFunc(traversal, node)) {
-        return false;
-    }
-
-    result = runFromLeavesToRoot(
-        traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
-    if (!result) {
-        stage.pushError(std::move(result.error()));
+        stage.pushError(result.error());
         return false;
     }
 

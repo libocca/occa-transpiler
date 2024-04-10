@@ -40,7 +40,7 @@ std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, 
     return out.str();
 }
 
-std::string getFunctionParamStr(const FunctionDecl& func, Rewriter& r) {
+std::string getFunctionParamStr(const FunctionDecl& func, oklt::Rewriter& r) {
     auto typeLoc = func.getFunctionTypeLoc();
     return r.getRewrittenText(typeLoc.getParensRange());
 }
