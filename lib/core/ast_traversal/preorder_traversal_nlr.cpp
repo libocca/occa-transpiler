@@ -308,6 +308,10 @@ tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::a
         return tl::make_unexpected(transpiledResult.error());
     }
 
+    if (sema.getProgramMetaData().kernels.empty()) {
+        return tl::make_unexpected(Error{{}, "Error: No [@kernel] functions found"});
+    }
+
     // 2. generate build json
     SPDLOG_INFO("Build metadata json");
     auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);

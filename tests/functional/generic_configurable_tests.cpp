@@ -91,7 +91,9 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
 }
 
 namespace {
-void compareError(const std::string& sourceFilePath, const oklt::UserResult& res, const std::string& refErrorMessage) {
+void compareError(const std::string& sourceFilePath,
+                  const oklt::UserResult& res,
+                  const std::string& refErrorMessage) {
     // TODO: currently compare only first error to the whole file. There can be
     // multiple errors
     EXPECT_EQ(res.error().empty(), refErrorMessage.empty())
@@ -102,9 +104,16 @@ void compareError(const std::string& sourceFilePath, const oklt::UserResult& res
     // Since path to file in error message depends on pwd, we have to replace it with just filename
     // Error must start with sourceFilePath
     auto filename = fs::path(sourceFilePath).filename().string();
-    errorMessage.replace(0, sourceFilePath.size(), filename);
+    if (errorMessage.find(sourceFilePath) == 0) {
+        errorMessage.replace(0, sourceFilePath.size(), filename);
+    }
 
-    EXPECT_EQ(errorMessage, refErrorMessage) << "Error messages are different";
+    if (errorMessage != refErrorMessage) {
+        std::cout << "hello\n";
+    }
+
+    EXPECT_EQ(errorMessage, refErrorMessage)
+        << "Error message is different for file: " << sourceFilePath;
 }
 }  // namespace
 

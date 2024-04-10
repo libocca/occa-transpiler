@@ -79,6 +79,16 @@ bool verifyLoopStructure(const std::list<OklLoopInfo*>& topLevelOuterLoops) {
 tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
     if (topOuterLoops.empty()) {
+        // If there is outer somewhere, but no on the top level
+        for (auto& loop : kernelInfo.topLevelLoops) {
+            if (loop.getFirstAttributedChild(
+                    [](OklLoopInfo& info) { return info.has(LoopType::Outer); })) {
+                return tl::make_unexpected(
+                    Error{{}, "Cannot have [@inner] loop outside of an [@outer] loop"});
+            }
+        }
+
+        // If there is no outer at all
         return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
                                          "[@kernel] requires at least one [@outer] for-loop"});
     }

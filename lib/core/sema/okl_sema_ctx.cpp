@@ -254,7 +254,8 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
             children.emplace_back(loopInfo);
 
             auto& child = children.back();
-            if (isTopLevelAttributed(loopTypeAxis, *_parsingKernInfo)) {
+            if (isTopLevelAttributed(loopTypeAxis, *_parsingKernInfo) &&
+                loopTypeAxis.types.front() == LoopType::Outer) {
                 _parsingKernInfo->topLevelOuterLoops.push_back(&child);
             }
             child.parent = _parsingKernInfo->currentLoop;
