@@ -259,6 +259,10 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
             }
             child.parent = _parsingKernInfo->currentLoop;
             _parsingKernInfo->currentLoop = &child;
+            if (_parsingKernInfo->loopMap.count(&child.stmt)) {
+                return tl::make_unexpected(
+                    Error{std::error_code(), "Multiple attributes on one loop"});
+            }
             _parsingKernInfo->loopMap.emplace(&child.stmt, &child);
             return {};
         });

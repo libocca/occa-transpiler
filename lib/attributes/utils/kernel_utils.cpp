@@ -8,7 +8,73 @@
 
 #include <clang/AST/ParentMapContext.h>
 
+#include <deque>
+
 namespace oklt {
+
+namespace {
+struct LoopTreeNode {
+    OklLoopInfo* loop;
+    uint32_t typeIdx = 0;  // type can be complex (@tile), so index indicates concrete type
+};
+
+bool verifyLoopStructureRecursiveBFS(std::deque<LoopTreeNode>& queue) {
+    // Leaf - stop condition
+    if (queue.empty()) {
+        return true;
+    }
+    std::deque<LoopTreeNode> nextQueue;
+
+    auto& firstNode = queue.front();
+
+    auto levelType = firstNode.loop->type[firstNode.typeIdx];
+
+    bool hasChildren = !firstNode.loop->children.empty();
+    bool hasTiledChildren = (firstNode.loop->type.size() - 1) > firstNode.typeIdx;
+    bool isLeafLevel = !hasChildren && !hasTiledChildren;
+
+    for (auto node : queue) {
+        // Verify same type
+        auto currLevelType = node.loop->type[node.typeIdx];
+        if (currLevelType != levelType) {
+            return false;
+        }
+
+        // Veryfi same depth
+        bool currHasChildren = !node.loop->children.empty();
+        bool currHasTiledChildren = (node.loop->type.size() - 1) > node.typeIdx;
+        if (isLeafLevel) {
+            if (currHasChildren || currHasTiledChildren) {
+                return false;
+            }
+        } else {
+            // We have to visist complex types (@tile) multiple times
+            if (currHasTiledChildren) {
+                node.typeIdx++;
+                nextQueue.push_back(node);
+            } else if (currHasChildren) {
+                for (auto& child : node.loop->children) {
+                    nextQueue.push_back(LoopTreeNode{&child});
+                }
+            } else {
+                // Not all children depth is the same = bad structure
+                return false;
+            }
+        }
+    }
+    return verifyLoopStructureRecursiveBFS(nextQueue);
+}
+
+// All leafs must be at the same level and all levels must have the same type
+bool verifyLoopStructure(const std::list<OklLoopInfo*>& topLevelOuterLoops) {
+    std::deque<LoopTreeNode> q;
+    for (auto* loop : topLevelOuterLoops) {
+        q.push_back({loop});
+    }
+    return verifyLoopStructureRecursiveBFS(q);
+}
+
+}  // namespace
 
 tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
@@ -17,6 +83,7 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) 
                                          "[@kernel] requires at least one [@outer] for-loop"});
     }
 
+    // Verify inner are present
     size_t nMissingInner = 0;
     for (auto& loop : topOuterLoops) {
         if (!loop->is(LoopType::Outer, LoopType::Inner) &&
@@ -33,9 +100,13 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) 
         return tl::make_unexpected(
             Error{OkltTranspilerErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
     }
+
+    // Verify loops hierarchy
+    if (!verifyLoopStructure(topOuterLoops)) {
+        return tl::make_unexpected(
+            Error{std::error_code(), "Incorrect [@outer]/[@inner] loops structure"});
+    }
     return {};
-    // return tl::make_unexpected(
-    // Error{OkltTranspilerErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
 }
 
 const clang::AttributedStmt* getAttributedStmt(const clang::Stmt& stmt, SessionStage& s) {
