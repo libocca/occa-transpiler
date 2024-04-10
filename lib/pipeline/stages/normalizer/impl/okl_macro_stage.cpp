@@ -38,7 +38,9 @@ bool isProbablyMacroAttr(const OklAttribute& attr, const std::vector<Token>& tok
     return true;
 }
 
-void removeOklAttr(const std::vector<Token>& tokens, const OklAttribute& attr, oklt::Rewriter& rewriter) {
+void removeOklAttr(const std::vector<Token>& tokens,
+                   const OklAttribute& attr,
+                   oklt::Rewriter& rewriter) {
     // remove OKL specific attribute in source code
     SourceLocation attrLocStart(tokens[attr.tok_indecies.front()].getLocation());
     SourceLocation attrLocEnd(tokens[attr.tok_indecies.back()].getLastLoc());
@@ -146,8 +148,7 @@ struct OklMacroAttributeNormalizerAction : public clang::ASTFrontendAction {
         auto tokens = fetchTokens(pp);
 
         if (tokens.empty()) {
-            _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING,
-                               "no tokens in source?");
+            _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "Error: Empty file");
             return false;
         }
 
@@ -220,8 +221,9 @@ OklMacroResult convertOklMacroAttribute(OklMacroStageInput input) {
         args,
         cppFileName,
         tool_name);
-    if (!ok) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
+    auto& errors = output.session->getErrors();
+    if (!ok || !errors.empty()) {
+        return tl::make_unexpected(std::move(errors));
     }
 
     // no errors and empty output could mean that the source is already normalized

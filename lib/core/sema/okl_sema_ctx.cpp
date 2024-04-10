@@ -220,7 +220,11 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
                                                                     const clang::ForStmt& stmt,
                                                                     const std::any* params,
                                                                     SessionStage& stage) {
-    assert(_parsingKernInfo);
+    if (!_parsingKernInfo) {
+        // NOTE: original OKL silently removes attribute
+        return tl::make_unexpected(
+            Error{std::error_code{}, "Attributed loop outside [@kernel] function"});
+    }
     auto loopTypeAxis = getLoopAxisType(params);
 
     // TODO: currently missing diagnostic on at least one [@outer] loop must be present

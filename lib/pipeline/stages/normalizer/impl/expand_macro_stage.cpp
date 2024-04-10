@@ -569,8 +569,9 @@ ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
     auto ok = tooling::runToolOnCodeWithArgs(
         std::make_unique<MacroExpander>(input, output), input_file, args, cppFileName, tool_name);
 
-    if (!ok) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
+    auto& errors = output.session->getErrors();
+    if (!ok || !errors.empty()) {
+        return tl::make_unexpected(std::move(errors));
     }
 
     SPDLOG_DEBUG("stage 1 inlined macros with OKL cpp source:\n\n{}", output.cppSrc);

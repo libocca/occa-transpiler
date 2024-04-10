@@ -253,13 +253,15 @@ GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
         args.push_back(std::move(incPath));
     }
 
-    if (!tooling::runToolOnCodeWithArgs(
-            std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
-            input_file,
-            args,
-            cppFileName,
-            tool_name)) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
+    auto ok = tooling::runToolOnCodeWithArgs(
+        std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
+        input_file,
+        args,
+        cppFileName,
+        tool_name);
+    auto& errors = output.session->getErrors();
+    if (!ok || !errors.empty()) {
+        return tl::make_unexpected(std::move(errors));
     }
 
     SPDLOG_DEBUG("stage 2 STD cpp source:\n\n{}", output.stdCppSrc);

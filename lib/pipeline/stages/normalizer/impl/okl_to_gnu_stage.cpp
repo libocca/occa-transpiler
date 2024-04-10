@@ -220,8 +220,7 @@ struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
         auto tokens = fetchTokens(pp);
 
         if (tokens.empty()) {
-            _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING,
-                               "no tokens in source?");
+            _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "Error: Empty file");
             return false;
         }
 
@@ -301,8 +300,9 @@ OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
         args,
         cppFileName,
         tool_name);
-    if (!ok) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
+    auto& errors = output.session->getErrors();
+    if (!ok || !errors.empty()) {
+        return tl::make_unexpected(std::move(errors));
     }
 
     // no errors and empty output could mean that the source is already normalized
