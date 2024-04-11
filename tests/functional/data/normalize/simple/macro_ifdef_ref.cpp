@@ -4,8 +4,8 @@
 void use_some_type(UnknownType hello);
 #endif
 
-[[okl::kernel("")]] void kern() {
-    [[okl::outer("")]] for (int i = 0; i < 10; i++) {
-        [[okl::inner("")]] for (int j = 0; j < 10; j++) {}
+[[okl_kernel("")]] void kern() {
+    [[okl_outer("")]] for (int i = 0; i < 10; i++) {
+        [[okl_inner("")]] for (int j = 0; j < 10; j++) {}
     }
 }

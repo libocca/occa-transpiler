@@ -1,13 +1,13 @@
 
 
-[[okl::kernel("")]] void test([[okl::restrict("")]] int* aaa
+[[okl_kernel("")]] void test([[okl_restrict("")]] int* aaa
 #if 1
                               ,
                               int bbb
 #endif
 ) {
-    [[okl::outer("")]] for (int i = 0; i < 10; ++i) {
-        [[okl::inner("")]] for (int j = 0; j < 10; ++j) {
+    [[okl_outer("")]] for (int i = 0; i < 10; ++i) {
+        [[okl_inner("")]] for (int j = 0; j < 10; ++j) {
             // BODY
         }
     }

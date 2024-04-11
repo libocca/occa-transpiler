@@ -1,6 +1,6 @@
 @kernel void f(float a) {
     @atomic a = a + 1;
-    [[okl::atomic("")]] a += 1;
+    [[okl_atomic("")]] a += 1;
 
     {
         float b;
