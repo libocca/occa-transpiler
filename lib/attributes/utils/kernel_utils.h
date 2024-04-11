@@ -9,9 +9,9 @@ class AttributedStmt;
 }  // namespace clang
 
 namespace oklt {
-    tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo);
-const clang::AttributedStmt* getAttributedStmt(const clang::Stmt& stmt, SessionStage& s);
-tl::expected<void, Error> handleChildAttr(const clang::Stmt& stmt,
-                                          std::string_view name,
-                                          SessionStage& s);
+tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo);
+const clang::AttributedStmt* getAttributedStmt(SessionStage& s, const clang::Stmt& stmt);
+tl::expected<std::any, Error> handleChildAttr(SessionStage& s,
+                                              const clang::Stmt& stmt,
+                                              std::string_view name);
 }  // namespace oklt

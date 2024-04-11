@@ -48,7 +48,7 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
+HandleResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
     TileParams ret = {};
     if (data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects at least one argument"});

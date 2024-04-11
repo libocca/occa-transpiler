@@ -54,7 +54,7 @@ HandleResult AttributeManager::handleAttr(SessionStage& stage,
     return {};
 }
 
-ParseResult AttributeManager::parseAttr(SessionStage& stage, const Attr& attr) {
+HandleResult AttributeManager::parseAttr(SessionStage& stage, const Attr& attr) {
     std::string name = attr.getNormalizedFullName();
     auto it = _attrParsers.find(name);
     if (it != _attrParsers.end()) {
@@ -65,8 +65,8 @@ ParseResult AttributeManager::parseAttr(SessionStage& stage, const Attr& attr) {
     return EmptyParams{};
 }
 
-ParseResult AttributeManager::parseAttr(SessionStage& stage,
-                                        const Attr& attr,
+HandleResult AttributeManager::parseAttr(SessionStage& stage,
+                                         const Attr& attr,
                                         OKLParsedAttr& params) {
     auto it = _attrParsers.find(params.name);
     if (it != _attrParsers.end()) {

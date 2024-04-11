@@ -28,7 +28,7 @@ class AttributeManager {
 
    public:
     using AttrParamParserType =
-        std::function<ParseResult(SessionStage&, const clang::Attr&, OKLParsedAttr&)>;
+        std::function<HandleResult(SessionStage&, const clang::Attr&, OKLParsedAttr&)>;
 
     AttributeManager(const AttributeManager&) = delete;
     AttributeManager(AttributeManager&&) = delete;
@@ -48,8 +48,8 @@ class AttributeManager {
     bool registerBackendHandler(BackendAttributeMap::KeyType key, AttrHandler handler);
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, NodeHandler handler);
 
-    ParseResult parseAttr(SessionStage& stage, const clang::Attr& attr);
-    ParseResult parseAttr(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& params);
+    HandleResult parseAttr(SessionStage& stage, const clang::Attr& attr);
+    HandleResult parseAttr(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& params);
 
     bool hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind) {
         return _implicitHandlers.hasHandler({backend, kind});

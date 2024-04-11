@@ -114,8 +114,8 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseDimOrderAttrParams(SessionStage& stage,
-                                    const clang::Attr& attr,
+HandleResult parseDimOrderAttrParams(SessionStage& stage,
+                                     const clang::Attr& attr,
                                     OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});

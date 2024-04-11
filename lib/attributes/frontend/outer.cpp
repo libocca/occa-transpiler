@@ -48,8 +48,8 @@ struct OuterAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseOuterAttrParams(SessionStage& stage,
-                                 const clang::Attr& attr,
+HandleResult parseOuterAttrParams(SessionStage& stage,
+                                  const clang::Attr& attr,
                                  OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@outer] does not take kwargs"});

@@ -7,7 +7,6 @@
 
 namespace oklt {
 
-using HandleResult = tl::expected<void, Error>;
-using ParseResult = tl::expected<std::any, Error>;
+using HandleResult = tl::expected<std::any, Error>;
 
 }  // namespace oklt

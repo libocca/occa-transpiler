@@ -49,9 +49,9 @@ struct KernelAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseKernelAttrParams(SessionStage& stage,
-                                  const clang::Attr& attr,
-                                  OKLParsedAttr& data) {
+HandleResult parseKernelAttrParams(SessionStage& stage,
+                                   const clang::Attr& attr,
+                                   OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@kernel] does not take arguments"});
     }
