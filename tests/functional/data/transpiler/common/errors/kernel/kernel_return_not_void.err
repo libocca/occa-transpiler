@@ -1,0 +1,3 @@
+kernel_return_not_void.cpp:1:1: error: ''okl_kernel'' only applies to functions with [void] return types; type here is int
+    1 | @kernel int hello_kern() {
+      | ^

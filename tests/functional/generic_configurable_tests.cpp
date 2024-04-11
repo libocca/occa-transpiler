@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 #include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
 
 #include <fstream>
 
@@ -96,8 +97,9 @@ void compareError(const std::string& sourceFilePath,
                   const std::string& refErrorMessage) {
     // TODO: currently compare only first error to the whole file. There can be
     // multiple errors
-    EXPECT_EQ(res.error().empty(), refErrorMessage.empty())
-        << "No error when expected, or vice versa";
+    EXPECT_EQ(res.has_value(), refErrorMessage.empty())
+        << "No error when expected, or vice versa: " << sourceFilePath;
+    ASSERT_FALSE(res.error().empty()) << "Failed silently? No error message: " << sourceFilePath;
     auto normalizeError = res.error().front();
     auto errorMessage = normalizeError.desc;
 
@@ -158,6 +160,7 @@ TEST_P(GenericTest, OCCATests) {
                 }
                 auto conf = actionConfig->get<NormalizeActionConfig>();
                 auto input = conf.build(dataDir);
+                SPDLOG_INFO("Run Normalize action for {}", input.sourcePath.string());
                 auto normalizeResult = oklt::normalize(input);
                 if (!normalizeResult && cmp != Compare::ERROR_MESSAGE) {
                     EXPECT_TRUE(false) << "File: " << conf.source << std::endl
@@ -198,6 +201,7 @@ TEST_P(GenericTest, OCCATests) {
                 }
                 auto conf = actionConfig->get<TranspileActionConfig>();
                 auto input = conf.build(dataDir);
+                SPDLOG_INFO("Run Transpile action for {}", input.sourcePath.string());
                 auto transpileResult = oklt::transpile(input);
 
                 if (!transpileResult && cmp != Compare::ERROR_MESSAGE) {
@@ -244,6 +248,8 @@ TEST_P(GenericTest, OCCATests) {
                 }
                 auto conf = actionConfig->get<TranspileActionConfig>();
                 auto input = conf.build(dataDir);
+                // std::cout << "Run Normalize and Transpile action for " << input.sourcePath << std::endl;;
+                SPDLOG_INFO("Run Normalize and Transpile action for {}", input.sourcePath.string());
                 auto transpileResult = oklt::normalizeAndTranspile(input);
 
                 if (!transpileResult && cmp != Compare::ERROR_MESSAGE) {

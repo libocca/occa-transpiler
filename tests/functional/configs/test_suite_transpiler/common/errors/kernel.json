@@ -4,23 +4,35 @@
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/no_kernel1.cpp",
+            "source": "transpiler/common/errors/kernel/no_kernel1.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/no_kernel1.err"
+        "reference": "transpiler/common/errors/kernel/no_kernel1.err"
     },
     {
         "action": "normalize_and_transpile",
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/no_kernel2.cpp",
+            "source": "transpiler/common/errors/kernel/no_kernel2.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/no_kernel2.err"
+        "reference": "transpiler/common/errors/kernel/no_kernel2.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/kernel/kernel_return_not_void.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/kernel/kernel_return_not_void.err"
     }
 ]

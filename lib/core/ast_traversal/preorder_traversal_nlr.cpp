@@ -143,7 +143,9 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPreActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
-            result.error().ctx = attr->getRange();
+            if (!result.error().ctx.has_value()) {
+                result.error().ctx = attr->getRange();
+            }
             return result;
         }
     }
@@ -167,7 +169,9 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     if (attrs.empty()) {
         auto result = procMng.runPostActionNodeHandle(procType, nullptr, node, sema, stage);
         if (!result) {
-            result.error().ctx = node.getSourceRange();
+            if (!result.error().ctx.has_value()) {
+                result.error().ctx = node.getSourceRange();
+            }
             return result;
         }
         if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
@@ -180,7 +184,9 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = procMng.runPostActionNodeHandle(procType, attr, node, sema, stage);
         if (!result) {
-            result.error().ctx = attr->getRange();
+            if (!result.error().ctx.has_value()) {
+                result.error().ctx = attr->getRange();
+            }
             return result;
         }
         transpilationAccumulator.push_back(TranspilationNode{
@@ -223,7 +229,9 @@ bool traverseNode(TraversalType& traversal,
 
         auto attrsResult = getNodeAttrs(*node, stage);
         if (!attrsResult) {
-            attrsResult.error().ctx = node->getSourceRange();
+            if (!attrsResult.error().ctx.has_value()) {
+                attrsResult.error().ctx = node->getSourceRange();
+            }
             return tl::make_unexpected(attrsResult.error());
         }
 

@@ -1,3 +1,3 @@
-bad_structure1.cpp:1:1: error: Incorrect [@outer]/[@inner] loops structure
-    1 | @kernel void hello_kern() {
-      | ^
+bad_structure1.cpp:10:13: error: Mistmatch of [@inner] loops: expected loop inside
+   10 |             @inner for (int k = 0; k < 10; ++k) {
+      |             ^

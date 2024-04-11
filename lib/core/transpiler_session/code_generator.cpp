@@ -73,7 +73,9 @@ HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionS
         sema.setLoopInfo(tnode.li);
         auto result = applyTranspilationToNode(tnode.attr, tnode.node, stage);
         if (!result) {
-            result.error().ctx = tnode.attr->getRange();
+            if (!result.error().ctx.has_value()) {
+                result.error().ctx = tnode.attr->getRange();
+            }
             return result;
         }
     }

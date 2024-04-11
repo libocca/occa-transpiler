@@ -116,7 +116,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
-    if (auto verified = verifyLoops(kernelInfo); !verified) {
+    if (auto verified = verifyLoops(kernelInfo, s); !verified) {
         return verified;
     }
 
