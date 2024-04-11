@@ -1,10 +1,9 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/parser.h"
+#include "attributes/frontend/params/empty_params.h"
+
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
-
-#include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
-#include "params/empty_params.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -16,9 +15,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling NOBARRIER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "nobarrier"},
-    {ParsedAttr::AS_CXX11, NOBARRIER_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_nobarrier"}};
+    {ParsedAttr::AS_CXX11, NO_BARRIER_ATTR_NAME},
+    {ParsedAttr::AS_GNU, NO_BARRIER_ATTR_NAME }};
 
 struct NoBarrierAttribute : public ParsedAttrInfo {
     NoBarrierAttribute() {
@@ -64,7 +62,7 @@ ParseResult parseNoBarrierAttrParams(const clang::Attr& attr,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<NoBarrierAttribute>(NOBARRIER_ATTR_NAME,
+AttributeManager::instance().registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME,
                                                                           parseNoBarrierAttrParams);
 }
 }  // namespace

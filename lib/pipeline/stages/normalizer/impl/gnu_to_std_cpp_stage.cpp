@@ -1,14 +1,13 @@
 #include <oklt/core/error.h>
 
-#include "attributes/attribute_names.h"
 #include "core/diag/diag_consumer.h"
-#include "core/rewriter/impl/dtree_rewriter_proxy.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/vfs/overlay_fs.h"
 
 #include "pipeline/stages/normalizer/error_codes.h"
 #include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
+#include "pipeline/stages/normalizer/impl/okl_attribute.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
@@ -16,15 +15,10 @@
 #include <clang/Tooling/Tooling.h>
 #include <spdlog/spdlog.h>
 
+namespace {
+
 using namespace oklt;
 using namespace clang;
-
-namespace {
-struct AttrNormalizerCtx {
-    ASTContext* astCtx;
-    oklt::Rewriter* rewriter;
-    std::list<OklAttrMarker> markers;
-};
 
 void removeAttr(oklt::Rewriter& rewriter, const Attr& attr) {
     auto arange = getAttrFullSourceRange(attr);
@@ -65,12 +59,12 @@ void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& sta
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
     assert(lastProccesedAttr);
-    auto& SM = stage.getCompiler().getSourceManager();
+    auto& sm = stage.getCompiler().getSourceManager();
     auto& mapper = stage.getSession().getOriginalSourceMapper();
     for (auto* attr : e.getAttrs()) {
         auto attrBegLoc = attr->getRange().getBegin();
-        auto prevFidAttrOffset = SM.getDecomposedLoc(attrBegLoc);
-        if (attr->isC2xAttribute() || attr->isCXX11Attribute()) {
+        auto prevFidAttrOffset = sm.getDecomposedLoc(attrBegLoc);
+        if (attr->isCXX11Attribute()) {
             mapper.updateAttributeOffset(prevFidAttrOffset, attrBegLoc, stage.getRewriter());
             continue;
         }
@@ -102,12 +96,8 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProcc
     return true;
 }
 
-SourceLocation getMarkerSourceLoc(const OklAttrMarker& marker, const SourceManager& srcMng) {
-    return srcMng.translateLineCol(srcMng.getMainFileID(), marker.loc.line, marker.loc.col);
-}
-
-// Traverse AST and normalize GMU attributes and fix markers to standard C++ attribute
-// representation
+// Traverse AST and convert GNU attributes and to standard C++ attribute
+// syntax and unified source location
 class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer> {
    public:
     explicit GnuToCppAttrNormalizer(SessionStage& stage)

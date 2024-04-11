@@ -1,11 +1,9 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/loop.h"
+#include "attributes/frontend/params/loop.h"
 
-#include <oklt/util/string_utils.h>
+#include "core/attribute_manager/attribute_manager.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -16,9 +14,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "max_inner_dims"},
     {ParsedAttr::AS_CXX11, MAX_INNER_DIMS},
-    {ParsedAttr::AS_GNU, "okl_max_inner_dims"}};
+    {ParsedAttr::AS_GNU, MAX_INNER_DIMS}};
 
 struct MaxInnerDims : public ParsedAttrInfo {
     MaxInnerDims() {

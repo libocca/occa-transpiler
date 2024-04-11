@@ -1,10 +1,10 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "attributes/frontend/params/dim.h"
+
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
-#include "core/transpiler_session/session_stage.h"
-
-#include "attributes/utils/parser.h"
-#include "params/empty_params.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -15,15 +15,15 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-constexpr ParsedAttrInfo::Spelling SHARED_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, SHARED_ATTR_NAME},
-    {ParsedAttr::AS_GNU, SHARED_ATTR_NAME}};
+constexpr ParsedAttrInfo::Spelling DIMORDER_ATTRIBUTE_SPELLINGS[] = {
+    {ParsedAttr::AS_CXX11, DIM_ORDER_ATTR_NAME},
+    {ParsedAttr::AS_GNU, DIM_ORDER_ATTR_NAME}};
 
-struct SharedAttribute : public ParsedAttrInfo {
-    SharedAttribute() {
+struct DimOrderAttribute : public ParsedAttrInfo {
+    DimOrderAttribute() {
         NumArgs = 1;
         OptArgs = 0;
-        Spellings = SHARED_ATTRIBUTE_SPELLINGS;
+        Spellings = DIMORDER_ATTRIBUTE_SPELLINGS;
         IsType = 1;
         HasCustomParsing = 1;
     }
@@ -31,19 +31,11 @@ struct SharedAttribute : public ParsedAttrInfo {
     bool diagAppertainsToDecl(clang::Sema& sema,
                               const clang::ParsedAttr& attr,
                               const clang::Decl* decl) const override {
-        // INFO: this attribute appertains to functions only.
-        if (!isa<VarDecl, TypeDecl>(decl)) {
-            sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-                << attr << attr.isDeclspecAttribute() << "variable or type declaration";
+        if (!isa<VarDecl, ParmVarDecl, TypedefDecl, FieldDecl>(decl)) {
+            sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+                << attr << attr.isDeclspecAttribute()
+                << "type, struct/union/class field or variable declarations";
             return false;
-        }
-
-        // INFO: if VarDecl, check if array
-        if (auto* var_decl = dyn_cast_or_null<VarDecl>(decl)) {
-            if (!dyn_cast_or_null<ConstantArrayType>(var_decl->getType().getTypePtr())) {
-                sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-                    << attr << attr.isDeclspecAttribute() << "array declaration";
-            }
         }
         return true;
     }
@@ -53,7 +45,8 @@ struct SharedAttribute : public ParsedAttrInfo {
                               const clang::Stmt* stmt) const override {
         // INFO: fail for all statements
         sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-            << attr << attr.isDeclspecAttribute() << "variable or type declaration";
+            << attr << attr.isDeclspecAttribute()
+            << "type, struct/union/class field or variable declarations";
         return false;
     }
 
@@ -80,6 +73,13 @@ struct SharedAttribute : public ParsedAttrInfo {
         // TODO: Move attributed type registering to util, since dublication with other types
         auto* ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
         decl->addAttr(ctxAttr);
+
+        // ValueDecl:
+        //   ParmVarDecl -- func param
+        //   VarDecl -- var
+        //   FieldDecl -- struct field
+        // TypeDecl:
+        //   TypedefDecl -- typedef
 
         auto& attrTypeMap = stage->tryEmplaceUserCtx<AttributedTypeMap>();
 
@@ -112,18 +112,38 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseSharedAttrParams(const clang::Attr& attr,
-                                  OKLParsedAttr& data,
-                                  SessionStage& stage) {
-    if (!data.args.empty() || !data.kwargs.empty()) {
-        return tl::make_unexpected(Error{{}, "[@shared] does not take arguments"});
+ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
+                                    OKLParsedAttr& data,
+                                    SessionStage& stage) {
+    if (!data.kwargs.empty()) {
+        return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});
     }
 
-    return EmptyParams{};
+    if (data.args.empty()) {
+        return tl::make_unexpected(Error{{}, "[@dimOrder] expects at least one argument"});
+    }
+
+    AttributedDimOrder ret;
+    for (auto arg : data.args) {
+        auto idx = arg.get<size_t>();
+        if (!idx.has_value()) {
+            return tl::make_unexpected(
+                Error{{}, "[@dimOrder] expects expects positive integer index"});
+        }
+
+        auto it = std::find(ret.idx.begin(), ret.idx.end(), idx.value());
+        if (it != ret.idx.end()) {
+            return tl::make_unexpected(Error{{}, "[@dimOrder] Duplicate index"});
+        }
+
+        ret.idx.push_back(idx.value());
+    }
+
+    return ret;
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME,
-                                                                       parseSharedAttrParams);
+    AttributeManager::instance().registerAttrFrontend<DimOrderAttribute>(DIM_ORDER_ATTR_NAME,
+                                                                         parseDimOrderAttrParams);
 }
 }  // namespace

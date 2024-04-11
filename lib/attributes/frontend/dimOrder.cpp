@@ -18,8 +18,7 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling DIMORDER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "dimOrder"},
-    {ParsedAttr::AS_CXX11, DIMORDER_ATTR_NAME},
+    {ParsedAttr::AS_CXX11, DIM_ORDER_ATTR_NAME},
     {ParsedAttr::AS_GNU, "okl_dimOrder"}};
 
 struct DimOrderAttribute : public ParsedAttrInfo {

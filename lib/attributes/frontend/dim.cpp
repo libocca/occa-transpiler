@@ -1,13 +1,11 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/parser.h"
+#include "attributes/utils/parser_impl.hpp"
+#include "attributes/frontend/params/dim.h"
+
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
 #include "core/diag/diag_handler.h"
-
-#include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
-#include "params/dim.h"
-
-#include <oklt/util/string_utils.h>
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -19,9 +17,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling DIM_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "dim"},
     {ParsedAttr::AS_CXX11, DIM_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_dim"}};
+    {ParsedAttr::AS_GNU, DIM_ATTR_NAME}};
 
 struct DimAttribute : public ParsedAttrInfo {
     DimAttribute() {

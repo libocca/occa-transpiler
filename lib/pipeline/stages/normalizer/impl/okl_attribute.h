@@ -1,10 +1,8 @@
 #pragma once
-
+#include "attributes/attribute_names.h"
 #include <clang/Basic/SourceLocation.h>
 
 namespace oklt {
-
-constexpr char OKL_ATTR_MARKER = '@';
 
 struct OklAttribute {
     std::string raw;
@@ -15,18 +13,18 @@ struct OklAttribute {
 
 inline static std::string wrapAsSpecificGnuAttr(const OklAttribute& attr) {
     if (attr.params.empty()) {
-        return "__attribute__((okl_" + attr.name + R"((")" + "" + "\")))";
+        return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")))";
     }
 
-    return "__attribute__((okl_" + attr.name + R"((")" + attr.params + "\")))";
+    return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")))";
 }
 
 inline static std::string wrapAsSpecificCxxAttr(const OklAttribute& attr) {
     if (attr.params.empty()) {
-        return "[[okl::" + attr.name + R"((")" + "" + "\")]]";
+        return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")]]";
     }
 
-    return "[[okl::" + attr.name + R"((")" + attr.params + "\")]]";
+    return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")]]";
 }
 
 }  // namespace oklt

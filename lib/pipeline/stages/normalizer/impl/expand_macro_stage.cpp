@@ -344,7 +344,7 @@ std::list<Token> lexMacroToken(Preprocessor& pp) {
         if (tok.is(tok::unknown)) {
             // Check for '@' symbol
             auto spelling = pp.getSpelling(tok);
-            if (spelling.empty() || spelling[0] != OKL_ATTR_MARKER) {
+            if (spelling.empty() || spelling[0] != OKL_ATTR_NATIVE_MARKER) {
                 break;
             }
             tok.setKind(tok::at);
