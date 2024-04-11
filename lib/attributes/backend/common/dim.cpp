@@ -199,13 +199,15 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        DIM_ATTR_NAME, makeSpecificAttrHandle(handleDimDeclAttribute));
+        {DIM_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
+        makeSpecificAttrHandle(handleDimDeclAttribute));
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute decl handler", DIM_ATTR_NAME);
     }
 
     ok = oklt::AttributeManager::instance().registerCommonHandler(
-        DIM_ATTR_NAME, makeSpecificAttrHandle(handleDimStmtAttribute));
+        {DIM_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
+        makeSpecificAttrHandle(handleDimStmtAttribute));
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ATTR_NAME);
     }

@@ -7,15 +7,16 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, SHARED_ATTR_NAME},
+        {TargetBackend::CUDA, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
         makeSpecificAttrHandle(cuda_subset::handleSharedAttribute));
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, SHARED_ATTR_NAME},
+        {TargetBackend::CUDA, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {

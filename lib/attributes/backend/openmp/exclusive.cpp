@@ -6,13 +6,14 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<DeclRefExpr>()},
         makeSpecificAttrHandle(serial_subset::handleExclusiveExprAttribute));
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<VarDecl>()},
         makeSpecificAttrHandle(serial_subset::handleExclusiveDeclAttribute));
 
     if (!ok) {

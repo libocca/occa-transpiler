@@ -17,6 +17,7 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     return "_occa_tiled_" + forLoop.var.name;
@@ -258,7 +259,8 @@ HandleResult handleTileAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleTileAttribute));
+        {TargetBackend::DPCPP, TILE_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        makeSpecificAttrHandle(handleTileAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", TILE_ATTR_NAME);

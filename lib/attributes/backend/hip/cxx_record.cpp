@@ -8,10 +8,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 const std::string HIP_FUNCTION_QUALIFIER = "__device__";
 
-HandleResult handleClassRecord(SessionStage& s, const clang::CXXRecordDecl& d) {
+HandleResult handleClassRecord(SessionStage& s, const CXXRecordDecl& d) {
     return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
@@ -21,18 +22,24 @@ HandleResult handleClassTemplateSpecialization(
     return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
+HandleResult handleClassTemplatePartialSpecialization(
+    SessionStage& s,
+    const clang::ClassTemplateSpecializationDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
+}
+
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::CXXRecord},
+        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<CXXRecordDecl>()},
         makeSpecificImplicitHandle(handleClassRecord));
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplateSpecialization},
+        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<ClassTemplateSpecializationDecl>()},
         makeSpecificImplicitHandle(handleClassTemplateSpecialization));
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplatePartialSpecialization},
-        makeSpecificImplicitHandle(handleClassTemplateSpecialization));
+        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<ClassTemplatePartialSpecializationDecl>()},
+        makeSpecificImplicitHandle(handleClassTemplatePartialSpecialization));
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");

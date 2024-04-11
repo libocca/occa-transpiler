@@ -5,6 +5,7 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 const std::string CUDA_FUNCTION_QUALIFIER = "__device__";
 
@@ -14,7 +15,7 @@ HandleResult handleCudaGlobalFunction(SessionStage& s, const clang::FunctionDecl
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::Function},
+        {TargetBackend::CUDA, ASTNodeKind::getFromNodeKind<FunctionDecl>()},
         makeSpecificImplicitHandle(handleCudaGlobalFunction));
 
     if (!ok) {

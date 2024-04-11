@@ -48,7 +48,8 @@ HandleResult handleInnerAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerDpppInnerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, INNER_ATTR_NAME}, makeSpecificAttrHandle(handleInnerAttribute));
+        {TargetBackend::DPCPP, INNER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        makeSpecificAttrHandle(handleInnerAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", INNER_ATTR_NAME);

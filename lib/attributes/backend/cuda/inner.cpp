@@ -10,7 +10,7 @@ using namespace clang;
 
 __attribute__((constructor)) void registerBackendHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, INNER_ATTR_NAME},
+        {TargetBackend::CUDA, INNER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
         makeSpecificAttrHandle(cuda_subset::handleInnerAttribute));
 
     if (!ok) {

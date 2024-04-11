@@ -11,6 +11,7 @@
 namespace {
 using namespace oklt;
 using namespace clang;
+
 HandleResult handleBarrierAttribute(SessionStage& s,
                                     const clang::Stmt& stmt,
                                     const clang::Attr& a) {
@@ -23,7 +24,8 @@ HandleResult handleBarrierAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, BARRIER_ATTR_NAME}, makeSpecificAttrHandle(handleBarrierAttribute));
+        {TargetBackend::DPCPP, BARRIER_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
+        makeSpecificAttrHandle(handleBarrierAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", BARRIER_ATTR_NAME);

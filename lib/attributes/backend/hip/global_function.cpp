@@ -5,6 +5,7 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 HandleResult handleHIPGlobalFunction(oklt::SessionStage& s, const clang::FunctionDecl& decl) {
     const std::string HIP_FUNCTION_QUALIFIER = "__device__";
@@ -13,7 +14,7 @@ HandleResult handleHIPGlobalFunction(oklt::SessionStage& s, const clang::Functio
 
 __attribute__((constructor)) void registerHIPKernelHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::Function},
+        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<FunctionDecl>()},
         makeSpecificImplicitHandle(handleHIPGlobalFunction));
 
     if (!ok) {

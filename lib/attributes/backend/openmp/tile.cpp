@@ -29,7 +29,8 @@ HandleResult handleOPENMPTileAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleOPENMPTileAttribute));
+        {TargetBackend::OPENMP, TILE_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        makeSpecificAttrHandle(handleOPENMPTileAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", TILE_ATTR_NAME);

@@ -28,7 +28,7 @@ HandleResult handleTranslationUnit(SessionStage& s, const TranslationUnitDecl& d
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::TranslationUnit},
+        {TargetBackend::CUDA, ASTNodeKind::getFromNodeKind<TranslationUnitDecl>()},
         makeSpecificImplicitHandle(handleTranslationUnit));
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for translation unit");

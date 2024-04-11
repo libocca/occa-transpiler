@@ -10,55 +10,42 @@
 namespace oklt {
 using namespace clang;
 
-bool CommonAttributeMap::registerHandler(std::string name, AttrDeclHandler handler) {
-    auto ret = _declHandlers.insert(std::make_pair(std::move(name), std::move(handler)));
-    return ret.second;
-}
-
-bool CommonAttributeMap::registerHandler(std::string name, AttrStmtHandler handler) {
-    auto ret = _stmtHandlers.insert(std::make_pair(std::move(name), std::move(handler)));
+bool CommonAttributeMap::registerHandler(const KeyType key, AttrHandler handler) {
+    auto ret = _nodeHandlers.emplace(std::make_pair(std::move(key), std::move(handler)));
     return ret.second;
 }
 
 HandleResult CommonAttributeMap::handleAttr(SessionStage& stage,
-                                            const clang::Decl& decl,
+                                            const clang::DynTypedNode& node,
                                             const clang::Attr& attr,
                                             const std::any* params) {
-    std::string name = attr.getNormalizedFullName();
-    auto it = _declHandlers.find(name);
-    if (it != _declHandlers.end()) {
-        return it->second.handle(stage, decl, attr, params);
+    auto kind = node.getNodeKind();
+    auto name = attr.getNormalizedFullName();
+    auto it = _nodeHandlers.find({name, kind});
+    if (it != _nodeHandlers.end()) {
+        return it->second.handle(stage, node, attr, params);
     }
+
+    it = _nodeHandlers.find({name, kind.getCladeKind()});
+    if (it != _nodeHandlers.end()) {
+        return it->second.handle(stage, node, attr, params);
+    }
+
     return tl::make_unexpected(Error{std::error_code(),
                                      util::fmt("Warning: no handle for attribute {} for node {} \n",
                                                attr.getNormalizedFullName(),
-                                               decl.getDeclKindName())
+                                               kind.asStringRef().str())
                                          .value()});
 }
 
-HandleResult CommonAttributeMap::handleAttr(SessionStage& stage,
-                                            const clang::Stmt& stmt,
-                                            const clang::Attr& attr,
-                                            const std::any* params) {
-    std::string name = attr.getNormalizedFullName();
-    auto it = _stmtHandlers.find(name);
-    if (it != _stmtHandlers.end()) {
-        return it->second.handle(stage, stmt, attr, params);
-    }
-    return tl::make_unexpected(Error{std::error_code(),
-                                     util::fmt("Warning: no handle for attribute {} for node {} \n",
-                                               attr.getNormalizedFullName(),
-                                               stmt.getStmtClassName())
-                                         .value()});
-}
-
-bool CommonAttributeMap::hasAttrHandler(const std::string& name) {
-    auto declIt = _declHandlers.find(name);
-    if (declIt != _declHandlers.cend()) {
+bool CommonAttributeMap::hasHandler(const KeyType& key) {
+    auto it = _nodeHandlers.find(key);
+    if (it != _nodeHandlers.cend()) {
         return true;
     }
-    auto stmtIt = _stmtHandlers.find(name);
-    return stmtIt != _stmtHandlers.cend();
+
+    it = _nodeHandlers.find({std::get<0>(key), std::get<1>(key).getCladeKind()});
+    return it != _nodeHandlers.cend();
 }
 
 }  // namespace oklt

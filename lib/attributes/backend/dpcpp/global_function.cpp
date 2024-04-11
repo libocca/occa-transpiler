@@ -5,6 +5,7 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 HandleResult handleGlobalFunctionDpcpp(oklt::SessionStage& s, const clang::FunctionDecl& decl) {
     const std::string HIP_FUNCTION_QUALIFIER = "SYCL_EXTERNAL";
@@ -13,7 +14,7 @@ HandleResult handleGlobalFunctionDpcpp(oklt::SessionStage& s, const clang::Funct
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::DPCPP, clang::Decl::Kind::Function},
+        {TargetBackend::DPCPP, ASTNodeKind::getFromNodeKind<FunctionDecl>()},
         makeSpecificImplicitHandle(handleGlobalFunctionDpcpp));
 
     if (!ok) {

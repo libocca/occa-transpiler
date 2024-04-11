@@ -29,29 +29,11 @@ HandleResult applyTranspilationToAttrNode(SessionStage& stage,
         return tl::make_unexpected(std::move(params.error()));
     }
 
-    if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(node.getNodeKind())) {
-        return am.handleAttr(stage, *node.get<Decl>(), attr, &params.value());
-    }
-
-    if (ASTNodeKind::getFromNodeKind<Stmt>().isBaseOf(node.getNodeKind())) {
-        return am.handleAttr(stage, *node.get<Stmt>(), attr, &params.value());
-    }
-
-    return tl::make_unexpected(
-        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().str()});
+    return am.handleAttr(stage, node, attr, &params.value());
 }
 
 HandleResult applyTranspilationToNode(SessionStage& stage, const DynTypedNode& node) {
-    if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(node.getNodeKind())) {
-        return AttributeManager::instance().handleNode(stage, *node.get<Decl>());
-    }
-
-    if (ASTNodeKind::getFromNodeKind<Stmt>().isBaseOf(node.getNodeKind())) {
-        return AttributeManager::instance().handleNode(stage, *node.get<Stmt>());
-    }
-
-    return tl::make_unexpected(
-        Error{{}, std::string("unexpected node kind:") + node.getNodeKind().asStringRef().str()});
+    return AttributeManager::instance().handleNode(stage, node);
 }
 
 HandleResult applyTranspilationToNode(SessionStage& stage,

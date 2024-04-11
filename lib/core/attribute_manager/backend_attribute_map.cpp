@@ -1,4 +1,4 @@
-#include <oklt/core/error.h>
+#include <oklt/util/string_utils.h>
 
 #include "core/attribute_manager/backend_attribute_map.h"
 #include "core/transpiler_session/session_stage.h"
@@ -6,49 +6,46 @@
 namespace oklt {
 using namespace clang;
 
-bool BackendAttributeMap::registerHandler(KeyType key, AttrDeclHandler handler) {
-    auto ret = _declHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
-    return ret.second;
-}
-
-bool BackendAttributeMap::registerHandler(KeyType key, AttrStmtHandler handler) {
-    auto ret = _stmtHandlers.insert(std::make_pair(std::move(key), std::move(handler)));
+bool BackendAttributeMap::registerHandler(KeyType key, AttrHandler handler) {
+    auto ret = _nodeHandlers.emplace(std::make_pair(std::move(key), std::move(handler)));
     return ret.second;
 }
 
 HandleResult BackendAttributeMap::handleAttr(SessionStage& stage,
-                                             const clang::Decl& decl,
+                                             const clang::DynTypedNode& node,
                                              const clang::Attr& attr,
                                              const std::any* params) {
-    std::string name = attr.getNormalizedFullName();
     auto backend = stage.getBackend();
-    auto it = _declHandlers.find(std::make_tuple(backend, name));
-    if (it == _declHandlers.end()) {
-        return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
+    auto kind = node.getNodeKind();
+    auto name = attr.getNormalizedFullName();
+
+    auto it = _nodeHandlers.find({backend, name, kind});
+    if (it != _nodeHandlers.end()) {
+        return it->second.handle(stage, node, attr, params);
     }
-    return it->second.handle(stage, decl, attr, params);
+
+    it = _nodeHandlers.find({backend, name, kind.getCladeKind()});
+    if (it != _nodeHandlers.end()) {
+        return it->second.handle(stage, node, attr, params);
+    }
+
+    return tl::make_unexpected(
+        Error{std::error_code(),
+              util::fmt("Warning: no handle for backend {} for attribute {} for node {} \n",
+                        backendToString(backend),
+                        attr.getNormalizedFullName(),
+                        kind.asStringRef().str())
+                  .value()});
 }
 
-HandleResult BackendAttributeMap::handleAttr(SessionStage& stage,
-                                             const clang::Stmt& stmt,
-                                             const clang::Attr& attr,
-                                             const std::any* params) {
-    std::string name = attr.getNormalizedFullName();
-    auto backend = stage.getBackend();
-    auto it = _stmtHandlers.find(std::make_tuple(backend, name));
-    if (it == _stmtHandlers.end()) {
-        return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
-    }
-    return it->second.handle(stage, stmt, attr, params);
-}
-
-bool BackendAttributeMap::hasAttrHandler(SessionStage& stage, const std::string& name) {
-    auto key = std::make_tuple(stage.getBackend(), name);
-    auto declIt = _declHandlers.find(key);
-    if (declIt != _declHandlers.cend()) {
+bool BackendAttributeMap::hasHandler(const KeyType& key) {
+    auto it = _nodeHandlers.find(key);
+    if (it != _nodeHandlers.cend()) {
         return true;
     }
-    auto stmtIt = _stmtHandlers.find(key);
-    return stmtIt != _stmtHandlers.cend();
+
+    it = _nodeHandlers.find({std::get<0>(key), std::get<1>(key), std::get<2>(key).getCladeKind()});
+    return it != _nodeHandlers.cend();
 }
+
 }  // namespace oklt

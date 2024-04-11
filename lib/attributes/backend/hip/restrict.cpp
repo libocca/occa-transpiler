@@ -10,7 +10,7 @@ using namespace clang;
 
 __attribute__((constructor)) void registerCUDARestrictHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, RESTRICT_ATTR_NAME},
+        {TargetBackend::HIP, RESTRICT_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
         makeSpecificAttrHandle(cuda_subset::handleRestrictAttribute));
 
     if (!ok) {

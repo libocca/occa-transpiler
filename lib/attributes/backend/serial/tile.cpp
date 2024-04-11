@@ -4,10 +4,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, TILE_ATTR_NAME},
+        {TargetBackend::SERIAL, TILE_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
         makeSpecificAttrHandle(serial_subset::handleTileAttribute));
 
     if (!ok) {

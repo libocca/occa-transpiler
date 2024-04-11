@@ -1,8 +1,7 @@
 #pragma once
 
 #include <oklt/core/target_backends.h>
-#include "core/attribute_manager/attr_decl_handler.h"
-#include "core/attribute_manager/attr_stmt_handler.h"
+#include "core/attribute_manager/attr_handler.h"
 #include "core/attribute_manager/result.h"
 #include "util/type_traits.h"
 
@@ -15,29 +14,22 @@ constexpr size_t N_ARGUMENTS_WITHOUT_PARAMS = 3;
 
 class BackendAttributeMap {
    public:
-    using KeyType = std::tuple<TargetBackend, std::string>;
-    using DeclHandlers = std::map<KeyType, AttrDeclHandler>;
-    using StmtHandlers = std::map<KeyType, AttrStmtHandler>;
+    using KeyType = std::tuple<TargetBackend, std::string, clang::ASTNodeKind>;
+    using NodeHandlers = std::map<KeyType, AttrHandler>;
 
     BackendAttributeMap() = default;
     ~BackendAttributeMap() = default;
 
-    bool registerHandler(KeyType key, AttrDeclHandler handler);
-    bool registerHandler(KeyType key, AttrStmtHandler handler);
+    bool registerHandler(KeyType key, AttrHandler handler);
 
     HandleResult handleAttr(SessionStage& stage,
-                            const clang::Decl& decl,
-                            const clang::Attr& attr,
-                            const std::any* params);
-    HandleResult handleAttr(SessionStage& stage,
-                            const clang::Stmt& stmt,
+                            const clang::DynTypedNode& node,
                             const clang::Attr& attr,
                             const std::any* params);
 
-    bool hasAttrHandler(SessionStage& stage, const std::string& name);
+    bool hasHandler(const KeyType& key);
 
    private:
-    DeclHandlers _declHandlers;
-    StmtHandlers _stmtHandlers;
+    NodeHandlers _nodeHandlers;
 };
 }  // namespace oklt

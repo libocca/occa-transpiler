@@ -5,15 +5,16 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, SHARED_ATTR_NAME},
+        {TargetBackend::SERIAL, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
         makeSpecificAttrHandle(serial_subset::handleSharedAttribute));
 
-    // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
+    // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, SHARED_ATTR_NAME},
+        {TargetBackend::SERIAL, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {

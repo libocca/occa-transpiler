@@ -6,9 +6,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
+
 __attribute__((constructor)) void registerHIPTileAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, TILE_ATTR_NAME},
+        {TargetBackend::CUDA, TILE_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
         makeSpecificAttrHandle(cuda_subset::handleTileAttribute));
 
     if (!ok) {

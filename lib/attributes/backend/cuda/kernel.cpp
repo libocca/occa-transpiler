@@ -6,10 +6,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, KERNEL_ATTR_NAME},
+        {TargetBackend::CUDA, KERNEL_ATTR_NAME, ASTNodeKind::getFromNodeKind<FunctionDecl>()},
         makeSpecificAttrHandle(cuda_subset::handleKernelAttribute));
 
     if (!ok) {

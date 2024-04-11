@@ -29,7 +29,8 @@ HandleResult handleNoBarrierStmtAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        NOBARRIER_ATTR_NAME, makeSpecificAttrHandle(handleNoBarrierStmtAttribute));
+        {NOBARRIER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        makeSpecificAttrHandle(handleNoBarrierStmtAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", NOBARRIER_ATTR_NAME);

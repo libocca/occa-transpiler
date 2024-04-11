@@ -11,6 +11,7 @@
 namespace {
 using namespace oklt;
 using namespace clang;
+
 HandleResult handleExclusiveAttribute(SessionStage& s,
                                       const clang::Decl& decl,
                                       const clang::Attr& a) {
@@ -21,11 +22,11 @@ HandleResult handleExclusiveAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
         makeSpecificAttrHandle(handleExclusiveAttribute));
 
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
         makeSpecificAttrHandle(defaultHandleExclusiveStmtAttribute));
 
     if (!ok) {

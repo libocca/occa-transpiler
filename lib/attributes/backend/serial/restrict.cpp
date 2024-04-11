@@ -4,10 +4,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPRestrictHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, RESTRICT_ATTR_NAME},
+        {TargetBackend::SERIAL, RESTRICT_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
         makeSpecificAttrHandle(serial_subset::handleRestrictAttribute));
 
     if (!ok) {

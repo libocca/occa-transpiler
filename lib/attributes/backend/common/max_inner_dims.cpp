@@ -43,7 +43,8 @@ HandleResult handleMaxInnerDimsStmtAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        MAX_INNER_DIMS, makeSpecificAttrHandle(handleMaxInnerDimsStmtAttribute));
+        {MAX_INNER_DIMS, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        makeSpecificAttrHandle(handleMaxInnerDimsStmtAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", MAX_INNER_DIMS);

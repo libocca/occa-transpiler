@@ -5,33 +5,29 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
-template <typename KeyType,
-          typename MapType,
-          typename GenKeyType,
-          typename GenMapType,
-          typename ActionFunc>
-oklt::HandleResult runNodeHandler(KeyType key,
-                                  MapType& attr_map,
-                                  GenKeyType gen_key,
-                                  GenMapType& gen_map,
-                                  ActionFunc action) {
-    // Handle attributed
-    auto it = attr_map.find(key);
-    if (it != attr_map.end()) {
-        return action(it->second);
+template <typename MapType, typename KeysType, typename ActionFunc>
+oklt::HandleResult runNodeHandler(MapType& map, KeysType& keys, ActionFunc action) {
+    for (auto& key : keys) {
+        auto it = map.find(key);
+        if (it != map.end()) {
+            return action(it->second);
+        }
     }
 
-    auto gen_it = gen_map.find(gen_key);
-    if (gen_it != gen_map.end()) {
-        return action(gen_it->second);
-    }
     return {};
 }
 
-AstProcessorManager::AttrKeyType makeAttrKey(AstProcessorType procType, const clang::Attr* attr) {
-    return {procType, attr ? attr->getNormalizedFullName() : ""};
+template <typename KeyType>
+std::vector<KeyType> makeKeys(AstProcessorType procType,
+                              const clang::DynTypedNode& node,
+                              const clang::Attr* attr) {
+    auto kind = node.getNodeKind();
+    auto name = attr ? attr->getNormalizedFullName() : "";
+    return {{procType, name, kind}, {procType, name, kind.getCladeKind()}};
 }
+
 }  // namespace
 
 namespace oklt {
@@ -42,63 +38,27 @@ AstProcessorManager& AstProcessorManager::instance() {
     return manager;
 }
 
-bool AstProcessorManager::registerDefaultHandle(DefaultKeyType key, DeclNodeHandle handle) {
-    auto [_, ret] = _defaultDeclHandlers.try_emplace(key, std::move(handle));
-    return ret;
-}
-
-bool AstProcessorManager::registerDefaultHandle(DefaultKeyType key, StmtNodeHandle handle) {
-    auto [_, ret] = _defaultStmtHandlers.try_emplace(key, std::move(handle));
-    return ret;
-}
-
-bool AstProcessorManager::registerSpecificNodeHandle(AttrKeyType key, DeclNodeHandle handler) {
-    auto [_, ret] = _declHandlers.try_emplace(std::move(key), std::move(handler));
-    return ret;
-}
-
-bool AstProcessorManager::registerSpecificNodeHandle(AttrKeyType key, StmtNodeHandle handler) {
-    auto [_, ret] = _stmtHandlers.try_emplace(std::move(key), std::move(handler));
+bool AstProcessorManager::registerHandle(KeyType key, NodeHandle handle) {
+    auto [_, ret] = _nodeHandlers.try_emplace(key, std::move(handle));
     return ret;
 }
 
 HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
                                                          SessionStage& stage,
-                                                         const clang::Decl& decl,
+                                                         const clang::DynTypedNode& node,
                                                          const clang::Attr* attr) {
+    auto keys = makeKeys<KeyType>(procType, node, attr);
     return runNodeHandler(
-        makeAttrKey(procType, attr), _declHandlers, procType, _defaultDeclHandlers, [&](auto h) {
-            return h.preAction(stage, decl, attr);
-        });
+        _nodeHandlers, keys, [&](auto h) { return h.preAction(stage, node, attr); });
 }
 
 HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
                                                           SessionStage& stage,
-                                                          const clang::Decl& decl,
+                                                          const clang::DynTypedNode& node,
                                                           const clang::Attr* attr) {
+    auto keys = makeKeys<KeyType>(procType, node, attr);
     return runNodeHandler(
-        makeAttrKey(procType, attr), _declHandlers, procType, _defaultDeclHandlers, [&](auto h) {
-            return h.postAction(stage, decl, attr);
-        });
+        _nodeHandlers, keys, [&](auto h) { return h.postAction(stage, node, attr); });
 }
 
-HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                         SessionStage& stage,
-                                                         const clang::Stmt& stmt,
-                                                         const clang::Attr* attr) {
-    return runNodeHandler(
-        makeAttrKey(procType, attr), _stmtHandlers, procType, _defaultStmtHandlers, [&](auto h) {
-            return h.preAction(stage, stmt, attr);
-        });
-}
-
-HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                          SessionStage& stage,
-                                                          const clang::Stmt& stmt,
-                                                          const clang::Attr* attr) {
-    return runNodeHandler(
-        makeAttrKey(procType, attr), _stmtHandlers, procType, _defaultStmtHandlers, [&](auto h) {
-            return h.postAction(stage, stmt, attr);
-        });
-}
 }  // namespace oklt

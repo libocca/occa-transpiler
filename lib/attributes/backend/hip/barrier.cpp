@@ -6,10 +6,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerHIPBarrierAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, BARRIER_ATTR_NAME},
+        {TargetBackend::HIP, BARRIER_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
         makeSpecificAttrHandle(cuda_subset::handleBarrierAttribute));
 
     if (!ok) {

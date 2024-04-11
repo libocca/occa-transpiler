@@ -6,9 +6,7 @@
 #include "core/attribute_manager/result.h"
 #include "util/type_traits.h"
 
-#include <clang/AST/Attr.h>
-#include <clang/AST/Decl.h>
-#include <clang/AST/Stmt.h>
+#include <clang/AST/ASTTypeTraits.h>
 
 #include <map>
 
@@ -23,24 +21,15 @@ class AstProcessorManager {
     ~AstProcessorManager() = default;
 
    public:
-    using AttrKeyType = std::tuple<AstProcessorType, std::string>;
-    using DefaultKeyType = std::tuple<AstProcessorType>;
+    using KeyType = std::tuple<AstProcessorType, std::string, clang::ASTNodeKind>;
+    using HandleType =
+        std::function<HandleResult(SessionStage&, const clang::DynTypedNode&, const clang::Attr*)>;
 
-    using DeclHandleType = std::function<HandleResult(SessionStage&, const clang::Decl&, const clang::Attr*)>;
-    using StmtHandleType = std::function<HandleResult(SessionStage&, const clang::Stmt&, const clang::Attr*)>;
-
-    struct DeclNodeHandle {
+    struct NodeHandle {
         // run in direction from parent to child
-        DeclHandleType preAction;
+        HandleType preAction;
         // run in direction from child to parent
-        DeclHandleType postAction;
-    };
-
-    struct StmtNodeHandle {
-        // run in direction from parent to child
-        StmtHandleType preAction;
-        // run in direction from child to parent
-        StmtHandleType postAction;
+        HandleType postAction;
     };
 
     static AstProcessorManager& instance();
@@ -50,124 +39,63 @@ class AstProcessorManager {
     AstProcessorManager& operator=(const AstProcessorManager&) = delete;
     AstProcessorManager& operator=(AstProcessorManager&&) = delete;
 
-    bool registerDefaultHandle(DefaultKeyType key, DeclNodeHandle handle);
-    bool registerDefaultHandle(DefaultKeyType key, StmtNodeHandle handle);
-
-    bool registerSpecificNodeHandle(AttrKeyType key, DeclNodeHandle handle);
-    bool registerSpecificNodeHandle(AttrKeyType key, StmtNodeHandle handle);
+    bool registerHandle(KeyType key, NodeHandle handle);
 
     HandleResult runPreActionNodeHandle(AstProcessorType procType,
                                         SessionStage& stage,
-                                        const clang::Decl& decl,
+                                        const clang::DynTypedNode& node,
                                         const clang::Attr* attr);
     HandleResult runPostActionNodeHandle(AstProcessorType procType,
                                          SessionStage& stage,
-                                         const clang::Decl& decl,
-                                         const clang::Attr* attr);
-    HandleResult runPreActionNodeHandle(AstProcessorType procType,
-                                        SessionStage& stage,
-                                        const clang::Stmt& stmt,
-                                        const clang::Attr* attr);
-    HandleResult runPostActionNodeHandle(AstProcessorType procType,
-                                         SessionStage& stage,
-                                         const clang::Stmt& stmt,
+                                         const clang::DynTypedNode& node,
                                          const clang::Attr* attr);
 
    private:
-    std::map<DefaultKeyType, DeclNodeHandle> _defaultDeclHandlers;
-    std::map<DefaultKeyType, StmtNodeHandle> _defaultStmtHandlers;
-    std::map<AttrKeyType, DeclNodeHandle> _declHandlers;
-    std::map<AttrKeyType, StmtNodeHandle> _stmtHandlers;
+    std::map<KeyType, NodeHandle> _nodeHandlers;
 };
 
-// INFO: helper functions to register specific Decl/Stmt handler in Ast Processor Manager
-//  so far 2 separate helpers for decl and stmt because no time to play with meta programming
-//  USE only by existing examples other cases are not tested!!!
 namespace detail {
 constexpr size_t HANDLE_NUM_OF_ARGS = 3;
-template <typename Handler, typename NodeType, typename HandleType>
-HandleType makeSpecificSemaXXXHandle(Handler& handler) {
-    using ExprType = typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
-    constexpr size_t n_arguments = func_num_arguments<Handler>::value;
+template <typename Handler, typename HandleType>
+HandleType makeSemaXXXHandle(Handler& handler) {
+    using NodeType = typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
+    constexpr size_t nargs = func_num_arguments<Handler>::value;
 
-    return HandleType{[&handler, n_arguments](SessionStage& stage,
-                                              const NodeType& node,
-                                              const clang::Attr* attr) -> HandleResult {
-        static_assert(n_arguments == HANDLE_NUM_OF_ARGS, "Handler must have 3 arguments");
-        if (!attr) {
-            auto handleNodeTypeName = typeid(ExprType).name();
-            return tl::make_unexpected(
-                Error{{}, util::fmt("nullptr attr for {}", handleNodeTypeName).value()});
-        }
+    return HandleType{[&handler, nargs](SessionStage& stage,
+                                        const clang::DynTypedNode& node,
+                                        const clang::Attr* attr) -> HandleResult {
+        static_assert(nargs == HANDLE_NUM_OF_ARGS, "Handler must have 3 arguments");
 
-        const auto localNode = clang::dyn_cast_or_null<ExprType>(&node);
+        const auto localNode = node.get<NodeType>();
         if (!localNode) {
-            auto baseNodeTypeName = typeid(NodeType).name();
-            auto handleNodeTypeName = typeid(ExprType).name();
-            return tl::make_unexpected(
-                Error{{},
-                      util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
-                          .value()});
+            auto baseNodeTypeName = node.getNodeKind().asStringRef();
+            auto handleNodeTypeName = clang::ASTNodeKind::getFromNodeKind<NodeType>().asStringRef();
+            return tl::make_unexpected(Error{
+                {},
+                util::fmt(
+                    "Failed to cast {} to {}", baseNodeTypeName.str(), handleNodeTypeName.str())
+                    .value()});
         }
-        return handler(stage, *localNode, *attr);
-    }};
-};
 
-// TODO: maybe remove dublication with makeSpecificSemaXXXHandle
-template <typename Handler, typename NodeType, typename HandleType>
-HandleType makeDefaultSemaXXXHandle(Handler& handler) {
-    using ExprType = typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
-    constexpr size_t n_arguments = func_num_arguments<Handler>::value;
-
-    return HandleType{[&handler, n_arguments](SessionStage& stage,
-                                              const NodeType& node,
-                                              const clang::Attr* attr) -> HandleResult {
-        static_assert(n_arguments == HANDLE_NUM_OF_ARGS, "Handler must have 3 arguments");
-        const auto localNode = clang::dyn_cast_or_null<ExprType>(&node);
-        if (!localNode) {
-            auto baseNodeTypeName = typeid(NodeType).name();
-            auto handleNodeTypeName = typeid(ExprType).name();
-            return tl::make_unexpected(
-                Error{{},
-                      util::fmt("Failed to cast {} to {}", baseNodeTypeName, handleNodeTypeName)
-                          .value()});
+        if constexpr (!std::is_reference_v<typename func_param_type<Handler, 3>::type>) {
+            return handler(stage, *localNode, attr);
+        } else {
+            if (!attr) {
+                auto handleNodeTypeName =
+                    clang::ASTNodeKind::getFromNodeKind<NodeType>().asStringRef();
+                return tl::make_unexpected(
+                    Error{{}, util::fmt("nullptr attr for {}", handleNodeTypeName.str()).value()});
+            }
+            return handler(stage, *localNode, *attr);
         }
-        return handler(stage, *localNode, attr);
     }};
 };
 
 }  // namespace detail
 
 template <typename Handler>
-auto makeSpecificSemaHandle(Handler& handler) {
-    using DeclOrStmt = typename std::remove_const_t<
-        typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>>;
-
-    if constexpr (std::is_base_of_v<clang::Decl, DeclOrStmt>) {
-        return detail::makeSpecificSemaXXXHandle<Handler,
-                                                 clang::Decl,
-                                                 AstProcessorManager::DeclHandleType>(handler);
-    } else {
-        return detail::makeSpecificSemaXXXHandle<Handler,
-                                                 clang::Stmt,
-                                                 AstProcessorManager::StmtHandleType>(handler);
-    }
-}
-
-template <typename Handler>
-auto makeDefaultSemaHandle(Handler& handler) {
-    using DeclOrStmt = typename std::remove_const_t<
-        typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>>;
-
-    if constexpr (std::is_base_of_v<clang::Decl, DeclOrStmt>) {
-        return detail::makeDefaultSemaXXXHandle<Handler,
-                                                clang::Decl,
-                                                AstProcessorManager::DeclHandleType>(handler);
-    } else {
-        return detail::makeDefaultSemaXXXHandle<Handler,
-                                                clang::Stmt,
-                                                AstProcessorManager::StmtHandleType>(handler);
-    }
+auto makeSemaHandle(Handler& handler) {
+    return detail::makeSemaXXXHandle<Handler, AstProcessorManager::HandleType>(handler);
 }
 
 }  // namespace oklt

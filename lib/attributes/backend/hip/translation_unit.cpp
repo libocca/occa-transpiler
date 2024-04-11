@@ -18,7 +18,7 @@ HandleResult handleTU(SessionStage& s, const TranslationUnitDecl& d) {
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
+        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<TranslationUnitDecl>()},
         makeSpecificImplicitHandle(handleTU));
 
     if (!ok) {

@@ -7,13 +7,14 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerCUDAExclusiveAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
         makeSpecificAttrHandle(cuda_subset::handleExclusiveAttribute));
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME},
+        {TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
         makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
 
     if (!ok) {

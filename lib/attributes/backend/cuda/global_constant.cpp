@@ -5,6 +5,7 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 HandleResult handleGlobalConstant(oklt::SessionStage& s, const clang::VarDecl& decl) {
     const std::string CUDA_CONST_QUALIFIER = "__constant__";
@@ -13,7 +14,7 @@ HandleResult handleGlobalConstant(oklt::SessionStage& s, const clang::VarDecl& d
 
 __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::Var},
+        {TargetBackend::CUDA, ASTNodeKind::getFromNodeKind<VarDecl>()},
         makeSpecificImplicitHandle(handleGlobalConstant));
 
     if (!ok) {

@@ -13,64 +13,44 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-namespace {
-HandleResult semaDefaultPre(SessionStage& stage,
-                            const clang::Stmt& stmt,
-                            const Attr* attr) {
-    if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
-        return preValidateOklForLoopWithoutAttribute(stage, *forStmt, attr);
-    }
-    return {};
-}
-
-HandleResult semaDefaultPost(SessionStage& stage,
-                             const clang::Stmt& stmt,
-                             const Attr* attr) {
-    if (auto forStmt = dyn_cast_or_null<ForStmt>(&stmt)) {
-        return postValidateOklForLoopWithoutAttribute(stage, *forStmt, attr);
-    }
-    return {};
-}
-
-}  // namespace
 __attribute__((constructor)) void registerOklSemaProcessor() {
     auto& mng = AstProcessorManager::instance();
-    using DeclHandle = AstProcessorManager::DeclNodeHandle;
-    using StmtHandle = AstProcessorManager::StmtNodeHandle;
 
     // sema handler for OKL kernel attribute
-    auto ok = mng.registerSpecificNodeHandle(
-        {AstProcessorType::OKL_WITH_SEMA, KERNEL_ATTR_NAME},
-        DeclHandle{.preAction = makeSpecificSemaHandle(preValidateOklKernel),
-                   .postAction = makeSpecificSemaHandle(postValidateOklKernel)});
+    auto ok = mng.registerHandle({AstProcessorType::OKL_WITH_SEMA,
+                                  KERNEL_ATTR_NAME,
+                                  ASTNodeKind::getFromNodeKind<FunctionDecl>()},
+                                 {.preAction = makeSemaHandle(preValidateOklKernel),
+                                  .postAction = makeSemaHandle(postValidateOklKernel)});
     assert(ok);
 
     // sema handler for OKL tile attribute
-    ok = mng.registerSpecificNodeHandle(
-        {AstProcessorType::OKL_WITH_SEMA, TILE_ATTR_NAME},
-        StmtHandle{.preAction = makeSpecificSemaHandle(preValidateOklForLoop),
-                   .postAction = makeSpecificSemaHandle(postValidateOklForLoop)});
+    ok = mng.registerHandle(
+        {AstProcessorType::OKL_WITH_SEMA, TILE_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        {.preAction = makeSemaHandle(preValidateOklForLoop),
+         .postAction = makeSemaHandle(postValidateOklForLoop)});
     assert(ok);
 
     // sema handler for OKL outer attribute
-    ok = mng.registerSpecificNodeHandle(
-        {AstProcessorType::OKL_WITH_SEMA, OUTER_ATTR_NAME},
-        StmtHandle{.preAction = makeSpecificSemaHandle(preValidateOklForLoop),
-                   .postAction = makeSpecificSemaHandle(postValidateOklForLoop)});
+    ok = mng.registerHandle(
+        {AstProcessorType::OKL_WITH_SEMA, OUTER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        {.preAction = makeSemaHandle(preValidateOklForLoop),
+         .postAction = makeSemaHandle(postValidateOklForLoop)});
     assert(ok);
 
     // sema handler for OKL inner attribute
-    ok = mng.registerSpecificNodeHandle(
-        {AstProcessorType::OKL_WITH_SEMA, INNER_ATTR_NAME},
-        StmtHandle{.preAction = makeSpecificSemaHandle(preValidateOklForLoop),
-                   .postAction = makeSpecificSemaHandle(postValidateOklForLoop)});
+    ok = mng.registerHandle(
+        {AstProcessorType::OKL_WITH_SEMA, INNER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        {.preAction = makeSemaHandle(preValidateOklForLoop),
+         .postAction = makeSemaHandle(postValidateOklForLoop)});
     assert(ok);
 
-    ok =
-        mng.registerDefaultHandle({AstProcessorType::OKL_WITH_SEMA},
-                                  StmtHandle{.preAction = makeDefaultSemaHandle(semaDefaultPre),
-                                             .postAction = makeDefaultSemaHandle(semaDefaultPost)});
+    ok = mng.registerHandle(
+        {AstProcessorType::OKL_WITH_SEMA, "", ASTNodeKind::getFromNodeKind<ForStmt>()},
+        {.preAction = makeSemaHandle(preValidateOklForLoopWithoutAttribute),
+         .postAction = makeSemaHandle(postValidateOklForLoopWithoutAttribute)});
 
     assert(ok);
 }
+
 }  // namespace

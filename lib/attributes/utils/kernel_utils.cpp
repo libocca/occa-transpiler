@@ -9,6 +9,7 @@
 #include <clang/AST/ParentMapContext.h>
 
 namespace oklt {
+using namespace clang;
 
 tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
@@ -70,7 +71,8 @@ tl::expected<void, Error> handleChildAttr(const clang::Stmt& stmt,
             return tl::make_unexpected(std::move(params.error()));
         }
 
-        return am.handleAttr(s, stmt, *attr, &params.value());
+        auto node = DynTypedNode::create(stmt);
+        return am.handleAttr(s, node, *attr, &params.value());
     }
 
     return {};

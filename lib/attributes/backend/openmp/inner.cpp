@@ -4,10 +4,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, INNER_ATTR_NAME},
+        {TargetBackend::OPENMP, INNER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
         makeSpecificAttrHandle(serial_subset::handleInnerAttribute));
 
     if (!ok) {

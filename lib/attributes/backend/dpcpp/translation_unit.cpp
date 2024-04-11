@@ -16,7 +16,7 @@ HandleResult handleTranslationUnitDpcpp(SessionStage& s, const clang::Translatio
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::DPCPP, clang::Decl::Kind::TranslationUnit},
+        {TargetBackend::DPCPP, ASTNodeKind::getFromNodeKind<TranslationUnitDecl>()},
         makeSpecificImplicitHandle(handleTranslationUnitDpcpp));
 
     if (!ok) {

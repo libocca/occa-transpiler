@@ -41,7 +41,8 @@ HandleResult handleOuterAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, OUTER_ATTR_NAME}, makeSpecificAttrHandle(handleOuterAttribute));
+        {TargetBackend::DPCPP, OUTER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
+        makeSpecificAttrHandle(handleOuterAttribute));
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", OUTER_ATTR_NAME);

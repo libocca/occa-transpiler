@@ -29,7 +29,7 @@ HandleResult handleOPENMPOuterAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, OUTER_ATTR_NAME},
+        {TargetBackend::OPENMP, OUTER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
         makeSpecificAttrHandle(handleOPENMPOuterAttribute));
 
     if (!ok) {

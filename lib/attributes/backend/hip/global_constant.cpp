@@ -11,9 +11,9 @@ HandleResult handleHIPGlobalConstant(oklt::SessionStage& s, const clang::VarDecl
     return oklt::handleGlobalConstant(s, decl, HIP_CONST_QUALIFIER);
 }
 
-__attribute__((constructor)) void registeHIPGlobalConstantHandler() {
+__attribute__((constructor)) void registerHIPGlobalConstantHandler() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::Var},
+        {TargetBackend::HIP, clang::ASTNodeKind::getFromNodeKind<clang::VarDecl>()},
         makeSpecificImplicitHandle(handleHIPGlobalConstant));
 
     if (!ok) {

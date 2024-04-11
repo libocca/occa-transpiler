@@ -33,10 +33,12 @@ HandleResult handleDimOrderStmtAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        DIM_ORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderDeclAttribute));
+        {DIM_ORDER_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
+        makeSpecificAttrHandle(handleDimOrderDeclAttribute));
 
     ok = ok && oklt::AttributeManager::instance().registerCommonHandler(
-                   DIM_ORDER_ATTR_NAME, makeSpecificAttrHandle(handleDimOrderStmtAttribute));
+                   {DIM_ORDER_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
+                   makeSpecificAttrHandle(handleDimOrderStmtAttribute));
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ORDER_ATTR_NAME);
     }
