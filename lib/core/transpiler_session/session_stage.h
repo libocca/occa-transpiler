@@ -4,9 +4,9 @@
 #include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
+#include "core/rewriter/rewriter_fabric.h"
 #include "core/rewriter/rewriter_proxy.h"
 #include "core/transpiler_session/header_info.h"
-#include "core/rewriter/rewriter_fabric.h"
 
 #include <clang/Frontend/CompilerInstance.h>
 
@@ -77,12 +77,8 @@ class SessionStage {
     TranspilerSession& _session;
     TargetBackend _backend;
     AstProcessorType _astProcType;
-
     clang::CompilerInstance& _compiler;
-    // std::unique_ptr<oklt::Rewriter> _rewriter;
     std::unique_ptr<oklt::Rewriter> _rewriter;
-
-    // XXX discuss key
     std::map<std::string, std::any> _userCtxMap;
 };
 

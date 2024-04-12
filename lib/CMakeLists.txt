@@ -162,6 +162,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/sema/okl_sema_info.cpp
     core/sema/okl_sema_info.h
 
+    core/lex/lexer.h
+    core/lex/lexer.cpp
+
     core/diag/diag_consumer.cpp
     core/diag/builtin_handlers/ignore_undecl_indent.cpp
 
@@ -224,7 +227,22 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/stages/normalizer/impl/expand_macro_stage.cpp
     pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
     pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
-    pipeline/stages/normalizer/impl/okl_attr_traverser.cpp
+
+    pipeline/core/stage_action.cpp
+    pipeline/core/stage_action.h
+    pipeline/core/stage_action_runner.cpp
+    pipeline/core/stage_action_runner.h
+    pipeline/core/stage_action_registry.h
+    pipeline/core/stage_action_registry.cpp
+    pipeline/utils/okl_attribute_traverser.cpp
+    pipeline/utils/okl_attribute_traverser.h
+    pipeline/utils/okl_attribute.h
+
+    pipeline/stages/okl_directive_expansion.cpp
+    pipeline/stages/macro_expansion.cpp
+    pipeline/stages/okl_to_gnu_attr_normalizer.cpp
+    pipeline/stages/gnu_to_std_cpp_attr_normalizer.cpp
+    pipeline/stages/transpilation.cpp
 )
 
 CPMAddPackage(expected

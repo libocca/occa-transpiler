@@ -3,16 +3,16 @@
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
-#include "core/vfs/overlay_fs.h"
 
-#include "pipeline/stages/normalizer/error_codes.h"
-#include "pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.h"
-#include "pipeline/stages/normalizer/impl/okl_attribute.h"
+#include "pipeline/core/stage_action_names.h"
+#include "pipeline/core/stage_action_registry.h"
+#include "pipeline/utils/okl_attribute.h"
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Tooling/Tooling.h>
+
 #include <spdlog/spdlog.h>
 
 namespace {
@@ -53,17 +53,21 @@ template <typename Expr, typename AttrType>
 void insertNormalizedAttr(const Expr& e, const AttrType& attr, SessionStage& stage) {
     auto oklAttr = toOklAttr(attr, stage.getCompiler().getASTContext());
     auto normalizedAttrStr = wrapAsSpecificCxxAttr(oklAttr);
+
     stage.getRewriter().InsertTextAfter(e.getBeginLoc(), normalizedAttrStr);
 }
 
 template <typename AttrType, typename Expr>
 bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProccesedAttr) {
     assert(lastProccesedAttr);
+
     auto& sm = stage.getCompiler().getSourceManager();
     auto& mapper = stage.getSession().getOriginalSourceMapper();
+
     for (auto* attr : e.getAttrs()) {
         auto attrBegLoc = attr->getRange().getBegin();
         auto prevFidAttrOffset = sm.getDecomposedLoc(attrBegLoc);
+
         if (attr->isCXX11Attribute()) {
             mapper.updateAttributeOffset(prevFidAttrOffset, attrBegLoc, stage.getRewriter());
             continue;
@@ -98,18 +102,10 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProcc
 
 // Traverse AST and convert GNU attributes and to standard C++ attribute
 // syntax and unified source location
-class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer> {
+class GnuToStdAttrNormalizerVisitor : public RecursiveASTVisitor<GnuToStdAttrNormalizerVisitor> {
    public:
-    explicit GnuToCppAttrNormalizer(SessionStage& stage)
-        : _stage(stage) {
-        auto anyCtx = _stage.getUserCtx("input");
-        if (anyCtx && anyCtx->has_value()) {
-            // use non-throw api by passing pointer to any
-            _input = *(std::any_cast<GnuToStdCppStageInput*>(anyCtx));
-        } else {
-            _input = nullptr;
-        }
-    }
+    explicit GnuToStdAttrNormalizerVisitor(SessionStage& stage)
+        : _stage(stage) {}
 
     bool VisitDecl(Decl* d) {
         assert(d != nullptr && "declaration is nullptr");
@@ -127,19 +123,18 @@ class GnuToCppAttrNormalizer : public RecursiveASTVisitor<GnuToCppAttrNormalizer
             return false;
         }
 
-        return RecursiveASTVisitor<GnuToCppAttrNormalizer>::TraverseAttributedStmt(as);
+        return RecursiveASTVisitor<GnuToStdAttrNormalizerVisitor>::TraverseAttributedStmt(as);
     }
 
    private:
     const Attr* _lastProccesedAttr{nullptr};
     SessionStage& _stage;
-    GnuToStdCppStageInput* _input;
 };
 
 // ASTConsumer to run GNU to C++ attribute replacing
-class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
+class GnuToStdAttrNormalizerConsumer : public ASTConsumer {
    public:
-    explicit GnuToCppAttrNormalizerConsumer(SessionStage& stage)
+    explicit GnuToStdAttrNormalizerConsumer(SessionStage& stage)
         : _stage(stage),
           _normalizer_visitor(_stage) {}
 
@@ -155,105 +150,24 @@ class GnuToCppAttrNormalizerConsumer : public ASTConsumer {
 
    private:
     SessionStage& _stage;
-    GnuToCppAttrNormalizer _normalizer_visitor;
+    GnuToStdAttrNormalizerVisitor _normalizer_visitor;
 };
 
-struct GnuToStdCppAttributeNormalizerAction : public clang::ASTFrontendAction {
-    explicit GnuToStdCppAttributeNormalizerAction(oklt::GnuToStdCppStageInput& input,
-                                                  oklt::GnuToStdCppStageOutput& output)
-        : _input(input),
-          _output(output),
-          _session(*input.session),
-          _stage(nullptr) {}
+class GnuToStdAttrNormalizer : public StageAction {
+   public:
+    GnuToStdAttrNormalizer() { _name = GNU_TO_STD_ATTR_NORMALIZER_STAGE; }
 
    protected:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                           llvm::StringRef in_file) override {
-        _stage =
-            std::make_unique<SessionStage>(_session, compiler, RewriterProxyType::WithDeltaTree);
-        if (!_stage->setUserCtx("input", &_input)) {
-            _stage->pushError(std::error_code(),
-                              "failed to set user ctx for GnuToStdCppAttributeNormalizerAction");
-            return nullptr;
-        }
-        auto consumer = std::make_unique<GnuToCppAttrNormalizerConsumer>(*_stage);
         compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
-
-        return std::move(consumer);
+        return std::make_unique<GnuToStdAttrNormalizerConsumer>(*_stage);
     }
 
-    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
-        if (compiler.hasFileManager()) {
-            auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
-                                           _input.gnuCppIncs);
-            compiler.getFileManager().setVirtualFileSystem(overlayFs);
-        }
-
-        return true;
-    }
-
-    void EndSourceFileAction() override {
-        _output.stdCppSrc = _stage->getRewriterResultForMainFile();
-        // no errors and empty output could mean that the source is already normalized
-        // so use input as output and lets the next stage try to figure out
-        if (_output.stdCppSrc.empty()) {
-            _output.stdCppSrc = std::move(_input.gnuCppSrc);
-        }
-
-        // we need keep all headers in output even there are not modififcation by rewriter to
-        // populate affected files futher
-        _output.stdCppIncs = _stage->getRewriterResultForHeaders();
-        _output.stdCppIncs.fileMap.merge(_input.gnuCppIncs.fileMap);
-    }
-
-   private:
-    oklt::GnuToStdCppStageInput& _input;
-    oklt::GnuToStdCppStageOutput& _output;
-    TranspilerSession& _session;
-    std::unique_ptr<SessionStage> _stage;
+    RewriterProxyType getRewriterType() const override { return RewriterProxyType::WithDeltaTree; }
 };
 
+StagePluginRegistry::Add<GnuToStdAttrNormalizer> gnuToCppAttrNormalizer(
+    GNU_TO_STD_ATTR_NORMALIZER_STAGE,
+    "");
 }  // namespace
-
-namespace oklt {
-GnuToStdCppResult convertGnuToStdCppAttribute(GnuToStdCppStageInput input) {
-    if (input.gnuCppSrc.empty()) {
-        SPDLOG_ERROR("Input source string is empty");
-        auto error =
-            makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
-        return tl::make_unexpected(std::vector<Error>{error});
-    }
-
-    Twine tool_name = "okl-transpiler-normalization-to-cxx";
-    auto cppFileNamePath = input.session->input.sourcePath;
-    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
-
-    auto input_file = std::move(input.gnuCppSrc);
-    GnuToStdCppStageOutput output = {.session = input.session};
-
-    auto& sessionInput = input.session->input;
-    for (const auto& define : sessionInput.defines) {
-        std::string def = "-D" + define;
-        args.push_back(std::move(def));
-    }
-
-    for (const auto& includePath : sessionInput.inlcudeDirectories) {
-        std::string incPath = "-I" + includePath.string();
-        args.push_back(std::move(incPath));
-    }
-
-    if (!tooling::runToolOnCodeWithArgs(
-            std::make_unique<GnuToStdCppAttributeNormalizerAction>(input, output),
-            input_file,
-            args,
-            cppFileName,
-            tool_name)) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
-    }
-
-    SPDLOG_DEBUG("stage 2 STD cpp source:\n\n{}", output.stdCppSrc);
-
-    return output;
-}
-}  // namespace oklt

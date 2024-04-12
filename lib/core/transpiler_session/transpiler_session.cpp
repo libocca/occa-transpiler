@@ -123,7 +123,7 @@ SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::stri
 
 TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
     input.backend = backend;
-    input.sourceCode = std::move(sourceCode);
+    input.source = std::move(sourceCode);
 }
 
 TranspilerSession::TranspilerSession(UserInput input_)
@@ -168,4 +168,5 @@ std::vector<Warning>& TranspilerSession::getWarnings() {
 OriginalSourceMapper& TranspilerSession::getOriginalSourceMapper() {
     return _sourceMapper;
 }
+
 }  // namespace oklt

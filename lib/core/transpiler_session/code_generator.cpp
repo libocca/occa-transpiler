@@ -99,7 +99,7 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
     // merging operation move the source to destination map so clone headers
     // to preserve them for possible laucher generator
-    auto clone = stage.getSession().normalizedHeaders.fileMap;
+    auto clone = stage.getSession().input.headers;
     inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
     return inputs;
@@ -133,8 +133,8 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     CompilerInstance compiler;
     compiler.setInvocation(std::move(invocation));
     compiler.createDiagnostics();
-    compiler.createFileManager(
-        makeOverlayFs(stage.getCompiler().getFileManager().getVirtualFileSystemPtr(), inputs));
+    compiler.createFileManager(makeOverlayFs(
+        stage.getCompiler().getFileManager().getVirtualFileSystemPtr(), inputs.fileMap));
 
     // XXX clang PrintPreprocessedInput action currently can provide output in two ways:
     //     - print it into STDOUT

@@ -1,5 +1,8 @@
-#include "core/ast_traversal/preorder_traversal_nlr.h"
+#include <oklt/util/format.h>
+
 #include "core/ast_processor_manager/ast_processor_manager.h"
+#include "core/diag/diag_consumer.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
@@ -9,15 +12,20 @@
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
 
-#include <clang/AST/Attr.h>
-#include <clang/FrontendTool/Utils.h>
-#include <clang/Lex/Preprocessor.h>
-#include <clang/Lex/PreprocessorOptions.h>
+#include "pipeline/core/stage_action.h"
+#include "pipeline/core/stage_action_names.h"
+#include "pipeline/core/stage_action_registry.h"
+
+#include <clang/AST/RecursiveASTVisitor.h>
+
 #include <spdlog/spdlog.h>
 
 namespace {
+
 using namespace oklt;
 using namespace clang;
+
+struct PreorderNlrTraversal;
 
 template <typename TraversalType, typename ExprType>
 bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
@@ -29,12 +37,12 @@ bool dispatchTraverseFunc(TraversalType& traversal, ExprType expr) {
             }
             return expr;
         }(expr);
-        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseStmt(expr_);
+        return traversal.template RecursiveASTVisitor<PreorderNlrTraversal>::TraverseStmt(expr_);
     } else if constexpr (std::is_same_v<PureType, Decl>) {
-        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseDecl(expr);
+        return traversal.template RecursiveASTVisitor<PreorderNlrTraversal>::TraverseDecl(expr);
     } else if constexpr (std::is_same_v<PureType, TranslationUnitDecl>) {
-        return traversal.RecursiveASTVisitor<PreorderNlrTraversal>::TraverseTranslationUnitDecl(
-            expr);
+        return traversal
+            .template RecursiveASTVisitor<PreorderNlrTraversal>::TraverseTranslationUnitDecl(expr);
     }
     return false;
 }
@@ -253,69 +261,138 @@ bool traverseNode(TraversalType& traversal,
     }
 
     return true;
-}
+};
 
-}  // namespace
-namespace oklt {
+class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraversal> {
+   public:
+    PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage)
+        : _procMng(procMng),
+          _stage(stage),
+          _tu(nullptr) {
+        // create storage for lazy transpiled nodes
+        _stage.tryEmplaceUserCtx<OklSemaCtx>();
+        _stage.tryEmplaceUserCtx<TranspilationNodes>();
+    }
 
-PreorderNlrTraversal::PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage)
-    : _procMng(procMng),
-      _stage(stage),
-      _tu(nullptr) {
-    // create storage for lazy transpiled nodes
-    _stage.tryEmplaceUserCtx<OklSemaCtx>();
-    _stage.tryEmplaceUserCtx<TranspilationNodes>();
-}
+    bool TraverseDecl(clang::Decl* decl) { return traverseNode(*this, decl, _procMng, _stage); }
 
-bool PreorderNlrTraversal::TraverseDecl(clang::Decl* decl) {
-    return traverseNode(*this, decl, _procMng, _stage);
-}
+    bool TraverseStmt(clang::Stmt* stmt) { return traverseNode(*this, stmt, _procMng, _stage); }
 
-bool PreorderNlrTraversal::TraverseStmt(clang::Stmt* stmt) {
-    return traverseNode(*this, stmt, _procMng, _stage);
-}
+    bool TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl) {
+        auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
+        sema.clear();
 
-bool PreorderNlrTraversal::TraverseTranslationUnitDecl(
-    clang::TranslationUnitDecl* translationUnitDecl) {
-    auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
-    sema.clear();
+        auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
+        tnodes.clear();
 
-    auto& tnodes = _stage.tryEmplaceUserCtx<TranspilationNodes>();
-    tnodes.clear();
+        _tu = translationUnitDecl;
+        return traverseNode(*this, translationUnitDecl, _procMng, _stage);
+    }
 
-    _tu = translationUnitDecl;
-    return traverseNode(*this, translationUnitDecl, _procMng, _stage);
-}
+    tl::expected<std::pair<std::string, std::string>, Error> applyAstProcessor(
+        clang::TranslationUnitDecl* translationUnitDecl) {
+        // traverse AST and generate sema metadata if required
+        if (!_tu || _tu != translationUnitDecl) {
+            SPDLOG_INFO("Start AST traversal");
+            if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
+                return tl::make_unexpected(Error{{}, "error during AST traversing"});
+            }
+        }
 
-tl::expected<std::pair<std::string, std::string>, Error> PreorderNlrTraversal::applyAstProcessor(
-    clang::TranslationUnitDecl* translationUnitDecl) {
-    // traverse AST and generate sema metadata if required
-    if (!_tu || _tu != translationUnitDecl) {
-        SPDLOG_INFO("Start AST traversal");
-        if (!TraverseTranslationUnitDecl(translationUnitDecl)) {
-            return tl::make_unexpected(Error{{}, "error during AST traversing"});
+        // 0. Clear Kernel metadata
+        auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
+        sema.getProgramMetaData().kernels.clear();
+
+        // 1. generate transpiled code
+        SPDLOG_INFO("Apply transpilation");
+        auto transpiledResult = generateTranspiledCode(_stage);
+        if (!transpiledResult) {
+            return tl::make_unexpected(transpiledResult.error());
+        }
+
+        // 2. generate build json
+        SPDLOG_INFO("Build metadata json");
+        auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
+        if (!transpiledMetaData) {
+            return tl::make_unexpected(transpiledMetaData.error());
+        }
+
+        return std::make_pair(std::move(transpiledResult.value()),
+                              std::move(transpiledMetaData.value()));
+    }
+
+   private:
+    AstProcessorManager& _procMng;
+    SessionStage& _stage;
+    clang::TranslationUnitDecl* _tu;
+};
+
+class TranspilationConsumer : public clang::ASTConsumer {
+   public:
+    TranspilationConsumer(SessionStage& stage)
+        : _stage(stage) {}
+
+    void HandleTranslationUnit(ASTContext& context) override {
+        // get the root of parsed AST that contains main file and all headers
+        TranslationUnitDecl* tu = context.getTranslationUnitDecl();
+
+        auto traversal =
+            std::make_unique<PreorderNlrTraversal>(AstProcessorManager::instance(), _stage);
+
+        // traverse AST and apply processor sema/backend handlers
+        // retrieve final transpiled kernel code that fused all user includes
+        {
+            auto result = traversal->applyAstProcessor(tu);
+            if (!result) {
+                _stage.pushError(result.error());
+                return;
+            }
+
+            // no errors and empty output could mean that the source is already transpiled
+            // so use input as output and lets the next stage try to figure out
+            if (result->first.empty()) {
+                result->first = _stage.getSession().input.source;
+            }
+            _stage.getSession().output.kernel.source = oklt::format(std::move(result->first));
+            _stage.getSession().output.kernel.metadata = std::move(result->second);
+        }
+
+        // reuse traversed AST
+        // retrieve launcher code and metadata if required
+        if (isDeviceCategory(_stage.getBackend())) {
+            _stage.setLauncherMode();
+
+            auto result = traversal->applyAstProcessor(tu);
+            if (!result) {
+                return;
+            }
+
+            // no errors and empty output could mean that the source is already transpiled
+            // so use input as output and lets the next stage try to figure out
+            if (result->first.empty()) {
+                result->first = _stage.getSession().input.source;
+            }
+            _stage.getSession().output.launcher.source = oklt::format(std::move(result->first));
+            _stage.getSession().output.launcher.metadata = std::move(result->second);
         }
     }
 
-    // 0. Clear Kernel metadata
-    auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
-    sema.getProgramMetaData().kernels.clear();
+    SessionStage& getSessionStage() { return _stage; }
 
-    // 1. generate transpiled code
-    SPDLOG_INFO("Apply transpilation");
-    auto transpiledResult = generateTranspiledCode(_stage);
-    if (!transpiledResult) {
-        return tl::make_unexpected(transpiledResult.error());
+   private:
+    SessionStage& _stage;
+};
+
+class Transpilation : public StageAction {
+   protected:
+    std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance& compiler,
+                                                   llvm::StringRef in_file) {
+        compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
+        compiler.getDiagnostics().setShowColors(true);
+
+        return std::make_unique<TranspilationConsumer>(*_stage);
     }
+};
 
-    // 2. generate build json
-    SPDLOG_INFO("Build metadata json");
-    auto transpiledMetaData = generateTranspiledCodeMetaData(_stage);
-    if (!transpiledMetaData) {
-        return tl::make_unexpected(transpiledMetaData.error());
-    }
-
-    return std::make_pair(std::move(transpiledResult.value()),
-                          std::move(transpiledMetaData.value()));
-}
-}  // namespace oklt
+StagePluginRegistry::Add<Transpilation> transpilation(TRANSPILATION_STAGE, "");
+}  // namespace

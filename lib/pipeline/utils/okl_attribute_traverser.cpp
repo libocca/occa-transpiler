@@ -1,7 +1,10 @@
-#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
+#include "pipeline/utils/okl_attribute_traverser.h"
 #include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/utils/okl_attribute.h"
 
+#include <clang/Lex/Preprocessor.h>
 #include <llvm/Support/FormatVariadic.h>
+
 #include <spdlog/spdlog.h>
 
 namespace {

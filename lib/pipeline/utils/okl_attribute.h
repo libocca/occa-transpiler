@@ -1,6 +1,8 @@
 #pragma once
+
 #include "attributes/attribute_names.h"
-#include <clang/Basic/SourceLocation.h>
+
+#include <vector>
 
 namespace oklt {
 

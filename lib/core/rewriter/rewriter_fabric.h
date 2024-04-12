@@ -6,6 +6,7 @@ namespace clang {
 class SourceManager;
 class LangOptions;
 }  // namespace clang
+
 namespace oklt {
 enum class RewriterProxyType {
     Original,

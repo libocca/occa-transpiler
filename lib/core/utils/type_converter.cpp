@@ -80,7 +80,8 @@ tl::expected<void, std::error_code> fillEnumNames(std::vector<std::string>& enum
 tl::expected<DataType, std::error_code> toOklDataTypeImpl(const QualType& type, ASTContext& ctx);
 tl::expected<void, std::error_code> fillTupleElement(
     const clang::QualType& type,
-    const std::shared_ptr<TupleElementDataType>& tupleElementDType, ASTContext& ctx) {
+    const std::shared_ptr<TupleElementDataType>& tupleElementDType,
+    ASTContext& ctx) {
     auto elementType = getBaseType(type);
     auto elementDType = toOklDataTypeImpl(elementType, ctx);
     if (!elementDType) {
@@ -193,7 +194,7 @@ tl::expected<StructFieldInfo, std::error_code> toOklStructFieldInfo(const clang:
         is_const = isConstPointer(var) || isPointerToConst(var);
     }
     auto dt = toOklDataType(var);
-    if(!dt) {
+    if (!dt) {
         return tl::make_unexpected(dt.error());
     }
 

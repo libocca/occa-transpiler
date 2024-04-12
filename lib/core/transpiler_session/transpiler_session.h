@@ -9,7 +9,6 @@
 
 #include <clang/Rewrite/Core/DeltaTree.h>
 
-#include <map>
 #include <vector>
 
 namespace clang {
@@ -46,10 +45,11 @@ struct TranspilerSession {
 
     // TODO add methods for user input/output
     UserInput input;
-    UserOutput output;
-
-    TransformedFiles normalizedHeaders;
-    TransformedFiles transpiledHeaders;
+    struct {
+        std::string source;
+        std::map<std::string, std::string> headers;
+        std::string metadata;
+    } lastStageResult;
 
    private:
     std::vector<Error> _errors;
