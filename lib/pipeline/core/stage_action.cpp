@@ -22,11 +22,12 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
         return false;
     }
 
-    if (!_session->input.headers.empty()) {
+    auto& input = _session->getInput();
+    if (!input.headers.empty()) {
         auto& fm = compiler.getFileManager();
         auto vfs = fm.getVirtualFileSystemPtr();
 
-        auto overlayFs = makeOverlayFs(vfs, _session->input.headers);
+        auto overlayFs = makeOverlayFs(vfs, input.headers);
         fm.setVirtualFileSystem(overlayFs);
     }
 
@@ -40,12 +41,14 @@ void StageAction::EndSourceFileAction() {
 
     // set input for the next stage
     // copy transformed or original main source file
-    _session->output.normalized = _stage->getRewriterResultForMainFile();
+    auto& input = _session->getInput();
+    auto& output = _session->getOutput();
+    output.normalized.source = _stage->getRewriterResultForMainFile();
 
     // copy transformed headers and merge untouched headers for the next stage
     auto transformedHeaders = _stage->getRewriterResultForHeaders();
-    transformedHeaders.fileMap.merge(_session->headers.fileMap);
-    _session->headers = std::move(transformedHeaders);
+    transformedHeaders.fileMap.merge(input.headers);
+    output.normalized.headers = std::move(transformedHeaders.fileMap);
 }
 
 bool StageAction::setSession(SharedTranspilerSession session) {

@@ -2,7 +2,7 @@
 
 #include "pipeline/core/stage_action_registry.h"
 #include "pipeline/core/stage_action_runner.h"
-#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <clang/Tooling/Tooling.h>
 
@@ -18,10 +18,11 @@ using namespace clang::tooling;
 namespace oklt {
 
 SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspilerSession session) {
-    if (session->src.empty()) {
+    auto& input = session->getInput();
+    if (input.source.empty()) {
         SPDLOG_ERROR("Input source string is empty");
         auto error =
-            makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
+            makeError(OkltPipelineErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
         return tl::make_unexpected(std::vector<Error>{error});
     }
 
@@ -29,7 +30,6 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
 
     Twine toolName = stageName;
 
-    auto& input = session->input;
     auto cppFileNamePath = input.sourcePath;
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
@@ -60,7 +60,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
         return tl::make_unexpected(std::vector<Error>{err});
     }
 
-    Twine code(session->src);
+    Twine code(input.source);
     bool ret = runToolOnCodeWithArgs(std::move(stageAction),
                                      code,
                                      args,
@@ -79,6 +79,9 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     if (!ret || !session->getErrors().empty()) {
         return tl::make_unexpected(std::move(session->getErrors()));
     }
+
+    // prepare input for the next stage of pipeline
+    session->moveOutputToInput();
 
     return session;
 }

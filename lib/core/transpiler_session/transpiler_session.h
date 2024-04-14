@@ -43,15 +43,24 @@ struct TranspilerSession {
 
     [[nodiscard]] OriginalSourceMapper& getOriginalSourceMapper();
 
-    // TODO add methods for user input/output
-    UserInput input;
-    struct {
-        std::string source;
-        std::map<std::string, std::string> headers;
-        std::string metadata;
-    } lastStageResult;
+    const UserInput& getInput() const { return _input; }
+
+    UserInput& getInput() { return _input; }
+
+    const UserOutput& getOutput() const { return _output; }
+
+    UserOutput& getOutput() { return _output; }
+
+    void moveOutputToInput() {
+        _input.source = std::move(_output.normalized.source);
+        _input.headers = std::move(_output.normalized.headers);
+    }
 
    private:
+    // TODO add methods for user input/output
+    UserInput _input;
+    UserOutput _output;
+
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
     OriginalSourceMapper _sourceMapper;

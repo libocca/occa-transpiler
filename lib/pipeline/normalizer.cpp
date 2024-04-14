@@ -3,14 +3,10 @@
 
 #include "pipeline/core/stage_action_names.h"
 #include "pipeline/core/stage_action_runner.h"
-#include "pipeline/stages/normalizer/normalizer.h"
+#include "core/transpiler_session/session_result.h"
 
 namespace oklt {
 UserResult normalize(UserInput input) {
-    return runNormalizerStage(TranspilerSession::make(std::move(input))).and_then(toUserResult);
-}
-
-UserResult normalize_ex(UserInput input) {
     static std::vector<std::string> normalizePipeline = {{OKL_DIRECTIVE_EXPANSION_STAGE},
                                                          {MACRO_EXPANSION_STAGE},
                                                          {OKL_TO_GNU_ATTR_NORMALIZER_STAGE},
@@ -18,6 +14,10 @@ UserResult normalize_ex(UserInput input) {
 
     auto session = TranspilerSession::make(std::move(input));
     auto result = runPipeline(normalizePipeline, session);
+    if (!result) {
+        return tl::make_unexpected(result.error());
+    }
     return toUserResult(result.value());
 }
+
 }  // namespace oklt

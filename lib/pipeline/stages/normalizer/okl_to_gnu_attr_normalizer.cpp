@@ -3,7 +3,8 @@
 
 #include "pipeline/core/stage_action_names.h"
 #include "pipeline/core/stage_action_registry.h"
-#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/core/error_codes.h"
+
 #include "pipeline/utils/okl_attribute.h"
 #include "pipeline/utils/okl_attribute_traverser.h"
 

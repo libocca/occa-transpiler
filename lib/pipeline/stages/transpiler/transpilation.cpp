@@ -339,6 +339,8 @@ class TranspilationConsumer : public clang::ASTConsumer {
         auto traversal =
             std::make_unique<PreorderNlrTraversal>(AstProcessorManager::instance(), _stage);
 
+        auto& input = _stage.getSession().getInput();
+        auto& output = _stage.getSession().getOutput();
         // traverse AST and apply processor sema/backend handlers
         // retrieve final transpiled kernel code that fused all user includes
         {
@@ -351,10 +353,10 @@ class TranspilationConsumer : public clang::ASTConsumer {
             // no errors and empty output could mean that the source is already transpiled
             // so use input as output and lets the next stage try to figure out
             if (result->first.empty()) {
-                result->first = _stage.getSession().input.source;
+                result->first = input.source;
             }
-            _stage.getSession().output.kernel.source = oklt::format(std::move(result->first));
-            _stage.getSession().output.kernel.metadata = std::move(result->second);
+            output.kernel.source = oklt::format(std::move(result->first));
+            output.kernel.metadata = std::move(result->second);
         }
 
         // reuse traversed AST
@@ -370,10 +372,10 @@ class TranspilationConsumer : public clang::ASTConsumer {
             // no errors and empty output could mean that the source is already transpiled
             // so use input as output and lets the next stage try to figure out
             if (result->first.empty()) {
-                result->first = _stage.getSession().input.source;
+                result->first = input.source;
             }
-            _stage.getSession().output.launcher.source = oklt::format(std::move(result->first));
-            _stage.getSession().output.launcher.metadata = std::move(result->second);
+            output.launcher.source = oklt::format(std::move(result->first));
+            output.launcher.metadata = std::move(result->second);
         }
     }
 
