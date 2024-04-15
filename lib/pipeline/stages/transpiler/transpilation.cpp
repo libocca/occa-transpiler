@@ -389,6 +389,16 @@ class Transpilation : public StageAction {
    protected:
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance& compiler,
                                                    llvm::StringRef in_file) {
+        if (!compiler.hasPreprocessor()) {
+            SPDLOG_CRITICAL("no preporcessor: {}", __PRETTY_FUNCTION__);
+        }
+
+        auto& deps = _stage->tryEmplaceUserCtx<HeaderDepsInfo>();
+        std::unique_ptr<PPCallbacks> callback =
+            std::make_unique<InclusionDirectiveCallback>(deps, compiler.getSourceManager());
+        // setup preprocessor hook to gather all user/system includes
+        compiler.getPreprocessor().addPPCallbacks(std::move(callback));
+
         compiler.getDiagnostics().setClient(new DiagConsumer(*_stage));
         compiler.getDiagnostics().setShowColors(true);
 
