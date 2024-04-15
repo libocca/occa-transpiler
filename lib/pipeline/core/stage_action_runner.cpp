@@ -1,8 +1,8 @@
 #include <oklt/core/error.h>
 
+#include "pipeline/core/error_codes.h"
 #include "pipeline/core/stage_action_registry.h"
 #include "pipeline/core/stage_action_runner.h"
-#include "pipeline/core/error_codes.h"
 
 #include <clang/Tooling/Tooling.h>
 
@@ -27,6 +27,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     }
 
     SPDLOG_INFO("start: {}", stageName);
+    SPDLOG_TRACE("input source:\n{}\n", input.source);
 
     Twine toolName = stageName;
 
@@ -82,6 +83,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
 
     // prepare input for the next stage of pipeline
     session->moveOutputToInput();
+    SPDLOG_TRACE("output source:\n{}\n", input.source);
 
     return session;
 }
