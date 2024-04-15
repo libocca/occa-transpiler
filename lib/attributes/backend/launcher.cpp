@@ -358,7 +358,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     SPDLOG_DEBUG("Handle translation unit");
 
     //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
-    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps;
+    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendHeaders;
     backendDeps.clear();
     backendDeps.emplace_back("#include " + std::string(includeOCCA) + "\n\n");
 

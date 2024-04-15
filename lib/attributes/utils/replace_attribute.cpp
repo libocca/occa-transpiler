@@ -96,16 +96,18 @@ HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
 
 HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,
-                                   std::string_view include) {
-    auto& sourceManager = s.getCompiler().getSourceManager();
-    auto mainFileId = sourceManager.getMainFileID();
-    auto loc = sourceManager.getLocForStartOfFile(mainFileId);
-
+                                   std::vector<std::string_view> headers,
+                                   std::vector<std::string_view> ns) {
     SPDLOG_DEBUG("Handle translation unit");
 
-    // s.getRewriter().InsertTextBefore(loc, "#include " + std::string(include) + "\n");
-    s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps.emplace_back("#include " +
-                                                                   std::string(include) + "\n");
+    auto& deps = s.tryEmplaceUserCtx<HeaderDepsInfo>();
+    for (auto header : headers) {
+        deps.backendHeaders.emplace_back("#include " + std::string(header) + "\n");
+    }
+
+    for (auto n : ns) {
+        deps.backendNss.emplace_back("using namespace " + std::string(n) + ";\n\n");
+    }
 
     return {};
 }

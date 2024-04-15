@@ -1,18 +1,35 @@
 #include "attributes/utils/replace_attribute.h"
+
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/transpiler_session/transpiler_session.h"
 
-#include <clang/AST/Decl.h>
 #include <spdlog/spdlog.h>
+
+namespace oklt {
+class SessionStage;
+}
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
 const std::string CUDA_RT_INC = "<cuda_runtime.h>";
-HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
-    return handleTranslationUnit(d, s, CUDA_RT_INC);
+const std::string CUDA_PL_PRIM_INC = "<cuda_pipeline_primitives.h>";
+
+std::vector<std::string_view> getBackendHeader(SessionStage& s) {
+    auto defines = s.getSession().getInput().defines;
+    auto hasAsyncMode = std::find(defines.begin(), defines.end(), "USE_ASYNC_READ");
+    if (hasAsyncMode == defines.end()) {
+        return {CUDA_RT_INC};
+    }
+    return {CUDA_RT_INC, CUDA_PL_PRIM_INC};
 }
+
+HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
+    return handleTranslationUnit(d, s, getBackendHeader(s));
+}
+
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
         {TargetBackend::CUDA, clang::Decl::Kind::TranslationUnit},
