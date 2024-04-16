@@ -1,6 +1,9 @@
 #include <occa/core/kernel.hpp>
 
 const int offset = 1;
+
+float add(float a, float b) { return a + b + offset; }
+
 // Outer -> inner ==> regular -> regular
 extern "C" void addVectors0(occa::modeKernel_t **deviceKernels,
                             const int &entries, occa::modeMemory_t *a,
