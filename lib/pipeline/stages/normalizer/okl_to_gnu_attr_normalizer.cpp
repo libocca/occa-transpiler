@@ -22,7 +22,7 @@ bool isProbablyOklSpecificForStmt(Token left, Token right) {
 }
 
 bool isProbablyAtBeginnigOfExpr(Token left, Token right) {
-    return ((left.is(tok::semi) || left.is(tok::l_brace)) && !right.is(tok::semi));
+    return ((left.isOneOf(tok::semi, tok::l_brace, tok::r_paren)) && !right.is(tok::semi));
 }
 
 Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {
@@ -128,7 +128,8 @@ bool replaceOklByGnuAttribute(const OklAttribute& oklAttr,
     }
     // INFO: attribute is not at the beginning of expr so wrap it as GNU.
     // GNU attribute has more diversity for locations (and it's a nightmare for parser and AST to
-    // handle all cases) than standard attribute. After parsing AST GNU will be replaced by CXX NB:
+    // handle all cases) than standard attribute. After parsing AST GNU will be replaced by CXX
+    // NB:
     // there are cases where GNU attribute could not be parsed and embed into AST For example:
     //   a+=1 __attrbute((okl_atomic));
     // and

@@ -200,7 +200,8 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
 }
 #endif
 
-std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const oklt::Rewriter& r) {
+std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo,
+                                                    const oklt::Rewriter& r) {
     auto sz = util::parseStrTo<size_t>(loopInfo.tileSize);
 
     // Prepare first loop
@@ -351,19 +352,21 @@ std::string getRootLoopBody(const FunctionDecl& decl,
 }
 
 HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
-    auto& sm = s.getCompiler().getSourceManager();
-    auto mainFileId = sm.getMainFileID();
-    auto loc = sm.getLocForStartOfFile(mainFileId);
-
     SPDLOG_DEBUG("Handle translation unit");
 
-    //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
     auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendHeaders;
     backendDeps.clear();
     backendDeps.emplace_back("#include " + std::string(includeOCCA) + "\n\n");
 
     return {};
 }
+
+HandleResult handleLauncherFunction(const FunctionDecl& d, SessionStage& s) {
+    SPDLOG_DEBUG("Handle function");
+    s.getRewriter().RemoveText(d.getSourceRange());
+    return {};
+}
+
 HandleResult handleLauncherKernelAttribute(const Attr& a,
                                            const FunctionDecl& func,
                                            SessionStage& s) {
@@ -373,8 +376,8 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     auto& rewriter = s.getRewriter();
 
     if (!sema.getParsingKernelInfo()) {
-        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
-                                         "handleKernelAttribute"});
+        return tl::make_unexpected(
+            Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL, "handleKernelAttribute"});
     }
 
     auto kernelInfo = *sema.getParsingKernelInfo();
@@ -419,13 +422,19 @@ __attribute__((constructor)) void registerLauncherHandler() {
         }                                                                             \
     }
 
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::_LAUNCHER, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleLauncherTranslationUnit));
-
-    if (!ok) {
-        SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");
+#define REG_IMPLICIT_HANDLE(KIND, BODY)                                                       \
+    {                                                                                         \
+        auto ok = oklt::AttributeManager::instance().registerImplicitHandler(                 \
+            {TargetBackend::_LAUNCHER, KIND}, BODY);                                          \
+        if (!ok) {                                                                            \
+            SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", (size_t)KIND); \
+        }                                                                                     \
     }
+
+    REG_IMPLICIT_HANDLE(clang::Decl::Kind::TranslationUnit,
+                        makeSpecificImplicitHandle(handleLauncherTranslationUnit));
+    REG_IMPLICIT_HANDLE(clang::Decl::Kind::Function,
+                        makeSpecificImplicitHandle(handleLauncherFunction));
 
     REG_ATTR_HANDLE(KERNEL_ATTR_NAME, makeSpecificAttrHandle(handleLauncherKernelAttribute));
     REG_ATTR_HANDLE(OUTER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
