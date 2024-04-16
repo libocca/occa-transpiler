@@ -29,7 +29,9 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   const std::string& funcQualifier);
 
 HandleResult handleCXXRecord(const clang::CXXRecordDecl&, SessionStage&, const std::string&);
-HandleResult handleCXXRecord(const clang::ClassTemplatePartialSpecializationDecl&, SessionStage&, const std::string&);
+HandleResult handleCXXRecord(const clang::ClassTemplatePartialSpecializationDecl&,
+                             SessionStage&,
+                             const std::string&);
 
 HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,

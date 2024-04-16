@@ -15,8 +15,8 @@ HandleResult handleClassRecord(const clang::CXXRecordDecl& d, SessionStage& s) {
     return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
 }
 
-HandleResult handleClassTemplatePartialSpecialization(
-    const clang::ClassTemplatePartialSpecializationDecl& d,
+HandleResult handleClassTemplateSpecialization(
+    const clang::ClassTemplateSpecializationDecl& d,
     SessionStage& s) {
     return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
 }
@@ -27,12 +27,12 @@ __attribute__((constructor)) void registerAttrBackend() {
         makeSpecificImplicitHandle(handleClassRecord));
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplatePartialSpecialization},
-        makeSpecificImplicitHandle(handleClassTemplatePartialSpecialization));
+        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplateSpecialization},
+        makeSpecificImplicitHandle(handleClassTemplateSpecialization));
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplateSpecialization},
-        makeSpecificImplicitHandle(handleClassTemplatePartialSpecialization));
+        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplatePartialSpecialization},
+        makeSpecificImplicitHandle(handleClassTemplateSpecialization));
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");
