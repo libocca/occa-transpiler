@@ -1,6 +1,6 @@
-#include "pipeline/utils/okl_attribute_traverser.h"
 #include "pipeline/core/error_codes.h"
 #include "pipeline/utils/okl_attribute.h"
+#include "pipeline/utils/okl_attribute_traverser.h"
 
 #include <clang/Lex/Preprocessor.h>
 #include <llvm/Support/FormatVariadic.h>
@@ -12,17 +12,20 @@ using namespace clang;
 using namespace oklt;
 
 enum class OklAttributeParserState {
-    SearchingAttrStart,
+    SearchingFirstOpenBracer,
+    SearchingSecondOpenBracer,
     ParseAttrName,
     SearchingAttrParamList,
-    ParseAttrParamList
+    ParseAttrParamList,
+    SearchingFirstCloseBracer,
+    SearchingSecondCloseBracer,
 };
 
 enum class FsmStepStatus { Error = -1, TokenProcessed = 0, OklAttrParsed = 1 };
 
 struct OklAttributePrarserFsm {
     size_t token_cursor{0};
-    OklAttributeParserState state{OklAttributeParserState::SearchingAttrStart};
+    OklAttributeParserState state{OklAttributeParserState::SearchingFirstOpenBracer};
     OklAttribute attr;
     const std::vector<Token>* tokens{nullptr};
     Preprocessor& pp;
@@ -31,7 +34,7 @@ struct OklAttributePrarserFsm {
 
 OklAttributePrarserFsm makeOklAttrParserFsm(Preprocessor& pp, const std::vector<Token>& tokens) {
     return {.token_cursor = 0,
-            .state = OklAttributeParserState::SearchingAttrStart,
+            .state = OklAttributeParserState::SearchingFirstOpenBracer,
             .attr = {},
             .tokens = &tokens,
             .pp = pp};
@@ -51,17 +54,29 @@ void incCurrsorToken(OklAttributePrarserFsm& fsm) {
 
 void resetFsmAttrState(OklAttributePrarserFsm& fsm) {
     fsm.attr = {};
-    fsm.state = OklAttributeParserState::SearchingAttrStart;
+    fsm.state = OklAttributeParserState::SearchingFirstOpenBracer;
 }
 
-bool isOklAttrMarker(const Token& token) {
-    return token.is(tok::at);
+bool isCxxOpenAttrBracer(const Token& token) {
+    return token.is(tok::l_square);
+}
+
+bool isCxxCloseAttrBracer(const Token& token) {
+    return token.is(tok::r_square);
 }
 
 FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token) {
     switch (fsm.state) {
-        case OklAttributeParserState::SearchingAttrStart:
-            if (!isOklAttrMarker(token)) {
+        case OklAttributeParserState::SearchingFirstOpenBracer:
+            if (!isCxxOpenAttrBracer(token)) {
+                break;
+            }
+            fsm.attr.tok_indecies.push_back(fsm.token_cursor);
+            fsm.state = OklAttributeParserState::SearchingSecondOpenBracer;
+            break;
+        case OklAttributeParserState::SearchingSecondOpenBracer:
+            if (!isCxxOpenAttrBracer(token)) {
+                resetFsmAttrState(fsm);
                 break;
             }
             fsm.attr.tok_indecies.push_back(fsm.token_cursor);
@@ -88,8 +103,15 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                 fsm.parenDepth += 1u;
 
                 fsm.state = OklAttributeParserState::ParseAttrParamList;
+            } else if (token.is(tok::r_square)) {
+                fsm.attr.tok_indecies.push_back(fsm.token_cursor);
+                fsm.state = OklAttributeParserState::SearchingSecondCloseBracer;
             } else {
-                return FsmStepStatus::OklAttrParsed;
+                SPDLOG_ERROR("malformed okl attr params: {} {} {}",
+                             token.getName(),
+                             getTokenName(token.getKind()),
+                             token.getLocation().printToString(fsm.pp.getSourceManager()));
+                return FsmStepStatus::Error;
             }
             break;
         case OklAttributeParserState::ParseAttrParamList:
@@ -101,7 +123,7 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
 
                 // all parentness are closed norify that OKL attribute is parsed
                 if (!fsm.parenDepth) {
-                    return FsmStepStatus::OklAttrParsed;
+                    fsm.state = OklAttributeParserState::SearchingFirstCloseBracer;
                 }
 
                 // still opened parentness so continue parsing
@@ -126,8 +148,8 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                               tok::kw_true,
                               tok::slash,
                               tok::star,
-                              tok::l_square,
                               tok::r_square,
+                              tok::l_square,
                               tok::plus,
                               tok::minus)) {
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
@@ -137,7 +159,7 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                                ? token_str
                                : std::string(llvm::formatv("\"{0}\"", token_str));
                 }(token);
-                return FsmStepStatus::TokenProcessed;
+                break;
             }
 
             SPDLOG_ERROR("malformed token in attribute param list: {} {} {}",
@@ -145,6 +167,22 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                          getTokenName(token.getKind()),
                          token.getLocation().printToString(fsm.pp.getSourceManager()));
             return FsmStepStatus::Error;
+        case OklAttributeParserState::SearchingFirstCloseBracer:
+            if (!isCxxCloseAttrBracer(token)) {
+                resetFsmAttrState(fsm);
+                break;
+            }
+            fsm.attr.tok_indecies.push_back(fsm.token_cursor);
+            fsm.state = OklAttributeParserState::SearchingSecondCloseBracer;
+            break;
+
+        case OklAttributeParserState::SearchingSecondCloseBracer:
+            if (!isCxxCloseAttrBracer(token)) {
+                resetFsmAttrState(fsm);
+                break;
+            }
+            fsm.attr.tok_indecies.push_back(fsm.token_cursor);
+            return FsmStepStatus::OklAttrParsed;
         default:
             SPDLOG_ERROR("malformed token in attribute param list: {} {}",
                          getTokenName(token.getKind()),
@@ -211,9 +249,9 @@ tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token
 }  // namespace
 
 namespace oklt {
-tl::expected<void, Error> visitOklAttributes(const std::vector<Token>& tokens,
-                                             clang::Preprocessor& pp,
-                                             OklAttrVisitor visitor) {
+tl::expected<void, Error> visitStdOklAttributes(const std::vector<Token>& tokens,
+                                                clang::Preprocessor& pp,
+                                                OklAttrVisitor visitor) {
     return parseAndVisitOklAttrFromTokens(tokens, pp, visitor);
 }
 

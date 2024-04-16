@@ -222,12 +222,15 @@ set (OCCA_TRANSPILER_SOURCES
 
     pipeline/utils/okl_attribute_traverser.cpp
     pipeline/utils/okl_attribute_traverser.h
+    pipeline/utils/std_okl_attribute_traverser.h
+    pipeline/utils/std_okl_attribute_traverser.cpp
     pipeline/utils/okl_attribute.h
 
     pipeline/stages/preprocessor/okl_directive_expansion.cpp
     pipeline/stages/preprocessor/macro_expansion.cpp
     pipeline/stages/normalizer/okl_to_gnu_attr_normalizer.cpp
     pipeline/stages/normalizer/gnu_to_std_cpp_attr_normalizer.cpp
+    pipeline/stages/transpiler/attr_arg_list_stringifier.cpp
     pipeline/stages/transpiler/transpilation.cpp
 )
 

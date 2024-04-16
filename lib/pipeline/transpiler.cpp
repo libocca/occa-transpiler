@@ -6,7 +6,8 @@
 
 namespace oklt {
 UserResult transpile(UserInput input) {
-    static std::vector<std::string> justTranspilationPipeline = {{TRANSPILATION_STAGE}};
+    static std::vector<std::string> justTranspilationPipeline = {ATTR_ARG_LIST_STRINGIFIER,
+                                                                 TRANSPILATION_STAGE};
 
     auto session = TranspilerSession::make(std::move(input));
     auto result = runPipeline(justTranspilationPipeline, session);

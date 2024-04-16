@@ -1,6 +1,7 @@
 #pragma once
 
 #include "attributes/attribute_names.h"
+#include <spdlog/fmt/fmt.h>
 
 #include <vector>
 
@@ -14,19 +15,21 @@ struct OklAttribute {
 };
 
 inline static std::string wrapAsSpecificGnuAttr(const OklAttribute& attr) {
-    if (attr.params.empty()) {
-        return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")))";
-    }
+    //if (attr.params.empty()) {
+    //    return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")))";
+    //}
 
-    return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")))";
+    //return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")))";
+    return fmt::format("__attribute__(({}{}(\"{}\")))", OKL_ATTR_PREFIX, attr.name, attr.params);
 }
 
 inline static std::string wrapAsSpecificCxxAttr(const OklAttribute& attr) {
-    if (attr.params.empty()) {
-        return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")]]";
-    }
+    //if (attr.params.empty()) {
+    //    return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")]]";
+    //}
 
-    return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")]]";
+    //return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")]]";
+    return fmt::format("[[{}{}(\"{}\")]]", OKL_ATTR_PREFIX, attr.name, attr.params);
 }
 
 }  // namespace oklt
