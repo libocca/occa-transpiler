@@ -1,23 +1,19 @@
-#include <oklt/core/error.h>
-
-#include "attributes/attribute_names.h"
-#include "core/rewriter/impl/dtree_rewriter_proxy.h"
+#include "core/lex/lexer.h"
 #include "core/transpiler_session/session_stage.h"
-#include "core/vfs/overlay_fs.h"
 
-#include "pipeline/stages/normalizer/error_codes.h"
-#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
-#include "pipeline/stages/normalizer/impl/okl_to_gnu_stage.h"
+#include "pipeline/core/stage_action_names.h"
+#include "pipeline/core/stage_action_registry.h"
+#include "pipeline/core/error_codes.h"
 
-#include <clang/AST/ASTContext.h>
-#include <clang/AST/RecursiveASTVisitor.h>
-#include <clang/Analysis/MacroExpansionContext.h>
+#include "pipeline/utils/okl_attribute.h"
+#include "pipeline/utils/okl_attribute_traverser.h"
+
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Tooling/Tooling.h>
+#include <clang/Lex/LiteralSupport.h>
+
 #include <spdlog/spdlog.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
@@ -36,15 +32,6 @@ Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens
 Token getRightNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {
     return attr.tok_indecies.back() != tokens.size() ? tokens[attr.tok_indecies.back() + 1]
                                                      : Token();
-}
-
-OklAttrMarker makeOklAttrMarker(const Preprocessor& pp,
-                                const OklAttribute& oklAtr,
-                                const SourceLocation loc) {
-    auto isValid = loc.isValid();
-    return {.attr = oklAtr,
-            .loc = {.line = pp.getSourceManager().getPresumedLineNumber(loc),
-                    .col = pp.getSourceManager().getPresumedColumnNumber(loc)}};
 }
 
 SourceLocation findForKwLocBefore(const std::vector<Token> tokens, size_t start) {
@@ -86,12 +73,11 @@ std::string getTokenLine(const Token& tok, const Preprocessor& pp) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // routine to replace OKL attribute with GNU one and store it original source location
 // one trick is that functions could fix malformed C++ for statement with extra semi
-bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
-                              const OklAttribute& oklAttr,
+bool replaceOklByGnuAttribute(const OklAttribute& oklAttr,
                               const std::vector<Token>& tokens,
                               Preprocessor& pp,
                               oklt::Rewriter& rewriter,
-                              TranspilerSession& session) {
+                              OriginalSourceMapper& mapper) {
     // TODO log each modification to adjust marker line col coordinate accordingly
     auto& attrBegToken = tokens[oklAttr.tok_indecies.front()];
     if (attrBegToken.getLocation().isInvalid()) {
@@ -103,7 +89,6 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     auto attrFidLine = getTokenFidLineNumber(attrBegToken, pp);
 
     // Insert original line to the originalLines mapping if needed
-    auto& mapper = session.getOriginalSourceMapper();
     auto attrLine = getTokenLine(attrBegToken, pp);
     mapper.addOriginalLine(attrFidLine, attrLine);
 
@@ -152,7 +137,6 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     else {
         auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
         rewriter.ReplaceText(attrSrcRange, gnuAttr);
-        gnu_markers.emplace_back(makeOklAttrMarker(pp, oklAttr, insertLoc));
     }
 
     // Save offset to original column mapping
@@ -168,151 +152,41 @@ bool replaceOklByGnuAttribute(std::list<OklAttrMarker>& gnu_markers,
     return true;
 }
 
-std::vector<Token> fetchTokens(Preprocessor& pp) {
-    std::vector<Token> tokens;
-    while (true) {
-        Token tok{};
-        pp.Lex(tok);
+class OklToGnuAttrNormalizer : public StageAction {
+   public:
+    OklToGnuAttrNormalizer() { _name = OKL_TO_GNU_ATTR_NORMALIZER_STAGE; }
 
-        if (tok.is(tok::eof)) {
-            break;
-        }
-
-        if (tok.is(tok::unknown)) {
-            // Check for '@' symbol
-            auto spelling = pp.getSpelling(tok);
-            if (spelling.empty() || spelling[0] != OKL_ATTR_NATIVE_MARKER) {
-                break;
-            }
-            tok.setKind(tok::at);
-        }
-
-        tokens.push_back(tok);
-    }
-
-    return tokens;
-}
-
-struct OklToGnuAttributeNormalizerAction : public clang::ASTFrontendAction {
-    explicit OklToGnuAttributeNormalizerAction(OklToGnuStageInput& input,
-                                               OklToGnuStageOutput& output)
-        : _input(input),
-          _output(output),
-          _session(*input.session) {
-        (void)_input;
-    }
-
-   protected:
-    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
-                                                          llvm::StringRef in_file) override {
-        return nullptr;
-    }
-
-    bool BeginSourceFileAction(CompilerInstance& compiler) override {
-        if (compiler.hasFileManager()) {
-            auto overlayFs = makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(),
-                                           _input.oklCppIncs);
-            compiler.getFileManager().setVirtualFileSystem(overlayFs);
-        }
-
+    bool BeginSourceFileAction(clang::CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
-        pp.EnterMainSourceFile();
         auto tokens = fetchTokens(pp);
 
         if (tokens.empty()) {
-            _session.pushError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING,
-                               "no tokens in source?");
+            _stage->pushError(OkltPipelineErrorCode::EMPTY_SOURCE_STRING, "no tokens in source?");
             return false;
         }
 
-        SessionStage stage{_session, compiler, RewriterProxyType::WithDeltaTree};
-        auto& rewriter = stage.getRewriter();
-
+        auto& rewriter = _stage->getRewriter();
         auto result = visitOklAttributes(
             tokens,
             pp,
             [this, &rewriter](
                 const OklAttribute& attr, const std::vector<Token>& tokens, Preprocessor& pp) {
-                replaceOklByGnuAttribute(_output.gnuMarkers, attr, tokens, pp, rewriter, _session);
-                return true;
+                return replaceOklByGnuAttribute(
+                    attr, tokens, pp, rewriter, _stage->getSession().getOriginalSourceMapper());
             });
         if (!result) {
-            _session.pushError(result.error().ec, result.error().desc);
+            _stage->pushError(result.error().ec, result.error().desc);
             return false;
         }
 
-        _output.gnuCppSrc = stage.getRewriterResultForMainFile();
-        // no errors and empty output could mean that the source is already normalized
-        // so use input as output and lets the next stage try to figure out
-        if (_output.gnuCppSrc.empty()) {
-            _output.gnuCppSrc = std::move(_input.oklCppSrc);
-        }
-
-        // we need keep all headers in output even there are not modififcation by rewriter to
-        // populate affected files futher
-        _output.gnuCppIncs = stage.getRewriterResultForHeaders();
-        _output.gnuCppIncs.fileMap.merge(_input.oklCppIncs.fileMap);
-
-        pp.EndSourceFile();
-
-        return false;
+        return true;
     }
 
-   private:
-    OklToGnuStageInput& _input;
-    OklToGnuStageOutput& _output;
-    TranspilerSession& _session;
+   protected:
+    RewriterProxyType getRewriterType() const override { return RewriterProxyType::WithDeltaTree; }
 };
+
+StagePluginRegistry::Add<OklToGnuAttrNormalizer> oklToGnuAttrNormalizer(
+    OKL_TO_GNU_ATTR_NORMALIZER_STAGE,
+    "");
 }  // namespace
-namespace oklt {
-
-OklToGnuResult convertOklToGnuAttribute(OklToGnuStageInput input) {
-    if (input.oklCppSrc.empty()) {
-        SPDLOG_ERROR("Input source string is empty");
-        auto error =
-            makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
-        return tl::make_unexpected(std::vector<Error>{error});
-    }
-
-    SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.oklCppSrc);
-
-    Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    auto cppFileNamePath = input.session->input.sourcePath;
-    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
-
-    auto input_file = std::move(input.oklCppSrc);
-
-    auto& sessionInput = input.session->input;
-    for (const auto& define : sessionInput.defines) {
-        std::string def = "-D" + define;
-        args.push_back(std::move(def));
-    }
-
-    for (const auto& includePath : sessionInput.inlcudeDirectories) {
-        std::string incPath = "-I" + includePath.string();
-        args.push_back(std::move(incPath));
-    }
-
-    OklToGnuStageOutput output = {.session = input.session};
-    auto ok = tooling::runToolOnCodeWithArgs(
-        std::make_unique<OklToGnuAttributeNormalizerAction>(input, output),
-        input_file,
-        args,
-        cppFileName,
-        tool_name);
-    if (!ok) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
-    }
-
-    // no errors and empty output could mean that the source is already normalized
-    // so use input as output and lets the next stage try to figure out
-    if (output.gnuCppSrc.empty()) {
-        output.gnuCppSrc = std::move(input_file);
-    }
-
-    SPDLOG_DEBUG("stage 1 GNU cpp source:\n\n{}", output.gnuCppSrc);
-
-    return output;
-}
-}  // namespace oklt

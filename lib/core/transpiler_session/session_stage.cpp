@@ -16,8 +16,8 @@ SessionStage::SessionStage(TranspilerSession& session,
                            RewriterProxyType rwType)
     : _session(session),
       _compiler(compiler),
-      _backend(session.input.backend),
-      _astProcType(session.input.astProcType),
+      _backend(session.getInput().backend),
+      _astProcType(session.getInput().astProcType),
       _rewriter(makeRewriterProxy(_compiler.getSourceManager(), _compiler.getLangOpts(), rwType)) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {

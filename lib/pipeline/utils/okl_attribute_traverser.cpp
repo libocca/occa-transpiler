@@ -1,7 +1,10 @@
-#include "pipeline/stages/normalizer/impl/okl_attr_traverser.h"
-#include "pipeline/stages/normalizer/error_codes.h"
+#include "pipeline/utils/okl_attribute_traverser.h"
+#include "pipeline/core/error_codes.h"
+#include "pipeline/utils/okl_attribute.h"
 
+#include <clang/Lex/Preprocessor.h>
 #include <llvm/Support/FormatVariadic.h>
+
 #include <spdlog/spdlog.h>
 
 namespace {
@@ -156,7 +159,7 @@ tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token
     if (tokens.empty()) {
         SPDLOG_CRITICAL("no input tokens");
         return tl::make_unexpected(
-            makeError(OkltNormalizerErrorCode::NO_TOKENS_FROM_SOURCE, "no tokens in source"));
+            makeError(OkltPipelineErrorCode::NO_TOKENS_FROM_SOURCE, "no tokens in source"));
     }
 
     // set intial FSM state with clear attr data
@@ -177,7 +180,7 @@ tl::expected<void, Error> parseAndVisitOklAttrFromTokens(const std::vector<Token
                 "error during parsing okl attr: {}",
                 tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager()));
             return tl::make_unexpected(Error{
-                OkltNormalizerErrorCode::OKL_ATTR_PARSIN_ERR,
+                OkltPipelineErrorCode::OKL_ATTR_PARSING_ERR,
                 "error on token at: " +
                     tokens[fsm.token_cursor].getLocation().printToString(pp.getSourceManager())});
         }

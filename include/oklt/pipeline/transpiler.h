@@ -5,4 +5,5 @@
 
 namespace oklt {
 UserResult transpile(UserInput input);
+UserResult transpile_ex(UserInput input);
 }  // namespace oklt

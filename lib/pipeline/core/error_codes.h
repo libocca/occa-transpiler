@@ -4,7 +4,7 @@
 #include <system_error>
 
 // this should be in the global namespace to make make_error_code works for automatic convertions
-enum class OkltTranspilerErrorCode {
+enum class OkltPipelineErrorCode {
     EMPTY_SOURCE_STRING = 1,
     NO_TOKENS_FROM_SOURCE = 10,
     OKL_ATTR_PARSING_ERR = 20,
@@ -20,11 +20,11 @@ enum class OkltTranspilerErrorCode {
 
 namespace std {
 template <>
-struct is_error_code_enum<OkltTranspilerErrorCode> : true_type {};
+struct is_error_code_enum<OkltPipelineErrorCode> : true_type {};
 }  // namespace std
 
-std::error_code make_error_code(OkltTranspilerErrorCode);
+std::error_code make_error_code(OkltPipelineErrorCode);
 
 namespace oklt {
-Error makeError(OkltTranspilerErrorCode ec, std::string desc);
+Error makeError(OkltPipelineErrorCode ec, std::string desc);
 }  // namespace oklt

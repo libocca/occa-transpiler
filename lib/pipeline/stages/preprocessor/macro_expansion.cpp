@@ -1,23 +1,19 @@
-#include <oklt/core/error.h>
-
+#include "core/lex/lexer.h"
 #include "core/transpiler_session/session_stage.h"
-#include "core/vfs/overlay_fs.h"
 
-#include "pipeline/stages/normalizer/error_codes.h"
-#include "pipeline/stages/normalizer/impl/expand_macro_stage.h"
-#include "pipeline/stages/normalizer/impl/okl_attribute.h"
+#include "pipeline/core/stage_action_names.h"
+#include "pipeline/core/stage_action_registry.h"
+#include "pipeline/utils/okl_attribute_traverser.h"
 
-#include <clang/AST/ASTContext.h>
-#include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Analysis/MacroExpansionContext.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Tooling/Tooling.h>
+#include <clang/Lex/LiteralSupport.h>
+
 #include <spdlog/spdlog.h>
 
 namespace {
-
-using namespace clang;
 using namespace oklt;
+using namespace clang;
 
 SourceLocation findPreviousTokenStart(SourceLocation start,
                                       const SourceManager& sm,
@@ -331,47 +327,7 @@ struct CommentDeleter : public CommentHandler {
     }
 };
 
-std::list<Token> lexMacroToken(Preprocessor& pp) {
-    std::list<Token> macros;
-    while (true) {
-        Token tok{};
-        pp.Lex(tok);
-
-        if (tok.is(tok::eof)) {
-            break;
-        }
-
-        if (tok.is(tok::unknown)) {
-            // Check for '@' symbol
-            auto spelling = pp.getSpelling(tok);
-            if (spelling.empty() || spelling[0] != OKL_ATTR_NATIVE_MARKER) {
-                break;
-            }
-            tok.setKind(tok::at);
-        }
-
-        // catch only valid macro loc
-        auto loc = tok.getLocation();
-        if (loc.isInvalid() || !loc.isMacroID()) {
-            continue;
-        }
-
-        if (pp.getSourceManager().isInSystemHeader(loc)) {
-            continue;
-        }
-
-        // catch start of macro expansion
-        if (!Lexer::isAtEndOfMacroExpansion(loc, pp.getSourceManager(), pp.getLangOpts())) {
-            continue;
-        }
-
-        macros.emplace_back(std::move(tok));
-    }
-
-    return macros;
-}
-
-void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
+void preprocessMacros(Preprocessor& pp, SessionStage& stage) {
     auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
     ctx->registerForPreprocessor(pp);
 
@@ -389,15 +345,37 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     auto* defCallback = new DefineDirectiveCallbacks(sm);
     pp.addPPCallbacks(std::unique_ptr<PPCallbacks>(defCallback));
 
-    pp.EnterMainSourceFile();
-    auto& rewriter = stage.getRewriter();
-
     auto commentDeleter = std::make_unique<CommentDeleter>(sm);
     pp.addCommentHandler(commentDeleter.get());
 
-    auto macros = lexMacroToken(pp);
+    // try to catch the first token of macro expansion
+    auto& rewriter = stage.getRewriter();
+    std::list<Token> macros;
+    fetchTokens(pp, [&macros, &pp, &sm](const Token& tok) {
+        // catch only valid macro loc
+        auto loc = tok.getLocation();
+        if (loc.isInvalid() || !loc.isMacroID()) {
+            return true;
+        }
 
-    // do macro expansion
+        if (sm.isInSystemHeader(loc)) {
+            return true;
+        }
+
+        // catch start of macro expansion
+        if (!Lexer::isAtEndOfMacroExpansion(loc, sm, pp.getLangOpts())) {
+            return true;
+        }
+
+        // catched start of the macro
+        macros.emplace_back(std::move(tok));
+
+        return true;
+    });
+
+    // TODO split into smaller processing function
+    //
+    //  do macro expansion
     std::set<StringRef> macroNames;
     for (const auto& tok : macros) {
         if (tok.hasLeadingEmptyMacro()) {
@@ -491,90 +469,17 @@ void expandAndInlineMacroWithOkl(Preprocessor& pp, SessionStage& stage) {
     }
 }
 
-struct MacroExpander : public clang::ASTFrontendAction {
-    explicit MacroExpander(ExpandMacroStageInput& input, ExpandMacroStageOutput& output)
-        : _input(input),
-          _output(output),
-          _session(*input.session) {
-        (void)_input;
-    }
+class MacroExpansion : public StageAction {
+   public:
+    MacroExpansion() { _name = MACRO_EXPANSION_STAGE; };
 
-   protected:
-    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
-                                                          llvm::StringRef in_file) override {
-        return nullptr;
-    }
-
-    bool PrepareToExecuteAction(CompilerInstance& compiler) override {
-        if (compiler.hasFileManager()) {
-            auto overlayFs =
-                makeOverlayFs(compiler.getFileManager().getVirtualFileSystemPtr(), _input.cppIncs);
-            compiler.getFileManager().setVirtualFileSystem(overlayFs);
-        }
-
-        return true;
-    }
-
-    bool BeginSourceFileAction(CompilerInstance& compiler) override {
+    bool BeginSourceFileAction(clang::CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
 
-        SessionStage stage{_session, compiler};
-        expandAndInlineMacroWithOkl(pp, stage);
-
-        _output.cppSrc = stage.getRewriterResultForMainFile();
-        _output.cppIncs = stage.getRewriterResultForHeaders();
-        _output.cppIncs.fileMap.merge(_input.cppIncs.fileMap);
-
-        return false;
+        preprocessMacros(pp, *_stage);
+        return true;
     }
-
-   private:
-    ExpandMacroStageInput& _input;
-    ExpandMacroStageOutput& _output;
-    TranspilerSession& _session;
 };
+
+StagePluginRegistry::Add<MacroExpansion> macroExpansion(MACRO_EXPANSION_STAGE, "");
 }  // namespace
-namespace oklt {
-
-ExpandMacroResult expandMacro(ExpandMacroStageInput input) {
-    if (input.cppSrc.empty()) {
-        SPDLOG_ERROR("Input source string is empty");
-        auto error =
-            makeError(OkltNormalizerErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
-        return tl::make_unexpected(std::vector<Error>{error});
-    }
-
-    SPDLOG_DEBUG("stage 0 OKL source:\n\n{}", input.cppSrc);
-
-    Twine tool_name = "okl-transpiler-normalization-to-gnu";
-    auto cppFileNamePath = input.session->input.sourcePath;
-    auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
-
-    std::vector<std::string> args = {"-std=c++17", "-fparse-all-comments", "-I."};
-
-    auto input_file = std::move(input.cppSrc);
-
-    auto& sessionInput = input.session->input;
-    for (const auto& define : sessionInput.defines) {
-        std::string def = "-D" + define;
-        args.push_back(std::move(def));
-    }
-
-    for (const auto& includePath : sessionInput.inlcudeDirectories) {
-        std::string incPath = "-I" + includePath.string();
-        args.push_back(std::move(incPath));
-    }
-
-    ExpandMacroStageOutput output = {.session = input.session};
-    auto ok = tooling::runToolOnCodeWithArgs(
-        std::make_unique<MacroExpander>(input, output), input_file, args, cppFileName, tool_name);
-
-    if (!ok) {
-        return tl::make_unexpected(std::move(output.session->getErrors()));
-    }
-
-    SPDLOG_DEBUG("stage 1 inlined macros with OKL cpp source:\n\n{}", output.cppSrc);
-
-    return output;
-}
-}  // namespace oklt

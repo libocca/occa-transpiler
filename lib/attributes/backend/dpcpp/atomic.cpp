@@ -3,7 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <spdlog/spdlog.h>
 
@@ -51,7 +51,7 @@ tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
     if (op.getOperator() != OverloadedOperatorKind::OO_Equal || numArgs != 2) {
         auto exprStr = getSourceText(op, ctx);
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP),
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP),
                   "Unsupported atomic operation: " + exprStr});
     }
     auto left = op.getArg(0);
@@ -63,7 +63,7 @@ tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
     if (!left->isLValue()) {
         auto leftText = getSourceText(*left, ctx);
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR),
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NON_LVALUE_EXPR),
                   leftText + ": is not lvalue"});
     }
     return util::fmt(
