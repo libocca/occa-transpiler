@@ -361,12 +361,6 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     return {};
 }
 
-HandleResult handleLauncherFunction(const FunctionDecl& d, SessionStage& s) {
-    SPDLOG_DEBUG("Handle function");
-    s.getRewriter().RemoveText(d.getSourceRange());
-    return {};
-}
-
 HandleResult handleLauncherKernelAttribute(const Attr& a,
                                            const FunctionDecl& func,
                                            SessionStage& s) {
@@ -433,8 +427,6 @@ __attribute__((constructor)) void registerLauncherHandler() {
 
     REG_IMPLICIT_HANDLE(clang::Decl::Kind::TranslationUnit,
                         makeSpecificImplicitHandle(handleLauncherTranslationUnit));
-    REG_IMPLICIT_HANDLE(clang::Decl::Kind::Function,
-                        makeSpecificImplicitHandle(handleLauncherFunction));
 
     REG_ATTR_HANDLE(KERNEL_ATTR_NAME, makeSpecificAttrHandle(handleLauncherKernelAttribute));
     REG_ATTR_HANDLE(OUTER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
