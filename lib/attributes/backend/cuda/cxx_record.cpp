@@ -30,6 +30,10 @@ __attribute__((constructor)) void registerAttrBackend() {
         {TargetBackend::CUDA, clang::Decl::Kind::ClassTemplatePartialSpecialization},
         makeSpecificImplicitHandle(handleClassTemplatePartialSpecialization));
 
+    ok &= oklt::AttributeManager::instance().registerImplicitHandler(
+        {TargetBackend::CUDA, clang::Decl::Kind::ClassTemplateSpecialization},
+        makeSpecificImplicitHandle(handleClassTemplatePartialSpecialization));
+
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global function");
     }
