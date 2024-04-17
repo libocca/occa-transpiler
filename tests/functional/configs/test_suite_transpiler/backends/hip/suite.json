@@ -1,4 +1,5 @@
 [
+    "implicit.json",
     "const_global.json",
     "non_kernel_function.json",
     "max_inner_dims.json",
