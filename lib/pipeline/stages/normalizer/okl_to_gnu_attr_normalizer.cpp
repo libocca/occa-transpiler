@@ -1,9 +1,9 @@
 #include "core/lex/lexer.h"
 #include "core/transpiler_session/session_stage.h"
 
+#include "pipeline/core/error_codes.h"
 #include "pipeline/core/stage_action_names.h"
 #include "pipeline/core/stage_action_registry.h"
-#include "pipeline/core/error_codes.h"
 
 #include "pipeline/utils/okl_attribute.h"
 #include "pipeline/utils/okl_attribute_traverser.h"
@@ -22,13 +22,8 @@ bool isProbablyOklSpecificForStmt(Token left, Token right) {
 }
 
 bool isProbablyAtBeginnigOfExpr(Token left, Token right) {
-    return ((left.isOneOf(tok::semi, tok::l_brace, tok::r_paren)) && !right.is(tok::semi));
+    return (left.isOneOf(tok::semi, tok::l_brace, tok::r_paren) && !right.is(tok::semi));
 }
-
-bool isProbablyAtEndOfFor(Token left, Token right) {
-    return ((left.is(tok::r_paren)) && (right.is(tok::l_brace) || right.is(tok::identifier)));
-}
-
 
 Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {
     return attr.tok_indecies.front() != 0 ? tokens[attr.tok_indecies.front() - 1] : Token();
@@ -113,7 +108,7 @@ bool replaceOklByGnuAttribute(const OklAttribute& oklAttr,
         rewriter.ReplaceText(leftNeighbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
 
-        // TODO delegate parsing 'for' statement to okl attribute parser
+        // TODO delegate parsing of 'for' statement to okl attribute parser
         auto forLoc = findForKwLocBefore(tokens, oklAttr.tok_indecies.front());
         if (forLoc.isInvalid()) {
             SPDLOG_ERROR("no kw_for is found before loc: {}\n",
@@ -125,20 +120,6 @@ bool replaceOklByGnuAttribute(const OklAttribute& oklAttr,
         rewriter.RemoveText(attrSrcRange);
         insertLoc = forLoc;
     }
-    else if (isProbablyAtEndOfFor(leftNeighbour, rightNeighbour)) {
-        // TODO delegate parsing 'for' statement to okl attribute parser
-        auto forLoc = findForKwLocBefore(tokens, oklAttr.tok_indecies.front());
-        if (forLoc.isInvalid()) {
-            SPDLOG_ERROR("no kw_for is found before loc: {}\n",
-                         leftNeighbour.getLocation().printToString(pp.getSourceManager()));
-            return false;
-        }
-        auto gnuAttr = wrapAsSpecificGnuAttr(oklAttr);
-        rewriter.InsertTextBefore(forLoc, gnuAttr);
-        rewriter.RemoveText(attrSrcRange);
-        insertLoc = forLoc;
-    }
-
     // INFO: just replace directly with standard attribute
     // if it's originally at the beginning, or an in-place type attribute.
     else if (isProbablyAtBeginnigOfExpr(leftNeighbour, rightNeighbour)) {
