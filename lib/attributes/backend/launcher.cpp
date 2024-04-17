@@ -364,6 +364,7 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
 
     return {};
 }
+
 HandleResult handleLauncherKernelAttribute(const Attr& a,
                                            const FunctionDecl& func,
                                            SessionStage& s) {

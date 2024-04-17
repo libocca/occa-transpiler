@@ -1,9 +1,9 @@
 #include "core/lex/lexer.h"
 #include "core/transpiler_session/session_stage.h"
 
+#include "pipeline/core/error_codes.h"
 #include "pipeline/core/stage_action_names.h"
 #include "pipeline/core/stage_action_registry.h"
-#include "pipeline/core/error_codes.h"
 
 #include "pipeline/utils/okl_attribute.h"
 #include "pipeline/utils/okl_attribute_traverser.h"
@@ -22,7 +22,7 @@ bool isProbablyOklSpecificForStmt(Token left, Token right) {
 }
 
 bool isProbablyAtBeginnigOfExpr(Token left, Token right) {
-    return ((left.is(tok::semi) || left.is(tok::l_brace)) && !right.is(tok::semi));
+    return (left.isOneOf(tok::semi, tok::l_brace, tok::r_paren) && !right.is(tok::semi));
 }
 
 Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {
@@ -108,6 +108,7 @@ bool replaceOklByGnuAttribute(const OklAttribute& oklAttr,
         rewriter.ReplaceText(leftNeighbour.getLocation(), 1, ")");
         rewriter.ReplaceText(rightNeighbour.getLocation(), 1, " ");
 
+        // TODO delegate parsing of 'for' statement to okl attribute parser
         auto forLoc = findForKwLocBefore(tokens, oklAttr.tok_indecies.front());
         if (forLoc.isInvalid()) {
             SPDLOG_ERROR("no kw_for is found before loc: {}\n",
@@ -128,7 +129,8 @@ bool replaceOklByGnuAttribute(const OklAttribute& oklAttr,
     }
     // INFO: attribute is not at the beginning of expr so wrap it as GNU.
     // GNU attribute has more diversity for locations (and it's a nightmare for parser and AST to
-    // handle all cases) than standard attribute. After parsing AST GNU will be replaced by CXX NB:
+    // handle all cases) than standard attribute. After parsing AST GNU will be replaced by CXX
+    // NB:
     // there are cases where GNU attribute could not be parsed and embed into AST For example:
     //   a+=1 __attrbute((okl_atomic));
     // and
