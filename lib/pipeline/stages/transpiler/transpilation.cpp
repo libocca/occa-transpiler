@@ -201,11 +201,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
 template <typename NodeType>
 bool skipNode(const NodeType& n, SessionStage& s) {
     const auto& sm = s.getCompiler().getSourceManager();
-    const auto& loc = n.getBeginLoc();
-
-    if (loc.isInvalid()) {
-        return true;
-    }
+    const auto& loc = n.getEndLoc();
 
     if (sm.isInSystemHeader(loc)) {
         return true;
@@ -228,7 +224,7 @@ bool traverseNode(TraversalType& traversal,
     }
 
     if (skipNode(*node, stage)) {
-        return true;
+        return dispatchTraverseFunc(traversal, node);
     }
 
     auto result = [&]() -> HandleResult {
