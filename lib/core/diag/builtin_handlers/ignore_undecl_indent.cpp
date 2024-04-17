@@ -76,6 +76,10 @@ bool isLooksLikeFunctionCall(const SourceLocation& loc,
             return false;
         }
 
+        if (!hasLParen && token->is(tok::r_paren)) {
+            return false;
+        }
+
         if (!cnt && token->is(tok::l_paren) && !hasLParen) {
             hasLParen = true;
         }

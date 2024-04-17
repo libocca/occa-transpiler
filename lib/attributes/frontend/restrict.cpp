@@ -30,9 +30,10 @@ struct RestrictAttribute : public ParsedAttrInfo {
                               const clang::ParsedAttr& attr,
                               const clang::Decl* decl) const override {
         // INFO: this can to applied to following decl
-        if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
+        if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl, FunctionDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-                << attr << ": can be applied only for parameters of pointer type in function";
+                << attr << ":"
+                << "parameters of pointer type in function";
             return false;
         }
         const auto type = [&sema](const clang::Decl* decl) {
@@ -41,6 +42,8 @@ struct RestrictAttribute : public ParsedAttrInfo {
                     return cast<FieldDecl>(decl)->getType();
                 case Decl::Typedef:
                     return sema.Context.getTypeDeclType(dyn_cast<TypeDecl>(decl));
+                case Decl::Function:
+                    return cast<FunctionDecl>(decl)->getReturnType();
                 default:
                     return cast<VarDecl>(decl)->getType();
             }

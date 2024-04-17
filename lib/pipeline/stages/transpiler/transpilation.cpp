@@ -201,11 +201,17 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
 template <typename NodeType>
 bool skipNode(const NodeType& n, SessionStage& s) {
     const auto& sm = s.getCompiler().getSourceManager();
-    if (sm.isInSystemHeader(n.getBeginLoc())) {
+    const auto& loc = n.getBeginLoc();
+
+    if (loc.isInvalid()) {
         return true;
     }
 
-    if (sm.isInSystemMacro(n.getBeginLoc())) {
+    if (sm.isInSystemHeader(loc)) {
+        return true;
+    }
+
+    if (sm.isInSystemMacro(loc)) {
         return true;
     }
 

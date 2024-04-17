@@ -9,5 +9,6 @@
     "nobarrier.json",
     "exclusive.json",
     "cxx_record.json",
-    "macro.json"
+    "macro.json",
+    "implicit.json"
 ]

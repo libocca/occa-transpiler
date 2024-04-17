@@ -31,6 +31,17 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/cuda/restrict/restrict_namespaced_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/restrict/restrict_return_type.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/restrict/restrict_return_type_ref.cpp"
      }
 
 ]
