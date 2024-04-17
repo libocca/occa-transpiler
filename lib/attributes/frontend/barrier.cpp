@@ -3,7 +3,7 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/barrier.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/Sema.h>

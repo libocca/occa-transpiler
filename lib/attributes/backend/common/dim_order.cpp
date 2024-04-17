@@ -1,7 +1,6 @@
-#include <core/attribute_manager/attributed_type_map.h>
 #include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/attr_handler.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -33,12 +32,10 @@ HandleResult handleDimOrderStmtAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        {DIM_ORDER_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
-        makeSpecificAttrHandle(handleDimOrderDeclAttribute));
+        DIM_ORDER_ATTR_NAME, handleDimOrderDeclAttribute);
 
     ok = ok && oklt::AttributeManager::instance().registerCommonHandler(
-                   {DIM_ORDER_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
-                   makeSpecificAttrHandle(handleDimOrderStmtAttribute));
+                   DIM_ORDER_ATTR_NAME, handleDimOrderStmtAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ORDER_ATTR_NAME);
     }

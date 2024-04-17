@@ -2,7 +2,8 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
 #include "core/attribute_manager/attr_handler.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
+#include "core/attribute_manager/implicid_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -410,37 +411,35 @@ HandleResult handleLauncherKernelAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerLauncherHandler() {
-#define REG_ATTR_HANDLE(NAME, KIND, BODY)                                             \
+#define REG_ATTR_HANDLE(NAME, BODY)                                                   \
     {                                                                                 \
         auto ok = oklt::AttributeManager::instance().registerBackendHandler(          \
-            {TargetBackend::_LAUNCHER, NAME, ASTNodeKind::getFromNodeKind<KIND>()},   \
-            makeSpecificAttrHandle(BODY));                                            \
+            TargetBackend::_LAUNCHER, NAME, BODY);                                    \
         if (!ok) {                                                                    \
             SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
         }                                                                             \
     }
 
-    auto ok = AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::_LAUNCHER, ASTNodeKind::getFromNodeKind<TranslationUnitDecl>()},
-        makeSpecificImplicitHandle(handleLauncherTranslationUnit));
+    auto ok = AttributeManager::instance().registerImplicitHandler(TargetBackend::_LAUNCHER,
+                                                                   handleLauncherTranslationUnit);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");
     }
 
-    REG_ATTR_HANDLE(KERNEL_ATTR_NAME, FunctionDecl, handleLauncherKernelAttribute);
-    REG_ATTR_HANDLE(OUTER_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
-    REG_ATTR_HANDLE(INNER_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
-    REG_ATTR_HANDLE(TILE_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(KERNEL_ATTR_NAME, handleLauncherKernelAttribute);
+    REG_ATTR_HANDLE(OUTER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(INNER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(TILE_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
-    REG_ATTR_HANDLE(ATOMIC_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
-    REG_ATTR_HANDLE(BARRIER_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
-    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, Decl, serial_subset::handleEmptyDeclAttribute);
-    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
-    REG_ATTR_HANDLE(SHARED_ATTR_NAME, Decl, serial_subset::handleEmptyDeclAttribute);
-    REG_ATTR_HANDLE(SHARED_ATTR_NAME, Stmt, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(ATOMIC_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(BARRIER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, serial_subset::handleEmptyDeclAttribute);
+    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyDeclAttribute);
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
-    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME, Decl, serial_subset::handleRestrictAttribute);
+    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME, serial_subset::handleRestrictAttribute);
 
 #undef REG_ATTR_HANDLE
 }

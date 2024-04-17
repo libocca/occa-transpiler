@@ -6,6 +6,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
+#include <clang/AST/Attr.h>
 #include <spdlog/spdlog.h>
 
 namespace oklt {
@@ -16,63 +17,29 @@ AttributeManager& AttributeManager::instance() {
     return attrManager;
 }
 
-bool AttributeManager::registerCommonHandler(CommonAttributeMap::KeyType key, AttrHandler handler) {
-    return _commonAttrs.registerHandler(std::move(key), std::move(handler));
-}
-
-bool AttributeManager::registerBackendHandler(BackendAttributeMap::KeyType key,
-                                              AttrHandler handler) {
-    return _backendAttrs.registerHandler(std::move(key), std::move(handler));
-}
-
-bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
-                                               NodeHandler handler) {
-    return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
+bool AttributeManager::hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind) {
+    return _handlers.hasHandler(backend, kind);
 }
 
 HandleResult AttributeManager::handleNode(SessionStage& stage, const DynTypedNode& node) {
-    return _implicitHandlers(stage, node);
+    return _handlers(stage, node);
 }
 
 HandleResult AttributeManager::handleAttr(SessionStage& stage,
                                           const DynTypedNode& node,
                                           const Attr& attr,
                                           const std::any* params) {
-    auto name = attr.getNormalizedFullName();
-    auto kind = node.getNodeKind();
-    if (_commonAttrs.hasHandler({name, kind})) {
-        return _commonAttrs.handleAttr(stage, node, attr, params);
-    }
-
-    auto backend = stage.getBackend();
-    if (_backendAttrs.hasHandler({backend, name, kind})) {
-        return _backendAttrs.handleAttr(stage, node, attr, params);
-    }
-
-    // TODO: Uncomment after multi-handle added
-    // return tl::make_unexpected(Error{std::error_code(), "no handler for attr: " + name});
-    return {};
+    return _handlers(stage, node, attr, params);
 }
 
 HandleResult AttributeManager::parseAttr(SessionStage& stage, const Attr& attr) {
-    std::string name = attr.getNormalizedFullName();
-    auto it = _attrParsers.find(name);
-    if (it != _attrParsers.end()) {
-        auto params = ParseOKLAttr(stage, attr);
-        return it->second(stage, attr, params);
-    }
-
-    return EmptyParams{};
+    return _handlers(stage, attr, nullptr);
 }
 
 HandleResult AttributeManager::parseAttr(SessionStage& stage,
                                          const Attr& attr,
-                                        OKLParsedAttr& params) {
-    auto it = _attrParsers.find(params.name);
-    if (it != _attrParsers.end()) {
-        return it->second(stage, attr, params);
-    }
-    return EmptyParams{};
+                                         OKLParsedAttr& params) {
+    return _handlers(stage, attr, &params);
 }
 
 tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionStage& stage,
@@ -97,8 +64,7 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionS
             }
 
             auto name = attr->getNormalizedFullName();
-            if (!_commonAttrs.hasHandler({name, kind}) &&
-                !_backendAttrs.hasHandler({backend, name, kind})) {
+            if (!_handlers.hasHandler(name, kind) && !_handlers.hasHandler(backend, name, kind)) {
                 // TODO report diag error
                 SPDLOG_ERROR(
                     "{} attribute: {} for decl: {} does not have a registered handler",
@@ -135,8 +101,8 @@ tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionS
             }
 
             auto name = attr->getNormalizedFullName();
-            if (!_commonAttrs.hasHandler({name, subKind}) &&
-                !_backendAttrs.hasHandler({backend, name, subKind})) {
+            if (!_handlers.hasHandler(name, subKind) &&
+                !_handlers.hasHandler(backend, name, subKind)) {
                 // TODO report diag error
                 SPDLOG_ERROR(
                     "{} attribute: {} for stmt: {} does not have a registered handler",

@@ -1,5 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/implicid_handler.h"
 
 #include <clang/AST/DeclCXX.h>
 #include <clang/AST/DeclTemplate.h>
@@ -30,16 +30,13 @@ HandleResult handleClassTemplatePartialSpecialization(
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<CXXRecordDecl>()},
-        makeSpecificImplicitHandle(handleClassRecord));
+        TargetBackend::HIP, handleClassRecord);
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<ClassTemplateSpecializationDecl>()},
-        makeSpecificImplicitHandle(handleClassTemplateSpecialization));
+        TargetBackend::HIP, handleClassTemplateSpecialization);
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, ASTNodeKind::getFromNodeKind<ClassTemplatePartialSpecializationDecl>()},
-        makeSpecificImplicitHandle(handleClassTemplatePartialSpecialization));
+        TargetBackend::HIP, handleClassTemplatePartialSpecialization);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");

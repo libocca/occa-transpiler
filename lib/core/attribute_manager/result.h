@@ -6,6 +6,7 @@
 #include <any>
 
 namespace oklt {
+struct Error;
 
 using HandleResult = tl::expected<std::any, Error>;
 

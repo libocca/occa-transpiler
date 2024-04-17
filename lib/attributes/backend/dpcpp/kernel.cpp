@@ -1,14 +1,15 @@
+#include <oklt/core/kernel_metadata.h>
+#include <oklt/util/string_utils.h>
+
 #include "attributes/attribute_names.h"
 #include "attributes/utils/kernel_utils.h"
 #include "core/rewriter/rewriter_proxy.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "oklt/core/kernel_metadata.h"
-#include "oklt/util/string_utils.h"
 #include "pipeline/core/error_codes.h"
 
 #include <spdlog/spdlog.h>
@@ -157,8 +158,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerKernelHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, KERNEL_ATTR_NAME, ASTNodeKind::getFromNodeKind<FunctionDecl>()},
-        makeSpecificAttrHandle(handleKernelAttribute));
+        TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);

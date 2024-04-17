@@ -2,7 +2,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/frontend/params/empty_params.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -10,7 +10,6 @@
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 

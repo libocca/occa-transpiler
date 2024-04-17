@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
@@ -108,8 +108,7 @@ HandleResult handleAtomicAttribute(SessionStage& stage,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, ATOMIC_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
-        makeSpecificAttrHandle(handleAtomicAttribute));
+        TargetBackend::DPCPP, ATOMIC_ATTR_NAME, handleAtomicAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);

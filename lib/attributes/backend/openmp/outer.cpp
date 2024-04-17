@@ -29,8 +29,7 @@ HandleResult handleOPENMPOuterAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, OUTER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
-        makeSpecificAttrHandle(handleOPENMPOuterAttribute));
+        TargetBackend::OPENMP, OUTER_ATTR_NAME, handleOPENMPOuterAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", OUTER_ATTR_NAME);

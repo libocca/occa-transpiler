@@ -1,6 +1,6 @@
 #include "attributes/utils/replace_attribute.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/implicid_handler.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
 
@@ -27,9 +27,8 @@ HandleResult handleTranslationUnit(SessionStage& s, const TranslationUnitDecl& d
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, ASTNodeKind::getFromNodeKind<TranslationUnitDecl>()},
-        makeSpecificImplicitHandle(handleTranslationUnit));
+    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(TargetBackend::CUDA,
+                                                                         handleTranslationUnit);
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for translation unit");
     }

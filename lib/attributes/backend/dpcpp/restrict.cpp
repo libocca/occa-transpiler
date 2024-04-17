@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -23,8 +23,7 @@ HandleResult handleRestrictAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerCUDARestrictHandler() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, RESTRICT_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
-        makeSpecificAttrHandle(handleRestrictAttribute));
+        TargetBackend::DPCPP, RESTRICT_ATTR_NAME, handleRestrictAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", RESTRICT_ATTR_NAME);

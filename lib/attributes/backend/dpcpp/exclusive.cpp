@@ -1,11 +1,10 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
 #include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
-#include <clang/AST/Stmt.h>
 #include <spdlog/spdlog.h>
 
 namespace {
@@ -22,12 +21,10 @@ HandleResult handleExclusiveAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
-        makeSpecificAttrHandle(handleExclusiveAttribute));
+        TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, handleExclusiveAttribute);
 
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
-        makeSpecificAttrHandle(defaultHandleExclusiveStmtAttribute));
+        TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, defaultHandleExclusiveStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);

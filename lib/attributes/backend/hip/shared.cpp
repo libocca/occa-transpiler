@@ -1,7 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
 
 #include <spdlog/spdlog.h>
 
@@ -11,13 +11,11 @@ using namespace clang;
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Decl>()},
-        makeSpecificAttrHandle(cuda_subset::handleSharedAttribute));
+        TargetBackend::HIP, SHARED_ATTR_NAME, cuda_subset::handleSharedAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::HIP, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
-        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
+        TargetBackend::HIP, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", SHARED_ATTR_NAME);

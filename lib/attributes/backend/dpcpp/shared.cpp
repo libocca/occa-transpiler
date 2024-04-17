@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/attribute_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -48,13 +48,11 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<VarDecl>()},
-        makeSpecificAttrHandle(handleSharedAttribute));
+        TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, SHARED_ATTR_NAME, ASTNodeKind::getFromNodeKind<Stmt>()},
-        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
+        TargetBackend::DPCPP, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", SHARED_ATTR_NAME);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <oklt/core/ast_processor_types.h>
+#include <oklt/core/target_backends.h>
 #include <oklt/util/string_utils.h>
 
 #include "core/attribute_manager/result.h"
@@ -58,7 +59,7 @@ namespace detail {
 constexpr size_t HANDLE_NUM_OF_ARGS = 3;
 template <typename Handler, typename HandleType>
 HandleType makeSemaXXXHandle(Handler& handler) {
-    using NodeType = typename std::remove_reference_t<typename func_param_type<Handler, 2>::type>;
+    using NodeType = typename std::remove_reference_t<typename func_param_type<Handler, 1>::type>;
     constexpr size_t nargs = func_num_arguments<Handler>::value;
 
     return HandleType{[&handler, nargs](SessionStage& stage,
@@ -77,7 +78,7 @@ HandleType makeSemaXXXHandle(Handler& handler) {
                     .value()});
         }
 
-        if constexpr (!std::is_reference_v<typename func_param_type<Handler, 3>::type>) {
+        if constexpr (!std::is_reference_v<typename func_param_type<Handler, 2>::type>) {
             return handler(stage, *localNode, attr);
         } else {
             if (!attr) {
