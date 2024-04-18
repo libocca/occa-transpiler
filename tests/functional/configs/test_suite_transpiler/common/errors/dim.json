@@ -1,0 +1,98 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dim_applied_to_wrong_node_1.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dim_applied_to_wrong_node_1.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dim_applied_to_wrong_node_2.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dim_applied_to_wrong_node_2.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dim_wrong_too_little_args.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dim_wrong_too_little_args.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dim_wrong_too_many_args.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dim_wrong_too_many_args.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dimorder_applied_to_wrong_node_1.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dimorder_applied_to_wrong_node_1.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dimorder_too_big_index.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dimorder_too_big_index.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dimorder_too_big_wrong_number_of_indecies.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dimorder_too_big_wrong_number_of_indecies.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/dim/dimorder_too_dublicate_index.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/dim/dimorder_too_dublicate_index.err"
+    }
+]

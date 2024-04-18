@@ -1,5 +1,6 @@
 [
     "loops.json",
     "kernel.json",
-    "shared.json"
+    "shared.json",
+    "dim.json"
 ]

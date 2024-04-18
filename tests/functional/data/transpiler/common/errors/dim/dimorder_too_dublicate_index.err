@@ -1,0 +1,3 @@
+dimorder_too_dublicate_index.cpp:3:37: error: [@dimOrder] Duplicate index
+    3 | @kernel void hello_kern(mat89_f mat @dimOrder(1, 1)) {
+      |                                     ^

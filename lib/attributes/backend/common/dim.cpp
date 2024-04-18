@@ -7,6 +7,7 @@
 #include "core/utils/range_to_string.h"
 
 #include <spdlog/spdlog.h>
+#include <algorithm>
 #include <numeric>
 
 namespace {
@@ -27,8 +28,8 @@ HandleResult handleDimDeclAttribute(const clang::Attr& a,
 
 // Given variable, returns dim order (0, 1, .. n) if no @dimOrder, or parses @dimOrder if present
 tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
-                                          const AttributedDim* params,
-                                          SessionStage& stage) {
+                                                                  const AttributedDim* params,
+                                                                  SessionStage& stage) {
     auto& ctx = stage.getCompiler().getASTContext();
     DimOrder dimOrder(params->dim.size());
     // Default dimensions order - 0, 1, ... n
@@ -36,36 +37,44 @@ tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
 
     auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
     auto attrs = attrTypeMap.get(ctx, var->getType());
-    for (const auto* attr : attrs) {
+    auto dimOrderAttr = std::find_if(attrs.begin(), attrs.end(), [](const auto* attr) {
         auto name = attr->getNormalizedFullName();
-        if (name != DIM_ORDER_ATTR_NAME) {
-            continue;
+        return (name == DIM_ORDER_ATTR_NAME);
+    });
+    auto status = [&]() -> tl::expected<void, Error> {
+        if (dimOrderAttr != attrs.end()) {
+            auto dimOrderParams = stage.getAttrManager().parseAttr(**dimOrderAttr, stage);
+            if (!dimOrderParams) {
+                return tl::make_unexpected(dimOrderParams.error());
+            }
+            auto* attributedDimOrder = std::any_cast<AttributedDimOrder>(&(dimOrderParams.value()));
+            if (!attributedDimOrder) {
+                return tl::make_unexpected(
+                    Error{{}, "Failed to cast @dimOrder parameters to AttributedDimOrder"});
+            }
+            dimOrder = attributedDimOrder->idx;
+        }
+        if (dimOrder.size() != params->dim.size()) {
+            return tl::make_unexpected(Error{{}, "[@dimOrder] wrong number of arguments"});
         }
 
-        auto dimOrderParams = stage.getAttrManager().parseAttr(*attr, stage);
-        if (!dimOrderParams) {
-            return tl::make_unexpected(dimOrderParams.error());
+        // Verify if dimensions are correct
+        auto nDims = params->dim.size();
+        for (const auto& dim : dimOrder) {
+            if (dim >= nDims) {
+                return tl::make_unexpected(
+                    Error{{},
+                          util::fmt("[@dimOrder] Dimensions must be in range [0, {}]", nDims - 1)
+                              .value()});
+            }
         }
-        auto* attributedDimOrder = std::any_cast<AttributedDimOrder>(&(dimOrderParams.value()));
-        if (!attributedDimOrder) {
-            return tl::make_unexpected(
-                Error{{}, "Failed to cast @dimOrder parameters to AttributedDimOrder"});
+        return {};
+    }();
+    if (!status) {
+        if (dimOrderAttr != attrs.end()) {
+            status.error().ctx = (*dimOrderAttr)->getRange();
         }
-        dimOrder = attributedDimOrder->idx;
-        break;
-    }
-    if (dimOrder.size() != params->dim.size()) {
-        return tl::make_unexpected(Error{{}, "[@dimOrder] wrong number of arguments"});
-    }
-
-    // Verify if dimensions are correct
-    auto nDims = params->dim.size();
-    for (const auto& dim : dimOrder) {
-        if (dim >= nDims) {
-            return tl::make_unexpected(Error{
-                {},
-                util::fmt("[@dimOrder] Dimensions must be in range [0, {}]", nDims - 1).value()});
-        }
+        return tl::make_unexpected(status.error());
     }
     return dimOrder;
 }
@@ -163,6 +172,7 @@ HandleResult handleDimStmtAttribute(const clang::Attr& a,
 
     auto& ctx = stage.getCompiler().getASTContext();
 
+    // TODO: Error from validateDim points to @dim, but should point to variable
     auto expressions = [&]() -> tl::expected<ExprVec, Error> {
         // Dispatch statement
         if (isa<RecoveryExpr>(stmt)) {
