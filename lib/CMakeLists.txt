@@ -142,7 +142,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
     attributes/backend/common/max_inner_dims.cpp
-        attributes/backend/common/no_barrier.cpp
+    attributes/backend/common/no_barrier.cpp
 
     core/ast_processors/okl_sema_processor/processor.cpp
     core/ast_processors/okl_sema_processor/handlers/function.h
@@ -155,8 +155,8 @@ set (OCCA_TRANSPILER_SOURCES
     core/sema/okl_sema_info.cpp
     core/sema/okl_sema_info.h
 
-        core/lex/lexer.h
-        core/lex/lexer.cpp
+    core/lex/lexer.h
+    core/lex/lexer.cpp
 
     core/diag/diag_consumer.cpp
     core/diag/builtin_handlers/ignore_undecl_indent.cpp
@@ -167,21 +167,21 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/logger.cpp
 
-        core/rewriter/delta/delta_trees.cpp
+    core/rewriter/delta/delta_trees.cpp
 
-        core/rewriter/impl/dtree_rewriter_proxy.cpp
-        core/rewriter/rewriter_proxy.cpp
-        core/rewriter/rewriter_fabric.cpp
+    core/rewriter/impl/dtree_rewriter_proxy.cpp
+    core/rewriter/rewriter_proxy.cpp
+    core/rewriter/rewriter_fabric.cpp
 
     core/attribute_manager/attribute_manager.cpp
     core/attribute_manager/attributed_type_map.cpp
-        core/attribute_manager/handler_map.cpp
+    core/attribute_manager/handler_map.cpp
 
     core/transpiler_session/transpiler_session.cpp
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
     core/transpiler_session/code_generator.cpp
-        core/transpiler_session/original_source_mapper.cpp
+    core/transpiler_session/original_source_mapper.cpp
 
     core/target_backends.cpp
 
@@ -202,24 +202,24 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/transpiler.cpp
     pipeline/normalizer_and_transpiler.cpp
 
-        pipeline/core/stage_action.cpp
-        pipeline/core/stage_action.h
-        pipeline/core/stage_action_runner.cpp
-        pipeline/core/stage_action_runner.h
-        pipeline/core/stage_action_registry.h
-        pipeline/core/stage_action_registry.cpp
-        pipeline/core/error_codes.cpp
-        pipeline/core/error_codes.h
+    pipeline/core/stage_action.cpp
+    pipeline/core/stage_action.h
+    pipeline/core/stage_action_runner.cpp
+    pipeline/core/stage_action_runner.h
+    pipeline/core/stage_action_registry.h
+    pipeline/core/stage_action_registry.cpp
+    pipeline/core/error_codes.cpp
+    pipeline/core/error_codes.h
 
-        pipeline/utils/okl_attribute_traverser.cpp
-        pipeline/utils/okl_attribute_traverser.h
-        pipeline/utils/okl_attribute.h
+    pipeline/utils/okl_attribute_traverser.cpp
+    pipeline/utils/okl_attribute_traverser.h
+    pipeline/utils/okl_attribute.h
 
-        pipeline/stages/preprocessor/okl_directive_expansion.cpp
-        pipeline/stages/preprocessor/macro_expansion.cpp
-        pipeline/stages/normalizer/okl_to_gnu_attr_normalizer.cpp
-        pipeline/stages/normalizer/gnu_to_std_cpp_attr_normalizer.cpp
-        pipeline/stages/transpiler/transpilation.cpp
+    pipeline/stages/preprocessor/okl_directive_expansion.cpp
+    pipeline/stages/preprocessor/macro_expansion.cpp
+    pipeline/stages/normalizer/okl_to_gnu_attr_normalizer.cpp
+    pipeline/stages/normalizer/gnu_to_std_cpp_attr_normalizer.cpp
+    pipeline/stages/transpiler/transpilation.cpp
 )
 
 CPMAddPackage(NAME expected
