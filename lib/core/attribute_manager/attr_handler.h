@@ -91,9 +91,7 @@ AttrHandler::HandleType AttrHandler::wrapHandler(F& f) {
 };
 
 template <enum HandleType H>
-struct HandlerKey<H,
-                  std::enable_if_t<H == HandleType::COMMON || H == HandleType::SEMA_PRE ||
-                                   H == HandleType::SEMA_POST>> : public HandleKeyBase {
+struct HandlerKey<H, std::enable_if_t<H == HandleType::COMMON>> : public HandleKeyBase {
     typedef AttrHandler HandlerType;
 
     template <typename... Ts>

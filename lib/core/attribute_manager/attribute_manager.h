@@ -31,13 +31,15 @@ class AttributeManager {
     static AttributeManager& instance();
 
     template <typename AttrFrontendType, typename F>
-    bool registerAttrFrontend(std::string name, F& func);
+    bool registerAttrFrontend(std::string attr, F& func);
     template <typename F>
     bool registerCommonHandler(std::string attr, F& func);
     template <typename F>
     bool registerBackendHandler(TargetBackend, std::string attr, F& func);
     template <typename F>
     bool registerImplicitHandler(TargetBackend, F& func);
+    template <typename F>
+    bool registerSemaHandler(std::string attr, F& pre, F& post);
 
     [[nodiscard]] bool hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind);
 
