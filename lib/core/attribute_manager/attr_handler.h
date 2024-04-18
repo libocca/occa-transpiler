@@ -79,7 +79,6 @@ AttrHandler::HandleType AttrHandler::wrapHandler(F& f) {
                                           ? std::any_cast<ParamsType>(params)
                                           : nullptr;
                 if (!p) {
-                    auto tn = typeid(ParamsType).name();
                     return tl::make_unexpected(Error{
                         {},
                         util::fmt("Any cast fail: failed to cast to {}", typeid(ParamsType).name())
