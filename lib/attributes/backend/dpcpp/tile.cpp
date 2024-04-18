@@ -252,7 +252,7 @@ HandleResult handleTileAttribute(SessionStage& s,
         afterRBraceCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
 
-    handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
     return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, false);
 }

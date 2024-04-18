@@ -3,8 +3,8 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/dim.h"
 
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/attributed_type_map.h"
+#include "core/attribute_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -112,9 +112,9 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
-                                    OKLParsedAttr& data,
-                                    SessionStage& stage) {
+HandleResult parseDimOrderAttrParams(SessionStage& stage,
+                                     const clang::Attr& attr,
+                                     OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});
     }

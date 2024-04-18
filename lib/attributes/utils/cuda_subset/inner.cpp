@@ -42,7 +42,7 @@ HandleResult handleInnerAttribute(SessionStage& s,
         afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
     }
 
-    handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
     return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, true);
 }

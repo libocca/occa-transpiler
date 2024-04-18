@@ -16,9 +16,8 @@ HandleResult handleClassRecord(SessionStage& s, const CXXRecordDecl& d) {
     return handleCXXRecord(s, d, CUDA_FUNCTION_QUALIFIER);
 }
 
-HandleResult handleClassTemplateSpecialization(
-    SessionStage& s,
-    const ClassTemplateSpecializationDecl& d) {
+HandleResult handleClassTemplateSpecialization(SessionStage& s,
+                                               const ClassTemplateSpecializationDecl& d) {
     return handleCXXRecord(s, d, CUDA_FUNCTION_QUALIFIER);
 }
 
@@ -29,14 +28,14 @@ HandleResult handleClassTemplatePartialSpecialization(
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        TargetBackend::CUDA, handleClassRecord);
+    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(TargetBackend::CUDA,
+                                                                         handleClassRecord);
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
         TargetBackend::CUDA, handleClassTemplateSpecialization);
 
     ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        TargetBackend::CUDA, handleClassTemplateSpecialization);
+        TargetBackend::CUDA, handleClassTemplatePartialSpecialization);
 
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global function");

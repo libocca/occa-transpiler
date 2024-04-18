@@ -476,7 +476,7 @@ class MacroExpansion : public StageAction {
     bool BeginSourceFileAction(clang::CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
 
-        preprocessMacros(pp, *_stage);
+        preprocessMacros(*_stage, pp);
         return true;
     }
 };
