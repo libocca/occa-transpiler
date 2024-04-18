@@ -9,7 +9,7 @@
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 #include "core/utils/type_converter.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <oklt/core/kernel_metadata.h>
 
@@ -358,12 +358,13 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
     SPDLOG_DEBUG("Handle translation unit");
 
     //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
-    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps;
+    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendHeaders;
     backendDeps.clear();
     backendDeps.emplace_back("#include " + std::string(includeOCCA) + "\n\n");
 
     return {};
 }
+
 HandleResult handleLauncherKernelAttribute(const Attr& a,
                                            const FunctionDecl& func,
                                            SessionStage& s) {
@@ -373,7 +374,7 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     auto& rewriter = s.getRewriter();
 
     if (!sema.getParsingKernelInfo()) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
                                          "handleKernelAttribute"});
     }
 

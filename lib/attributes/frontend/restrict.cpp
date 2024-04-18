@@ -1,10 +1,9 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
-
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
+
+#include "core/attribute_manager/attribute_manager.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -16,9 +15,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling RESTRICT_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "restrict"},
     {ParsedAttr::AS_CXX11, RESTRICT_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_restrict"}};
+    {ParsedAttr::AS_GNU, RESTRICT_ATTR_NAME}};
 
 struct RestrictAttribute : public ParsedAttrInfo {
     RestrictAttribute() {
@@ -32,9 +30,10 @@ struct RestrictAttribute : public ParsedAttrInfo {
                               const clang::ParsedAttr& attr,
                               const clang::Decl* decl) const override {
         // INFO: this can to applied to following decl
-        if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
+        if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl, FunctionDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-                << attr << ": can be applied only for parameters of pointer type in function";
+                << attr << ":"
+                << "parameters of pointer type in function";
             return false;
         }
         const auto type = [&sema](const clang::Decl* decl) {
@@ -43,6 +42,8 @@ struct RestrictAttribute : public ParsedAttrInfo {
                     return cast<FieldDecl>(decl)->getType();
                 case Decl::Typedef:
                     return sema.Context.getTypeDeclType(dyn_cast<TypeDecl>(decl));
+                case Decl::Function:
+                    return cast<FunctionDecl>(decl)->getReturnType();
                 default:
                     return cast<VarDecl>(decl)->getType();
             }

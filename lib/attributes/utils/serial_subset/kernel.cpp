@@ -3,7 +3,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <spdlog/spdlog.h>
 namespace oklt::serial_subset {
@@ -21,7 +21,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
 
     auto oklKernelInfo = toOklKernelInfo(func);
     if (!sema.getParsingKernelInfo() && !oklKernelInfo) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
                                          "handleKernelAttribute"});
     }
 

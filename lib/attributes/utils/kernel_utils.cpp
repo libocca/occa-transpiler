@@ -3,7 +3,7 @@
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "oklt/core/kernel_metadata.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include "tl/expected.hpp"
 
@@ -42,7 +42,7 @@ tl::expected<void, std::pair<const clang::ForStmt*, std::string>> verifyLoopStru
 
     auto levelType = firstNode.loop->type[firstNode.typeIdx];
 
-    bool hasChildren = !firstNode.loop->children.empty();
+    bool hasChildren = firstNode.loop->getFirstAttributedChild();
     bool hasTiledChildren = getNextAttributedTypeIdx(firstNode.loop->type, firstNode.typeIdx) != -1;
     bool isLeafLevel = !hasChildren && !hasTiledChildren;
 
@@ -58,7 +58,7 @@ tl::expected<void, std::pair<const clang::ForStmt*, std::string>> verifyLoopStru
         }
 
         // Veryfy same depth
-        bool currHasChildren = !node.loop->children.empty();
+        bool currHasChildren = node.loop->getFirstAttributedChild();
         auto nextTiledTypeIdx = getNextAttributedTypeIdx(node.loop->type, node.typeIdx);
         bool currHasTiledChildren = nextTiledTypeIdx != -1;
         if (isLeafLevel) {
@@ -146,7 +146,7 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo,
         }
 
         // If there is no outer at all
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
+        return tl::make_unexpected(Error{OkltPipelineErrorCode::AT_LEAST_ONE_OUTER_REQUIRED,
                                          "[@kernel] requires at least one [@outer] for-loop"});
     }
 
@@ -161,11 +161,11 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo,
     }
     if (nMissingInner) {
         if (nMissingInner == topOuterLoops.size()) {
-            return tl::make_unexpected(Error{OkltTranspilerErrorCode::AT_LEAST_ONE_INNER_REQUIRED,
+            return tl::make_unexpected(Error{OkltPipelineErrorCode::AT_LEAST_ONE_INNER_REQUIRED,
                                              "[@kernel] requires at least one [@inner] for-loop"});
         }
         return tl::make_unexpected(
-            Error{OkltTranspilerErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
+            Error{OkltPipelineErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
     }
 
     // Verify loops hierarchy
@@ -178,6 +178,8 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo,
                   failedLoopAttribute == nullptr ? std::any() : failedLoopAttribute->getRange()});
     }
     return {};
+    // return tl::make_unexpected(
+    // Error{OkltPipelineErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
 }
 
 const clang::AttributedStmt* getAttributedStmt(const clang::Stmt& stmt, SessionStage& s) {

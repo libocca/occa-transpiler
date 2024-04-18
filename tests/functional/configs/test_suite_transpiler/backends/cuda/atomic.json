@@ -80,6 +80,17 @@
         "action": "normalize_and_transpile",
         "action_config": {
             "backend": "cuda",
+            "source": "transpiler/backends/cuda/atomic/atomic_in_one_line_if_or_loop.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/atomic/atomic_in_one_line_if_or_loop_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
             "source": "transpiler/backends/cuda/atomic/atomic_dec.cpp",
             "includes": [],
             "defs": [],

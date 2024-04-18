@@ -38,7 +38,7 @@ tl::expected<DimOrder, Error> getDimOrder(const clang::DeclRefExpr* var,
     auto attrs = attrTypeMap.get(ctx, var->getType());
     for (const auto* attr : attrs) {
         auto name = attr->getNormalizedFullName();
-        if (name != DIMORDER_ATTR_NAME) {
+        if (name != DIM_ORDER_ATTR_NAME) {
             continue;
         }
 

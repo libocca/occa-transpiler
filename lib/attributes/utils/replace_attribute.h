@@ -3,7 +3,6 @@
 #include <oklt/core/error.h>
 #include "core/attribute_manager/result.h"
 
-#include <clang/AST/Decl.h>
 #include <tl/expected.hpp>
 
 #include <string>
@@ -11,6 +10,7 @@
 namespace clang {
 class TranslationUnitDecl;
 class CXXRecordDecl;
+class ClassTemplatePartialSpecializationDecl;
 class FunctionDecl;
 class VarDecl;
 class Decl;
@@ -23,13 +23,18 @@ class SessionStage;
 HandleResult handleGlobalConstant(const clang::VarDecl& decl,
                                   SessionStage& s,
                                   const std::string& qualifier);
+
 HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier);
-HandleResult handleCXXRecord(const clang::CXXRecordDecl&,
-                                  SessionStage&,
-                                  const std::string&);
+
+HandleResult handleCXXRecord(const clang::CXXRecordDecl&, SessionStage&, const std::string&);
+HandleResult handleCXXRecord(const clang::ClassTemplatePartialSpecializationDecl&,
+                             SessionStage&,
+                             const std::string&);
+
 HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,
-                                   std::string_view includes);
+                                   std::vector<std::string_view> headers,
+                                   std::vector<std::string_view> ns = {});
 }  // namespace oklt

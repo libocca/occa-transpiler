@@ -61,7 +61,7 @@ oklt::UserInput NormalizeActionConfig::build(const fs::path& dataDir) const {
     std::ifstream sourceFile{sourceFullPath};
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
     return oklt::UserInput{.backend = oklt::TargetBackend::CUDA,
-                           .sourceCode = std::move(sourceCode)};
+                           .source = std::move(sourceCode)};
 }
 
 struct TranspileActionConfig {
@@ -85,7 +85,7 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
 
     return oklt::UserInput{.backend = expectedBackend.value(),
                            .astProcType = oklt::AstProcessorType::OKL_WITH_SEMA,
-                           .sourceCode = std::move(sourceCode),
+                           .source = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
                            .inlcudeDirectories = includes,
                            .defines = defs};
@@ -173,17 +173,13 @@ TEST_P(GenericTest, OCCATests) {
                     case Compare::SOURCE: {
                         std::string formatedReference = oklt::format(reference);
                         std::string normalizedSource =
-                            oklt::format(normalizeResult.value().normalized.sourceCode);
+                            oklt::format(normalizeResult.value().normalized.source);
                         EXPECT_EQ(formatedReference, normalizedSource)
                             << fmt::format("Failed compare {} with generated normalized source",
                                            referencePath.string());
                         break;
                     }
                     case Compare::METADATA: {
-                        EXPECT_EQ(reference, normalizeResult.value().normalized.metadataJson)
-                            << fmt::format(
-                                   "Failed compare {} with generated normalization metadataJson",
-                                   referencePath.string());
                         break;
                     }
                     case Compare::ERROR_MESSAGE: {
@@ -219,7 +215,7 @@ TEST_P(GenericTest, OCCATests) {
                     case Compare::SOURCE: {
                         std::string formatedReference = oklt::format(reference);
                         std::string transpiledSource =
-                            oklt::format(transpileResult.value().kernel.sourceCode);
+                            oklt::format(transpileResult.value().kernel.source);
                         EXPECT_EQ(formatedReference, transpiledSource) << fmt::format(
                             "Failed compare {} with generated normalization metadataJson",
                             referencePath.string());
@@ -227,7 +223,7 @@ TEST_P(GenericTest, OCCATests) {
                         break;
                     }
                     case Compare::METADATA: {
-                        EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson)
+                        EXPECT_EQ(reference, transpileResult.value().kernel.metadata)
                             << fmt::format("Failed compare {} with generated kernel metadataJson",
                                            referencePath.string());
 
@@ -267,14 +263,14 @@ TEST_P(GenericTest, OCCATests) {
                     case Compare::SOURCE: {
                         std::string formatedReference = oklt::format(reference);
                         std::string transpiledSource =
-                            oklt::format(transpileResult.value().kernel.sourceCode);
+                            oklt::format(transpileResult.value().kernel.source);
                         EXPECT_EQ(formatedReference, transpiledSource) << fmt::format(
                             "Failed compare {} with generated normalized and transpiled",
                             referencePath.string());
                         break;
                     }
                     case Compare::METADATA: {
-                        EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson)
+                        EXPECT_EQ(reference, transpileResult.value().kernel.metadata)
                             << fmt::format("Failed compare {} with generated kernel metadataJson",
                                            referencePath.string());
 

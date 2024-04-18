@@ -73,7 +73,7 @@ HandleResult applyTranspilationToNodes(const TranspilationNodes& nodes, SessionS
         sema.setLoopInfo(tnode.li);
         auto result = applyTranspilationToNode(tnode.attr, tnode.node, stage);
         if (!result) {
-            if (!result.error().ctx.has_value()) {
+            if (!result.error().ctx.has_value() && tnode.attr) {
                 result.error().ctx = tnode.attr->getRange();
             }
             return result;
@@ -101,7 +101,7 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
     // merging operation move the source to destination map so clone headers
     // to preserve them for possible laucher generator
-    auto clone = stage.getSession().normalizedHeaders.fileMap;
+    auto clone = stage.getSession().getInput().headers;
     inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
     return inputs;
@@ -135,8 +135,8 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
     CompilerInstance compiler;
     compiler.setInvocation(std::move(invocation));
     compiler.createDiagnostics();
-    compiler.createFileManager(
-        makeOverlayFs(stage.getCompiler().getFileManager().getVirtualFileSystemPtr(), inputs));
+    compiler.createFileManager(makeOverlayFs(
+        stage.getCompiler().getFileManager().getVirtualFileSystemPtr(), inputs.fileMap));
 
     // XXX clang PrintPreprocessedInput action currently can provide output in two ways:
     //     - print it into STDOUT
@@ -159,9 +159,13 @@ tl::expected<std::string, Error> preprocessedInputs(const TransformedFiles& inpu
 }
 
 std::string restoreSystemAndBackendHeaders(std::string& input, const HeaderDepsInfo& deps) {
-    // insert backend specific headers
-    for (const auto& dep : deps.backendDeps) {
-        input.insert(0, dep);
+    // insert backend specific headers and namespaces
+    for (auto it = deps.backendNss.rbegin(); it < deps.backendNss.rend(); ++it) {
+        input.insert(0, *it);
+    }
+
+    for (auto it = deps.backendHeaders.rbegin(); it < deps.backendHeaders.rend(); ++it) {
+        input.insert(0, *it);
     }
 
     // restore system headers
@@ -186,8 +190,7 @@ tl::expected<std::string, Error> fuseIncludeDeps(const HeaderDepsInfo& deps, Ses
     }
 
     auto finalTranspiledKernel = restoreSystemAndBackendHeaders(preprocessedResult.value(), deps);
-
-    return std::move(finalTranspiledKernel);
+    return finalTranspiledKernel;
 }
 }  // namespace
 

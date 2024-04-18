@@ -1,5 +1,4 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
@@ -7,6 +6,41 @@
 #include <clang/AST/AST.h>
 
 #include <spdlog/spdlog.h>
+
+namespace {
+
+using namespace clang;
+
+template <typename T>
+oklt::HandleResult handleCXXRecordImpl(const T& node,
+                                       oklt::Rewriter& r,
+                                       const std::string& modifier_) {
+    auto modifier = modifier_ + " ";
+    // for all explicit constructors/methods add qualifier
+    for (const auto& method : node.methods()) {
+        if (method->isImplicit()) {
+            continue;
+        }
+        auto loc = method->getBeginLoc();
+        r.InsertTextBefore(loc, modifier);
+    }
+
+    // for all templated constructors/methods add qualifier
+    for (const auto& decl : node.decls()) {
+        if (!isa<FunctionTemplateDecl>(decl)) {
+            continue;
+        }
+        auto funcTemplate = dyn_cast<FunctionTemplateDecl>(decl);
+        if (funcTemplate->isImplicit()) {
+            continue;
+        }
+        auto loc = funcTemplate->getAsFunction()->getBeginLoc();
+        r.InsertTextBefore(loc, modifier);
+    }
+
+    return {};
+}
+}  // namespace
 
 namespace oklt {
 using namespace clang;
@@ -66,46 +100,34 @@ HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
 
 HandleResult handleCXXRecord(const clang::CXXRecordDecl& cxxRecord,
                              SessionStage& s,
-                             const std::string& qualifier) {
-    auto spacedModifier = qualifier + " ";
-
-    // for all explicit constructors/methods add qualifier
-    for (const auto& method : cxxRecord.methods()) {
-        if (method->isImplicit()) {
-            continue;
-        }
-        auto loc = method->getBeginLoc();
-        s.getRewriter().InsertTextBefore(loc, spacedModifier);
+                             const std::string& modifier) {
+    if (cxxRecord.isImplicit()) {
+        return {};
     }
 
-    // for all templated constructors/methods add qualifier
-    for (const auto& decl : cxxRecord.decls()) {
-        if (!isa<FunctionTemplateDecl>(decl)) {
-            continue;
-        }
-        auto funcTemplate = dyn_cast<FunctionTemplateDecl>(decl);
-        if (funcTemplate->isImplicit()) {
-            continue;
-        }
-        auto loc = funcTemplate->getAsFunction()->getBeginLoc();
-        s.getRewriter().InsertTextBefore(loc, spacedModifier);
-    }
+    return handleCXXRecordImpl(cxxRecord, s.getRewriter(), modifier);
+}
 
-    return {};
+HandleResult handleCXXRecord(const clang::ClassTemplatePartialSpecializationDecl& cxxRecord,
+                             SessionStage& s,
+                             const std::string& modifier) {
+    return handleCXXRecordImpl(cxxRecord, s.getRewriter(), modifier);
 }
 
 HandleResult handleTranslationUnit(const clang::TranslationUnitDecl& decl,
                                    SessionStage& s,
-                                   std::string_view include) {
-    auto& sourceManager = s.getCompiler().getSourceManager();
-    auto mainFileId = sourceManager.getMainFileID();
-    auto loc = sourceManager.getLocForStartOfFile(mainFileId);
-
+                                   std::vector<std::string_view> headers,
+                                   std::vector<std::string_view> ns) {
     SPDLOG_DEBUG("Handle translation unit");
 
-    // s.getRewriter().InsertTextBefore(loc, "#include " + std::string(include) + "\n");
-    s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps.emplace_back("#include " +
-                                                                   std::string(include) + "\n");
+    auto& deps = s.tryEmplaceUserCtx<HeaderDepsInfo>();
+    for (auto header : headers) {
+        deps.backendHeaders.emplace_back("#include " + std::string(header) + "\n");
+    }
+
+    for (auto n : ns) {
+        deps.backendNss.emplace_back("using namespace " + std::string(n) + ";\n\n");
+    }
 
     return {};
 }

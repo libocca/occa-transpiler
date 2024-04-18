@@ -16,8 +16,8 @@ SessionStage::SessionStage(TranspilerSession& session,
                            RewriterProxyType rwType)
     : _session(session),
       _compiler(compiler),
-      _backend(session.input.backend),
-      _astProcType(session.input.astProcType),
+      _backend(session.getInput().backend),
+      _astProcType(session.getInput().astProcType),
       _rewriter(makeRewriterProxy(_compiler.getSourceManager(), _compiler.getLangOpts(), rwType)) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
@@ -120,9 +120,9 @@ void SessionStage::pushError(const Error& err) {
     if (err.ctx.has_value() && err.ctx.type() == typeid(clang::SourceRange)) {
         auto range = std::any_cast<clang::SourceRange>(err.ctx);
         auto begLoc = range.getBegin();
-        auto& SM = getCompiler().getSourceManager();
+        auto& sm = getCompiler().getSourceManager();
         StoredDiagnostic sd(
-            DiagnosticsEngine::Level::Error, 0, err.desc, FullSourceLoc(begLoc, SM), {}, {});
+            DiagnosticsEngine::Level::Error, 0, err.desc, FullSourceLoc(begLoc, sm), {}, {});
         _session.pushDiagnosticMessage(sd, *this);
         return;
     }

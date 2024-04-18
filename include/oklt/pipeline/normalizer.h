@@ -5,4 +5,6 @@
 
 namespace oklt {
 UserResult normalize(UserInput input);
-}
+
+UserResult normalize_ex(UserInput input);
+}  // namespace oklt

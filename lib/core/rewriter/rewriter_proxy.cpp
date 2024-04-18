@@ -16,11 +16,11 @@ const clang::LangOptions& RewriterProxy::getLangOpts() const {
 }
 
 int RewriterProxy::getRangeSize(clang::SourceRange Range,
-                                     clang::Rewriter::RewriteOptions opts) const {
+                                clang::Rewriter::RewriteOptions opts) const {
     return _rewriter.getRangeSize(Range, opts);
 }
 int RewriterProxy::getRangeSize(const clang::CharSourceRange& Range,
-                                     clang::Rewriter::RewriteOptions opts) const {
+                                clang::Rewriter::RewriteOptions opts) const {
     return _rewriter.getRangeSize(Range, opts);
 }
 
@@ -29,9 +29,9 @@ std::string RewriterProxy::getRewrittenText(clang::CharSourceRange Range) const 
 }
 
 bool RewriterProxy::InsertText(clang::SourceLocation Loc,
-                                    clang::StringRef Str,
-                                    bool InsertAfter,
-                                    bool indentNewLines) {
+                               clang::StringRef Str,
+                               bool InsertAfter,
+                               bool indentNewLines) {
     return _rewriter.InsertText(Loc, Str, InsertAfter, indentNewLines);
 }
 
@@ -40,22 +40,21 @@ bool RewriterProxy::InsertTextAfterToken(clang::SourceLocation Loc, clang::Strin
 }
 
 bool RewriterProxy::RemoveText(clang::SourceLocation Start,
-                                    unsigned Length,
-                                    clang::Rewriter::RewriteOptions opts) {
+                               unsigned Length,
+                               clang::Rewriter::RewriteOptions opts) {
     return _rewriter.RemoveText(Start, Length, opts);
 }
 
 bool RewriterProxy::ReplaceText(clang::SourceLocation Start,
-                                     unsigned OrigLength,
-                                     clang::StringRef NewStr) {
+                                unsigned OrigLength,
+                                clang::StringRef NewStr) {
     return _rewriter.ReplaceText(Start, OrigLength, NewStr);
 }
-bool RewriterProxy::ReplaceText(clang::SourceRange range,
-                                     clang::SourceRange replacementRange) {
+bool RewriterProxy::ReplaceText(clang::SourceRange range, clang::SourceRange replacementRange) {
     return _rewriter.ReplaceText(range, replacementRange);
 }
 bool RewriterProxy::IncreaseIndentation(clang::CharSourceRange range,
-                                             clang::SourceLocation parentIndent) {
+                                        clang::SourceLocation parentIndent) {
     return _rewriter.IncreaseIndentation(range, parentIndent);
 }
 clang::RewriteBuffer& RewriterProxy::getEditBuffer(clang::FileID FID) {

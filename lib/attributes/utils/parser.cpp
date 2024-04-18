@@ -1,12 +1,17 @@
+#include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
+
 #include "core/transpiler_session/session_stage.h"
 
+#include <clang/Basic/TargetInfo.h>
 #include <clang/AST/Attr.h>
 #include <clang/Basic/CharInfo.h>
+#include <clang/Basic/TargetInfo.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/LiteralSupport.h>
 #include <clang/Lex/Preprocessor.h>
+
 #include <llvm/ADT/StringExtras.h>
 
 namespace {
@@ -295,8 +300,7 @@ class AttrParamParser {
             return std::nullopt;
         }
 
-        auto name = std::string("okl::") + TokIt->getRawIdentifier().str();
-
+        auto name = OKL_ATTR_PREFIX + TokIt->getRawIdentifier().str();
         auto buffer = StringRef(rawStart, SM.getCharacterData(TokIt->getEndLoc()) - rawStart);
 
         ++TokIt;

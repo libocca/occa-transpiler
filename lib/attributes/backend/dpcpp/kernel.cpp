@@ -9,7 +9,7 @@
 #include "core/utils/type_converter.h"
 #include "oklt/core/kernel_metadata.h"
 #include "oklt/util/string_utils.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <spdlog/spdlog.h>
 
@@ -105,7 +105,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
 
     if (!sema.getParsingKernelInfo()) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
                                          "handleKernelAttribute"});
     }
 

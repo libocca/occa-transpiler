@@ -2,7 +2,7 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/Attr.h>
@@ -23,7 +23,7 @@ HandleResult handleBinOp(const BinaryOperator& binOp,
         auto binOpStr = getSourceText(binOp, ctx);
         std::string description = "Atomic does not support this operation: " + binOpStr;
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
     auto left = binOp.getLHS();
@@ -31,7 +31,7 @@ HandleResult handleBinOp(const BinaryOperator& binOp,
         auto leftText = getSourceText(*left, ctx);
         std::string description = leftText + ": is not lvalue";
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
     }
 
     auto leftText = getSourceText(*left, ctx);
@@ -54,7 +54,7 @@ HandleResult handleUnOp(const UnaryOperator& unOp,
         auto binOpStr = getSourceText(unOp, ctx);
         std::string description = "Atomic does not support this operation: " + binOpStr;
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
     auto expr = unOp.getSubExpr();
     auto unOpText = getSourceText(*expr, ctx);
@@ -76,7 +76,7 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
         auto exprStr = getSourceText(assignOp, ctx);
         std::string description = "Atomic does not support this operation: " + exprStr;
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
     auto left = assignOp.getArg(0);
@@ -85,7 +85,7 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
         auto leftText = getSourceText(*left, ctx);
         std::string description = leftText + ": is not lvalue";
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
     }
 
     auto leftText = getSourceText(*left, ctx);
@@ -138,7 +138,7 @@ HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionSt
         std::string description = "Atomic does not support this operation: " + exprStr;
 
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
     // INFO: looks like it's really statemet that actually should not happen
@@ -146,6 +146,6 @@ HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionSt
     std::string description = "Atomic does not support this operation: " + stmtStr;
 
     return tl::make_unexpected(
-        Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+        Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
 }
 }  // namespace oklt::cuda_subset

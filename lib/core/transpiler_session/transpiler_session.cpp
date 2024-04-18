@@ -1,24 +1,28 @@
 #include <oklt/core/error.h>
 #include <oklt/core/kernel_metadata.h>
 
+#include "attributes/attribute_names.h"
+
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
 
 #include <clang/Basic/Diagnostic.h>
 
 #include <clang/Frontend/TextDiagnostic.h>
+
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
-namespace oklt {
+#include <regex>
 
 namespace {
+using namespace oklt;
 clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic& diag,
                                                          SessionStage& stage) {
-    auto& SM = stage.getCompiler().getSourceManager();
+    auto& sm = stage.getCompiler().getSourceManager();
     auto& session = stage.getSession();
     clang::SourceLocation errLoc = diag.getLocation();
-    auto [fid, offset] = SM.getDecomposedExpansionLoc(errLoc);
+    auto [fid, offset] = sm.getDecomposedExpansionLoc(errLoc);
     auto& attrOffsetToOriginalCol = session.getOriginalSourceMapper().getAttrOffsetToOriginalCol();
 
     auto fidOffset = std::make_pair(fid, offset);
@@ -28,17 +32,56 @@ clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic
             "Substitute error for attribute at offset {} column to: {}", fidOffset.second, col);
 
         // Create new loc with same line, but new col
-        auto line = SM.getSpellingLineNumber(errLoc);
-        errLoc = SM.translateLineCol(fidOffset.first, line, col);
+        auto line = sm.getSpellingLineNumber(errLoc);
+        errLoc = sm.translateLineCol(fidOffset.first, line, col);
 
         clang::StoredDiagnostic sd(
-            diag.getLevel(), 0, diag.getMessage(), clang::FullSourceLoc(errLoc, SM), {}, {});
+            diag.getLevel(), 0, diag.getMessage(), clang::FullSourceLoc(errLoc, sm), {}, {});
         return sd;
     }
 
     return diag;
 }
+std::string removeOklPrefix(const std::string& input) {
+    // match word 'okl_' prefix proceeding 'attribute' word
+    std::regex pattern(fmt::format(R"('{}(.+?)' attribute)", OKL_ATTR_PREFIX));
+    // Replacement string
+    std::string replacement = "'$1' attribute";
+    // Perform the replacement
+    std::string result = std::regex_replace(input, pattern, replacement);
 
+    return result;
+}
+
+std::string& substituteOriginalLineForRow(std::string& input,
+                                          const OriginalLines& ol,
+                                          clang::FileID fid,
+                                          unsigned row) {
+    auto errFidRow = std::make_pair(fid, row);
+
+    // Substitute original line if possible
+    if (ol.find(errFidRow) == ol.end()) {
+        return input;
+    }
+
+    auto originalLine = ol.at(errFidRow);
+    auto lineMsgPrefix = fmt::format("{} | ", row);
+    auto newLineMsg = lineMsgPrefix + originalLine;
+
+    auto msgPrefixIdx = input.find(lineMsgPrefix);
+    if (msgPrefixIdx == std::string::npos) {
+        return input;
+    }
+
+    auto endIdx = input.find("\n", msgPrefixIdx);
+    input.replace(msgPrefixIdx, endIdx - msgPrefixIdx, newLineMsg);
+    SPDLOG_DEBUG("Substitute original line for row: {}", row);
+
+    return input;
+}
+}  // namespace
+
+namespace oklt {
 std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
                                            std::string errorMsg,
                                            SessionStage& stage) {
@@ -47,19 +90,13 @@ std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
     auto errFid = stage.getCompiler().getSourceManager().getFileID(errLoc);
     auto errRow = stage.getCompiler().getSourceManager().getSpellingLineNumber(errLoc);
     auto errFidRow = std::make_pair(errFid, errRow);
-    // Substitute original line if possible
-    if (originalLines.find(errFidRow) != originalLines.end()) {
-        auto originalLine = originalLines.at(errFidRow);
-        auto lineMsgPrefix = fmt::format("{} | ", errRow);
-        auto newLineMsg = lineMsgPrefix + originalLine;
 
-        auto msgPrefixIdx = errorMsg.find(lineMsgPrefix);
-        if (msgPrefixIdx != std::string::npos) {
-            auto endIdx = errorMsg.find("\n", msgPrefixIdx);
-            errorMsg.replace(msgPrefixIdx, endIdx - msgPrefixIdx, newLineMsg);
-            SPDLOG_DEBUG("Substitute original line for row: {}", errRow);
-        }
-    }
+    // remove OKL prefix for attribute error message
+    errorMsg = removeOklPrefix(errorMsg);
+
+    // Substitute original line if possible
+    errorMsg = substituteOriginalLineForRow(errorMsg, originalLines, errFid, errRow);
+
     return errorMsg;
 }
 
@@ -76,8 +113,6 @@ std::string getErrorMessage(clang::StoredDiagnostic& diag, SessionStage& stage) 
     return errorMsg;
 }
 
-}  // namespace
-
 SharedTranspilerSession TranspilerSession::make(UserInput input) {
     return std::make_shared<TranspilerSession>(std::move(input));
 }
@@ -87,12 +122,12 @@ SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::stri
 }
 
 TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
-    input.backend = backend;
-    input.sourceCode = std::move(sourceCode);
+    _input.backend = backend;
+    _input.source = std::move(sourceCode);
 }
 
-TranspilerSession::TranspilerSession(UserInput input_)
-    : input(std::move(input_)) {}
+TranspilerSession::TranspilerSession(UserInput input)
+    : _input(std::move(input)) {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& diag, SessionStage& stage) {
     auto errorMsg = getErrorMessage(diag, stage);
@@ -133,4 +168,5 @@ std::vector<Warning>& TranspilerSession::getWarnings() {
 OriginalSourceMapper& TranspilerSession::getOriginalSourceMapper() {
     return _sourceMapper;
 }
+
 }  // namespace oklt

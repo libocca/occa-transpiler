@@ -4,7 +4,6 @@
 #include "core/transpiler_session/session_stage.h"
 
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
 #include "params/empty_params.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -17,9 +16,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling SHARED_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "shared"},
     {ParsedAttr::AS_CXX11, SHARED_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_shared"}};
+    {ParsedAttr::AS_GNU, SHARED_ATTR_NAME}};
 
 struct SharedAttribute : public ParsedAttrInfo {
     SharedAttribute() {
