@@ -17,31 +17,6 @@ AttributeManager& AttributeManager::instance() {
     return attrManager;
 }
 
-bool AttributeManager::hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind) {
-    return _handlers.hasHandler(backend, kind);
-}
-
-HandleResult AttributeManager::handleNode(SessionStage& stage, const DynTypedNode& node) {
-    return _handlers(stage, node);
-}
-
-HandleResult AttributeManager::handleAttr(SessionStage& stage,
-                                          const DynTypedNode& node,
-                                          const Attr& attr,
-                                          const std::any* params) {
-    return _handlers(stage, node, attr, params);
-}
-
-HandleResult AttributeManager::parseAttr(SessionStage& stage, const Attr& attr) {
-    return _handlers(stage, attr, nullptr);
-}
-
-HandleResult AttributeManager::parseAttr(SessionStage& stage,
-                                         const Attr& attr,
-                                         OKLParsedAttr& params) {
-    return _handlers(stage, attr, &params);
-}
-
 tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionStage& stage,
                                                                         const DynTypedNode& node) {
     auto backend = stage.getBackend();
