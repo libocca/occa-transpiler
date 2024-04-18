@@ -19,14 +19,14 @@ class SessionStage;
 
 class AttrHandler : public NodeHandler {
    private:
-    using HandleType = std::function<HandleResult(SessionStage&,
-                                                  const clang::DynTypedNode&,
+    using HandlerType = std::function<HandleResult(SessionStage&,
+                                                   const clang::DynTypedNode&,
                                                   const clang::Attr&,
                                                   const std::any*)>;
-    const HandleType handler;
+    const HandlerType handler;
 
     template <class F>
-    HandleType wrapHandler(F&);
+    HandlerType wrapHandler(F&);
 
    public:
     template <class F>
@@ -44,7 +44,7 @@ class AttrHandler : public NodeHandler {
 };
 
 template <class F>
-AttrHandler::HandleType AttrHandler::wrapHandler(F& f) {
+AttrHandler::HandlerType AttrHandler::wrapHandler(F& f) {
     constexpr size_t nargs = func_num_arguments<F>::value;
     static_assert(nargs == 3 || nargs == 4);
     static_assert(std::is_same_v<SessionStage, std::decay_t<func_param_type_t<F, 0>>>);
@@ -52,10 +52,10 @@ AttrHandler::HandleType AttrHandler::wrapHandler(F& f) {
                   std::is_base_of_v<clang::Stmt, std::decay_t<func_param_type_t<F, 1>>>);
     static_assert(std::is_same_v<clang::Attr, std::decay_t<func_param_type_t<F, 2>>>);
 
-    return HandleType{[&f, nargs](SessionStage& stage,
-                                  const clang::DynTypedNode& node,
-                                  const clang::Attr& attr,
-                                  const std::any* params) -> HandleResult {
+    return HandlerType{[&f, nargs](SessionStage& stage,
+                                   const clang::DynTypedNode& node,
+                                   const clang::Attr& attr,
+                                   const std::any* params) -> HandleResult {
         using NodeT = std::decay_t<func_param_type_t<F, 1>>;
         const auto localNode = node.get<NodeT>();
         if (!localNode) {

@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${ROOT_DIR}/include/oklt/core/ast_processor_types.h
     ${ROOT_DIR}/include/oklt/core/target_backends.h
 
     ${ROOT_DIR}/include/oklt/core/transpiler_session/user_input.h
@@ -144,8 +143,6 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/dim_order.cpp
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/nobarrier.cpp
-
-    core/ast_processor_manager/ast_processor_manager.cpp
 
     core/ast_processors/okl_sema_processor/processor.cpp
     core/ast_processors/okl_sema_processor/handlers/function.h
