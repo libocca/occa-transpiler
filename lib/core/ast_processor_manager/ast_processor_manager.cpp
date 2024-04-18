@@ -36,22 +36,17 @@ AstProcessorManager& AstProcessorManager::instance() {
     return manager;
 }
 
-bool AstProcessorManager::registerHandle(KeyType key, NodeHandle handle) {
-    auto [_, ret] = _nodeHandlers.try_emplace(key, std::move(handle));
-    return ret;
-}
-
-HandleResult AstProcessorManager::runPreActionNodeHandle(SessionStage& stage,
-                                                         const clang::DynTypedNode& node,
-                                                         const clang::Attr* attr) {
+HandleResult AstProcessorManager::handleSemaPre(SessionStage& stage,
+                                                const clang::DynTypedNode& node,
+                                                const clang::Attr* attr) {
     auto keys = makeKeys<KeyType>(node, attr);
     return runNodeHandler(
         _nodeHandlers, keys, [&](auto h) { return h.preAction(stage, node, attr); });
 }
 
-HandleResult AstProcessorManager::runPostActionNodeHandle(SessionStage& stage,
-                                                          const clang::DynTypedNode& node,
-                                                          const clang::Attr* attr) {
+HandleResult AstProcessorManager::handleSemaPost(SessionStage& stage,
+                                                 const clang::DynTypedNode& node,
+                                                 const clang::Attr* attr) {
     auto keys = makeKeys<KeyType>(node, attr);
     return runNodeHandler(
         _nodeHandlers, keys, [&](auto h) { return h.postAction(stage, node, attr); });

@@ -17,32 +17,24 @@ __attribute__((constructor)) void registerOklSemaProcessor() {
     auto& mng = AstProcessorManager::instance();
 
     // sema handler for OKL kernel attribute
-    auto ok = mng.registerHandle({KERNEL_ATTR_NAME, ASTNodeKind::getFromNodeKind<FunctionDecl>()},
-                                 {.preAction = makeSemaHandle(preValidateOklKernel),
-                                  .postAction = makeSemaHandle(postValidateOklKernel)});
+    auto ok =
+        mng.registerSemaHandler(KERNEL_ATTR_NAME, preValidateOklKernel, postValidateOklKernel);
     assert(ok);
 
     // sema handler for OKL tile attribute
-    ok = mng.registerHandle({TILE_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
-                            {.preAction = makeSemaHandle(preValidateOklForLoop),
-         .postAction = makeSemaHandle(postValidateOklForLoop)});
+    ok = mng.registerSemaHandler(TILE_ATTR_NAME, preValidateOklForLoop, postValidateOklForLoop);
     assert(ok);
 
     // sema handler for OKL outer attribute
-    ok = mng.registerHandle({OUTER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
-                            {.preAction = makeSemaHandle(preValidateOklForLoop),
-         .postAction = makeSemaHandle(postValidateOklForLoop)});
+    ok = mng.registerSemaHandler(OUTER_ATTR_NAME, preValidateOklForLoop, postValidateOklForLoop);
     assert(ok);
 
     // sema handler for OKL inner attribute
-    ok = mng.registerHandle({INNER_ATTR_NAME, ASTNodeKind::getFromNodeKind<ForStmt>()},
-                            {.preAction = makeSemaHandle(preValidateOklForLoop),
-         .postAction = makeSemaHandle(postValidateOklForLoop)});
+    ok = mng.registerSemaHandler(INNER_ATTR_NAME, preValidateOklForLoop, postValidateOklForLoop);
     assert(ok);
 
-    ok = mng.registerHandle({"", ASTNodeKind::getFromNodeKind<ForStmt>()},
-                            {.preAction = makeSemaHandle(preValidateOklForLoopWithoutAttribute),
-         .postAction = makeSemaHandle(postValidateOklForLoopWithoutAttribute)});
+    ok = mng.registerSemaHandler(
+        "", preValidateOklForLoopWithoutAttribute, postValidateOklForLoopWithoutAttribute);
 
     assert(ok);
 }

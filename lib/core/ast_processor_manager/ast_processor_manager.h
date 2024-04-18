@@ -3,6 +3,7 @@
 #include <oklt/core/target_backends.h>
 #include <oklt/util/string_utils.h>
 
+#include "core/attribute_manager/attribute_manager.h"
 #include "core/attribute_manager/result.h"
 #include "util/type_traits.h"
 
@@ -39,14 +40,15 @@ class AstProcessorManager {
     AstProcessorManager& operator=(const AstProcessorManager&) = delete;
     AstProcessorManager& operator=(AstProcessorManager&&) = delete;
 
-    bool registerHandle(KeyType key, NodeHandle handle);
+    template <typename F>
+    bool registerSemaHandler(std::string attr, F& pre, F& post);
 
-    HandleResult runPreActionNodeHandle(SessionStage& stage,
-                                        const clang::DynTypedNode& node,
-                                        const clang::Attr* attr);
-    HandleResult runPostActionNodeHandle(SessionStage& stage,
-                                         const clang::DynTypedNode& node,
-                                         const clang::Attr* attr);
+    HandleResult handleSemaPre(SessionStage& stage,
+                               const clang::DynTypedNode& node,
+                               const clang::Attr* attr);
+    HandleResult handleSemaPost(SessionStage& stage,
+                                const clang::DynTypedNode& node,
+                                const clang::Attr* attr);
 
    private:
     std::map<KeyType, NodeHandle> _nodeHandlers;
@@ -91,9 +93,15 @@ HandleType makeSemaXXXHandle(Handler& handler) {
 
 }  // namespace detail
 
-template <typename Handler>
-auto makeSemaHandle(Handler& handler) {
-    return detail::makeSemaXXXHandle<Handler, AstProcessorManager::HandleType>(handler);
+template <typename F>
+bool AstProcessorManager::registerSemaHandler(std::string attr, F& pre, F& post) {
+    auto handle = NodeHandle{
+        .preAction = detail::makeSemaXXXHandle<F, AstProcessorManager::HandleType>(pre),
+        .postAction = detail::makeSemaXXXHandle<F, AstProcessorManager::HandleType>(post),
+    };
+    auto key =
+        KeyType{attr, clang::ASTNodeKind::getFromNodeKind<std::decay_t<func_param_type_t<F, 1>>>()};
+    return _nodeHandlers.try_emplace(std::move(key), std::move(handle)).second;
 }
 
 }  // namespace oklt
