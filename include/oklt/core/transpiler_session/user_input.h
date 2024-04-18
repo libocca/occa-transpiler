@@ -1,6 +1,5 @@
 #pragma once
 
-#include <oklt/core/ast_processor_types.h>
 #include <oklt/core/target_backends.h>
 
 #include <vector>
@@ -10,7 +9,6 @@ namespace oklt {
 
 struct UserInput {
     TargetBackend backend;
-    AstProcessorType astProcType;
     std::string source;
     std::map<std::string, std::string> headers;
     std::filesystem::path sourcePath;

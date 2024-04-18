@@ -17,7 +17,6 @@ SessionStage::SessionStage(TranspilerSession& session,
     : _session(session),
       _compiler(compiler),
       _backend(session.getInput().backend),
-      _astProcType(session.getInput().astProcType),
       _rewriter(makeRewriterProxy(_compiler.getSourceManager(), _compiler.getLangOpts(), rwType)) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
@@ -95,10 +94,6 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
 
 TargetBackend SessionStage::getBackend() const {
     return _backend;
-}
-
-AstProcessorType SessionStage::getAstProccesorType() const {
-    return _astProcType;
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {

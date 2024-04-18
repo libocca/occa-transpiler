@@ -20,12 +20,10 @@ oklt::HandleResult runNodeHandler(MapType& map, KeysType& keys, ActionFunc actio
 }
 
 template <typename KeyType>
-std::vector<KeyType> makeKeys(AstProcessorType procType,
-                              const clang::DynTypedNode& node,
-                              const clang::Attr* attr) {
+std::vector<KeyType> makeKeys(const clang::DynTypedNode& node, const clang::Attr* attr) {
     auto kind = node.getNodeKind();
     auto name = attr ? attr->getNormalizedFullName() : "";
-    return {{procType, name, kind}, {procType, name, kind.getCladeKind()}};
+    return {{name, kind}, {name, kind.getCladeKind()}};
 }
 
 }  // namespace
@@ -43,20 +41,18 @@ bool AstProcessorManager::registerHandle(KeyType key, NodeHandle handle) {
     return ret;
 }
 
-HandleResult AstProcessorManager::runPreActionNodeHandle(AstProcessorType procType,
-                                                         SessionStage& stage,
+HandleResult AstProcessorManager::runPreActionNodeHandle(SessionStage& stage,
                                                          const clang::DynTypedNode& node,
                                                          const clang::Attr* attr) {
-    auto keys = makeKeys<KeyType>(procType, node, attr);
+    auto keys = makeKeys<KeyType>(node, attr);
     return runNodeHandler(
         _nodeHandlers, keys, [&](auto h) { return h.preAction(stage, node, attr); });
 }
 
-HandleResult AstProcessorManager::runPostActionNodeHandle(AstProcessorType procType,
-                                                          SessionStage& stage,
+HandleResult AstProcessorManager::runPostActionNodeHandle(SessionStage& stage,
                                                           const clang::DynTypedNode& node,
                                                           const clang::Attr* attr) {
-    auto keys = makeKeys<KeyType>(procType, node, attr);
+    auto keys = makeKeys<KeyType>(node, attr);
     return runNodeHandler(
         _nodeHandlers, keys, [&](auto h) { return h.postAction(stage, node, attr); });
 }

@@ -83,7 +83,6 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
     return oklt::UserInput{.backend = expectedBackend.value(),
-                           .astProcType = oklt::AstProcessorType::OKL_WITH_SEMA,
                            .source = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
                            .inlcudeDirectories = includes,

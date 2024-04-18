@@ -1,6 +1,5 @@
 #pragma once
 
-#include <oklt/core/ast_processor_types.h>
 #include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
@@ -39,7 +38,6 @@ class SessionStage {
     TransformedFiles getRewriterResultForHeaders();
 
     [[nodiscard]] TargetBackend getBackend() const;
-    [[nodiscard]] AstProcessorType getAstProccesorType() const;
     static AttributeManager& getAttrManager();
 
     void setLauncherMode();
@@ -76,7 +74,6 @@ class SessionStage {
    protected:
     TranspilerSession& _session;
     TargetBackend _backend;
-    AstProcessorType _astProcType;
     clang::CompilerInstance& _compiler;
     std::unique_ptr<oklt::Rewriter> _rewriter;
     std::map<std::string, std::any> _userCtxMap;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <oklt/core/ast_processor_types.h>
 #include <oklt/core/target_backends.h>
 #include <oklt/util/string_utils.h>
 
@@ -22,7 +21,7 @@ class AstProcessorManager {
     ~AstProcessorManager() = default;
 
    public:
-    using KeyType = std::tuple<AstProcessorType, std::string, clang::ASTNodeKind>;
+    using KeyType = std::tuple<std::string, clang::ASTNodeKind>;
     using HandleType =
         std::function<HandleResult(SessionStage&, const clang::DynTypedNode&, const clang::Attr*)>;
 
@@ -42,12 +41,10 @@ class AstProcessorManager {
 
     bool registerHandle(KeyType key, NodeHandle handle);
 
-    HandleResult runPreActionNodeHandle(AstProcessorType procType,
-                                        SessionStage& stage,
+    HandleResult runPreActionNodeHandle(SessionStage& stage,
                                         const clang::DynTypedNode& node,
                                         const clang::Attr* attr);
-    HandleResult runPostActionNodeHandle(AstProcessorType procType,
-                                         SessionStage& stage,
+    HandleResult runPostActionNodeHandle(SessionStage& stage,
                                          const clang::DynTypedNode& node,
                                          const clang::Attr* attr);
 

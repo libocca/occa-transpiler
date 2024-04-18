@@ -169,18 +169,9 @@ int main(int argc, char* argv[]) {
                 normalization_output = build_normalization_output_filename(sourcePath);
             }
 
-            oklt::AstProcessorType procType = [&]() {
-                auto semaType = transpile_command.get("-s");
-                if (semaType == "with-sema") {
-                    return oklt::AstProcessorType::OKL_WITH_SEMA;
-                }
-                return oklt::AstProcessorType::OKL_NO_SEMA;
-            }();
-
             std::ifstream ifs(sourcePath.string());
             std::string sourceCode{std::istreambuf_iterator<char>(ifs), {}};
             oklt::UserInput input{.backend = backend.value(),
-                                  .astProcType = procType,
                                   .source = sourceCode,
                                   .sourcePath = sourcePath,
                                   .inlcudeDirectories = std::move(includes),
