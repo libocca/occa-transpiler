@@ -105,19 +105,14 @@ bool tryToNormalizeAttrExpr(Expr& e, SessionStage& stage, const Attr** lastProcc
 class GnuToStdAttrNormalizerVisitor : public RecursiveASTVisitor<GnuToStdAttrNormalizerVisitor> {
    public:
     explicit GnuToStdAttrNormalizerVisitor(SessionStage& stage)
-        : _stage(stage) {}
-
-    bool VisitDecl(Decl* d) {
-        assert(d != nullptr && "declaration is nullptr");
-
-        if (!d->hasAttrs()) {
-            return true;
-        }
-        return tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage, &_lastProccesedAttr);
-    }
+        : _stage(stage),
+          _sm(stage.getCompiler().getSourceManager()) {}
 
     bool TraverseAttributedStmt(AttributedStmt* as) {
         assert(as != nullptr && "attributed statement is nullptr");
+        if (_sm.isInSystemHeader(as->getEndLoc())) {
+            return true;
+        }
 
         if (!tryToNormalizeAttrExpr<SuppressAttr>(*as, _stage, &_lastProccesedAttr)) {
             return false;
@@ -126,9 +121,27 @@ class GnuToStdAttrNormalizerVisitor : public RecursiveASTVisitor<GnuToStdAttrNor
         return RecursiveASTVisitor<GnuToStdAttrNormalizerVisitor>::TraverseAttributedStmt(as);
     }
 
+    bool TraverseDecl(clang::Decl* d) {
+        assert(d != nullptr && "declaration is nullptr");
+        if (_sm.isInSystemHeader(d->getLocation())) {
+            return true;
+        }
+
+        if (!d->hasAttrs()) {
+            return RecursiveASTVisitor<GnuToStdAttrNormalizerVisitor>::TraverseDecl(d);
+        }
+        auto ok = tryToNormalizeAttrExpr<AnnotateAttr>(*d, _stage, &_lastProccesedAttr);
+        if (!ok) {
+            return false;
+        }
+
+        return RecursiveASTVisitor<GnuToStdAttrNormalizerVisitor>::TraverseDecl(d);
+    }
+
    private:
     const Attr* _lastProccesedAttr{nullptr};
     SessionStage& _stage;
+    const SourceManager& _sm;
 };
 
 // ASTConsumer to run GNU to C++ attribute replacing

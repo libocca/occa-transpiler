@@ -223,8 +223,10 @@ bool traverseNode(TraversalType& traversal,
         return true;
     }
 
+    // node in non user header - skip traverse it
+    // TODO add more robust verification
     if (skipNode(*node, stage)) {
-        return dispatchTraverseFunc(traversal, node);
+        return true;
     }
 
     auto result = [&]() -> HandleResult {
