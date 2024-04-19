@@ -48,6 +48,12 @@ using namespace clang;
 HandleResult handleGlobalConstant(const clang::VarDecl& decl,
                                   SessionStage& s,
                                   const std::string& qualifier) {
+
+    // skip decl with invalid soucce location
+    if (decl.getLocation().isInvalid()) {
+        return {};
+    }
+
     if (!isGlobalConstVariable(decl)) {
         return {};
     }
@@ -85,6 +91,11 @@ HandleResult handleGlobalConstant(const clang::VarDecl& decl,
 HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier) {
+    // skip built in functions or with invalid soucce location
+    if (decl.getLocation().isInvalid() || decl.isInlineBuiltinDeclaration()) {
+        return {};
+    }
+
     // INFO: Check if function is not attributed with OKL attribute
     auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
