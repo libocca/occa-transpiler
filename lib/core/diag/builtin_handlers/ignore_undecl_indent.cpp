@@ -100,10 +100,10 @@ bool isLooksLikeFunctionCall(const SourceLocation& loc,
 
 class IgnoreUndeclHandler : public DiagHandler {
    public:
-    IgnoreUndeclHandler(unsigned id)
+    explicit IgnoreUndeclHandler(unsigned id)
         : DiagHandler(id){};
-    IgnoreUndeclHandler()
-        : IgnoreUndeclHandler(diag::err_undeclared_var_use){};
+    explicit IgnoreUndeclHandler()
+        : DiagHandler(diag::err_undeclared_var_use){};
 
     bool HandleDiagnostic(SessionStage& session, DiagLevel level, const Diagnostic& info) override {
         const auto& sm = info.getSourceManager();
@@ -129,7 +129,7 @@ class IgnoreUndeclHandler : public DiagHandler {
 
 class IgnoreUndeclSuggestHandler : public IgnoreUndeclHandler {
    public:
-    IgnoreUndeclSuggestHandler()
+    explicit IgnoreUndeclSuggestHandler()
         : IgnoreUndeclHandler(diag::err_undeclared_var_use_suggest){};
 };
 
