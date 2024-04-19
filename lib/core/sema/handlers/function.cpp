@@ -1,9 +1,9 @@
-#include <oklt/core/error.h>
-#include <oklt/core/kernel_metadata.h>
+#include "oklt/core/error.h"
+#include "oklt/core/kernel_metadata.h"
 
-#include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
+#include "function.h"
 
 #include <clang/AST/AST.h>
 

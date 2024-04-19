@@ -1,8 +1,8 @@
 #include "attributes/attribute_names.h"
 
-#include "core/ast_processors/okl_sema_processor/handlers/function.h"
-#include "core/ast_processors/okl_sema_processor/handlers/loop.h"
 #include "core/handler_manager/sema_handler.h"
+#include "core/sema/handlers/function.h"
+#include "core/sema/handlers/loop.h"
 
 #include <clang/AST/AST.h>
 

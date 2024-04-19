@@ -144,16 +144,15 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/no_barrier.cpp
 
-    core/ast_processors/okl_sema_processor/processor.cpp
-    core/ast_processors/okl_sema_processor/handlers/function.h
-    core/ast_processors/okl_sema_processor/handlers/function.cpp
-    core/ast_processors/okl_sema_processor/handlers/loop.h
-    core/ast_processors/okl_sema_processor/handlers/loop.cpp
-
     core/sema/okl_sema_ctx.cpp
     core/sema/okl_sema_ctx.h
     core/sema/okl_sema_info.cpp
     core/sema/okl_sema_info.h
+        core/sema/processor.cpp
+        core/sema/handlers/function.h
+        core/sema/handlers/function.cpp
+        core/sema/handlers/loop.h
+        core/sema/handlers/loop.cpp
 
     core/lex/lexer.h
     core/lex/lexer.cpp
