@@ -144,19 +144,22 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/no_barrier.cpp
 
+    # Sema
     core/sema/okl_sema_ctx.cpp
     core/sema/okl_sema_ctx.h
     core/sema/okl_sema_info.cpp
     core/sema/okl_sema_info.h
-        core/sema/processor.cpp
-        core/sema/handlers/function.h
-        core/sema/handlers/function.cpp
-        core/sema/handlers/loop.h
-        core/sema/handlers/loop.cpp
+    core/sema/processor.cpp
+    core/sema/handlers/function.h
+    core/sema/handlers/function.cpp
+    core/sema/handlers/loop.h
+    core/sema/handlers/loop.cpp
 
+    # Lexer
     core/lex/lexer.h
     core/lex/lexer.cpp
 
+    # Diagnostics
     core/diag/diag_consumer.cpp
     core/diag/builtin_handlers/ignore_undecl_indent.cpp
 
