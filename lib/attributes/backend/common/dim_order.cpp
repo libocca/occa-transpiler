@@ -31,9 +31,11 @@ HandleResult handleDimOrderStmtAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::instance().registerCommonHandler(DIM_ORDER_ATTR_NAME, handleDimOrderDeclAttribute);
+    auto ok =
+        HandlerManager::registerCommonHandler(DIM_ORDER_ATTR_NAME, handleDimOrderDeclAttribute);
 
-    ok = ok && HandlerManager::instance().registerCommonHandler(DIM_ORDER_ATTR_NAME, handleDimOrderStmtAttribute);
+    ok = ok &&
+         HandlerManager::registerCommonHandler(DIM_ORDER_ATTR_NAME, handleDimOrderStmtAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ORDER_ATTR_NAME);
     }

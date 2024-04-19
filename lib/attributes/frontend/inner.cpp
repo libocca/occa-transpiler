@@ -75,7 +75,6 @@ HandleResult parseInnerAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME,
-                                                                    parseInnerAttrParams);
+    HandlerManager::registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME, parseInnerAttrParams);
 }
 }  // namespace

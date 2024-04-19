@@ -7,7 +7,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::SERIAL, INNER_ATTR_NAME, serial_subset::handleInnerAttribute);
 
     if (!ok) {

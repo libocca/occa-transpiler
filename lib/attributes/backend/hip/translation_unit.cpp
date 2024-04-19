@@ -17,8 +17,7 @@ HandleResult handleTU(SessionStage& s, const TranslationUnitDecl& d) {
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok =
-        oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::HIP, handleTU);
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleTU);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for translation unit");

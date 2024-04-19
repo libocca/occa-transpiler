@@ -9,7 +9,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerHIPTileAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::CUDA, TILE_ATTR_NAME, cuda_subset::handleTileAttribute);
 
     if (!ok) {

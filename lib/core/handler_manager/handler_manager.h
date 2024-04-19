@@ -18,28 +18,20 @@ namespace oklt {
 struct OKLParsedAttr;
 
 class HandlerManager {
-   protected:
+   public:
     HandlerManager() = default;
     ~HandlerManager() = default;
 
-   public:
-    HandlerManager(const HandlerManager&) = delete;
-    HandlerManager(HandlerManager&&) = delete;
-    HandlerManager& operator=(const HandlerManager&) = delete;
-    HandlerManager& operator=(HandlerManager&&) = delete;
-
-    static HandlerManager& instance();
-
     template <typename AttrFrontendType, typename F>
-    bool registerAttrFrontend(std::string attr, F& func);
+    static bool registerAttrFrontend(std::string attr, F& func);
     template <typename F>
-    bool registerCommonHandler(std::string attr, F& func);
+    static bool registerCommonHandler(std::string attr, F& func);
     template <typename F>
-    bool registerBackendHandler(TargetBackend, std::string attr, F& func);
+    static bool registerBackendHandler(TargetBackend, std::string attr, F& func);
     template <typename F>
-    bool registerImplicitHandler(TargetBackend, F& func);
+    static bool registerImplicitHandler(TargetBackend, F& func);
     template <typename F>
-    bool registerSemaHandler(std::string attr, F& pre, F& post);
+    static bool registerSemaHandler(std::string attr, F& pre, F& post);
 
     [[nodiscard]] bool hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind);
     [[nodiscard]] HandleResult parseAttr(SessionStage& stage, const clang::Attr& attr);
@@ -56,53 +48,53 @@ class HandlerManager {
     [[nodiscard]] HandleResult handleSemaPre(SessionStage& stage,
                                              const clang::DynTypedNode& node,
                                              const clang::Attr* attr);
-    [[nodiscard]] HandleResult handleSemaPost(SessionStage& stage,
-                                              const clang::DynTypedNode& node,
-                                              const clang::Attr* attr);
+    [[nodiscard]] static HandleResult handleSemaPost(SessionStage& stage,
+                                                     const clang::DynTypedNode& node,
+                                                     const clang::Attr* attr);
 
     tl::expected<std::set<const clang::Attr*>, Error> checkAttrs(SessionStage& stage,
                                                                  const clang::DynTypedNode& node);
 
    private:
-    HandlerMap _handlers;
+    static HandlerMap& _map();
 };
 
 inline bool HandlerManager::hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind) {
-    return _handlers.hasHandler(backend, kind);
+    return _map().hasHandler(backend, kind);
 }
 
 inline HandleResult HandlerManager::parseAttr(SessionStage& stage, const clang::Attr& attr) {
-    return _handlers(stage, attr, nullptr);
+    return _map()(stage, attr, nullptr);
 }
 
 inline HandleResult HandlerManager::parseAttr(SessionStage& stage,
                                               const clang::Attr& attr,
-                                                OKLParsedAttr& params) {
-    return _handlers(stage, attr, &params);
+                                              OKLParsedAttr& params) {
+    return _map()(stage, attr, &params);
 }
 
 inline HandleResult HandlerManager::handleAttr(SessionStage& stage,
                                                const clang::DynTypedNode& node,
-                                                 const clang::Attr& attr,
-                                                 const std::any* params) {
-    return _handlers(stage, node, attr, params);
+                                               const clang::Attr& attr,
+                                               const std::any* params) {
+    return _map()(stage, node, attr, params);
 }
 
 inline HandleResult HandlerManager::handleNode(SessionStage& stage,
                                                const clang::DynTypedNode& node) {
-    return _handlers(stage, node);
+    return _map()(stage, node);
 }
 
 inline HandleResult HandlerManager::handleSemaPre(SessionStage& stage,
                                                   const clang::DynTypedNode& node,
-                                                    const clang::Attr* attr) {
-    return _handlers.pre(stage, node, attr);
+                                                  const clang::Attr* attr) {
+    return _map().pre(stage, node, attr);
 }
 
 inline HandleResult HandlerManager::handleSemaPost(SessionStage& stage,
                                                    const clang::DynTypedNode& node,
-                                                     const clang::Attr* attr) {
-    return _handlers.post(stage, node, attr);
+                                                   const clang::Attr* attr) {
+    return _map().post(stage, node, attr);
 }
 
 }  // namespace oklt

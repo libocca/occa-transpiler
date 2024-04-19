@@ -47,7 +47,7 @@ HandleResult handleInnerAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpppInnerAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, INNER_ATTR_NAME, handleInnerAttribute);
 
     if (!ok) {

@@ -12,10 +12,10 @@
 namespace oklt {
 using namespace clang;
 
-HandlerManager& HandlerManager::instance() {
-    static HandlerManager attrManager;
-    return attrManager;
-}
+HandlerMap& HandlerManager::_map() {
+    static HandlerMap m = {};
+    return m;
+};
 
 tl::expected<std::set<const Attr*>, Error> HandlerManager::checkAttrs(SessionStage& stage,
                                                                       const DynTypedNode& node) {
@@ -39,7 +39,7 @@ tl::expected<std::set<const Attr*>, Error> HandlerManager::checkAttrs(SessionSta
             }
 
             auto name = attr->getNormalizedFullName();
-            if (!_handlers.hasHandler(name, kind) && !_handlers.hasHandler(backend, name, kind)) {
+            if (!_map().hasHandler(name, kind) && !_map().hasHandler(backend, name, kind)) {
                 // TODO report diag error
                 SPDLOG_ERROR(
                     "{} attribute: {} for decl: {} does not have a registered handler",
@@ -76,8 +76,7 @@ tl::expected<std::set<const Attr*>, Error> HandlerManager::checkAttrs(SessionSta
             }
 
             auto name = attr->getNormalizedFullName();
-            if (!_handlers.hasHandler(name, subKind) &&
-                !_handlers.hasHandler(backend, name, subKind)) {
+            if (!_map().hasHandler(name, subKind) && !_map().hasHandler(backend, name, subKind)) {
                 // TODO report diag error
                 SPDLOG_ERROR(
                     "{} attribute: {} for stmt: {} does not have a registered handler",

@@ -28,7 +28,7 @@ HandleResult handleOPENMPOuterAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::OPENMP, OUTER_ATTR_NAME, handleOPENMPOuterAttribute);
 
     if (!ok) {

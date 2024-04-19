@@ -15,7 +15,7 @@ HandleResult handleOPENMPBarrierAttribute(SessionStage& s, const NullStmt& stmt,
 }
 
 __attribute__((constructor)) void registerOPENMPBarrierHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::OPENMP, BARRIER_ATTR_NAME, handleOPENMPBarrierAttribute);
 
     if (!ok) {

@@ -114,7 +114,7 @@ HandleResult parseExclusiveAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    HandlerManager::instance().registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME,
-                                                                        parseExclusiveAttrParams);
+    HandlerManager::registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME,
+                                                             parseExclusiveAttrParams);
 }
 }  // namespace

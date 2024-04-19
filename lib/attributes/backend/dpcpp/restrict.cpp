@@ -22,7 +22,7 @@ HandleResult handleRestrictAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerCUDARestrictHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, RESTRICT_ATTR_NAME, handleRestrictAttribute);
 
     if (!ok) {

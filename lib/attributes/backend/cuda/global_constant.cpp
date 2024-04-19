@@ -13,8 +13,7 @@ HandleResult handleGlobalConstant(oklt::SessionStage& s, const clang::VarDecl& d
 }
 
 __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
-    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::CUDA,
-                                                                       handleGlobalConstant);
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleGlobalConstant);
 
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global constant");

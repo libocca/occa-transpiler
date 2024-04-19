@@ -13,8 +13,7 @@ HandleResult handleHIPGlobalFunction(oklt::SessionStage& s, const clang::Functio
 }
 
 __attribute__((constructor)) void registerHIPKernelHandler() {
-    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::HIP,
-                                                                       handleHIPGlobalFunction);
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleHIPGlobalFunction);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");

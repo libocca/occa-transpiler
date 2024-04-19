@@ -1,7 +1,7 @@
+#include "attributes/frontend/params/dim.h"
 #include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "attributes/frontend/params/dim.h"
 
 #include "core/diag/diag_handler.h"
 #include "core/handler_manager/parse_handler.h"
@@ -152,9 +152,8 @@ HandleResult parseDimAttrParams(SessionStage& stage, const clang::Attr& attr, OK
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME,
-                                                                  parseDimAttrParams);
+    HandlerManager::registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME, parseDimAttrParams);
     // for suppression of func call error that potentially is dim calls
-    static oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
+    static DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
 }
 }  // namespace

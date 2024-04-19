@@ -74,7 +74,6 @@ HandleResult parseOuterAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
-                                                                    parseOuterAttrParams);
+    HandlerManager::registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME, parseOuterAttrParams);
 }
 }  // namespace

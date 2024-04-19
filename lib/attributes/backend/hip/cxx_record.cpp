@@ -28,14 +28,11 @@ HandleResult handleClassTemplatePartialSpecialization(
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::HIP,
-                                                                       handleClassRecord);
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleClassRecord);
 
-    ok &= oklt::HandlerManager::instance().registerImplicitHandler(
-        TargetBackend::HIP, handleClassTemplateSpecialization);
+    ok &= HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleClassTemplateSpecialization);
 
-    ok &= oklt::HandlerManager::instance().registerImplicitHandler(
-        TargetBackend::HIP, handleClassTemplatePartialSpecialization);
+    ok &= HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleClassTemplatePartialSpecialization);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");

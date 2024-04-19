@@ -143,7 +143,7 @@ HandleResult parseDimOrderAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<DimOrderAttribute>(DIM_ORDER_ATTR_NAME,
-                                                                       parseDimOrderAttrParams);
+    HandlerManager::registerAttrFrontend<DimOrderAttribute>(DIM_ORDER_ATTR_NAME,
+                                                            parseDimOrderAttrParams);
 }
 }  // namespace

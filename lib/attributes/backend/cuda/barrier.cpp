@@ -9,7 +9,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerCUDABarrierAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::CUDA, BARRIER_ATTR_NAME, cuda_subset::handleBarrierAttribute);
 
     if (!ok) {

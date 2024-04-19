@@ -10,11 +10,11 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::CUDA, SHARED_ATTR_NAME, cuda_subset::handleSharedAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
-    ok &= oklt::HandlerManager::instance().registerBackendHandler(
+    ok &= HandlerManager::registerBackendHandler(
         TargetBackend::CUDA, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {

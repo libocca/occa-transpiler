@@ -8,11 +8,11 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::SERIAL, SHARED_ATTR_NAME, serial_subset::handleSharedAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
-    ok &= oklt::HandlerManager::instance().registerBackendHandler(
+    ok &= HandlerManager::registerBackendHandler(
         TargetBackend::SERIAL, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {

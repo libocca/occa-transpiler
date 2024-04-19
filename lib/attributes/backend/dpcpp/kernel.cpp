@@ -157,7 +157,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
 
     if (!ok) {

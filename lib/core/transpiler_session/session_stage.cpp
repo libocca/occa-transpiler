@@ -6,8 +6,6 @@
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
 
-#include <spdlog/spdlog.h>
-
 namespace oklt {
 using namespace clang;
 
@@ -28,7 +26,7 @@ oklt::Rewriter& SessionStage::getRewriter() {
 }
 
 HandlerManager& SessionStage::getAttrManager() {
-    return HandlerManager::instance();
+    return tryEmplaceUserCtx<HandlerManager>();
 }
 
 void SessionStage::setLauncherMode() {

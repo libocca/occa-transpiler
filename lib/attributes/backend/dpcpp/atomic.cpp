@@ -107,7 +107,7 @@ HandleResult handleAtomicAttribute(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, ATOMIC_ATTR_NAME, handleAtomicAttribute);
 
     if (!ok) {

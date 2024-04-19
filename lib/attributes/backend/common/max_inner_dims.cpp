@@ -42,7 +42,8 @@ HandleResult handleMaxInnerDimsStmtAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::instance().registerCommonHandler(MAX_INNER_DIMS, handleMaxInnerDimsStmtAttribute);
+    auto ok =
+        HandlerManager::registerCommonHandler(MAX_INNER_DIMS, handleMaxInnerDimsStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", MAX_INNER_DIMS);

@@ -52,8 +52,8 @@ AttrHandler::HandlerType AttrHandler::wrapHandler(F& f) {
                   std::is_base_of_v<clang::Stmt, std::decay_t<func_param_type_t<F, 1>>>);
     static_assert(std::is_same_v<clang::Attr, std::decay_t<func_param_type_t<F, 2>>>);
 
-    return HandlerType{[&f, nargs](SessionStage& stage,
-                                   const clang::DynTypedNode& node,
+    return HandlerType{[&f](SessionStage& stage,
+                            const clang::DynTypedNode& node,
                                    const clang::Attr& attr,
                                    const std::any* params) -> HandleResult {
         using NodeT = std::decay_t<func_param_type_t<F, 1>>;
@@ -113,7 +113,7 @@ struct HandlerKey<H, std::enable_if_t<H == HandleType::COMMON>> : public HandleK
 
 template <typename F>
 inline bool HandlerManager::registerCommonHandler(std::string attr, F& func) {
-    return _handlers.insert(HandlerKey<HandleType::COMMON>(attr), func);
+    return _map().insert(HandlerKey<HandleType::COMMON>(attr), func);
 };
 
 }  // namespace oklt

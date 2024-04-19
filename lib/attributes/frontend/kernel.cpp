@@ -60,7 +60,6 @@ HandleResult parseKernelAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME,
-                                                                     parseKernelAttrParams);
+    HandlerManager::registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME, parseKernelAttrParams);
 }
 }  // namespace

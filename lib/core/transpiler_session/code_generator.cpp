@@ -33,7 +33,8 @@ HandleResult applyTranspilationToAttrNode(SessionStage& stage,
 }
 
 HandleResult applyTranspilationToNode(SessionStage& stage, const DynTypedNode& node) {
-    return HandlerManager::instance().handleNode(stage, node);
+    auto& am = stage.getAttrManager();
+    return am.handleNode(stage, node);
 }
 
 HandleResult applyTranspilationToNode(SessionStage& stage,

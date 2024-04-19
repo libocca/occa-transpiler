@@ -1,7 +1,7 @@
+#include "attributes/frontend/params/barrier.h"
 #include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "attributes/frontend/params/barrier.h"
 
 #include "core/handler_manager/parse_handler.h"
 
@@ -82,7 +82,7 @@ HandleResult parseBarrierAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
-                                                                      parseBarrierAttrParams);
+    HandlerManager::registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
+                                                           parseBarrierAttrParams);
 }
 }  // namespace

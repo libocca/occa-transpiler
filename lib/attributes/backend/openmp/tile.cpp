@@ -28,7 +28,7 @@ HandleResult handleOPENMPTileAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::OPENMP, TILE_ATTR_NAME, handleOPENMPTileAttribute);
 
     if (!ok) {

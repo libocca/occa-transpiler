@@ -258,7 +258,7 @@ HandleResult handleTileAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, TILE_ATTR_NAME, handleTileAttribute);
 
     if (!ok) {

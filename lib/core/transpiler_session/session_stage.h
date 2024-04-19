@@ -33,12 +33,12 @@ class SessionStage {
 
     clang::CompilerInstance& getCompiler();
 
-    oklt::Rewriter& getRewriter();
+    [[nodiscard]] oklt::Rewriter& getRewriter();
     std::string getRewriterResultForMainFile();
     TransformedFiles getRewriterResultForHeaders();
 
     [[nodiscard]] TargetBackend getBackend() const;
-    static HandlerManager& getAttrManager();
+    [[nodiscard]] HandlerManager& getAttrManager();
 
     void setLauncherMode();
 

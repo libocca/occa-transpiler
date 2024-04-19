@@ -10,9 +10,9 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerCUDAExclusiveAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME, cuda_subset::handleExclusiveAttribute);
-    ok &= oklt::HandlerManager::instance().registerBackendHandler(
+    ok &= HandlerManager::registerBackendHandler(
         TargetBackend::CUDA, EXCLUSIVE_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {

@@ -69,7 +69,7 @@ HandleResult parseRestrictAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<RestrictAttribute>(RESTRICT_ATTR_NAME,
-                                                                       parseRestrictAttrParams);
+    HandlerManager::registerAttrFrontend<RestrictAttribute>(RESTRICT_ATTR_NAME,
+                                                            parseRestrictAttrParams);
 }
 }  // namespace

@@ -23,7 +23,7 @@ HandleResult handleBarrierAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, BARRIER_ATTR_NAME, handleBarrierAttribute);
 
     if (!ok) {

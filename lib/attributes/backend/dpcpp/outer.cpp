@@ -40,7 +40,7 @@ HandleResult handleOuterAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, OUTER_ATTR_NAME, handleOuterAttribute);
 
     if (!ok) {

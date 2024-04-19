@@ -47,11 +47,11 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
+    auto ok = HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
-    ok &= oklt::HandlerManager::instance().registerBackendHandler(
+    ok &= HandlerManager::registerBackendHandler(
         TargetBackend::DPCPP, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {

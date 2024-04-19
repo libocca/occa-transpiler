@@ -27,8 +27,7 @@ HandleResult handleTranslationUnit(SessionStage& s, const TranslationUnitDecl& d
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::CUDA,
-                                                                       handleTranslationUnit);
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleTranslationUnit);
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for translation unit");
     }

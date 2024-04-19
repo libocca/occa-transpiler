@@ -106,8 +106,7 @@ HandleResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OK
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::instance().registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME,
-                                                                   parseTileAttribute);
+    HandlerManager::registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME, parseTileAttribute);
 }
 
 }  // namespace
