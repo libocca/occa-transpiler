@@ -2,8 +2,8 @@
 #include "attributes/utils/parser.h"
 #include "attributes/frontend/params/empty_params.h"
 
-#include "core/attribute_manager/parse_handler.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -114,7 +114,7 @@ HandleResult parseExclusiveAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    AttributeManager::instance().registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME,
-                                                                          parseExclusiveAttrParams);
+    HandlerManager::instance().registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME,
+                                                                        parseExclusiveAttrParams);
 }
 }  // namespace

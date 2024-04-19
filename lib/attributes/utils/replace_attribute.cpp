@@ -1,6 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
@@ -11,12 +10,11 @@
 #include <spdlog/spdlog.h>
 
 namespace {
-
+using namespace oklt;
 using namespace clang;
 
 template <typename T>
-oklt::HandleResult handleCXXRecordImpl(const T& node,
-                                       oklt::Rewriter& r,
+HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r,
                                        const std::string& modifier_) {
     auto modifier = modifier_ + " ";
     // for all explicit constructors/methods add qualifier

@@ -1,12 +1,11 @@
-#include <oklt/core/kernel_metadata.h>
-
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/Attr.h>
+
 #include <spdlog/spdlog.h>
 
 namespace oklt {

@@ -3,14 +3,13 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/loop.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
@@ -75,7 +74,7 @@ HandleResult parseOuterAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
-                                                                      parseOuterAttrParams);
+    HandlerManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
+                                                                    parseOuterAttrParams);
 }
 }  // namespace

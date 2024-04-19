@@ -6,7 +6,7 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/kernel_utils.h"
-#include "core/attribute_manager/backend_handler.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"
@@ -258,7 +258,7 @@ HandleResult handleTileAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, TILE_ATTR_NAME, handleTileAttribute);
 
     if (!ok) {

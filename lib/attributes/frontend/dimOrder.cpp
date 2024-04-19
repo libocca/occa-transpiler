@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attributed_type_map.h"
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"

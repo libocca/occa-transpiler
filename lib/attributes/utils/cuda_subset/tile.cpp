@@ -9,7 +9,7 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/kernel_utils.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"

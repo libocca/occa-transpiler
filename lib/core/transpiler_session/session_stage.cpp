@@ -1,12 +1,12 @@
 #include "core/transpiler_session/session_stage.h"
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/diag/diag_consumer.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/transpiler_session/transpiler_session.h"
-
-#include <spdlog/spdlog.h>
 
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
+
+#include <spdlog/spdlog.h>
 
 namespace oklt {
 using namespace clang;
@@ -27,8 +27,8 @@ oklt::Rewriter& SessionStage::getRewriter() {
     return *_rewriter.get();
 }
 
-AttributeManager& SessionStage::getAttrManager() {
-    return AttributeManager::instance();
+HandlerManager& SessionStage::getAttrManager() {
+    return HandlerManager::instance();
 }
 
 void SessionStage::setLauncherMode() {

@@ -3,7 +3,7 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/loop.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -75,7 +75,7 @@ HandleResult parseInnerAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME,
-                                                                      parseInnerAttrParams);
+    HandlerManager::instance().registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME,
+                                                                    parseInnerAttrParams);
 }
 }  // namespace

@@ -2,7 +2,7 @@
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
-#include "core/attribute_manager/backend_handler.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 
 #include <spdlog/spdlog.h>
@@ -40,7 +40,7 @@ HandleResult handleOuterAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, OUTER_ATTR_NAME, handleOuterAttribute);
 
     if (!ok) {

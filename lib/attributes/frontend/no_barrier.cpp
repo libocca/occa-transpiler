@@ -2,7 +2,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/frontend/params/empty_params.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -61,7 +61,7 @@ HandleResult parseNoBarrierAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-AttributeManager::instance().registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME,
-                                                                          parseNoBarrierAttrParams);
+    HandlerManager::instance().registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME,
+                                                                        parseNoBarrierAttrParams);
 }
 }  // namespace

@@ -1,8 +1,8 @@
 #include "attributes/frontend/params/dim.h"
 #include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
-#include "core/attribute_manager/attr_handler.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/attr_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 
@@ -198,14 +198,13 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerCommonHandler(DIM_ATTR_NAME,
-                                                                       handleDimDeclAttribute);
+    auto ok =
+        HandlerManager::instance().registerCommonHandler(DIM_ATTR_NAME, handleDimDeclAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute decl handler", DIM_ATTR_NAME);
     }
 
-    ok = oklt::AttributeManager::instance().registerCommonHandler(DIM_ATTR_NAME,
-                                                                  handleDimStmtAttribute);
+    ok = HandlerManager::instance().registerCommonHandler(DIM_ATTR_NAME, handleDimStmtAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ATTR_NAME);
     }

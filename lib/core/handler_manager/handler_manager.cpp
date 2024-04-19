@@ -2,7 +2,7 @@
 
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -12,13 +12,13 @@
 namespace oklt {
 using namespace clang;
 
-AttributeManager& AttributeManager::instance() {
-    static AttributeManager attrManager;
+HandlerManager& HandlerManager::instance() {
+    static HandlerManager attrManager;
     return attrManager;
 }
 
-tl::expected<std::set<const Attr*>, Error> AttributeManager::checkAttrs(SessionStage& stage,
-                                                                        const DynTypedNode& node) {
+tl::expected<std::set<const Attr*>, Error> HandlerManager::checkAttrs(SessionStage& stage,
+                                                                      const DynTypedNode& node) {
     auto backend = stage.getBackend();
     auto kind = node.getNodeKind();
     if (ASTNodeKind::getFromNodeKind<Decl>().isBaseOf(kind)) {

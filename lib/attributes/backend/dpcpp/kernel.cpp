@@ -3,8 +3,8 @@
 
 #include "attributes/attribute_names.h"
 #include "attributes/utils/kernel_utils.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/rewriter/rewriter_proxy.h"
-#include "core/attribute_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -157,7 +157,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
 
     if (!ok) {

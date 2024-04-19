@@ -28,7 +28,7 @@ HandleResult handleOPENMPAtomicAttribute(SessionStage& s, const Stmt& stmt, cons
 }
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::OPENMP, ATOMIC_ATTR_NAME, handleOPENMPAtomicAttribute);
 
     if (!ok) {

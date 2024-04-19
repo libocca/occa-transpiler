@@ -3,9 +3,9 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/dim.h"
 
-#include "core/attribute_manager/parse_handler.h"
-#include "core/attribute_manager/attributed_type_map.h"
 #include "core/diag/diag_handler.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -152,8 +152,8 @@ HandleResult parseDimAttrParams(SessionStage& stage, const clang::Attr& attr, OK
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME,
-                                                                    parseDimAttrParams);
+    HandlerManager::instance().registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME,
+                                                                  parseDimAttrParams);
     // for suppression of func call error that potentially is dim calls
     static oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
 }

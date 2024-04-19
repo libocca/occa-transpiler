@@ -3,13 +3,12 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/barrier.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
@@ -83,7 +82,7 @@ HandleResult parseBarrierAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
-                                                                        parseBarrierAttrParams);
+    HandlerManager::instance().registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
+                                                                      parseBarrierAttrParams);
 }
 }  // namespace

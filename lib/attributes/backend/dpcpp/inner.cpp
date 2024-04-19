@@ -3,7 +3,7 @@
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/kernel_utils.h"
-#include "core/attribute_manager/backend_handler.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 
 #include <spdlog/spdlog.h>
@@ -47,7 +47,7 @@ HandleResult handleInnerAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpppInnerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, INNER_ATTR_NAME, handleInnerAttribute);
 
     if (!ok) {

@@ -1,5 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/implicid_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 
 #include <spdlog/spdlog.h>
 
@@ -13,8 +13,8 @@ HandleResult handleHIPGlobalFunction(oklt::SessionStage& s, const clang::Functio
 }
 
 __attribute__((constructor)) void registerHIPKernelHandler() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(TargetBackend::HIP,
-                                                                         handleHIPGlobalFunction);
+    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::HIP,
+                                                                       handleHIPGlobalFunction);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");

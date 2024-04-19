@@ -1,11 +1,13 @@
+#include <oklt/core/kernel_metadata.h>
+
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
-#include "oklt/core/kernel_metadata.h"
 
 #include <spdlog/spdlog.h>
+
 namespace oklt::serial_subset {
 using namespace clang;
 

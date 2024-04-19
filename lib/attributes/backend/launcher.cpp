@@ -1,9 +1,9 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
-#include "core/attribute_manager/attr_handler.h"
-#include "core/attribute_manager/backend_handler.h"
-#include "core/attribute_manager/implicid_handler.h"
+#include "core/handler_manager/attr_handler.h"
+#include "core/handler_manager/backend_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -413,15 +413,15 @@ HandleResult handleLauncherKernelAttribute(SessionStage& s,
 __attribute__((constructor)) void registerLauncherHandler() {
 #define REG_ATTR_HANDLE(NAME, BODY)                                                   \
     {                                                                                 \
-        auto ok = oklt::AttributeManager::instance().registerBackendHandler(          \
+        auto ok = oklt::HandlerManager::instance().registerBackendHandler(            \
             TargetBackend::_LAUNCHER, NAME, BODY);                                    \
         if (!ok) {                                                                    \
             SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
         }                                                                             \
     }
 
-    auto ok = AttributeManager::instance().registerImplicitHandler(TargetBackend::_LAUNCHER,
-                                                                   handleLauncherTranslationUnit);
+    auto ok = HandlerManager::instance().registerImplicitHandler(TargetBackend::_LAUNCHER,
+                                                                 handleLauncherTranslationUnit);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");

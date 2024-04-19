@@ -1,5 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/implicid_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 
 #include <clang/AST/DeclCXX.h>
 #include <clang/AST/DeclTemplate.h>
@@ -28,13 +28,13 @@ HandleResult handleClassTemplatePartialSpecialization(
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(TargetBackend::CUDA,
-                                                                         handleClassRecord);
+    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::CUDA,
+                                                                       handleClassRecord);
 
-    ok &= oklt::AttributeManager::instance().registerImplicitHandler(
+    ok &= oklt::HandlerManager::instance().registerImplicitHandler(
         TargetBackend::CUDA, handleClassTemplateSpecialization);
 
-    ok &= oklt::AttributeManager::instance().registerImplicitHandler(
+    ok &= oklt::HandlerManager::instance().registerImplicitHandler(
         TargetBackend::CUDA, handleClassTemplatePartialSpecialization);
 
     if (!ok) {

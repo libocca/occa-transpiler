@@ -2,7 +2,7 @@
 
 #include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/ast_processors/okl_sema_processor/handlers/loop.h"
-#include "core/attribute_manager/sema_handler.h"
+#include "core/handler_manager/sema_handler.h"
 
 #include <clang/AST/AST.h>
 
@@ -11,7 +11,7 @@ using namespace clang;
 using namespace oklt;
 
 __attribute__((constructor)) void registerOklSemaProcessor() {
-    auto& am = AttributeManager::instance();
+    auto& am = HandlerManager::instance();
 
     // sema handler for OKL kernel attribute
     auto ok = am.registerSemaHandler(KERNEL_ATTR_NAME, preValidateOklKernel, postValidateOklKernel);

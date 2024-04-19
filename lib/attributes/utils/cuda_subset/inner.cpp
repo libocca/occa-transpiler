@@ -5,7 +5,7 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/kernel_utils.h"
 
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "tl/expected.hpp"

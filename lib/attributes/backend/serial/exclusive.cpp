@@ -7,9 +7,9 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::SERIAL, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveExprAttribute);
-    ok &= oklt::AttributeManager::instance().registerBackendHandler(
+    ok &= oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::SERIAL, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveDeclAttribute);
 
     if (!ok) {

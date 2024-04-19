@@ -3,7 +3,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -11,7 +11,6 @@
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace oklt;
 using namespace clang;
 
@@ -107,8 +106,8 @@ HandleResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OK
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME,
-                                                                     parseTileAttribute);
+    HandlerManager::instance().registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME,
+                                                                   parseTileAttribute);
 }
 
 }  // namespace

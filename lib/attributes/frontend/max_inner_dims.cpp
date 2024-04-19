@@ -3,7 +3,7 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/loop.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -73,7 +73,7 @@ HandleResult parseMaxInnerDims(SessionStage& stage, const clang::Attr& attr, OKL
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<MaxInnerDims>(MAX_INNER_DIMS,
-                                                                    parseMaxInnerDims);
+    HandlerManager::instance().registerAttrFrontend<MaxInnerDims>(MAX_INNER_DIMS,
+                                                                  parseMaxInnerDims);
 }
 }  // namespace

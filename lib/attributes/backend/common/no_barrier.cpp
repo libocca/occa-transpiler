@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attr_handler.h"
+#include "core/handler_manager/attr_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -28,8 +28,7 @@ HandleResult handleNoBarrierStmtAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        NO_BARRIER_ATTR_NAME, handleNoBarrierStmtAttribute);
+    auto ok = HandlerManager::instance().registerCommonHandler(NO_BARRIER_ATTR_NAME, handleNoBarrierStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", NO_BARRIER_ATTR_NAME);

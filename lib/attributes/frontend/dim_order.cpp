@@ -3,8 +3,8 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/dim.h"
 
-#include "core/attribute_manager/attributed_type_map.h"
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -143,7 +143,7 @@ HandleResult parseDimOrderAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<DimOrderAttribute>(DIM_ORDER_ATTR_NAME,
-                                                                         parseDimOrderAttrParams);
+    HandlerManager::instance().registerAttrFrontend<DimOrderAttribute>(DIM_ORDER_ATTR_NAME,
+                                                                       parseDimOrderAttrParams);
 }
 }  // namespace

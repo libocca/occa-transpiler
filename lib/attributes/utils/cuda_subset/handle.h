@@ -1,6 +1,6 @@
 #include "attributes/frontend/params/barrier.h"
 #include "attributes/frontend/params/tile.h"
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 
 namespace clang {
 class Attr;

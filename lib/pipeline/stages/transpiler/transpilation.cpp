@@ -3,8 +3,8 @@
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
 
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/handler_manager.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"

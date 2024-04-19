@@ -1,5 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/implicid_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 
 #include <spdlog/spdlog.h>
 
@@ -13,8 +13,8 @@ HandleResult handleGlobalFunctionDpcpp(oklt::SessionStage& s, const clang::Funct
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(TargetBackend::DPCPP,
-                                                                         handleGlobalFunctionDpcpp);
+    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::DPCPP,
+                                                                       handleGlobalFunctionDpcpp);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register implicit handler for global function");

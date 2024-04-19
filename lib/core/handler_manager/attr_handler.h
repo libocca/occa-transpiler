@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "util/type_traits.h"
 
 #include <clang/AST/ASTTypeTraits.h>
@@ -112,7 +112,7 @@ struct HandlerKey<H, std::enable_if_t<H == HandleType::COMMON>> : public HandleK
 };
 
 template <typename F>
-inline bool AttributeManager::registerCommonHandler(std::string attr, F& func) {
+inline bool HandlerManager::registerCommonHandler(std::string attr, F& func) {
     return _handlers.insert(HandlerKey<HandleType::COMMON>(attr), func);
 };
 

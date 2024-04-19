@@ -3,8 +3,8 @@
 #include <oklt/core/error.h>
 #include <oklt/util/string_utils.h>
 
-#include "core/attribute_manager/handler_map.h"
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/handler_map.h"
+#include "core/handler_manager/result.h"
 
 #include <clang/AST/ASTTypeTraits.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -17,18 +17,18 @@ namespace oklt {
 
 struct OKLParsedAttr;
 
-class AttributeManager {
+class HandlerManager {
    protected:
-    AttributeManager() = default;
-    ~AttributeManager() = default;
+    HandlerManager() = default;
+    ~HandlerManager() = default;
 
    public:
-    AttributeManager(const AttributeManager&) = delete;
-    AttributeManager(AttributeManager&&) = delete;
-    AttributeManager& operator=(const AttributeManager&) = delete;
-    AttributeManager& operator=(AttributeManager&&) = delete;
+    HandlerManager(const HandlerManager&) = delete;
+    HandlerManager(HandlerManager&&) = delete;
+    HandlerManager& operator=(const HandlerManager&) = delete;
+    HandlerManager& operator=(HandlerManager&&) = delete;
 
-    static AttributeManager& instance();
+    static HandlerManager& instance();
 
     template <typename AttrFrontendType, typename F>
     bool registerAttrFrontend(std::string attr, F& func);
@@ -67,40 +67,40 @@ class AttributeManager {
     HandlerMap _handlers;
 };
 
-inline bool AttributeManager::hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind) {
+inline bool HandlerManager::hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind) {
     return _handlers.hasHandler(backend, kind);
 }
 
-inline HandleResult AttributeManager::parseAttr(SessionStage& stage, const clang::Attr& attr) {
+inline HandleResult HandlerManager::parseAttr(SessionStage& stage, const clang::Attr& attr) {
     return _handlers(stage, attr, nullptr);
 }
 
-inline HandleResult AttributeManager::parseAttr(SessionStage& stage,
-                                                const clang::Attr& attr,
+inline HandleResult HandlerManager::parseAttr(SessionStage& stage,
+                                              const clang::Attr& attr,
                                                 OKLParsedAttr& params) {
     return _handlers(stage, attr, &params);
 }
 
-inline HandleResult AttributeManager::handleAttr(SessionStage& stage,
-                                                 const clang::DynTypedNode& node,
+inline HandleResult HandlerManager::handleAttr(SessionStage& stage,
+                                               const clang::DynTypedNode& node,
                                                  const clang::Attr& attr,
                                                  const std::any* params) {
     return _handlers(stage, node, attr, params);
 }
 
-inline HandleResult AttributeManager::handleNode(SessionStage& stage,
-                                                 const clang::DynTypedNode& node) {
+inline HandleResult HandlerManager::handleNode(SessionStage& stage,
+                                               const clang::DynTypedNode& node) {
     return _handlers(stage, node);
 }
 
-inline HandleResult AttributeManager::handleSemaPre(SessionStage& stage,
-                                                    const clang::DynTypedNode& node,
+inline HandleResult HandlerManager::handleSemaPre(SessionStage& stage,
+                                                  const clang::DynTypedNode& node,
                                                     const clang::Attr* attr) {
     return _handlers.pre(stage, node, attr);
 }
 
-inline HandleResult AttributeManager::handleSemaPost(SessionStage& stage,
-                                                     const clang::DynTypedNode& node,
+inline HandleResult HandlerManager::handleSemaPost(SessionStage& stage,
+                                                   const clang::DynTypedNode& node,
                                                      const clang::Attr* attr) {
     return _handlers.post(stage, node, attr);
 }

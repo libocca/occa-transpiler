@@ -2,7 +2,7 @@
 #include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -55,7 +55,7 @@ HandleResult parseAtomicAttrParams(SessionStage& stage, const Attr& attr, OKLPar
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME,
-                                                                       parseAtomicAttrParams);
+    HandlerManager::instance().registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME,
+                                                                     parseAtomicAttrParams);
 }
 }  // namespace

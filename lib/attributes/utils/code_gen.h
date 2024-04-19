@@ -1,7 +1,7 @@
 #pragma once
 
 #include <oklt/core/kernel_metadata.h>
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Attr.h>

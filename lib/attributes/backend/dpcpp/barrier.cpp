@@ -1,7 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/utils/cuda_subset/handle.h"
-#include "core/attribute_manager/backend_handler.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
@@ -23,7 +23,7 @@ HandleResult handleBarrierAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, BARRIER_ATTR_NAME, handleBarrierAttribute);
 
     if (!ok) {

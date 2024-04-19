@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attr_handler.h"
+#include "core/handler_manager/attr_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -42,8 +42,7 @@ HandleResult handleMaxInnerDimsStmtAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        MAX_INNER_DIMS, handleMaxInnerDimsStmtAttribute);
+    auto ok = HandlerManager::instance().registerCommonHandler(MAX_INNER_DIMS, handleMaxInnerDimsStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", MAX_INNER_DIMS);

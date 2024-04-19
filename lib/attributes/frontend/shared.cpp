@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attributed_type_map.h"
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include "attributes/utils/parser.h"
@@ -123,7 +123,7 @@ HandleResult parseSharedAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME,
-                                                                       parseSharedAttrParams);
+    HandlerManager::instance().registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME,
+                                                                     parseSharedAttrParams);
 }
 }  // namespace

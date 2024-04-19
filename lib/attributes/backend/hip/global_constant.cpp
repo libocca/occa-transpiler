@@ -1,5 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/implicid_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 
 #include <spdlog/spdlog.h>
 
@@ -12,8 +12,8 @@ HandleResult handleHIPGlobalConstant(oklt::SessionStage& s, const clang::VarDecl
 }
 
 __attribute__((constructor)) void registerHIPGlobalConstantHandler() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(TargetBackend::HIP,
-                                                                         handleHIPGlobalConstant);
+    auto ok = oklt::HandlerManager::instance().registerImplicitHandler(TargetBackend::HIP,
+                                                                       handleHIPGlobalConstant);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global constant");

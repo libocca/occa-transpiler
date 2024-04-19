@@ -173,11 +173,11 @@ set (OCCA_TRANSPILER_SOURCES
     core/rewriter/rewriter_proxy.cpp
     core/rewriter/rewriter_fabric.cpp
 
-    core/attribute_manager/attribute_manager.cpp
-    core/attribute_manager/attributed_type_map.cpp
-    core/attribute_manager/handler_map.cpp
+        core/handler_manager/handler_manager.cpp
+        core/handler_manager/handler_map.cpp
 
     core/transpiler_session/transpiler_session.cpp
+        core/transpiler_session/attributed_type_map.cpp
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
     core/transpiler_session/code_generator.cpp

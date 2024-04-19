@@ -1,7 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/backend_handler.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
@@ -20,10 +20,10 @@ HandleResult handleExclusiveAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
+    auto ok = oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, handleExclusiveAttribute);
 
-    ok &= oklt::AttributeManager::instance().registerBackendHandler(
+    ok &= oklt::HandlerManager::instance().registerBackendHandler(
         TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, defaultHandleExclusiveStmtAttribute);
 
     if (!ok) {

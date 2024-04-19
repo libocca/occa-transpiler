@@ -2,7 +2,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/frontend/params/empty_params.h"
 
-#include "core/attribute_manager/parse_handler.h"
+#include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -60,7 +60,7 @@ HandleResult parseKernelAttrParams(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME,
-                                                                       parseKernelAttrParams);
+    HandlerManager::instance().registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME,
+                                                                     parseKernelAttrParams);
 }
 }  // namespace

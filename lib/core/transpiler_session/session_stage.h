@@ -14,10 +14,10 @@
 namespace oklt {
 
 class ASTVisitor;
-class AttributeManager;
+class HandlerManager;
 struct TranspilerSession;
 
-// INFO: could hold not the reference to the global AttributeManager
+// INFO: could hold not the reference to the global HandlerManager
 //       but hold the pointer to the AttributeManagerView
 //       that is built for current session with set of interested attribute handlers
 class SessionStage {
@@ -38,7 +38,7 @@ class SessionStage {
     TransformedFiles getRewriterResultForHeaders();
 
     [[nodiscard]] TargetBackend getBackend() const;
-    static AttributeManager& getAttrManager();
+    static HandlerManager& getAttrManager();
 
     void setLauncherMode();
 

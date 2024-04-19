@@ -6,7 +6,7 @@
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 
 #include "core/utils/attributes.h"
 #include "core/vfs/overlay_fs.h"
@@ -33,7 +33,7 @@ HandleResult applyTranspilationToAttrNode(SessionStage& stage,
 }
 
 HandleResult applyTranspilationToNode(SessionStage& stage, const DynTypedNode& node) {
-    return AttributeManager::instance().handleNode(stage, node);
+    return HandlerManager::instance().handleNode(stage, node);
 }
 
 HandleResult applyTranspilationToNode(SessionStage& stage,
