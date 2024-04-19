@@ -170,6 +170,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     auto& transpilationAccumulator = stage.tryEmplaceUserCtx<TranspilationNodes>();
     auto* ki = sema.getParsingKernelInfo();
     auto* cl = sema.getLoopInfo();
+    auto& attrManager = stage.getAttrManager();
 
     // non attributed node
     if (attrs.empty()) {
@@ -178,7 +179,7 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
             result.error().ctx = node.getSourceRange();
             return result;
         }
-        if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
+        if (attrManager.hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
             transpilationAccumulator.push_back(TranspilationNode{
                 .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
         }
@@ -190,6 +191,13 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
         if (!result) {
             result.error().ctx = attr->getRange();
             return result;
+        }
+        auto backendNode = std::make_pair(stage.getBackend(), getNodeType(node));
+        auto backendAttr = std::make_pair(stage.getBackend(), attr->getNormalizedFullName());
+        if (attrManager.hasImplicitHandler(backendNode.first, backendNode.second) &&
+            attrManager.areCompatibleHandlers(backendNode, backendAttr)) {
+            transpilationAccumulator.push_back(TranspilationNode{
+                .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
         }
         transpilationAccumulator.push_back(TranspilationNode{
             .ki = ki, .li = cl, .attr = attr, .node = DynTypedNode::create(node)});

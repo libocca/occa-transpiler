@@ -52,11 +52,20 @@ class AttributeManager {
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, DeclHandler handler);
     bool registerImplicitHandler(ImplicitHandlerMap::KeyType key, StmtHandler handler);
 
+    bool registerCompatibleImplicitAttributePair(ImplicitHandlerMap::KeyType impicitKey,
+                                                 BackendAttributeMap::KeyType attributeKey);
+
     ParseResult parseAttr(const clang::Attr& attr, SessionStage& stage);
     ParseResult parseAttr(const clang::Attr& attr, OKLParsedAttr& params, SessionStage& stage);
 
     bool hasImplicitHandler(TargetBackend backend, int nodeType) {
         return _implicitHandlers.hasHandler({backend, nodeType});
+    }
+
+    bool areCompatibleHandlers(ImplicitHandlerMap::KeyType implicitKey,
+                               BackendAttributeMap::KeyType attributeKey) {
+        return _compatibleImplicitAttributeHandlers.count(
+            std::make_pair(implicitKey, attributeKey));
     }
 
     HandleResult handleAttr(const clang::Attr& attr,
@@ -85,6 +94,8 @@ class AttributeManager {
     BackendAttributeMap _backendAttrs;
     ImplicitHandlerMap _implicitHandlers;
     std::map<std::string, AttrParamParserType> _attrParsers;
+    std::set<std::pair<ImplicitHandlerMap::KeyType, BackendAttributeMap::KeyType>>
+        _compatibleImplicitAttributeHandlers;
 };
 
 namespace detail {

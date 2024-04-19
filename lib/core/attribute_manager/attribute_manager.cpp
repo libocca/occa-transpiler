@@ -44,6 +44,17 @@ bool AttributeManager::registerImplicitHandler(ImplicitHandlerMap::KeyType key,
     return _implicitHandlers.registerHandler(std::move(key), std::move(handler));
 }
 
+bool AttributeManager::registerCompatibleImplicitAttributePair(
+    ImplicitHandlerMap::KeyType implicitKey,
+    BackendAttributeMap::KeyType attributeKey) {
+    auto p = std::make_pair(implicitKey, attributeKey);
+    if (_compatibleImplicitAttributeHandlers.count(p)) {
+        return false;
+    }
+    _compatibleImplicitAttributeHandlers.insert(p);
+    return true;
+}
+
 HandleResult AttributeManager::handleNode(const Stmt& stmt, SessionStage& stage) {
     return _implicitHandlers(stmt, stage);
 }

@@ -13,6 +13,11 @@ __attribute__((constructor)) void registerCUDARestrictHandler() {
         {TargetBackend::HIP, RESTRICT_ATTR_NAME},
         makeSpecificAttrHandle(cuda_subset::handleRestrictAttribute));
 
+    // allow @restrict in return type case
+    ok &= oklt::AttributeManager::instance().registerCompatibleImplicitAttributePair(
+        {TargetBackend::HIP, clang::Decl::Kind::Function},
+        {TargetBackend::HIP, RESTRICT_ATTR_NAME});
+
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", RESTRICT_ATTR_NAME);
     }
