@@ -1,12 +1,12 @@
-[submodule "submodules/expected"]
-	path = dependecy/submodules/expected
+[submodule "deps/expected"]
+	path = deps/expected
 	url = https://github.com/TartanLlama/expected.git
-[submodule "submodules/json"]
-	path = dependecy/submodules/json
+[submodule "deps/json"]
+	path = deps/json
 	url = https://github.com/nlohmann/json.git
-[submodule "submodules/spdlog"]
-	path = dependecy/submodules/spdlog
+[submodule "deps/spdlog"]
+	path = deps/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "submodules/argparse"]
-	path = dependecy/submodules/argparse
+[submodule "deps/argparse"]
+	path = deps/argparse
 	url = https://github.com/p-ranav/argparse.git

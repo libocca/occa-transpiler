@@ -7,16 +7,16 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME argparser
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/submodules/argparse
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/argparse
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-   SOURCE_DIR ${CMAKE_SOURCE_DIR}/submodules/json
+   SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/json
    OPTIONS "JSON_BuildTests OFF")
 
 CPMAddPackage(NAME spdlog
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/submodules/spdlog
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
   OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 add_library(GTest::GTest INTERFACE IMPORTED)
