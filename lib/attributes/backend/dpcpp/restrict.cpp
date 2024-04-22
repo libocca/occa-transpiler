@@ -16,7 +16,7 @@ HandleResult handleRestrictAttribute(SessionStage& s,
                                      const clang::Decl& decl,
                                      const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@restrict] attribute");
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     s.getRewriter().InsertTextBefore(decl.getLocation(), RESTRICT_MODIFIER);
     return {};
 }
