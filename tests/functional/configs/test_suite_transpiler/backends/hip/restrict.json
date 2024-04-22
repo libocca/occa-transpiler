@@ -1,0 +1,47 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/restrict/restrict_builtin_types.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/restrict/restrict_builtin_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/restrict/restrict_complex_types.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/restrict/restrict_complex_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/restrict/restrict_namespaced_types.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/restrict/restrict_namespaced_types_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/restrict/restrict_return_type.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/restrict/restrict_return_type_ref.cpp"
+     }
+
+]
