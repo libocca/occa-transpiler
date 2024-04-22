@@ -169,6 +169,9 @@ set (OCCA_TRANSPILER_SOURCES
 
     core/logger.cpp
 
+    core/sys/setup.h
+    core/sys/setup.cpp
+
     core/rewriter/delta/delta_trees.cpp
 
     core/rewriter/impl/dtree_rewriter_proxy.cpp
