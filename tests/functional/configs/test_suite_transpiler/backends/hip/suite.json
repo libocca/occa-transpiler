@@ -7,5 +7,6 @@
     "inner_outer.json",
     "barrier.json",
     "nobarrier.json",
-    "macro.json"
+    "macro.json",
+    "restrict.json"
 ]
