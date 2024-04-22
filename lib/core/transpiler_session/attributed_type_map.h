@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../../../../../../usr/lib/llvm-17/include/clang/AST/ASTTypeTraits.h"
-#include "../../../../../../../usr/lib/llvm-17/include/llvm/ADT/DenseSet.h"
+#include <clang/AST/ASTTypeTraits.h>
+#include <llvm/ADT/DenseSet.h>
 
 namespace oklt {
 

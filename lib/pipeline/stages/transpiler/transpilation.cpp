@@ -65,12 +65,12 @@ int getNodeType(const Stmt& s) {
     return s.getStmtClass();
 }
 
-tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Decl& decl, SessionStage& stage) {
-    return stage.getAttrManager().checkAttrs(decl, stage);
+tl::expected<std::set<const Attr*>, Error> getNodeAttrs(SessionStage& stage, const Decl& decl) {
+    return stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(decl));
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::DeclRefExpr& expr,
-                                                                  SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(SessionStage& stage,
+                                                                  const clang::DeclRefExpr& expr) {
     auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
     auto& ctx = stage.getCompiler().getASTContext();
     auto attrs = attrTypeMap.get(ctx, expr.getType());
@@ -79,8 +79,9 @@ tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::D
     return res;
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::RecoveryExpr& expr,
-                                                                   SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(
+    SessionStage& stage,
+    const clang::RecoveryExpr& expr) {
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
         return {};
@@ -91,11 +92,11 @@ tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::
         return {};
     }
 
-    return tryGetDeclRefExprAttrs(*declRefExpr, stage);
+    return tryGetDeclRefExprAttrs(stage, *declRefExpr);
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::CallExpr& expr,
-                                                               SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(SessionStage& stage,
+                                                               const clang::CallExpr& expr) {
     // If no errors, call default postValidate.
     if (!expr.containsErrors()) {
         return {};
