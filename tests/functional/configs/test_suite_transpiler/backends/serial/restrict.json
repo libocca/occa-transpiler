@@ -31,5 +31,16 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/serial/restrict/restrict_namespaced_types_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/restrict/restrict_return_type.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/restrict/restrict_return_type_ref.cpp"
   }
 ]
