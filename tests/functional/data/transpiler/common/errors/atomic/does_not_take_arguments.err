@@ -1,0 +1,3 @@
+does_not_take_arguments.cpp:4:13: error: [@atomic] does not take arguments
+    4 |             @atomic(12) i += 12;
+      |             ^

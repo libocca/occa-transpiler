@@ -1,3 +1,0 @@
-dim_applied_to_wrong_node_2.cpp:4:13: error: [@dim] expects at least one argument
-    4 |             @dim int ii = 0;
-      |             ^

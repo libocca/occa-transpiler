@@ -16,12 +16,12 @@
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/dim/dim_applied_to_wrong_node_2.cpp",
+            "source": "transpiler/common/errors/dim/dim_expects_at_least_one_argument.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/dim/dim_applied_to_wrong_node_2.err"
+        "reference": "transpiler/common/errors/dim/dim_expects_at_least_one_argument.err"
     },
     {
         "action": "normalize_and_transpile",

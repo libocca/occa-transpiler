@@ -1,0 +1,62 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/barrier/applied_to_decl.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/barrier/applied_to_decl.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/barrier/applied_to_non_null_stmt.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/barrier/applied_to_non_null_stmt.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/barrier/does_not_take_kwargs.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/barrier/does_not_take_kwargs.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/barrier/has_invalid_barrier_type.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/barrier/has_invalid_barrier_type.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/barrier/takes_at_most_one_argument.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/barrier/takes_at_most_one_argument.err"
+    }
+]

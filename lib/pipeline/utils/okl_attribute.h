@@ -1,6 +1,9 @@
 #pragma once
 
+#include <oklt/util/string_utils.h>
 #include "attributes/attribute_names.h"
+
+#include <spdlog/fmt/fmt.h>
 
 #include <vector>
 
@@ -14,19 +17,15 @@ struct OklAttribute {
 };
 
 inline static std::string wrapAsSpecificGnuAttr(const OklAttribute& attr) {
-    if (attr.params.empty()) {
-        return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")))";
-    }
-
-    return "__attribute__((" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")))";
+    return fmt::format(
+        "__attribute__(({}{}(\"{}\")))", OKL_ATTR_PREFIX, attr.name, attr.params);
 }
 
 inline static std::string wrapAsSpecificCxxAttr(const OklAttribute& attr) {
-    if (attr.params.empty()) {
-        return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + "" + "\")]]";
-    }
-
-    return "[[" + OKL_ATTR_PREFIX + attr.name + R"((")" + attr.params + "\")]]";
+    // TODO: this is ugly
+    auto paramsWithEscape = util::replace(attr.params, "\"", "\\\"");
+    auto res = fmt::format("[[{}{}(\"{}\")]]", OKL_ATTR_PREFIX, attr.name, paramsWithEscape);
+    return res;
 }
 
 }  // namespace oklt

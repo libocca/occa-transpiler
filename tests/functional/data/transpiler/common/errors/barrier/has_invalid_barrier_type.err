@@ -1,0 +1,3 @@
+has_invalid_barrier_type.cpp:7:13: error: [@barrier] has an invalid barrier type: hello
+    7 |             @barrier("hello");
+      |             ^
