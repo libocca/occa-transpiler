@@ -6,7 +6,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleOPENMPBarrierAttribute(const Attr& a, const NullStmt& stmt, SessionStage& s) {
+HandleResult handleOPENMPBarrierAttribute(SessionStage& s, const NullStmt& stmt, const Attr& a) {
     SPDLOG_DEBUG("Handle [@barrier] attribute");
 
     SourceRange range(getAttrFullSourceRange(a).getBegin(), stmt.getEndLoc());
@@ -15,9 +15,8 @@ HandleResult handleOPENMPBarrierAttribute(const Attr& a, const NullStmt& stmt, S
 }
 
 __attribute__((constructor)) void registerOPENMPBarrierHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, BARRIER_ATTR_NAME},
-        makeSpecificAttrHandle(handleOPENMPBarrierAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::OPENMP, BARRIER_ATTR_NAME, handleOPENMPBarrierAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", BARRIER_ATTR_NAME);

@@ -1,4 +1,4 @@
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -6,6 +6,7 @@
 #include "pipeline/core/error_codes.h"
 
 #include <spdlog/spdlog.h>
+
 namespace oklt::serial_subset {
 using namespace clang;
 
@@ -13,7 +14,7 @@ namespace {
 const std::string EXTERN_C = "extern \"C\"";
 }  // namespace
 
-HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
+HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, const Attr& a) {
     SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& rewriter = s.getRewriter();

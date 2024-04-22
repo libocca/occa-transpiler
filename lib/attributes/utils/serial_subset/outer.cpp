@@ -1,5 +1,5 @@
 #include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -9,10 +9,10 @@
 namespace oklt::serial_subset {
 using namespace clang;
 
-HandleResult handleOuterAttribute(const Attr& a,
+HandleResult handleOuterAttribute(SessionStage& s,
                                   const ForStmt& stmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const Attr& a,
+                                  const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@outer] attribute");
 
     if (!params) {
@@ -25,7 +25,7 @@ HandleResult handleOuterAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@outer: failed to fetch loop meta data from sema"});
     }
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     return {};
 }
 

@@ -1,19 +1,19 @@
-#include <oklt/core/error.h>
-#include <oklt/core/kernel_metadata.h>
+#include "oklt/core/error.h"
+#include "oklt/core/kernel_metadata.h"
 
-#include "core/ast_processors/okl_sema_processor/handlers/function.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
+#include "function.h"
 
 #include <clang/AST/AST.h>
 
 namespace oklt {
 using namespace clang;
 
-HandleResult preValidateOklKernel(const Attr& attr,
-                                  const FunctionDecl& fd,
-                                  OklSemaCtx& sema,
-                                  SessionStage& stage) {
+HandleResult preValidateOklKernel(SessionStage& stage,
+                                  const clang::FunctionDecl& fd,
+                                  const clang::Attr& attr) {
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     if (sema.isParsingOklKernel()) {
         // TODO nested okl kernel function
         //  make appropriate error code
@@ -29,11 +29,11 @@ HandleResult preValidateOklKernel(const Attr& attr,
     return {};
 }
 
-HandleResult postValidateOklKernel(const Attr& attr,
-                                   const FunctionDecl& fd,
-                                   OklSemaCtx& sema,
-                                   SessionStage& stage) {
+HandleResult postValidateOklKernel(SessionStage& stage,
+                                   const clang::FunctionDecl& fd,
+                                   const clang::Attr& attr) {
     // stop parsing of current kernel info and reset internal state of sema
+    auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     sema.stopParsingKernelInfo();
 
     return {};

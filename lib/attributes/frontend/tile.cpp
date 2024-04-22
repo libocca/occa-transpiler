@@ -3,7 +3,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -11,7 +11,6 @@
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace oklt;
 using namespace clang;
 
@@ -48,7 +47,7 @@ struct TileAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
+HandleResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
     TileParams ret = {};
     if (data.args.empty()) {
         return tl::make_unexpected(Error{{}, "[@tile] expects at least one argument"});
@@ -73,7 +72,7 @@ ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, Ses
         }
 
         auto subAttr = data.get<OKLParsedAttr>(i).value();
-        auto loop = stage.getAttrManager().parseAttr(attr, subAttr, stage);
+        auto loop = stage.getAttrManager().parseAttr(stage, attr, subAttr);
         if (!loop) {
             return tl::make_unexpected(loop.error());
         }
@@ -107,8 +106,7 @@ ParseResult parseTileAttribute(const clang::Attr& attr, OKLParsedAttr& data, Ses
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME,
-                                                                     parseTileAttribute);
+    HandlerManager::registerAttrFrontend<TileAttribute>(TILE_ATTR_NAME, parseTileAttribute);
 }
 
 }  // namespace

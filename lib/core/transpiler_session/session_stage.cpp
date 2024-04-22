@@ -1,9 +1,7 @@
 #include "core/transpiler_session/session_stage.h"
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/diag/diag_consumer.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/transpiler_session/transpiler_session.h"
-
-#include <spdlog/spdlog.h>
 
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
@@ -17,7 +15,6 @@ SessionStage::SessionStage(TranspilerSession& session,
     : _session(session),
       _compiler(compiler),
       _backend(session.getInput().backend),
-      _astProcType(session.getInput().astProcType),
       _rewriter(makeRewriterProxy(_compiler.getSourceManager(), _compiler.getLangOpts(), rwType)) {}
 
 clang::CompilerInstance& SessionStage::getCompiler() {
@@ -28,8 +25,8 @@ oklt::Rewriter& SessionStage::getRewriter() {
     return *_rewriter.get();
 }
 
-AttributeManager& SessionStage::getAttrManager() {
-    return AttributeManager::instance();
+HandlerManager& SessionStage::getAttrManager() {
+    return tryEmplaceUserCtx<HandlerManager>();
 }
 
 void SessionStage::setLauncherMode() {
@@ -95,10 +92,6 @@ TransformedFiles SessionStage::getRewriterResultForHeaders() {
 
 TargetBackend SessionStage::getBackend() const {
     return _backend;
-}
-
-AstProcessorType SessionStage::getAstProccesorType() const {
-    return _astProcType;
 }
 
 void SessionStage::pushDiagnosticMessage(clang::StoredDiagnostic& message) {

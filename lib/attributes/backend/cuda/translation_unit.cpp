@@ -1,14 +1,10 @@
 #include "attributes/utils/replace_attribute.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/implicid_handler.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
 
 #include <spdlog/spdlog.h>
-
-namespace oklt {
-class SessionStage;
-}
 
 namespace {
 using namespace oklt;
@@ -26,14 +22,12 @@ std::vector<std::string_view> getBackendHeader(SessionStage& s) {
     return {CUDA_RT_INC, CUDA_PL_PRIM_INC};
 }
 
-HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
-    return handleTranslationUnit(d, s, getBackendHeader(s));
+HandleResult handleTranslationUnit(SessionStage& s, const TranslationUnitDecl& d) {
+    return handleTranslationUnit(s, d, getBackendHeader(s));
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleTranslationUnit));
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleTranslationUnit);
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for translation unit");
     }

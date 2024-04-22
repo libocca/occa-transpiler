@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -11,9 +11,8 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionStage& s) {
+HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
-
 
     auto varName = var.getNameAsString();
     // Desugar since it is attributed (since it is @shared variable)
@@ -44,17 +43,16 @@ HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionSta
 
     s.getRewriter().ReplaceText(range, newDeclaration);
 
-    return defaultHandleSharedDeclAttribute(a, var, s);
+    return defaultHandleSharedDeclAttribute(s, var, a);
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, SHARED_ATTR_NAME}, makeSpecificAttrHandle(handleSharedAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedAttribute);
 
-    // Empty Stmt hanler since @shared variable is of attributed type, it is called on DeclRefExpr
-    ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, SHARED_ATTR_NAME},
-        makeSpecificAttrHandle(defaultHandleSharedStmtAttribute));
+    // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
+    ok &= HandlerManager::registerBackendHandler(
+        TargetBackend::DPCPP, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", SHARED_ATTR_NAME);

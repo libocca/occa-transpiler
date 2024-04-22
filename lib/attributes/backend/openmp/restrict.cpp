@@ -4,11 +4,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPRestrictHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, RESTRICT_ATTR_NAME},
-        makeSpecificAttrHandle(serial_subset::handleRestrictAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::OPENMP, RESTRICT_ATTR_NAME, serial_subset::handleRestrictAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", RESTRICT_ATTR_NAME);

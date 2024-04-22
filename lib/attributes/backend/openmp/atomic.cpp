@@ -9,7 +9,7 @@ using namespace clang;
 const std::string prefixExprText = "\n#pragma omp atomic\n";
 const std::string prefixCompoundText = "\n#pragma omp critical\n";
 
-HandleResult handleOPENMPAtomicAttribute(const Attr& a, const Stmt& stmt, SessionStage& s) {
+HandleResult handleOPENMPAtomicAttribute(SessionStage& s, const Stmt& stmt, const Attr& a) {
     SPDLOG_DEBUG("Handle [@atomic] attribute");
     auto& rewriter = s.getRewriter();
 
@@ -28,9 +28,8 @@ HandleResult handleOPENMPAtomicAttribute(const Attr& a, const Stmt& stmt, Sessio
 }
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, ATOMIC_ATTR_NAME},
-        makeSpecificAttrHandle(handleOPENMPAtomicAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::OPENMP, ATOMIC_ATTR_NAME, handleOPENMPAtomicAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);

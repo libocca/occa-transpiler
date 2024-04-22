@@ -1,14 +1,15 @@
 #include "attributes/utils/kernel_utils.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/transpiler_session/session_stage.h"
 #include "oklt/core/kernel_metadata.h"
 #include "pipeline/core/error_codes.h"
 
-#include "tl/expected.hpp"
-
 #include <clang/AST/ParentMapContext.h>
 
+#include <tl/expected.hpp>
+
 namespace oklt {
+using namespace clang;
 
 tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
@@ -38,7 +39,7 @@ tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo) 
     // Error{OkltPipelineErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
 }
 
-const clang::AttributedStmt* getAttributedStmt(const clang::Stmt& stmt, SessionStage& s) {
+const clang::AttributedStmt* getAttributedStmt(SessionStage& s, const clang::Stmt& stmt) {
     auto& ctx = s.getCompiler().getASTContext();
     const auto parents = ctx.getParentMapContext().getParents(stmt);
     if (parents.empty())
@@ -47,10 +48,10 @@ const clang::AttributedStmt* getAttributedStmt(const clang::Stmt& stmt, SessionS
     return parents[0].get<clang::AttributedStmt>();
 }
 
-tl::expected<void, Error> handleChildAttr(const clang::Stmt& stmt,
-                                          std::string_view name,
-                                          SessionStage& s) {
-    auto* attributedStmt = getAttributedStmt(stmt, s);
+tl::expected<std::any, Error> handleChildAttr(SessionStage& s,
+                                              const clang::Stmt& stmt,
+                                              std::string_view name) {
+    auto* attributedStmt = getAttributedStmt(s, stmt);
     if (!attributedStmt) {
         return {};
     }
@@ -65,12 +66,13 @@ tl::expected<void, Error> handleChildAttr(const clang::Stmt& stmt,
             continue;
         }
 
-        auto params = am.parseAttr(*attr, s);
+        auto params = am.parseAttr(s, *attr);
         if (!params) {
             return tl::make_unexpected(std::move(params.error()));
         }
 
-        return am.handleAttr(*attr, stmt, &params.value(), s);
+        auto node = DynTypedNode::create(stmt);
+        return am.handleAttr(s, node, *attr, &params.value());
     }
 
     return {};

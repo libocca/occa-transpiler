@@ -432,7 +432,7 @@ class AttrParamParser {
 namespace oklt {
 using namespace clang;
 
-OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage) {
+OKLParsedAttr ParseOKLAttr(SessionStage& stage, const clang::Attr& attr) {
     assert((isa<AnnotateAttr>(attr) || isa<SuppressAttr>(attr)) &&
            "We only support AnnotateAttr or SuppressAttr");
 

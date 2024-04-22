@@ -10,6 +10,6 @@ namespace oklt {
 class SessionStage;
 
 clang::SourceRange getAttrFullSourceRange(const clang::Attr& attr);
-bool removeAttribute(const clang::Attr& attr, SessionStage& stage);
+bool removeAttribute(SessionStage& stage, const clang::Attr& attr);
 bool isOklAttribute(const clang::Attr& attr);
 }  // namespace oklt

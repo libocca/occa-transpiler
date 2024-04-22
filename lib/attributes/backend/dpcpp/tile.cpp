@@ -6,7 +6,7 @@
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/kernel_utils.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"
@@ -17,6 +17,7 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     return "_occa_tiled_" + forLoop.var.name;
@@ -220,10 +221,10 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
     return res;
 }
 
-HandleResult handleTileAttribute(const clang::Attr& a,
+HandleResult handleTileAttribute(SessionStage& s,
                                  const clang::ForStmt& forStmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+                                 const clang::Attr& a,
+                                 const TileParams* params) {
     SPDLOG_DEBUG("Handle [@tile] attribute");
 
     if (!params) {
@@ -251,14 +252,14 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         afterRBraceCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
 
-    handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, false);
 }
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleTileAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::DPCPP, TILE_ATTR_NAME, handleTileAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", TILE_ATTR_NAME);

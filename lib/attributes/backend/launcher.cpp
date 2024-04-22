@@ -1,8 +1,9 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
-#include "core/attribute_manager/attr_stmt_handler.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/attr_handler.h"
+#include "core/handler_manager/backend_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -244,10 +245,10 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
     return {firstMeta, secondMeta};
 }
 
-std::string getRootLoopBody(const FunctionDecl& decl,
+std::string getRootLoopBody(SessionStage& s,
+                            const FunctionDecl& decl,
                             OklLoopInfo& loopInfo,
-                            size_t loopNo,
-                            SessionStage& s) {
+                            size_t loopNo) {
     std::stringstream out;
     auto& r = s.getRewriter();
 
@@ -268,7 +269,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
         // NOTE: Tile is a special case
         if (child->isTiled()) {
             auto& am = s.getAttrManager();
-            auto params = std::any_cast<TileParams>(am.parseAttr(*child->attr, s).value());
+            auto params = std::any_cast<TileParams>(am.parseAttr(s, *child->attr).value());
 
             auto [firstMeta, secondMeta] = splitTileAttr(*child, r);
             //  if (metadata.type.size() > 0)
@@ -350,7 +351,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
     return out.str();
 }
 
-HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
+HandleResult handleLauncherTranslationUnit(SessionStage& s, const TranslationUnitDecl& d) {
     auto& sm = s.getCompiler().getSourceManager();
     auto mainFileId = sm.getMainFileID();
     auto loc = sm.getLocForStartOfFile(mainFileId);
@@ -364,10 +365,9 @@ HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, Session
 
     return {};
 }
-
-HandleResult handleLauncherKernelAttribute(const Attr& a,
+HandleResult handleLauncherKernelAttribute(SessionStage& s,
                                            const FunctionDecl& func,
-                                           SessionStage& s) {
+                                           const Attr& a) {
     SPDLOG_DEBUG("Handle attribute: {}", a.getNormalizedFullName());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -398,9 +398,9 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
         if (!loop) {
             continue;
         }
-        removeAttribute(*loop->attr, s);
+        removeAttribute(s, *loop->attr);
 
-        auto body = getRootLoopBody(func, *loop, n, s);
+        auto body = getRootLoopBody(s, func, *loop, n);
         // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
         rewriter.RemoveText(SourceRange{loop->stmt.getForLoc(), loop->stmt.getRParenLoc()});
         rewriter.ReplaceText(loop->stmt.getBody()->getSourceRange(), body);
@@ -412,36 +412,33 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
 
 __attribute__((constructor)) void registerLauncherHandler() {
 #define REG_ATTR_HANDLE(NAME, BODY)                                                   \
-    {                                                                                 \
-        auto ok = oklt::AttributeManager::instance().registerBackendHandler(          \
-            {TargetBackend::_LAUNCHER, NAME}, BODY);                                  \
+    {                                                                                           \
+        auto ok = HandlerManager::registerBackendHandler(TargetBackend::_LAUNCHER, NAME, BODY);                                    \
         if (!ok) {                                                                    \
             SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
         }                                                                             \
     }
 
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::_LAUNCHER, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleLauncherTranslationUnit));
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::_LAUNCHER,
+                                                      handleLauncherTranslationUnit);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");
     }
 
-    REG_ATTR_HANDLE(KERNEL_ATTR_NAME, makeSpecificAttrHandle(handleLauncherKernelAttribute));
-    REG_ATTR_HANDLE(OUTER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(INNER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(TILE_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
+    REG_ATTR_HANDLE(KERNEL_ATTR_NAME, handleLauncherKernelAttribute);
+    REG_ATTR_HANDLE(OUTER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(INNER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(TILE_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
-    REG_ATTR_HANDLE(ATOMIC_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(BARRIER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, AttrDeclHandler{serial_subset::handleEmptyDeclAttribute});
-    REG_ATTR_HANDLE(SHARED_ATTR_NAME, AttrDeclHandler{serial_subset::handleEmptyDeclAttribute});
-    REG_ATTR_HANDLE(SHARED_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
+    REG_ATTR_HANDLE(ATOMIC_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(BARRIER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, serial_subset::handleEmptyDeclAttribute);
+    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyDeclAttribute);
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
-    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME,
-                    makeSpecificAttrHandle(serial_subset::handleRestrictAttribute));
+    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME, serial_subset::handleRestrictAttribute);
 
 #undef REG_ATTR_HANDLE
 }

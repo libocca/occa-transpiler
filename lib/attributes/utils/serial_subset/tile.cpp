@@ -1,13 +1,13 @@
+#include <oklt/core/kernel_metadata.h>
+#include <oklt/util/string_utils.h>
+
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
-#include "oklt/core/kernel_metadata.h"
-
-#include <oklt/util/string_utils.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
@@ -137,10 +137,10 @@ std::string buildCheckString(const ForStmt& stmt,
 
 }  // namespace
 
-HandleResult handleTileAttribute(const Attr& a,
+HandleResult handleTileAttribute(SessionStage& s,
                                  const ForStmt& stmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+                                 const Attr& a,
+                                 const TileParams* params) {
     SPDLOG_DEBUG("Handle [@tile] attribute");
 
     if (!params) {
@@ -153,7 +153,7 @@ HandleResult handleTileAttribute(const Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
 
     auto& rewriter = s.getRewriter();
 

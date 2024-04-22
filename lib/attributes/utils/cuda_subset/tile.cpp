@@ -9,7 +9,7 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/kernel_utils.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"
@@ -88,10 +88,10 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleTileAttribute(const Attr& a,
-                                 const ForStmt& forStmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+HandleResult handleTileAttribute(SessionStage& s,
+                                 const clang::ForStmt& forStmt,
+                                 const clang::Attr& a,
+                                 const TileParams* params) {
     SPDLOG_DEBUG("Handle [@tile] attribute");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -114,9 +114,9 @@ HandleResult handleTileAttribute(const Attr& a,
         afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";";
     }
 
-    handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, false);
 }
 
 }  // namespace oklt::cuda_subset

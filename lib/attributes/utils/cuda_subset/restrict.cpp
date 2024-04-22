@@ -1,4 +1,4 @@
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -10,12 +10,12 @@ const std::string RESTRICT_MODIFIER = "__restrict__ ";
 }
 namespace oklt::cuda_subset {
 using namespace clang;
-HandleResult handleRestrictAttribute(const clang::Attr& a,
+HandleResult handleRestrictAttribute(SessionStage& s,
                                      const clang::Decl& decl,
-                                     SessionStage& s) {
+                                     const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@restrict] attribute");
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     s.getRewriter().InsertTextBefore(decl.getLocation(), RESTRICT_MODIFIER);
 
     return {};

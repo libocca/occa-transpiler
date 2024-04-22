@@ -4,11 +4,11 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPBarrierHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, BARRIER_ATTR_NAME},
-        AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::SERIAL, BARRIER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[SERIAL] Failed to register {} attribute handler", BARRIER_ATTR_NAME);

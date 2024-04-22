@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set (OCCA_TRANSPILER_SOURCES
-    ${ROOT_DIR}/include/oklt/core/ast_processor_types.h
     ${ROOT_DIR}/include/oklt/core/target_backends.h
 
     ${ROOT_DIR}/include/oklt/core/transpiler_session/user_input.h
@@ -145,22 +144,22 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/no_barrier.cpp
 
-    core/ast_processor_manager/ast_processor_manager.cpp
-
-    core/ast_processors/okl_sema_processor/processor.cpp
-    core/ast_processors/okl_sema_processor/handlers/function.h
-    core/ast_processors/okl_sema_processor/handlers/function.cpp
-    core/ast_processors/okl_sema_processor/handlers/loop.h
-    core/ast_processors/okl_sema_processor/handlers/loop.cpp
-
+    # Sema
     core/sema/okl_sema_ctx.cpp
     core/sema/okl_sema_ctx.h
     core/sema/okl_sema_info.cpp
     core/sema/okl_sema_info.h
+    core/sema/processor.cpp
+    core/sema/handlers/function.h
+    core/sema/handlers/function.cpp
+    core/sema/handlers/loop.h
+    core/sema/handlers/loop.cpp
 
+    # Lexer
     core/lex/lexer.h
     core/lex/lexer.cpp
 
+    # Diagnostics
     core/diag/diag_consumer.cpp
     core/diag/builtin_handlers/ignore_undecl_indent.cpp
 
@@ -176,17 +175,11 @@ set (OCCA_TRANSPILER_SOURCES
     core/rewriter/rewriter_proxy.cpp
     core/rewriter/rewriter_fabric.cpp
 
-    core/attribute_manager/attr_decl_handler.cpp
-    core/attribute_manager/attr_stmt_handler.cpp
-    core/attribute_manager/attribute_manager.cpp
-    core/attribute_manager/attributed_type_map.cpp
-    core/attribute_manager/backend_attribute_map.cpp
-    core/attribute_manager/common_attribute_map.cpp
-    core/attribute_manager/implicit_handlers/implicit_handler_map.cpp
-    core/attribute_manager/implicit_handlers/decl_handler.cpp
-    core/attribute_manager/implicit_handlers/stmt_handler.cpp
+    core/handler_manager/handler_manager.cpp
+    core/handler_manager/handler_map.cpp
 
     core/transpiler_session/transpiler_session.cpp
+    core/transpiler_session/attributed_type_map.cpp
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
     core/transpiler_session/code_generator.cpp

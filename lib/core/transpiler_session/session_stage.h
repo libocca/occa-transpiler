@@ -1,6 +1,5 @@
 #pragma once
 
-#include <oklt/core/ast_processor_types.h>
 #include <oklt/core/error.h>
 #include <oklt/core/target_backends.h>
 
@@ -15,10 +14,10 @@
 namespace oklt {
 
 class ASTVisitor;
-class AttributeManager;
+class HandlerManager;
 struct TranspilerSession;
 
-// INFO: could hold not the reference to the global AttributeManager
+// INFO: could hold not the reference to the global HandlerManager
 //       but hold the pointer to the AttributeManagerView
 //       that is built for current session with set of interested attribute handlers
 class SessionStage {
@@ -34,13 +33,12 @@ class SessionStage {
 
     clang::CompilerInstance& getCompiler();
 
-    oklt::Rewriter& getRewriter();
+    [[nodiscard]] oklt::Rewriter& getRewriter();
     std::string getRewriterResultForMainFile();
     TransformedFiles getRewriterResultForHeaders();
 
     [[nodiscard]] TargetBackend getBackend() const;
-    [[nodiscard]] AstProcessorType getAstProccesorType() const;
-    static AttributeManager& getAttrManager();
+    [[nodiscard]] HandlerManager& getAttrManager();
 
     void setLauncherMode();
 
@@ -76,7 +74,6 @@ class SessionStage {
    protected:
     TranspilerSession& _session;
     TargetBackend _backend;
-    AstProcessorType _astProcType;
     clang::CompilerInstance& _compiler;
     std::unique_ptr<oklt::Rewriter> _rewriter;
     std::map<std::string, std::any> _userCtxMap;

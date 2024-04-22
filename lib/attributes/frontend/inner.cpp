@@ -3,7 +3,7 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "attributes/frontend/params/loop.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -48,9 +48,9 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseInnerAttrParams(const clang::Attr& attr,
-                                 OKLParsedAttr& data,
-                                 SessionStage& stage) {
+HandleResult parseInnerAttrParams(SessionStage& stage,
+                                  const clang::Attr& attr,
+                                  OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@inner] does not take kwargs"});
     }
@@ -75,7 +75,6 @@ ParseResult parseInnerAttrParams(const clang::Attr& attr,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME,
-                                                                      parseInnerAttrParams);
+    HandlerManager::registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME, parseInnerAttrParams);
 }
 }  // namespace

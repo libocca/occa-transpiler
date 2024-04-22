@@ -10,10 +10,10 @@
 
 namespace oklt::cuda_subset {
 
-oklt::HandleResult handleBarrierAttribute(const clang::Attr& attr,
+oklt::HandleResult handleBarrierAttribute(SessionStage& stage,
                                           const clang::Stmt& stmt,
-                                          const oklt::AttributedBarrier* params,
-                                          SessionStage& stage) {
+                                          const clang::Attr& attr,
+                                          const oklt::AttributedBarrier* params) {
     SPDLOG_DEBUG("Handle [@barrier] attribute");
 
     if (!params) {
