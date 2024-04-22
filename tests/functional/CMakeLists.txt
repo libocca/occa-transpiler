@@ -6,20 +6,17 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  argparser
-  GITHUB_REPOSITORY p-ranav/argparse
-  GIT_TAG v3.0
+  NAME argparser
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/argparse
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-    VERSION 3.11.2
-    GITHUB_REPOSITORY nlohmann/json
-    OPTIONS "JSON_BuildTests OFF")
+   SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/json
+   OPTIONS "JSON_BuildTests OFF")
 
 CPMAddPackage(NAME spdlog
-  VERSION 1.13.0
-  GITHUB_REPOSITORY gabime/spdlog
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
   OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 add_library(GTest::GTest INTERFACE IMPORTED)

@@ -2,15 +2,13 @@ cmake_minimum_required(VERSION 3.26)
 project (occa-tool VERSION 0.0.1 LANGUAGES CXX)
 
 CPMAddPackage(
-  argparser
-  GITHUB_REPOSITORY p-ranav/argparse
-  GIT_TAG v3.0
+  NAME argparser
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/argparse
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME spdlog
-  VERSION 1.13.0
-  GITHUB_REPOSITORY gabime/spdlog
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
   OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 

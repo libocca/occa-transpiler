@@ -52,8 +52,8 @@ struct TranspilerSession {
     UserOutput& getOutput() { return _output; }
 
     void moveOutputToInput() {
-        _input.source = std::move(_output.normalized.source);
-        _input.headers = std::move(_output.normalized.headers);
+        _input.source = _output.normalized.source;
+        _input.headers = _output.normalized.headers;
     }
 
    private:

@@ -182,10 +182,6 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
             }
             return result;
         }
-        if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
-            transpilationAccumulator.push_back(TranspilationNode{
-                .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
-        }
     }
 
     // attributed node
@@ -199,6 +195,11 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
         }
         transpilationAccumulator.push_back(TranspilationNode{
             .ki = ki, .li = cl, .attr = attr, .node = DynTypedNode::create(node)});
+    }
+
+    if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
+        transpilationAccumulator.push_back(TranspilationNode{
+            .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
     }
 
     return {};
@@ -229,8 +230,10 @@ bool traverseNode(TraversalType& traversal,
         return true;
     }
 
+    // node in non user header - skip traverse it
+    // TODO add more robust verification
     if (skipNode(*node, stage)) {
-        return dispatchTraverseFunc(traversal, node);
+        return true;
     }
 
     auto result = [&]() -> HandleResult {

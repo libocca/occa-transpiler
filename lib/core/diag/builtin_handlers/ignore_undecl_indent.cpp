@@ -100,7 +100,9 @@ bool isLooksLikeFunctionCall(const SourceLocation& loc,
 
 class IgnoreUndeclHandler : public DiagHandler {
    public:
-    IgnoreUndeclHandler()
+    explicit IgnoreUndeclHandler(unsigned id)
+        : DiagHandler(id){};
+    explicit IgnoreUndeclHandler()
         : DiagHandler(diag::err_undeclared_var_use){};
 
     bool HandleDiagnostic(SessionStage& session, DiagLevel level, const Diagnostic& info) override {
@@ -125,5 +127,12 @@ class IgnoreUndeclHandler : public DiagHandler {
     }
 };
 
+class IgnoreUndeclSuggestHandler : public IgnoreUndeclHandler {
+   public:
+    explicit IgnoreUndeclSuggestHandler()
+        : IgnoreUndeclHandler(diag::err_undeclared_var_use_suggest){};
+};
+
 oklt::DiagHandlerRegistry::Add<IgnoreUndeclHandler> diag_dim("IgnoreUndeclUse", "");
+oklt::DiagHandlerRegistry::Add<IgnoreUndeclSuggestHandler> diag_dim2("IgnoreUndeclSuggestUse", "");
 }  // namespace

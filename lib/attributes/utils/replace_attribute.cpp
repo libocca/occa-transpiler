@@ -1,9 +1,11 @@
 #include "attributes/utils/replace_attribute.h"
+#include "attributes/attribute_names.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
 
 #include <clang/AST/AST.h>
+#include <clang/AST/Attr.h>
 
 #include <spdlog/spdlog.h>
 
@@ -48,6 +50,12 @@ using namespace clang;
 HandleResult handleGlobalConstant(const clang::VarDecl& decl,
                                   SessionStage& s,
                                   const std::string& qualifier) {
+
+    // skip decl with invalid soucce location
+    if (decl.getLocation().isInvalid()) {
+        return {};
+    }
+
     if (!isGlobalConstVariable(decl)) {
         return {};
     }
@@ -85,9 +93,24 @@ HandleResult handleGlobalConstant(const clang::VarDecl& decl,
 HandleResult handleGlobalFunction(const clang::FunctionDecl& decl,
                                   SessionStage& s,
                                   const std::string& funcQualifier) {
+    // skip built in functions or with invalid soucce location
+    if (decl.getLocation().isInvalid() || decl.isInlineBuiltinDeclaration()) {
+        return {};
+    }
+
     // INFO: Check if function is not attributed with OKL attribute
     auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
+
+    // If function is @kernel, we don't handle it
+    for (auto* attr : decl.getAttrs()) {
+        if (attr->getNormalizedFullName() == KERNEL_ATTR_NAME) {
+            SPDLOG_DEBUG(
+                "Global function handler skipped function {}, since it has @kernel attribute",
+                decl.getNameAsString());
+            return {};
+        }
+    }
 
     SPDLOG_DEBUG("Handle global function '{}' at {}",
                  decl.getNameAsString(),
