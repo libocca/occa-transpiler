@@ -51,7 +51,7 @@ struct RestrictAttribute : public ParsedAttrInfo {
 
         if (!type->isPointerType() && !type->isArrayType()) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
-                << attr << ": supports only pointer type";
+                << attr << ":" << "pointer type";
             return false;
         }
         return true;

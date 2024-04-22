@@ -178,10 +178,6 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
             result.error().ctx = node.getSourceRange();
             return result;
         }
-        if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
-            transpilationAccumulator.push_back(TranspilationNode{
-                .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
-        }
     }
 
     // attributed node
@@ -193,6 +189,11 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
         }
         transpilationAccumulator.push_back(TranspilationNode{
             .ki = ki, .li = cl, .attr = attr, .node = DynTypedNode::create(node)});
+    }
+
+    if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
+        transpilationAccumulator.push_back(TranspilationNode{
+            .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
     }
 
     return {};
