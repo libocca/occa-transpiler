@@ -15,6 +15,12 @@ sudo ./llvm.sh 17 all
 rm llvm.sh
 ```
 
+### Submodules
+```bash
+git submodule init
+git submodule update
+```
+
 ### Compile
 ```bash
 mkdir -p build && cd build
