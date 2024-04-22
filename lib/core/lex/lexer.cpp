@@ -9,12 +9,18 @@ using namespace clang;
 std::vector<clang::Token> fetchTokens(
     clang::Preprocessor& pp,
     std::optional<std::function<bool(const clang::Token)>> watcher) {
+    const auto& sm = pp.getSourceManager();
     std::vector<Token> tokens;
 
     pp.EnterMainSourceFile();
     while (true) {
         Token tok{};
         pp.Lex(tok);
+
+        // only include tokens from user input source,headers
+        if (sm.isInSystemHeader(tok.getLocation())) {
+            continue;
+        }
 
         if (tok.is(tok::eof)) {
             break;

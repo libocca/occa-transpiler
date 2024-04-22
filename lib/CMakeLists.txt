@@ -231,21 +231,17 @@ set (OCCA_TRANSPILER_SOURCES
     pipeline/stages/transpiler/transpilation.cpp
 )
 
-CPMAddPackage(expected
-    GITHUB_REPOSITORY
-    TartanLlama/expected
-    GIT_TAG v1.1.0
+CPMAddPackage(NAME expected
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/expected
     OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-    VERSION 3.11.2
-    GITHUB_REPOSITORY nlohmann/json
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/json
     OPTIONS "JSON_BuildTests OFF")
 
 CPMAddPackage(NAME spdlog
-  VERSION 1.13.0
-  GITHUB_REPOSITORY gabime/spdlog
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
   OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 set(LLVM_LINK_COMPONENTS Support)

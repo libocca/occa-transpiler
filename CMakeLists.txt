@@ -26,7 +26,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-include(cmake/CPM.cmake)
+include(cmake/CPM_0.38.6.cmake)
 
 find_package(LLVM 17 REQUIRED CONFIG)
 find_package(Clang 17 REQUIRED CONFIG)
