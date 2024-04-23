@@ -4,5 +4,7 @@
     "shared.json",
     "dim.json",
     "atomic.json",
-    "barrier.json"
+    "barrier.json",
+    "exclusive.json",
+    "restrict.json"
 ]

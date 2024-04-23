@@ -1,0 +1,3 @@
+does_not_take_arguments.cpp:3:9: error: [@exclusive] does not take arguments
+    3 |         @exclusive(1) int kk = 0;
+      |         ^

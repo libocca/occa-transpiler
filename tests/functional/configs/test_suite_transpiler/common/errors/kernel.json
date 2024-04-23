@@ -34,5 +34,29 @@
             "launcher": ""
         },
         "reference": "transpiler/common/errors/kernel/kernel_return_not_void.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/kernel/applied_to_stmt.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/kernel/applied_to_stmt.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/kernel/kernel_does_not_take_arguments.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/kernel/kernel_does_not_take_arguments.err"
     }
 ]

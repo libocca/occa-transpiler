@@ -4,47 +4,47 @@
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/shared/shared_not_between_outer_inner.cpp",
+            "source": "transpiler/common/errors/exclusive/applied_to_stmt.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/shared/shared_not_between_outer_inner.err"
+        "reference": "transpiler/common/errors/exclusive/applied_to_stmt.err"
     },
     {
         "action": "normalize_and_transpile",
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/shared/applied_to_stmt.cpp",
+            "source": "transpiler/common/errors/exclusive/applied_to_wrong_decl.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/shared/applied_to_stmt.err"
+        "reference": "transpiler/common/errors/exclusive/applied_to_wrong_decl.err"
     },
     {
         "action": "normalize_and_transpile",
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/shared/applied_to_wrong_decl.cpp",
+            "source": "transpiler/common/errors/exclusive/must_be_defined_between_outer_inner.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/shared/applied_to_wrong_decl.err"
+        "reference": "transpiler/common/errors/exclusive/must_be_defined_between_outer_inner.err"
     },
     {
         "action": "normalize_and_transpile",
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/shared/does_not_take_arguments.cpp",
+            "source": "transpiler/common/errors/exclusive/does_not_take_arguments.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/shared/does_not_take_arguments.err"
+        "reference": "transpiler/common/errors/exclusive/does_not_take_arguments.err"
     }
 ]

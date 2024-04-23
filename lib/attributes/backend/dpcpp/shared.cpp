@@ -1,4 +1,5 @@
 #include "attributes/attribute_names.h"
+#include "attributes/utils/common.h"
 #include "attributes/utils/default_handlers.h"
 #include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
@@ -14,24 +15,17 @@ using namespace clang;
 HandleResult handleSharedAttribute(const Attr& a, const VarDecl& var, SessionStage& s) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
-
     auto varName = var.getNameAsString();
     // Desugar since it is attributed (since it is @shared variable)
     auto typeStr =
         QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
 
-    Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
-
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(sharedError);
+    if (!isLastOuter(loopInfo)) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
-    auto* loopBelowInfo = loopInfo->getFirstAttributedChild();
-    if (!loopBelowInfo || !(loopInfo->is(LoopType::Outer) && loopBelowInfo->is(LoopType::Inner))) {
-        return tl::make_unexpected(sharedError);
-    }
-
     auto newDeclaration =
         util::fmt(
             "auto & {} = "
