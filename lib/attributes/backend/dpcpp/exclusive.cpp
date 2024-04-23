@@ -1,7 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/handler_manager/handler_manager.h"
+#include "core/handler_manager/backend_handler.h"
 
 #include <clang/AST/Attr.h>
 #include <spdlog/spdlog.h>

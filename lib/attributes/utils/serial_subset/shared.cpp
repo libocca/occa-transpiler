@@ -1,4 +1,3 @@
-#include "attributes/utils/common.h"
 #include <oklt/core/kernel_metadata.h>
 
 #include "attributes/utils/default_handlers.h"
@@ -16,7 +15,7 @@ HandleResult handleSharedAttribute(SessionStage& s, const Decl& decl, const Attr
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!isLastOuter(loopInfo)) {
+    if (!loopInfo || !loopInfo->isLastOuter()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }

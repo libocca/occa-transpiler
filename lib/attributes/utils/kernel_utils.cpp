@@ -133,8 +133,7 @@ const clang::Attr* getFirstLoopAttribute(const clang::ForStmt* forStmt, SessionS
 
 }  // namespace
 
-tl::expected<void, Error> verifyLoops(OklSemaCtx::ParsedKernelInfo& kernelInfo,
-                                      SessionStage& stage) {
+tl::expected<void, Error> verifyLoops(SessionStage& stage, OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
     if (topOuterLoops.empty()) {
         // If there is outer somewhere, but not on the top level

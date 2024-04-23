@@ -112,8 +112,6 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/serial_subset/inner.cpp
     attributes/utils/serial_subset/outer.cpp
     attributes/utils/serial_subset/handle.h
-    attributes/utils/common.h
-    attributes/utils/common.cpp
 
     # Serial
     attributes/backend/serial/kernel.cpp

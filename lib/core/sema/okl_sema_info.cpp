@@ -294,6 +294,20 @@ bool OklLoopInfo::updateAutoWithSpecificAxis() {
     return true;
 }
 
+bool OklLoopInfo::isLastOuter() {
+    // Should have outer, but in case of @tile, other loop can be only outer or regular
+    bool ok = has(LoopType::Outer) && !has(LoopType::Inner);
+
+    auto childLoop = getFirstAttributedChild();
+    if (!childLoop) {
+        return false;
+    }
+    // Child should have inner, but in case of @tile, other loop can be only inner or regular
+    ok = ok && childLoop->has(LoopType::Inner) && !childLoop->has(LoopType::Outer);
+
+    return ok;
+}
+
 size_t OklLoopInfo::OptSizes::product() {
     return std::accumulate(begin(), end(), size_t{1}, [](const OptSize& a, const OptSize& b) {
         size_t aZ = a.value_or(size_t{1});

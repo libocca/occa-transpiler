@@ -117,7 +117,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
-    if (auto verified = verifyLoops(kernelInfo, s); !verified) {
+    if (auto verified = verifyLoops(s, kernelInfo); !verified) {
         return tl::make_unexpected(std::move(verified.error()));
     }
 

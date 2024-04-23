@@ -1,4 +1,3 @@
-#include "attributes/utils/common.h"
 #include "attributes/utils/default_handlers.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/handler_manager/result.h"
@@ -23,8 +22,7 @@ HandleResult handleExclusiveAttribute(SessionStage& stage,
             Error{{}, "@exclusive: failed to fetch loop meta data from sema"});
     }
 
-    auto definedBetweenOuterInner = isLastOuter(loopInfo);
-    if (!definedBetweenOuterInner) {
+    if (!loopInfo->isLastOuter()) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
