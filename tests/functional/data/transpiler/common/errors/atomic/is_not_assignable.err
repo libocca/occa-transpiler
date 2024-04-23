@@ -1,0 +1,3 @@
+is_not_assignable.cpp:4:13: error: expression is not assignable
+    4 |             @atomic 12 *= 12;
+      |             ^

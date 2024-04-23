@@ -1,0 +1,3 @@
+takes_at_most_one_argument.cpp:6:13: error: [@barrier] takes at most one argument
+    6 |             @barrier("a", "b");
+      |             ^

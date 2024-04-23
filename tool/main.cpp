@@ -192,6 +192,7 @@ int main(int argc, char* argv[]) {
                 oklt::util::writeFileAsStr(transpilation_meta, userOutput.kernel.metadata);
 
                 if (!userOutput.launcher.source.empty()) {
+                    std::cout << result.value().kernel.source;
                     oklt::util::writeFileAsStr(launcher_output.string(),
                                                userOutput.launcher.source);
                     oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadata);

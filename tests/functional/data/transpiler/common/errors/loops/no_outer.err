@@ -1,0 +1,3 @@
+no_outer.cpp:1:1: error: [@kernel] requires at least one [@outer] for-loop
+    1 | @kernel void hello_kern() {
+      | ^

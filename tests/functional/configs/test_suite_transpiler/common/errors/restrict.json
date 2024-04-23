@@ -4,35 +4,35 @@
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/outer_too_big_dimensions.cpp",
+            "source": "transpiler/common/errors/restrict/applied_to_non_pointer.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/outer_too_big_dimensions.err"
+        "reference": "transpiler/common/errors/restrict/applied_to_non_pointer.err"
     },
     {
         "action": "normalize_and_transpile",
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/outer_too_much_arguments.cpp",
+            "source": "transpiler/common/errors/restrict/applied_to_non_pointer2.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/outer_too_much_arguments.err"
+        "reference": "transpiler/common/errors/restrict/applied_to_non_pointer2.err"
     },
     {
         "action": "normalize_and_transpile",
         "compare": "error_message",
         "action_config": {
             "backend": "cuda",
-            "source": "transpiler/common/errors/outer_applied_to_decl.cpp",
+            "source": "transpiler/common/errors/restrict/applied_to_stmt.cpp",
             "includes": [],
             "defs": [],
             "launcher": ""
         },
-        "reference": "transpiler/common/errors/outer_applied_to_decl.err"
+        "reference": "transpiler/common/errors/restrict/applied_to_stmt.err"
     }
 ]

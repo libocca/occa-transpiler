@@ -1,0 +1,3 @@
+dimorder_applied_to_wrong_node_1.cpp:4:13: error: 'dimOrder' attribute only applies to type, struct/union/class field or variable declarations
+    4 |             @dimOrder(1, 0) for (int k = 0; k < 10; ++k) {
+      |             ^

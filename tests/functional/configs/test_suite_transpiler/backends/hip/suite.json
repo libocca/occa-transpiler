@@ -8,5 +8,6 @@
     "barrier.json",
     "nobarrier.json",
     "macro.json",
-    "restrict.json"
+    "restrict.json",
+    "shared.json"
 ]

@@ -150,7 +150,9 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = am.handleSemaPre(stage, node, attr);
         if (!result) {
-            result.error().ctx = attr->getRange();
+            if (!result.error().ctx.has_value() && attr) {
+                result.error().ctx = attr->getRange();
+            }
             return result;
         }
     }
@@ -173,7 +175,9 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     if (attrs.empty()) {
         auto result = am.handleSemaPost(stage, node, nullptr);
         if (!result) {
-            result.error().ctx = node.getSourceRange();
+            if (!result.error().ctx.has_value()) {
+                result.error().ctx = node.getSourceRange();
+            }
             return result;
         }
     }
@@ -182,7 +186,9 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     for (const auto* attr : attrs) {
         auto result = am.handleSemaPost(stage, node, attr);
         if (!result) {
-            result.error().ctx = attr->getRange();
+            if (!result.error().ctx.has_value() && attr) {
+                result.error().ctx = attr->getRange();
+            }
             return result;
         }
         transpilationAccumulator.push_back(TranspilationNode{.ki = ki, .li = cl, .attr = attr, .node = node});
@@ -229,7 +235,9 @@ bool traverseNode(TraversalType& traversal, SessionStage& stage, NodeType* node)
 
         auto attrsResult = getNodeAttrs(stage, *node);
         if (!attrsResult) {
-            attrsResult.error().ctx = node->getSourceRange();
+            if (!attrsResult.error().ctx.has_value()) {
+                attrsResult.error().ctx = node->getSourceRange();
+            }
             return tl::make_unexpected(attrsResult.error());
         }
 
@@ -303,6 +311,10 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
         auto transpiledResult = generateTranspiledCode(_stage);
         if (!transpiledResult) {
             return tl::make_unexpected(transpiledResult.error());
+        }
+
+        if (sema.getProgramMetaData().kernels.empty()) {
+            return tl::make_unexpected(Error{{}, "Error: No [@kernel] functions found"});
         }
 
         // 2. generate build json

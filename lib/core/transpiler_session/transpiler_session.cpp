@@ -17,11 +17,24 @@
 
 namespace {
 using namespace oklt;
+
+std::string::const_iterator firstNonWhiteCharacter(const std::string& str) {
+    if (str.empty()) {
+        return str.cend();
+    }
+    auto it = str.cbegin();
+    while (isspace(*it) && (it != str.cend())) {
+        ++it;
+    }
+    return it;
+}
+
 clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic& diag,
                                                          SessionStage& stage) {
     auto& sm = stage.getCompiler().getSourceManager();
     auto& session = stage.getSession();
     clang::SourceLocation errLoc = diag.getLocation();
+    auto line = sm.getSpellingLineNumber(errLoc);
     auto [fid, offset] = sm.getDecomposedExpansionLoc(errLoc);
     auto& attrOffsetToOriginalCol = session.getOriginalSourceMapper().getAttrOffsetToOriginalCol();
 
@@ -32,9 +45,21 @@ clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic
             "Substitute error for attribute at offset {} column to: {}", fidOffset.second, col);
 
         // Create new loc with same line, but new col
-        auto line = sm.getSpellingLineNumber(errLoc);
         errLoc = sm.translateLineCol(fidOffset.first, line, col);
 
+        clang::StoredDiagnostic sd(
+            diag.getLevel(), 0, diag.getMessage(), clang::FullSourceLoc(errLoc, sm), {}, {});
+        return sd;
+    }
+    auto& originalLines = stage.getSession().getOriginalSourceMapper().getOriginalLines();
+    auto errRow = stage.getCompiler().getSourceManager().getSpellingLineNumber(errLoc);
+
+    // Otherwise, if there was a normalization, move column to first non-white char. symbol
+    // TODO: Reuse deltatree, to actually show correct column
+    if (originalLines.count({fid, errRow})) {
+        auto origLine = originalLines.at({fid, errRow});
+        auto col = std::distance(origLine.cbegin(), firstNonWhiteCharacter(origLine)) + 1;
+        errLoc = sm.translateLineCol(fidOffset.first, line, col);
         clang::StoredDiagnostic sd(
             diag.getLevel(), 0, diag.getMessage(), clang::FullSourceLoc(errLoc, sm), {}, {});
         return sd;

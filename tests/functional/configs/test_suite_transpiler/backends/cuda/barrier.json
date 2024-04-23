@@ -9,5 +9,16 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/cuda/barrier/barrier_builtin_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/barrier/barrier_warp.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/barrier/barrier_warp_ref.cpp"
      }
 ]

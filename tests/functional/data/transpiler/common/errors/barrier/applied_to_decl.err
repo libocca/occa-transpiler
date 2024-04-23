@@ -1,0 +1,3 @@
+applied_to_decl.cpp:6:13: error: 'barrier' attribute only applies to empty statements
+    6 |             @barrier int i = 12;;
+      |             ^

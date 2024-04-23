@@ -1,0 +1,3 @@
+applied_to_non_pointer.cpp:3:9: error: 'okl_restrict': only applies to pointer type
+    3 |         @restrict int k;
+      |         ^
