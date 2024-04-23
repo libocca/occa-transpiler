@@ -5,7 +5,7 @@
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
 #include "attributes/utils/kernel_utils.h"
 
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "tl/expected.hpp"
@@ -17,10 +17,10 @@
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleInnerAttribute(const clang::Attr& a,
+HandleResult handleInnerAttribute(SessionStage& s,
                                   const clang::ForStmt& forStmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const clang::Attr& a,
+                                  const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@inner] attribute");
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
@@ -42,8 +42,8 @@ HandleResult handleInnerAttribute(const clang::Attr& a,
         afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
     }
 
-    handleChildAttr(forStmt, NO_BARRIER_ATTR_NAME, s);
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, afterRBraceCode, s, true);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, true);
 }
 }  // namespace oklt::cuda_subset

@@ -1,8 +1,8 @@
-#include <attributes/utils/code_gen.h>
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/utils/code_gen.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 
 #include <spdlog/spdlog.h>
@@ -11,10 +11,10 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleOuterAttribute(const clang::Attr& a,
+HandleResult handleOuterAttribute(SessionStage& s,
                                   const clang::ForStmt& forStmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const clang::Attr& a,
+                                  const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@outer] attribute");
 
     if (!params) {
@@ -36,13 +36,12 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
         *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, prefixCode, true);
 }
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, OUTER_ATTR_NAME}, makeSpecificAttrHandle(handleOuterAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::DPCPP, OUTER_ATTR_NAME, handleOuterAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", OUTER_ATTR_NAME);

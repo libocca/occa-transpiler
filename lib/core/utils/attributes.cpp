@@ -8,7 +8,7 @@
 namespace oklt {
 using namespace clang;
 
-bool removeAttribute(const clang::Attr& attr, SessionStage& stage) {
+bool removeAttribute(SessionStage& stage, const clang::Attr& attr) {
     auto& rewriter = stage.getRewriter();
     auto range = getAttrFullSourceRange(attr);
     // INFO: sometimes rewrite functions does the job but return false value

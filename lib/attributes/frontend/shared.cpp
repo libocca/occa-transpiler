@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include "attributes/utils/parser.h"
@@ -112,9 +112,9 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseSharedAttrParams(const clang::Attr& attr,
-                                  OKLParsedAttr& data,
-                                  SessionStage& stage) {
+HandleResult parseSharedAttrParams(SessionStage& stage,
+                                   const clang::Attr& attr,
+                                  OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@shared] does not take arguments"});
     }
@@ -123,7 +123,6 @@ ParseResult parseSharedAttrParams(const clang::Attr& attr,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME,
-                                                                       parseSharedAttrParams);
+    HandlerManager::registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME, parseSharedAttrParams);
 }
 }  // namespace

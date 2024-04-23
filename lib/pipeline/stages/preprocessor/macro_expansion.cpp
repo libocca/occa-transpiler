@@ -327,7 +327,7 @@ struct CommentDeleter : public CommentHandler {
     }
 };
 
-void preprocessMacros(Preprocessor& pp, SessionStage& stage) {
+void preprocessMacros(SessionStage& stage, Preprocessor& pp) {
     auto ctx = std::make_unique<MacroExpansionContext>(pp.getLangOpts());
     ctx->registerForPreprocessor(pp);
 
@@ -476,7 +476,7 @@ class MacroExpansion : public StageAction {
     bool BeginSourceFileAction(clang::CompilerInstance& compiler) override {
         auto& pp = compiler.getPreprocessor();
 
-        preprocessMacros(pp, *_stage);
+        preprocessMacros(*_stage, pp);
         return true;
     }
 };

@@ -1,11 +1,10 @@
 #include <oklt/util/format.h>
 
-#include "core/ast_processor_manager/ast_processor_manager.h"
 #include "core/diag/diag_consumer.h"
 #include "core/transpiler_session/session_stage.h"
 
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/handler_manager.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"
@@ -66,12 +65,12 @@ int getNodeType(const Stmt& s) {
     return s.getStmtClass();
 }
 
-tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Decl& decl, SessionStage& stage) {
-    return stage.getAttrManager().checkAttrs(decl, stage);
+tl::expected<std::set<const Attr*>, Error> getNodeAttrs(SessionStage& stage, const Decl& decl) {
+    return stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(decl));
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::DeclRefExpr& expr,
-                                                                  SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(SessionStage& stage,
+                                                                  const clang::DeclRefExpr& expr) {
     auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
     auto& ctx = stage.getCompiler().getASTContext();
     auto attrs = attrTypeMap.get(ctx, expr.getType());
@@ -80,8 +79,9 @@ tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(const clang::D
     return res;
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::RecoveryExpr& expr,
-                                                                   SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(
+    SessionStage& stage,
+    const clang::RecoveryExpr& expr) {
     auto subExpr = expr.subExpressions();
     if (subExpr.empty()) {
         return {};
@@ -92,11 +92,11 @@ tl::expected<std::set<const Attr*>, Error> tryGetRecoveryExprAttrs(const clang::
         return {};
     }
 
-    return tryGetDeclRefExprAttrs(*declRefExpr, stage);
+    return tryGetDeclRefExprAttrs(stage, *declRefExpr);
 }
 
-tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::CallExpr& expr,
-                                                               SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(SessionStage& stage,
+                                                               const clang::CallExpr& expr) {
     // If no errors, call default postValidate.
     if (!expr.containsErrors()) {
         return {};
@@ -118,38 +118,37 @@ tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(const clang::Call
         return {};
     }
 
-    return tryGetDeclRefExprAttrs(*declRefExpr, stage);
+    return tryGetDeclRefExprAttrs(stage, *declRefExpr);
 }
 
-tl::expected<std::set<const Attr*>, Error> getNodeAttrs(const Stmt& stmt, SessionStage& stage) {
+tl::expected<std::set<const Attr*>, Error> getNodeAttrs(SessionStage& stage, const Stmt& stmt) {
     switch (stmt.getStmtClass()) {
         case Stmt::RecoveryExprClass:
-            return tryGetRecoveryExprAttrs(cast<RecoveryExpr>(stmt), stage);
+            return tryGetRecoveryExprAttrs(stage, cast<RecoveryExpr>(stmt));
         case Stmt::CallExprClass:
-            return tryGetCallExprAttrs(cast<CallExpr>(stmt), stage);
+            return tryGetCallExprAttrs(stage, cast<CallExpr>(stmt));
         case Stmt::DeclRefExprClass:
-            return tryGetDeclRefExprAttrs(cast<DeclRefExpr>(stmt), stage);
+            return tryGetDeclRefExprAttrs(stage, cast<DeclRefExpr>(stmt));
         default:
-            return stage.getAttrManager().checkAttrs(stmt, stage);
+            return stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(stmt));
     }
 
     return {};
 }
 
-template <typename TraversalType, typename NodeType>
+template <typename TraversalType>
 HandleResult runFromRootToLeaves(TraversalType& traversal,
-                                 AstProcessorManager& procMng,
-                                 AstProcessorType procType,
-                                 const std::set<const Attr*>& attrs,
-                                 NodeType& node,
+                                 SessionStage& stage,
                                  OklSemaCtx& sema,
-                                 SessionStage& stage) {
+                                 DynTypedNode& node,
+                                 const std::set<const Attr*>& attrs) {
+    auto& am = stage.getAttrManager();
     if (attrs.empty()) {
-        return procMng.runPreActionNodeHandle(procType, nullptr, node, sema, stage);
+        return am.handleSemaPre(stage, node, nullptr);
     }
 
     for (const auto* attr : attrs) {
-        auto result = procMng.runPreActionNodeHandle(procType, attr, node, sema, stage);
+        auto result = am.handleSemaPre(stage, node, attr);
         if (!result) {
             if (!result.error().ctx.has_value() && attr) {
                 result.error().ctx = attr->getRange();
@@ -161,21 +160,20 @@ HandleResult runFromRootToLeaves(TraversalType& traversal,
     return {};
 }
 
-template <typename TraversalType, typename NodeType>
+template <typename TraversalType>
 HandleResult runFromLeavesToRoot(TraversalType& traversal,
-                                 AstProcessorManager& procMng,
-                                 AstProcessorType procType,
-                                 const std::set<const Attr*>& attrs,
-                                 NodeType& node,
+                                 SessionStage& stage,
                                  OklSemaCtx& sema,
-                                 SessionStage& stage) {
+                                 DynTypedNode& node,
+                                 const std::set<const Attr*>& attrs) {
+    auto& am = stage.getAttrManager();
     auto& transpilationAccumulator = stage.tryEmplaceUserCtx<TranspilationNodes>();
     auto* ki = sema.getParsingKernelInfo();
     auto* cl = sema.getLoopInfo();
 
     // non attributed node
     if (attrs.empty()) {
-        auto result = procMng.runPostActionNodeHandle(procType, nullptr, node, sema, stage);
+        auto result = am.handleSemaPost(stage, node, nullptr);
         if (!result) {
             if (!result.error().ctx.has_value()) {
                 result.error().ctx = node.getSourceRange();
@@ -186,27 +184,26 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
 
     // attributed node
     for (const auto* attr : attrs) {
-        auto result = procMng.runPostActionNodeHandle(procType, attr, node, sema, stage);
+        auto result = am.handleSemaPost(stage, node, attr);
         if (!result) {
             if (!result.error().ctx.has_value() && attr) {
                 result.error().ctx = attr->getRange();
             }
             return result;
         }
-        transpilationAccumulator.push_back(TranspilationNode{
-            .ki = ki, .li = cl, .attr = attr, .node = DynTypedNode::create(node)});
+        transpilationAccumulator.push_back(TranspilationNode{.ki = ki, .li = cl, .attr = attr, .node = node});
     }
 
-    if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), getNodeType(node))) {
+    if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), node.getNodeKind())) {
         transpilationAccumulator.push_back(TranspilationNode{
-            .ki = ki, .li = cl, .attr = nullptr, .node = DynTypedNode::create(node)});
+            .ki = ki, .li = cl, .attr = nullptr, .node = node});
     }
 
     return {};
 }
 
 template <typename NodeType>
-bool skipNode(const NodeType& n, SessionStage& s) {
+bool skipNode(SessionStage& s, const NodeType& n) {
     const auto& sm = s.getCompiler().getSourceManager();
     const auto& loc = n.getEndLoc();
 
@@ -222,25 +219,21 @@ bool skipNode(const NodeType& n, SessionStage& s) {
 }
 
 template <typename TraversalType, typename NodeType>
-bool traverseNode(TraversalType& traversal,
-                  NodeType* node,
-                  AstProcessorManager& procMng,
-                  SessionStage& stage) {
+bool traverseNode(TraversalType& traversal, SessionStage& stage, NodeType* node) {
     if (node == nullptr) {
         return true;
     }
 
     // node in non user header - skip traverse it
     // TODO add more robust verification
-    if (skipNode(*node, stage)) {
+    if (skipNode(stage, *node)) {
         return true;
     }
 
     auto result = [&]() -> HandleResult {
         auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-        auto procType = stage.getAstProccesorType();
 
-        auto attrsResult = getNodeAttrs(*node, stage);
+        auto attrsResult = getNodeAttrs(stage, *node);
         if (!attrsResult) {
             if (!attrsResult.error().ctx.has_value()) {
                 attrsResult.error().ctx = node->getSourceRange();
@@ -248,9 +241,8 @@ bool traverseNode(TraversalType& traversal,
             return tl::make_unexpected(attrsResult.error());
         }
 
-        const auto& attrNode = tryGetAttrNode(*node);
-        auto result = runFromRootToLeaves(
-            traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        auto attrNode = DynTypedNode::create(tryGetAttrNode(*node));
+        auto result = runFromRootToLeaves(traversal, stage, sema, attrNode, attrsResult.value());
         if (!result) {
             return result;
         }
@@ -260,8 +252,7 @@ bool traverseNode(TraversalType& traversal,
             return tl::make_unexpected(Error{});
         }
 
-        result = runFromLeavesToRoot(
-            traversal, procMng, procType, attrsResult.value(), attrNode, sema, stage);
+        result = runFromLeavesToRoot(traversal, stage, sema, attrNode, attrsResult.value());
         if (!result) {
             return result;
         }
@@ -278,18 +269,17 @@ bool traverseNode(TraversalType& traversal,
 
 class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraversal> {
    public:
-    PreorderNlrTraversal(AstProcessorManager& procMng, SessionStage& stage)
-        : _procMng(procMng),
-          _stage(stage),
+    PreorderNlrTraversal(SessionStage& stage)
+        : _stage(stage),
           _tu(nullptr) {
         // create storage for lazy transpiled nodes
         _stage.tryEmplaceUserCtx<OklSemaCtx>();
         _stage.tryEmplaceUserCtx<TranspilationNodes>();
     }
 
-    bool TraverseDecl(clang::Decl* decl) { return traverseNode(*this, decl, _procMng, _stage); }
+    bool TraverseDecl(clang::Decl* decl) { return traverseNode(*this, _stage, decl); }
 
-    bool TraverseStmt(clang::Stmt* stmt) { return traverseNode(*this, stmt, _procMng, _stage); }
+    bool TraverseStmt(clang::Stmt* stmt) { return traverseNode(*this, _stage, stmt); }
 
     bool TraverseTranslationUnitDecl(clang::TranslationUnitDecl* translationUnitDecl) {
         auto& sema = _stage.tryEmplaceUserCtx<OklSemaCtx>();
@@ -299,7 +289,7 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
         tnodes.clear();
 
         _tu = translationUnitDecl;
-        return traverseNode(*this, translationUnitDecl, _procMng, _stage);
+        return traverseNode(*this, _stage, translationUnitDecl);
     }
 
     tl::expected<std::pair<std::string, std::string>, Error> applyAstProcessor(
@@ -339,7 +329,6 @@ class PreorderNlrTraversal : public clang::RecursiveASTVisitor<PreorderNlrTraver
     }
 
    private:
-    AstProcessorManager& _procMng;
     SessionStage& _stage;
     clang::TranslationUnitDecl* _tu;
 };
@@ -353,8 +342,7 @@ class TranspilationConsumer : public clang::ASTConsumer {
         // get the root of parsed AST that contains main file and all headers
         TranslationUnitDecl* tu = context.getTranslationUnitDecl();
 
-        auto traversal =
-            std::make_unique<PreorderNlrTraversal>(AstProcessorManager::instance(), _stage);
+        auto traversal = std::make_unique<PreorderNlrTraversal>(_stage);
 
         auto& input = _stage.getSession().getInput();
         auto& output = _stage.getSession().getOutput();

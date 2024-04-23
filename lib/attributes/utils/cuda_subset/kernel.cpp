@@ -1,8 +1,7 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/kernel_utils.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -50,7 +49,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, oklt::Rewriter& r) {
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
+HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, const Attr& a) {
     SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
@@ -69,7 +68,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
     auto paramStr = getFunctionParamStr(func, rewriter);
 
     if (auto verified = verifyLoops(kernelInfo, s); !verified) {
-        return verified;
+        return tl::make_unexpected(std::move(verified.error()));
     }
 
     auto startPos = getAttrFullSourceRange(a).getBegin();
@@ -82,7 +81,7 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
 
-        handleChildAttr(child->stmt, MAX_INNER_DIMS, s);
+        handleChildAttr(s, child->stmt, MAX_INNER_DIMS);
 
         std::stringstream out;
         if (n != 0) {

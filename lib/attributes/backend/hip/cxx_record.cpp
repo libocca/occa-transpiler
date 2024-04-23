@@ -1,5 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/implicid_handler.h"
 
 #include <clang/AST/DeclCXX.h>
 #include <clang/AST/DeclTemplate.h>
@@ -8,31 +8,31 @@
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 const std::string HIP_FUNCTION_QUALIFIER = "__device__";
 
-HandleResult handleClassRecord(const clang::CXXRecordDecl& d, SessionStage& s) {
-    return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
+HandleResult handleClassRecord(SessionStage& s, const CXXRecordDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
-HandleResult handleClassTemplateSpecialization(
-    const clang::ClassTemplateSpecializationDecl& d,
-    SessionStage& s) {
-    return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
+HandleResult handleClassTemplateSpecialization(SessionStage& s,
+                                               const clang::ClassTemplateSpecializationDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
+}
+
+HandleResult handleClassTemplatePartialSpecialization(
+    SessionStage& s,
+    const clang::ClassTemplatePartialSpecializationDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::CXXRecord},
-        makeSpecificImplicitHandle(handleClassRecord));
+    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleClassRecord);
 
-    ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplateSpecialization},
-        makeSpecificImplicitHandle(handleClassTemplateSpecialization));
+    ok &= HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleClassTemplateSpecialization);
 
-    ok &= oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::ClassTemplatePartialSpecialization},
-        makeSpecificImplicitHandle(handleClassTemplateSpecialization));
+    ok &= HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleClassTemplatePartialSpecialization);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");

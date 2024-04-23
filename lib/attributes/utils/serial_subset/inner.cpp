@@ -1,5 +1,5 @@
 #include "attributes/frontend/params/loop.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -14,10 +14,10 @@ const std::string exclusiveNullText = "_occa_exclusive_index = 0;\n";
 const std::string exclusiveIncText = "++_occa_exclusive_index;\n";
 }  // namespace
 
-HandleResult handleInnerAttribute(const Attr& a,
+HandleResult handleInnerAttribute(SessionStage& s,
                                   const ForStmt& stmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const Attr& a,
+                                  const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@inner] attribute");
 
     if (!params) {
@@ -32,7 +32,7 @@ HandleResult handleInnerAttribute(const Attr& a,
 
     auto& rewriter = s.getRewriter();
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
 
     // Top most `@inner` loop
     if (auto parent = loopInfo->getAttributedParent(); parent->has(LoopType::Outer)) {

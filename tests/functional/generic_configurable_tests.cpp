@@ -84,7 +84,6 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
     return oklt::UserInput{.backend = expectedBackend.value(),
-                           .astProcType = oklt::AstProcessorType::OKL_WITH_SEMA,
                            .source = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
                            .inlcudeDirectories = includes,
@@ -108,10 +107,6 @@ void compareError(const std::string& sourceFilePath,
     auto filename = fs::path(sourceFilePath).filename().string();
     if (errorMessage.find(sourceFilePath) == 0) {
         errorMessage.replace(0, sourceFilePath.size(), filename);
-    }
-
-    if (errorMessage != refErrorMessage) {
-        std::cout << "hello\n";
     }
 
     EXPECT_EQ(errorMessage, refErrorMessage)

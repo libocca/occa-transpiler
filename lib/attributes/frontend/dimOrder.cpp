@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
@@ -114,9 +114,9 @@ struct DimOrderAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseDimOrderAttrParams(const clang::Attr& attr,
-                                    OKLParsedAttr& data,
-                                    SessionStage& stage) {
+HandleResult parseDimOrderAttrParams(SessionStage& stage,
+                                     const clang::Attr& attr,
+                                    OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@dimOrder] does not take kwargs"});
     }

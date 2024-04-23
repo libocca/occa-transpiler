@@ -2,7 +2,7 @@
 #include "attributes/utils/parser.h"
 #include "attributes/frontend/params/empty_params.h"
 
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
@@ -10,7 +10,6 @@
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
@@ -48,9 +47,9 @@ struct NoBarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseNoBarrierAttrParams(const clang::Attr& attr,
-                                     OKLParsedAttr& data,
-                                     SessionStage& stage) {
+HandleResult parseNoBarrierAttrParams(SessionStage& stage,
+                                      const clang::Attr& attr,
+                                      OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@nobarrier] does not take kwargs"});
     }
@@ -62,7 +61,7 @@ ParseResult parseNoBarrierAttrParams(const clang::Attr& attr,
 }
 
 __attribute__((constructor)) void registerAttrFrontend() {
-AttributeManager::instance().registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME,
-                                                                          parseNoBarrierAttrParams);
+    HandlerManager::registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME,
+                                                             parseNoBarrierAttrParams);
 }
 }  // namespace

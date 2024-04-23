@@ -41,12 +41,12 @@ LoopAxisTypes getLoopAxisType(const std::any* param) {
     return res;
 }
 
-tl::expected<OklLoopInfo, Error> makeOklLoopInfo(const clang::ForStmt& stmt,
+tl::expected<OklLoopInfo, Error> makeOklLoopInfo(SessionStage& stage,
+                                                 const clang::ForStmt& stmt,
                                                  const clang::Attr* attr,
                                                  LoopAxisTypes loopTypeAxis,
-                                                 OklSemaCtx::ParsedKernelInfo& kernelInfo,
-                                                 SessionStage& stage) {
-    auto parsedLoopInfo = parseForStmt(attr, stmt, stage);
+                                                 OklSemaCtx::ParsedKernelInfo& kernelInfo) {
+    auto parsedLoopInfo = parseForStmt(stage, stmt, attr);
     if (!parsedLoopInfo) {
         return parsedLoopInfo;
     }
@@ -216,15 +216,16 @@ void OklSemaCtx::setLoopInfo(OklLoopInfo* loopInfo) {
     }
 }
 
-tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang::Attr* attr,
+tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(SessionStage& stage,
                                                                     const clang::ForStmt& stmt,
-                                                                    const std::any* params,
-                                                                    SessionStage& stage) {
+                                                                    const clang::Attr* attr,
+                                                                    const std::any* params) {
     if (!_parsingKernInfo) {
         // NOTE: original OKL silently removes attribute
         return tl::make_unexpected(
             Error{std::error_code{}, "Attributed loop outside [@kernel] function"});
     }
+
     auto loopTypeAxis = getLoopAxisType(params);
 
     // TODO: currently missing diagnostic on at least one [@outer] loop must be present
@@ -249,7 +250,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
                   .desc = "Cannot have [@inner] loop outside of an [@outer] loop"});
     }
 
-    return makeOklLoopInfo(stmt, attr, loopTypeAxis, *_parsingKernInfo, stage)
+    return makeOklLoopInfo(stage, stmt, attr, loopTypeAxis, *_parsingKernInfo)
         .and_then([&](auto&& loopInfo) -> tl::expected<void, Error> {
             children.emplace_back(loopInfo);
 
@@ -269,8 +270,8 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(const clang:
         });
 }
 
-tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::Attr* attr,
-                                                                   const clang::ForStmt& stmt,
+tl::expected<void, Error> OklSemaCtx::stopParsingAttributedForLoop(const clang::ForStmt& stmt,
+                                                                   const clang::Attr* attr,
                                                                    const std::any* params) {
     assert(_parsingKernInfo);
 

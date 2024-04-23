@@ -1,14 +1,15 @@
+#include <oklt/core/kernel_metadata.h>
+#include <oklt/util/string_utils.h>
+
 #include "attributes/attribute_names.h"
 #include "attributes/utils/kernel_utils.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/rewriter/rewriter_proxy.h"
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "oklt/core/kernel_metadata.h"
-#include "oklt/util/string_utils.h"
 #include "pipeline/core/error_codes.h"
 
 #include <spdlog/spdlog.h>
@@ -96,9 +97,9 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     return r.getRewrittenText(typeLoc.getParensRange());
 }
 
-HandleResult handleKernelAttribute(const clang::Attr& a,
+HandleResult handleKernelAttribute(SessionStage& s,
                                    const clang::FunctionDecl& func,
-                                   SessionStage& s) {
+                                   const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& rewriter = s.getRewriter();
@@ -130,7 +131,7 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
 
-        handleChildAttr(child->stmt, MAX_INNER_DIMS, s);
+        handleChildAttr(s, child->stmt, MAX_INNER_DIMS);
 
         std::stringstream out;
         if (n != 0) {
@@ -156,8 +157,8 @@ HandleResult handleKernelAttribute(const clang::Attr& a,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, KERNEL_ATTR_NAME}, makeSpecificAttrHandle(handleKernelAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);

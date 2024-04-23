@@ -1,5 +1,5 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/attr_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -10,9 +10,9 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleNoBarrierStmtAttribute(const clang::Attr& a,
+HandleResult handleNoBarrierStmtAttribute(SessionStage& s,
                                           const clang::ForStmt& forStmt,
-                                          SessionStage& s) {
+                                          const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@nobarrier] attribute");
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
@@ -23,13 +23,13 @@ HandleResult handleNoBarrierStmtAttribute(const clang::Attr& a,
 
     loopInfo->sharedInfo.used = false;
 
-    removeAttribute(a, s);
+    removeAttribute(s, a);
     return {};
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerCommonHandler(
-        NO_BARRIER_ATTR_NAME, makeSpecificAttrHandle(handleNoBarrierStmtAttribute));
+    auto ok =
+        HandlerManager::registerCommonHandler(NO_BARRIER_ATTR_NAME, handleNoBarrierStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", NO_BARRIER_ATTR_NAME);

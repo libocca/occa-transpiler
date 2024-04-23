@@ -35,12 +35,12 @@ struct OklSemaCtx {
     [[nodiscard]] bool isDeclInLexicalTraversal(const clang::Decl&) const;
 
     [[nodiscard]] tl::expected<void, Error> startParsingAttributedForLoop(
-        const clang::Attr* attr,
+        SessionStage& stage,
         const clang::ForStmt& stmt,
-        const std::any* params,
-        SessionStage& stage);
-    [[nodiscard]] tl::expected<void, Error> stopParsingAttributedForLoop(const clang::Attr* attr,
-                                                                         const clang::ForStmt& stmt,
+        const clang::Attr* attr,
+        const std::any* params);
+    [[nodiscard]] tl::expected<void, Error> stopParsingAttributedForLoop(const clang::ForStmt& stmt,
+                                                                         const clang::Attr* attr,
                                                                          const std::any* params);
     [[nodiscard]] OklLoopInfo* getLoopInfo(const clang::ForStmt& forStmt) const;
     [[nodiscard]] OklLoopInfo* getLoopInfo();

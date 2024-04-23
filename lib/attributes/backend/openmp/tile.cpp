@@ -8,10 +8,10 @@ using namespace clang;
 
 const std::string prefixText = "\n#pragma omp parallel for\n";
 
-HandleResult handleOPENMPTileAttribute(const Attr& a,
+HandleResult handleOPENMPTileAttribute(SessionStage& s,
                                        const ForStmt& stmt,
-                                       const TileParams* params,
-                                       SessionStage& s) {
+                                       const Attr& a,
+                                       const TileParams* params) {
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
@@ -24,12 +24,12 @@ HandleResult handleOPENMPTileAttribute(const Attr& a,
         s.getRewriter().InsertText(stmt.getBeginLoc(), prefixText, false, true);
     }
 
-    return serial_subset::handleTileAttribute(a, stmt, params, s);
+    return serial_subset::handleTileAttribute(s, stmt, a, params);
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleOPENMPTileAttribute));
+    auto ok = HandlerManager::registerBackendHandler(
+        TargetBackend::OPENMP, TILE_ATTR_NAME, handleOPENMPTileAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", TILE_ATTR_NAME);

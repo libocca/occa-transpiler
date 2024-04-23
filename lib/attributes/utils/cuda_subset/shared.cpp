@@ -1,6 +1,6 @@
 #include "attributes/utils/common.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -14,7 +14,7 @@ namespace {
 const std::string SHARED_MODIFIER = "__shared__";
 }
 namespace oklt::cuda_subset {
-HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, SessionStage& s) {
+HandleResult handleSharedAttribute(SessionStage& s, const clang::Decl& d, const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
     std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
@@ -27,6 +27,6 @@ HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, S
     }
 
     s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);
-    return defaultHandleSharedDeclAttribute(a, d, s);
+    return defaultHandleSharedDeclAttribute(s, d, a);
 }
 }  // namespace oklt::cuda_subset

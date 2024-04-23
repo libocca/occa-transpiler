@@ -123,6 +123,6 @@ struct OKLParsedAttr {
     [[nodiscard]] bool isa(const std::string& k);
 };
 
-OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage);
+OKLParsedAttr ParseOKLAttr(SessionStage& stage, const clang::Attr& attr);
 
 }  // namespace oklt

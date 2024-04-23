@@ -1,7 +1,7 @@
 #include "attributes/utils/common.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
+#include "core/handler_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -11,9 +11,9 @@
 #include <spdlog/spdlog.h>
 
 namespace oklt::cuda_subset {
-HandleResult handleExclusiveAttribute(const clang::Attr& attr,
+HandleResult handleExclusiveAttribute(SessionStage& stage,
                                       const clang::Decl& decl,
-                                      SessionStage& stage) {
+                                      const clang::Attr& attr) {
     SPDLOG_DEBUG("Handle [@exclusive] attribute");
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
@@ -30,6 +30,6 @@ HandleResult handleExclusiveAttribute(const clang::Attr& attr,
     }
 
     stage.getRewriter().RemoveText(getAttrFullSourceRange(attr));
-    return defaultHandleExclusiveDeclAttribute(attr, decl, stage);
+    return defaultHandleExclusiveDeclAttribute(stage, decl, attr);
 }
 }  // namespace oklt::cuda_subset
