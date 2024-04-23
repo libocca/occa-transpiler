@@ -151,8 +151,8 @@ HandleResult parseDimAttrParams(SessionStage& stage, const clang::Attr& attr, OK
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME, parseDimAttrParams);
+__attribute__((constructor)) void registerDimAttrFrontend() {
+    registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME, parseDimAttrParams);
     // for suppression of func call error that potentially is dim calls
     static DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
 }

@@ -22,8 +22,8 @@ HandleResult handleRestrictAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerCUDARestrictHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, RESTRICT_ATTR_NAME, handleRestrictAttribute);
+    auto ok =
+        registerBackendHandler(TargetBackend::DPCPP, RESTRICT_ATTR_NAME, handleRestrictAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", RESTRICT_ATTR_NAME);

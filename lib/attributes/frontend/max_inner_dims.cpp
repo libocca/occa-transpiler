@@ -72,7 +72,7 @@ HandleResult parseMaxInnerDims(SessionStage& stage, const clang::Attr& attr, OKL
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<MaxInnerDims>(MAX_INNER_DIMS, parseMaxInnerDims);
+__attribute__((constructor)) void registerMaxInnerDimsAttrFrontend() {
+    registerAttrFrontend<MaxInnerDims>(MAX_INNER_DIMS, parseMaxInnerDims);
 }
 }  // namespace

@@ -40,8 +40,7 @@ HandleResult handleOuterAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpcppOuterAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, OUTER_ATTR_NAME, handleOuterAttribute);
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, OUTER_ATTR_NAME, handleOuterAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", OUTER_ATTR_NAME);

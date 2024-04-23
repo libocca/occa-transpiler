@@ -198,12 +198,12 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerCommonHandler(DIM_ATTR_NAME, handleDimDeclAttribute);
+    auto ok = registerCommonHandler(DIM_ATTR_NAME, handleDimDeclAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute decl handler", DIM_ATTR_NAME);
     }
 
-    ok = HandlerManager::registerCommonHandler(DIM_ATTR_NAME, handleDimStmtAttribute);
+    ok = registerCommonHandler(DIM_ATTR_NAME, handleDimStmtAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ATTR_NAME);
     }

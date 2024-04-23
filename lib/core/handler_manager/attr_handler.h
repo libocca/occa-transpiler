@@ -113,8 +113,8 @@ struct HandlerKey<H, std::enable_if_t<H == HandleType::COMMON>> : public HandleK
 };
 
 template <typename F>
-inline bool HandlerManager::registerCommonHandler(std::string attr, F& func) {
-    return _map().insert(HandlerKey<HandleType::COMMON>(attr), func);
+inline bool registerCommonHandler(std::string attr, F& func) {
+    return HandlerManager::_map().insert(HandlerKey<HandleType::COMMON>(attr), func);
 };
 
 }  // namespace oklt
