@@ -15,7 +15,7 @@ UserResult normalizeAndTranspile(UserInput input) {
     auto session = TranspilerSession::make(std::move(input));
     auto result = runPipeline(fullTranspilationPipeline, session);
     if (!result) {
-        return tl::make_unexpected(result.error());
+        return tl::make_unexpected(std::move(result.error()));
     }
     return toUserResult(result.value());
 }

@@ -3,8 +3,6 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
 
-#include <sstream>
-
 namespace oklt::util {
 using namespace llvm;
 
@@ -115,7 +113,7 @@ tl::expected<size_t, Error> getCurlyBracketIdx(const std::string_view& str) {
 tl::expected<std::string, Error> fmt(const std::string& s) {
     auto pos = impl::getCurlyBracketIdx(s);
     if (!pos.has_value()) {
-        return tl::make_unexpected(pos.error());
+        return tl::make_unexpected(std::move(pos.error()));
     }
 
     if (pos.value() != static_cast<size_t>(-1)) {

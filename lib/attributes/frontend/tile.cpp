@@ -74,7 +74,7 @@ HandleResult parseTileAttribute(SessionStage& stage, const clang::Attr& attr, OK
         auto subAttr = data.get<OKLParsedAttr>(i).value();
         auto loop = stage.getAttrManager().parseAttr(stage, attr, subAttr);
         if (!loop) {
-            return tl::make_unexpected(loop.error());
+            return tl::make_unexpected(std::move(loop.error()));
         }
 
         if (loop.value().type() != typeid(AttributedLoop)) {

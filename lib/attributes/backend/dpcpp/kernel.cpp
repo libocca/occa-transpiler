@@ -118,7 +118,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
     if (auto verified = verifyLoops(kernelInfo, s); !verified) {
-        return verified;
+        return tl::make_unexpected(std::move(verified.error()));
     }
 
     size_t n = 0;

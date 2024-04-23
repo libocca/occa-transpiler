@@ -74,7 +74,7 @@ tl::expected<DimOrder, Error> getDimOrder(SessionStage& stage,
         if (dimOrderAttr != attrs.end()) {
             status.error().ctx = (*dimOrderAttr)->getRange();
         }
-        return tl::make_unexpected(status.error());
+        return tl::make_unexpected(std::move(status.error()));
     }
     return dimOrder;
 }
@@ -184,7 +184,7 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
         return tl::make_unexpected(Error{{}, "Incorrect statement type for [@dim]"});
     }();
     if (!expressions) {
-        return tl::make_unexpected(expressions.error());
+        return tl::make_unexpected(std::move(expressions.error()));
     }
 
     auto* dimVarExpr = expressions.value()[0];
@@ -195,7 +195,7 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 
     auto dimOrder = getDimOrder(stage, dimVarDeclExpr, params);
     if (!dimOrder) {
-        return tl::make_unexpected(dimOrder.error());
+        return tl::make_unexpected(std::move(dimOrder.error()));
     }
 
     auto dimVarNameStr = getSourceText(*dimVarExpr, ctx);

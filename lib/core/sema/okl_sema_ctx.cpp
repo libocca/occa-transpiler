@@ -48,7 +48,7 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(SessionStage& stage,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto parsedLoopInfo = parseForStmt(stage, stmt, attr);
     if (!parsedLoopInfo) {
-        return parsedLoopInfo;
+        return tl::make_unexpected(std::move(parsedLoopInfo.error()));
     }
     parsedLoopInfo->type = loopTypeAxis.types;
     parsedLoopInfo->axis = loopTypeAxis.axis;
