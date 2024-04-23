@@ -37,7 +37,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
     // TODO get this info from user input aka json prop file
-    std::vector<std::string> args = { "-v",
+    std::vector<std::string> args = {
         "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I.", getSysRootOpt()};
 
     for (const auto& define : input.defines) {
