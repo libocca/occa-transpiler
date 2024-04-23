@@ -19,7 +19,7 @@ __attribute__((constructor)) void initSysRoot() {
     if (sysRoot) {
         *CLANG_SYSROOT_DIR = sysRoot;
         *CLANG_ISYSTEM_OPT =
-            fmt::format("isystem{}/lib/clang/{}/include", *CLANG_SYSROOT_DIR, CLANG_VERSION_MAJOR);
+            fmt::format("-isystem{}/lib/clang/{}/include", *CLANG_SYSROOT_DIR, CLANG_VERSION_MAJOR);
         SPDLOG_DEBUG("set additional clang opt: {}", *CLANG_ISYSTEM_OPT);
     }
 }
