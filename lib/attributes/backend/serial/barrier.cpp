@@ -7,7 +7,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPBarrierHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::SERIAL, BARRIER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
     if (!ok) {

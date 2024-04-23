@@ -412,15 +412,14 @@ HandleResult handleLauncherKernelAttribute(SessionStage& s,
 
 __attribute__((constructor)) void registerLauncherHandler() {
 #define REG_ATTR_HANDLE(NAME, BODY)                                                   \
-    {                                                                                           \
-        auto ok = HandlerManager::registerBackendHandler(TargetBackend::_LAUNCHER, NAME, BODY);                                    \
+    {                                                                                 \
+        auto ok = registerBackendHandler(TargetBackend::_LAUNCHER, NAME, BODY);       \
         if (!ok) {                                                                    \
             SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
         }                                                                             \
     }
 
-    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::_LAUNCHER,
-                                                      handleLauncherTranslationUnit);
+    auto ok = registerImplicitHandler(TargetBackend::_LAUNCHER, handleLauncherTranslationUnit);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");

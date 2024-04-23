@@ -13,8 +13,7 @@ HandleResult handleGlobalFunctionDpcpp(oklt::SessionStage& s, const clang::Funct
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
-    auto ok =
-        HandlerManager::registerImplicitHandler(TargetBackend::DPCPP, handleGlobalFunctionDpcpp);
+    auto ok = registerImplicitHandler(TargetBackend::DPCPP, handleGlobalFunctionDpcpp);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register implicit handler for global function");

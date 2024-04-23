@@ -9,7 +9,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerCUDARestrictHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::HIP, RESTRICT_ATTR_NAME, cuda_subset::handleRestrictAttribute);
 
     if (!ok) {

@@ -23,8 +23,8 @@ HandleResult handleBarrierAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, BARRIER_ATTR_NAME, handleBarrierAttribute);
+    auto ok =
+        registerBackendHandler(TargetBackend::DPCPP, BARRIER_ATTR_NAME, handleBarrierAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", BARRIER_ATTR_NAME);

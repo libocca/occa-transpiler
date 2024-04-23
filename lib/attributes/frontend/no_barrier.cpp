@@ -60,8 +60,7 @@ HandleResult parseNoBarrierAttrParams(SessionStage& stage,
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME,
-                                                             parseNoBarrierAttrParams);
+__attribute__((constructor)) void registerNoBarrierAttrFrontend() {
+    registerAttrFrontend<NoBarrierAttribute>(NO_BARRIER_ATTR_NAME, parseNoBarrierAttrParams);
 }
 }  // namespace

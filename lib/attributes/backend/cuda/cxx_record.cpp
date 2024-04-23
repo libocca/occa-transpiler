@@ -28,11 +28,11 @@ HandleResult handleClassTemplatePartialSpecialization(
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleClassRecord);
+    auto ok = registerImplicitHandler(TargetBackend::CUDA, handleClassRecord);
 
-    ok &= HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleClassTemplateSpecialization);
+    ok &= registerImplicitHandler(TargetBackend::CUDA, handleClassTemplateSpecialization);
 
-    ok &= HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleClassTemplatePartialSpecialization);
+    ok &= registerImplicitHandler(TargetBackend::CUDA, handleClassTemplatePartialSpecialization);
 
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global function");

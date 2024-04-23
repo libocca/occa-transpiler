@@ -7,7 +7,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::SERIAL, ATOMIC_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
     if (!ok) {

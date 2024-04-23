@@ -10,12 +10,11 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, cuda_subset::handleExclusiveAttribute);
 
-    ok &= HandlerManager::registerBackendHandler(
+    ok &= registerBackendHandler(
         TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, defaultHandleExclusiveStmtAttribute);
 
     if (!ok) {
