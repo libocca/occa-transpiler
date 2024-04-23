@@ -23,15 +23,15 @@ class HandlerManager {
     ~HandlerManager() = default;
 
     template <typename AttrFrontendType, typename F>
-    static bool registerAttrFrontend(std::string attr, F& func);
+    friend bool registerAttrFrontend(std::string attr, F& func);
     template <typename F>
-    static bool registerCommonHandler(std::string attr, F& func);
+    friend bool registerCommonHandler(std::string attr, F& func);
     template <typename F>
-    static bool registerBackendHandler(TargetBackend, std::string attr, F& func);
+    friend bool registerBackendHandler(TargetBackend, std::string attr, F& func);
     template <typename F>
-    static bool registerImplicitHandler(TargetBackend, F& func);
+    friend bool registerImplicitHandler(TargetBackend, F& func);
     template <typename F>
-    static bool registerSemaHandler(std::string attr, F& pre, F& post);
+    friend bool registerSemaHandler(std::string attr, F& pre, F& post);
 
     [[nodiscard]] bool hasImplicitHandler(TargetBackend backend, clang::ASTNodeKind kind);
     [[nodiscard]] HandleResult parseAttr(SessionStage& stage, const clang::Attr& attr);

@@ -15,8 +15,7 @@ HandleResult handleTranslationUnitDpcpp(SessionStage& s, const clang::Translatio
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
-    auto ok =
-        HandlerManager::registerImplicitHandler(TargetBackend::DPCPP, handleTranslationUnitDpcpp);
+    auto ok = registerImplicitHandler(TargetBackend::DPCPP, handleTranslationUnitDpcpp);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register implicit handler for translation unit");

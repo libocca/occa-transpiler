@@ -109,8 +109,8 @@ struct HandlerKey<H, std::enable_if_t<H == HandleType::SEMA>> : public HandleKey
 };
 
 template <typename F>
-inline bool HandlerManager::registerSemaHandler(std::string attr, F& pre, F& post) {
-    return _map().insert(HandlerKey<HandleType::SEMA>(attr), pre, post);
+inline bool registerSemaHandler(std::string attr, F& pre, F& post) {
+    return HandlerManager::_map().insert(HandlerKey<HandleType::SEMA>(attr), pre, post);
 }
 
 }  // namespace oklt

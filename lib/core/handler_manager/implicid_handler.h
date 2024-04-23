@@ -86,8 +86,8 @@ struct HandlerKey<T, std::enable_if_t<T == HandleType::IMPLICIT>> : public Handl
 };
 
 template <typename F>
-inline bool HandlerManager::registerImplicitHandler(TargetBackend backend, F& func) {
-    return _map().insert(HandlerKey<HandleType::IMPLICIT>(backend), func);
+inline bool registerImplicitHandler(TargetBackend backend, F& func) {
+    return HandlerManager::_map().insert(HandlerKey<HandleType::IMPLICIT>(backend), func);
 }
 
 }  // namespace oklt

@@ -20,10 +20,10 @@ HandleResult handleExclusiveAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, handleExclusiveAttribute);
+    auto ok =
+        registerBackendHandler(TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, handleExclusiveAttribute);
 
-    ok &= HandlerManager::registerBackendHandler(
+    ok &= registerBackendHandler(
         TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, defaultHandleExclusiveStmtAttribute);
 
     if (!ok) {

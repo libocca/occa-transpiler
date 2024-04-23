@@ -157,8 +157,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);

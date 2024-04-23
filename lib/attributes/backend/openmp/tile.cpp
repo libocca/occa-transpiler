@@ -28,8 +28,8 @@ HandleResult handleOPENMPTileAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerOPENMPSharedHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::OPENMP, TILE_ATTR_NAME, handleOPENMPTileAttribute);
+    auto ok =
+        registerBackendHandler(TargetBackend::OPENMP, TILE_ATTR_NAME, handleOPENMPTileAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", TILE_ATTR_NAME);

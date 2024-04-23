@@ -9,7 +9,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerBackendHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::CUDA, INNER_ATTR_NAME, cuda_subset::handleInnerAttribute);
 
     if (!ok) {

@@ -12,7 +12,7 @@ HandleResult handleHIPGlobalConstant(oklt::SessionStage& s, const clang::VarDecl
 }
 
 __attribute__((constructor)) void registerHIPGlobalConstantHandler() {
-    auto ok = HandlerManager::registerImplicitHandler(TargetBackend::HIP, handleHIPGlobalConstant);
+    auto ok = registerImplicitHandler(TargetBackend::HIP, handleHIPGlobalConstant);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register implicit handler for global constant");
