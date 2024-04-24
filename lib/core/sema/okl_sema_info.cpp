@@ -181,29 +181,11 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
     if (overridenInnerSizes.has_value()) {
         return overridenInnerSizes.value();
     }
-    if (isRegular()) {
-        if (children.empty()) {
-            return {1, 1, 1};
-        }
-    }
-
-    OptSize sz = std::nullopt;
-    if (is(LoopType::Inner) && range.size != 0) {
-        sz = range.size;
-    } else if (is(LoopType::Outer, LoopType::Inner)) {
-        if (!tileSize.empty()) {
-            // TODO: maybe reuse attribute parser
-            char* p;
-            auto tileSizeLL = std::strtoll(tileSize.c_str(), &p, 10);
-            if (*p) {
-                sz = std::nullopt;
-            } else {
-                sz = static_cast<size_t>(tileSizeLL);
-            }
-        }
-    }
-
     OklLoopInfo::OptSizes ret{1, 1, 1};
+
+    if (isRegular() && children.empty()) {
+        return ret;
+    }
 
 #ifdef LEGACY_INNER_SIZES_CALCULATION
     if (!children.empty()) {
@@ -222,9 +204,26 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
 #endif
 
     if (has(LoopType::Inner)) {
-        for (size_t i = 0; i < type.size(); ++i) {
-            if (type[i] == LoopType::Inner) {
-                ret[static_cast<size_t>(axis[i])] = sz;
+        if (type.size() == 1) {
+            ret[static_cast<size_t>(axis[0])] =
+                range.size == 0 ? std::nullopt : std::make_optional(range.size);
+        } else if (type.size() == 2) {  // Tiled loop
+            // TODO: maybe reuse attribute parser
+            char* p;
+            auto tileSizeLL = std::strtoll(tileSize.c_str(), &p, 10);
+
+            // if tile size is known at compile time, then it is a size of the second loop
+            if (type[1] == LoopType::Inner) {
+                ret[static_cast<size_t>(axis[1])] =
+                    *p ? std::nullopt : std::make_optional(static_cast<size_t>(tileSizeLL));
+            }
+            // if both tile size and range size are known at compile time, then ceil(range size /
+            // tile size) is a size of loop
+            if (type[0] == LoopType::Inner) {
+                ret[static_cast<size_t>(axis[0])] = *p || range.size == 0
+                                                        ? std::nullopt
+                                                        : std::make_optional(static_cast<size_t>(
+                                                              1 + ((range.size - 1) / tileSizeLL)));
             }
         }
     }
