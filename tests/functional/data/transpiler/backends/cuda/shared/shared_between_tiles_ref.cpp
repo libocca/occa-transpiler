@@ -1,6 +1,6 @@
 #include <cuda_runtime.h>
 
-extern "C" __global__ void _occa_test_kern_0() {
+extern "C" __global__ __launch_bounds__(12) void _occa_test_kern_0() {
   {
     int _occa_tiled_i = (0) + ((4) * blockIdx.x);
     for (int i = _occa_tiled_i; i < (_occa_tiled_i + (4)); ++i) {

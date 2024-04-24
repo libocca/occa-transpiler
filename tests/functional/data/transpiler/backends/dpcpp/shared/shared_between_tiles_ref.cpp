@@ -1,7 +1,7 @@
 #include <CL/sycl.hpp>
 using namespace sycl;
 
-extern "C" void _occa_test_kern_0(sycl::queue *queue_,
+extern "C" [[sycl::reqd_work_group_size(1, 3, 4)]] void _occa_test_kern_0(sycl::queue *queue_,
                                   sycl::nd_range<3> *range_) {
   queue_->submit([&](sycl::handler &handler_) {
     handler_.parallel_for(*range_, [=](sycl::nd_item<3> item_) {
