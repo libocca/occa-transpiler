@@ -1,4 +1,4 @@
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"

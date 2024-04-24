@@ -1,5 +1,5 @@
 #include "attributes/backend/dpcpp/common.h"
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/utils/range_to_string.h"
 

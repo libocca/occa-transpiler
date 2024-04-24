@@ -9,7 +9,7 @@
 #include "oklt/core/kernel_metadata.h"
 
 #include <oklt/core/error.h>
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include <clang/AST/Attr.h>
 

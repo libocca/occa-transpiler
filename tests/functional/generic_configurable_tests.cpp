@@ -7,7 +7,6 @@
 #include <oklt/pipeline/normalizer_and_transpiler.h>
 #include <oklt/pipeline/transpiler.h>
 #include <oklt/util/format.h>
-#include <oklt/util/string_utils.h>
 
 #include <nlohmann/json.hpp>
 
@@ -24,13 +23,38 @@ using namespace oklt::tests;
 enum struct Action { NORMALIZER, TRANSPILER, NORMALIZE_AND_TRANSPILE };
 enum struct Compare { SOURCE, METADATA, ERROR_MESSAGE };
 
+std::string toLower(const std::string& str) {
+    std::string result;
+    result.reserve(str.size());
+    std::transform(str.begin(), str.end(), std::back_inserter(result), ::tolower);
+    return result;
+}
+
+std::string toCamelCase(std::string str) {
+    std::size_t res_ind = 0;
+    for (int i = 0; i < str.length(); i++) {
+        // check for spaces in the sentence
+        if (str[i] == ' ' || str[i] == '_') {
+            // conversion into upper case
+            str[i + 1] = ::toupper(str[i + 1]);
+            continue;
+        }
+        // If not space, copy character
+        else {
+            str[res_ind++] = str[i];
+        }
+    }
+    // return string to main
+    return str.substr(0, res_ind);
+}
+
 tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
     static const std::map<std::string, Action> actions = {
         {"normalizer", Action::NORMALIZER},
         {"transpiler", Action::TRANSPILER},
         {"normalize_and_transpile", Action::NORMALIZE_AND_TRANSPILE},
     };
-    auto it = actions.find(oklt::util::toLower(v));
+    auto it = actions.find(toLower(v));
     if (it != actions.cend()) {
         return it->second;
     }
@@ -43,7 +67,7 @@ tl::expected<Compare, std::string> buildCompareFrom(const std::string& v) {
         {"metadata", Compare::METADATA},
         {"error_message", Compare::ERROR_MESSAGE},
     };
-    auto it = compares.find(oklt::util::toLower(v));
+    auto it = compares.find(toLower(v));
     if (it != compares.cend()) {
         return it->second;
     }
@@ -60,8 +84,7 @@ oklt::UserInput NormalizeActionConfig::build(const fs::path& dataDir) const {
     auto sourceFullPath = dataDir / source;
     std::ifstream sourceFile{sourceFullPath};
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
-    return oklt::UserInput{.backend = oklt::TargetBackend::CUDA,
-                           .source = std::move(sourceCode)};
+    return oklt::UserInput{.backend = oklt::TargetBackend::CUDA, .source = std::move(sourceCode)};
 }
 
 struct TranspileActionConfig {
@@ -239,7 +262,6 @@ TEST_P(GenericTest, OCCATests) {
                 }
                 auto conf = actionConfig->get<TranspileActionConfig>();
                 auto input = conf.build(dataDir);
-                // std::cout << "Run Normalize and Transpile action for " << input.sourcePath << std::endl;;
                 SPDLOG_INFO("Run Normalize and Transpile action for {}", input.sourcePath.string());
                 auto transpileResult = oklt::normalizeAndTranspile(input);
 
@@ -286,7 +308,7 @@ struct GenericConfigTestNamePrinter {
     std::string operator()(const testing::TestParamInfo<std::string>& info) const {
         std::filesystem::path fullPath(info.param);
         auto fileName = fullPath.stem();
-        return oklt::util::toCamelCase(fileName.string());
+        return toCamelCase(fileName.string());
     }
 };
 
