@@ -38,7 +38,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
 
     // TODO get this info from user input aka json prop file
     std::vector<std::string> args = {
-        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I.", getSysRootOpt()};
+        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I.", getISystemOpt()};
 
     for (const auto& define : input.defines) {
         std::string def = "-D" + define;

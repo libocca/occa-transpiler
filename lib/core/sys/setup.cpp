@@ -12,9 +12,12 @@ std::unique_ptr<std::string> CLANG_ISYSTEM_OPT;
 
 constexpr char EB_ROOT_CLANG[] = "EBROOTCLANG";
 
-__attribute__((constructor)) void initSysRoot() {
+__attribute__((constructor)) void initClangEnvVars() {
     CLANG_SYSROOT_DIR = std::make_unique<std::string>();
     CLANG_ISYSTEM_OPT = std::make_unique<std::string>();
+
+    // for EeasyBuild environment clang requires to specify additional include path for internal
+    // system headers
     auto sysRoot = std::getenv(EB_ROOT_CLANG);
     if (sysRoot) {
         *CLANG_SYSROOT_DIR = sysRoot;
@@ -31,7 +34,7 @@ std::string getSysRoot() {
     return *CLANG_SYSROOT_DIR;
 }
 
-std::string getSysRootOpt() {
+std::string getISystemOpt() {
     return *CLANG_ISYSTEM_OPT;
 }
 

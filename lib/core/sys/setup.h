@@ -5,5 +5,5 @@
 
 namespace oklt {
 std::string getSysRoot();
-std::string getSysRootOpt();
+std::string getISystemOpt();
 }  // namespace oklt
