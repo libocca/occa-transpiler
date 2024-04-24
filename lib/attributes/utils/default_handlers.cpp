@@ -32,7 +32,9 @@ HandleResult defaultHandleSharedStmtAttribute(SessionStage& stage,
     if (!currLoop) {
         return {};
     }
+
     currLoop->markSharedUsed();
+
     return {};
 }
 
@@ -46,7 +48,9 @@ HandleResult defaultHandleExclusiveStmtAttribute(SessionStage& stage,
     if (!currLoop) {
         return {};
     }
+
     currLoop->markExclusiveUsed();
+
     return {};
 }
 
@@ -56,11 +60,15 @@ HandleResult defaultHandleSharedDeclAttribute(SessionStage& stage,
     SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto* currLoop = sema.getLoopInfo();
-    if (!currLoop) {
+    auto* loopInfo = sema.getLoopInfo();
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
+    }
+    if (!loopInfo) {
         return {};
     }
-    currLoop->sharedInfo.declared = true;
+
+    loopInfo->sharedInfo.declared = true;
 
     return {};
 }
@@ -71,11 +79,16 @@ HandleResult defaultHandleExclusiveDeclAttribute(SessionStage& stage,
     SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto* currLoop = sema.getLoopInfo();
-    if (!currLoop) {
+    auto* loopInfo = sema.getLoopInfo();
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
+    }
+    if (!loopInfo) {
         return {};
     }
-    currLoop->exclusiveInfo.declared = true;
+
+    loopInfo->exclusiveInfo.declared = true;
+
     return {};
 }
 

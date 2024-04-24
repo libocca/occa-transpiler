@@ -17,12 +17,16 @@ HandleResult handleExclusiveAttribute(SessionStage& stage,
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(
-            Error{{}, "@exclusive: failed to fetch loop meta data from sema"});
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
     }
-
-    if (!loopInfo->isLastOuter()) {
+    if (loopInfo && loopInfo->has(LoopType::Inner)) {
+        return tl::make_unexpected(
+            Error{{}, "Cannot define [@exclusive] variables inside an [@inner] loop"});
+    }
+    auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
+    bool isInnerChild = child && child->has(LoopType::Inner);
+    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
