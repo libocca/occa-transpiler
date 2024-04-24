@@ -183,10 +183,8 @@ OklLoopInfo::OptSizes OklLoopInfo::getInnerSizes() {
     }
     OklLoopInfo::OptSizes ret{1, 1, 1};
 
-    if (isRegular()) {
-        if (children.empty()) {
-            return ret;
-        }
+    if (isRegular() && children.empty()) {
+        return ret;
     }
 
 #ifdef LEGACY_INNER_SIZES_CALCULATION
