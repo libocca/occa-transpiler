@@ -1,0 +1,3 @@
+applied_to_wrong_stmt.cpp:4:13: error: 'atomic' attribute only applies to expression or compound statement
+    4 |             @atomic for (int k = 0; k < 10; ++k) {
+      |             ^

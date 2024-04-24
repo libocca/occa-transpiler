@@ -81,8 +81,7 @@ HandleResult parseBarrierAttrParams(SessionStage& stage,
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
-                                                           parseBarrierAttrParams);
+__attribute__((constructor)) void registerBarrierAttrFrontend() {
+    registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME, parseBarrierAttrParams);
 }
 }  // namespace

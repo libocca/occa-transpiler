@@ -1,0 +1,3 @@
+applied_to_stmt.cpp:3:9: error: 'restrict' attribute cannot be applied to a statement
+    3 |         @restrict for (int j = 0; j < 10; ++j; @inner) {
+      |         ^

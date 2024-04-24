@@ -53,9 +53,9 @@ struct HandlerKey<T, std::enable_if_t<T == HandleType::PARSER>> : public HandleK
 };
 
 template <typename AttrFrontendType, typename F>
-inline bool HandlerManager::registerAttrFrontend(std::string attr, F& func) {
+inline bool registerAttrFrontend(std::string attr, F& func) {
     static clang::ParsedAttrInfoRegistry::Add<AttrFrontendType> register_okl_atomic(attr, "");
-    return _map().insert(HandlerKey<HandleType::PARSER>(attr), func);
+    return HandlerManager::_map().insert(HandlerKey<HandleType::PARSER>(attr), func);
 };
 
 }  // namespace oklt

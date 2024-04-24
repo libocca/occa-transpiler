@@ -258,8 +258,7 @@ HandleResult handleTileAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, TILE_ATTR_NAME, handleTileAttribute);
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, TILE_ATTR_NAME, handleTileAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", TILE_ATTR_NAME);

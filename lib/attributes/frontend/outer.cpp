@@ -73,7 +73,7 @@ HandleResult parseOuterAttrParams(SessionStage& stage,
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME, parseOuterAttrParams);
+__attribute__((constructor)) void registerOuterAttrFrontend() {
+    registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME, parseOuterAttrParams);
 }
 }  // namespace

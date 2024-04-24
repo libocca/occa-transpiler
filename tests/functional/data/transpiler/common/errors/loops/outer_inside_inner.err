@@ -1,0 +1,3 @@
+outer_inside_inner.cpp:3:9: error: Cannot have [@inner] loop outside of an [@outer] loop
+    3 |         @outer for (int j = 0; j < 10; ++j) {
+      |         ^

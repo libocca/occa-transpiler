@@ -19,18 +19,12 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
     auto typeStr =
         QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
 
-    Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
-
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(sharedError);
+    if (!loopInfo || !loopInfo->isLastOuter()) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
-    auto* loopBelowInfo = loopInfo->getFirstAttributedChild();
-    if (!loopBelowInfo || !(loopInfo->is(LoopType::Outer) && loopBelowInfo->is(LoopType::Inner))) {
-        return tl::make_unexpected(sharedError);
-    }
-
     auto newDeclaration =
         util::fmt(
             "auto & {} = "
@@ -47,11 +41,10 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedAttribute);
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
-    ok &= HandlerManager::registerBackendHandler(
+    ok &= registerBackendHandler(
         TargetBackend::DPCPP, SHARED_ATTR_NAME, defaultHandleSharedStmtAttribute);
 
     if (!ok) {

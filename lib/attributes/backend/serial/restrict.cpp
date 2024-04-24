@@ -7,7 +7,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPRestrictHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::SERIAL, RESTRICT_ATTR_NAME, serial_subset::handleRestrictAttribute);
 
     if (!ok) {

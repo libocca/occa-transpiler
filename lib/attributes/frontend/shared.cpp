@@ -122,7 +122,7 @@ HandleResult parseSharedAttrParams(SessionStage& stage,
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME, parseSharedAttrParams);
+__attribute__((constructor)) void registerSharedAttrFrontend() {
+    registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME, parseSharedAttrParams);
 }
 }  // namespace

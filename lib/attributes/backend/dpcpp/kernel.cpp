@@ -117,8 +117,8 @@ HandleResult handleKernelAttribute(SessionStage& s,
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, oklKernelInfo, rewriter);
 
-    if (auto verified = verifyLoops(kernelInfo); !verified) {
-        return verified;
+    if (auto verified = verifyLoops(s, kernelInfo); !verified) {
+        return tl::make_unexpected(std::move(verified.error()));
     }
 
     size_t n = 0;
@@ -157,8 +157,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, KERNEL_ATTR_NAME, handleKernelAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", KERNEL_ATTR_NAME);

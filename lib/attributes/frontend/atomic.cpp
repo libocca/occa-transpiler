@@ -54,7 +54,7 @@ HandleResult parseAtomicAttrParams(SessionStage& stage, const Attr& attr, OKLPar
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME, parseAtomicAttrParams);
+__attribute__((constructor)) void registerAtomicAttrFrontend() {
+    registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME, parseAtomicAttrParams);
 }
 }  // namespace

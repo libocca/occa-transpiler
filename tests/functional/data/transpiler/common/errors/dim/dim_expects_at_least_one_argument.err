@@ -1,0 +1,3 @@
+dim_expects_at_least_one_argument.cpp:1:20: error: [@dim] expects at least one argument
+    1 | typedef int* mat89 @dim;
+      |                    ^

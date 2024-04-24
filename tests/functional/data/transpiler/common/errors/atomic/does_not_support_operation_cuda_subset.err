@@ -1,0 +1,3 @@
+does_not_support_operation_cuda_subset.cpp:4:13: error: Atomic does not support this operation: j *= 12
+    4 |             @atomic j *= 12;
+      |             ^

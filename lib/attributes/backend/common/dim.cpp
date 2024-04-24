@@ -7,6 +7,7 @@
 #include "core/utils/range_to_string.h"
 
 #include <spdlog/spdlog.h>
+#include <algorithm>
 #include <numeric>
 
 namespace {
@@ -36,36 +37,44 @@ tl::expected<DimOrder, Error> getDimOrder(SessionStage& stage,
 
     auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
     auto attrs = attrTypeMap.get(ctx, var->getType());
-    for (const auto* attr : attrs) {
+    auto dimOrderAttr = std::find_if(attrs.begin(), attrs.end(), [](const auto* attr) {
         auto name = attr->getNormalizedFullName();
-        if (name != DIM_ORDER_ATTR_NAME) {
-            continue;
+        return (name == DIM_ORDER_ATTR_NAME);
+    });
+    auto status = [&]() -> tl::expected<void, Error> {
+        if (dimOrderAttr != attrs.end()) {
+            auto dimOrderParams = stage.getAttrManager().parseAttr(stage, **dimOrderAttr);
+            if (!dimOrderParams) {
+                return tl::make_unexpected(dimOrderParams.error());
+            }
+            auto* attributedDimOrder = std::any_cast<AttributedDimOrder>(&(dimOrderParams.value()));
+            if (!attributedDimOrder) {
+                return tl::make_unexpected(
+                    Error{{}, "Failed to cast @dimOrder parameters to AttributedDimOrder"});
+            }
+            dimOrder = attributedDimOrder->idx;
+        }
+        if (dimOrder.size() != params->dim.size()) {
+            return tl::make_unexpected(Error{{}, "[@dimOrder] wrong number of arguments"});
         }
 
-        auto dimOrderParams = stage.getAttrManager().parseAttr(stage, *attr);
-        if (!dimOrderParams) {
-            return tl::make_unexpected(dimOrderParams.error());
+        // Verify if dimensions are correct
+        auto nDims = params->dim.size();
+        for (const auto& dim : dimOrder) {
+            if (dim >= nDims) {
+                return tl::make_unexpected(
+                    Error{{},
+                          util::fmt("[@dimOrder] Dimensions must be in range [0, {}]", nDims - 1)
+                              .value()});
+            }
         }
-        auto* attributedDimOrder = std::any_cast<AttributedDimOrder>(&(dimOrderParams.value()));
-        if (!attributedDimOrder) {
-            return tl::make_unexpected(
-                Error{{}, "Failed to cast @dimOrder parameters to AttributedDimOrder"});
+        return {};
+    }();
+    if (!status) {
+        if (dimOrderAttr != attrs.end()) {
+            status.error().ctx = (*dimOrderAttr)->getRange();
         }
-        dimOrder = attributedDimOrder->idx;
-        break;
-    }
-    if (dimOrder.size() != params->dim.size()) {
-        return tl::make_unexpected(Error{{}, "[@dimOrder] wrong number of arguments"});
-    }
-
-    // Verify if dimensions are correct
-    auto nDims = params->dim.size();
-    for (const auto& dim : dimOrder) {
-        if (dim >= nDims) {
-            return tl::make_unexpected(Error{
-                {},
-                util::fmt("[@dimOrder] Dimensions must be in range [0, {}]", nDims - 1).value()});
-        }
+        return tl::make_unexpected(std::move(status.error()));
     }
     return dimOrder;
 }
@@ -163,6 +172,7 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 
     auto& ctx = stage.getCompiler().getASTContext();
 
+    // TODO: Error from validateDim points to @dim, but should point to variable
     auto expressions = [&]() -> tl::expected<ExprVec, Error> {
         // Dispatch statement
         if (isa<RecoveryExpr>(stmt)) {
@@ -174,7 +184,7 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
         return tl::make_unexpected(Error{{}, "Incorrect statement type for [@dim]"});
     }();
     if (!expressions) {
-        return tl::make_unexpected(expressions.error());
+        return tl::make_unexpected(std::move(expressions.error()));
     }
 
     auto* dimVarExpr = expressions.value()[0];
@@ -185,7 +195,7 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 
     auto dimOrder = getDimOrder(stage, dimVarDeclExpr, params);
     if (!dimOrder) {
-        return tl::make_unexpected(dimOrder.error());
+        return tl::make_unexpected(std::move(dimOrder.error()));
     }
 
     auto dimVarNameStr = getSourceText(*dimVarExpr, ctx);
@@ -198,12 +208,12 @@ HandleResult handleDimStmtAttribute(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerCommonHandler(DIM_ATTR_NAME, handleDimDeclAttribute);
+    auto ok = registerCommonHandler(DIM_ATTR_NAME, handleDimDeclAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute decl handler", DIM_ATTR_NAME);
     }
 
-    ok = HandlerManager::registerCommonHandler(DIM_ATTR_NAME, handleDimStmtAttribute);
+    ok = registerCommonHandler(DIM_ATTR_NAME, handleDimStmtAttribute);
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute stmt handler", DIM_ATTR_NAME);
     }

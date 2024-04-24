@@ -196,6 +196,7 @@ int main(int argc, char* argv[]) {
                                                userOutput.launcher.source);
                     oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadata);
                 }
+                std::cout << result.value().kernel.source;
                 SPDLOG_INFO("Transpilation success");
             } else {
                 SPDLOG_ERROR("Transpilation failed");

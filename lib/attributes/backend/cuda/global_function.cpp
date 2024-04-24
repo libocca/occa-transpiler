@@ -15,8 +15,7 @@ HandleResult handleCudaGlobalFunction(SessionStage& s, const clang::FunctionDecl
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok =
-        HandlerManager::registerImplicitHandler(TargetBackend::CUDA, handleCudaGlobalFunction);
+    auto ok = registerImplicitHandler(TargetBackend::CUDA, handleCudaGlobalFunction);
 
     if (!ok) {
         SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global function");

@@ -7,7 +7,7 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPKernelHandler() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::OPENMP, KERNEL_ATTR_NAME, serial_subset::handleKernelAttribute);
 
     if (!ok) {

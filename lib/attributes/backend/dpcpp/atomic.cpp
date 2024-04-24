@@ -107,8 +107,7 @@ HandleResult handleAtomicAttribute(SessionStage& stage,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
-        TargetBackend::DPCPP, ATOMIC_ATTR_NAME, handleAtomicAttribute);
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, ATOMIC_ATTR_NAME, handleAtomicAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);

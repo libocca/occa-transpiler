@@ -1,0 +1,3 @@
+does_not_take_kwargs.cpp:6:13: error: [@barrier] does not take kwargs
+    6 |             @barrier(a=12);
+      |             ^

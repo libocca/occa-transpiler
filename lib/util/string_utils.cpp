@@ -3,8 +3,6 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
 
-#include <sstream>
-
 namespace oklt::util {
 using namespace llvm;
 
@@ -85,6 +83,19 @@ std::vector<std::string_view> split(const std::string_view& str,
     return ret;
 }
 
+std::string replace(std::string_view str, std::string_view from, std::string_view to) {
+    auto res = std::string(str);
+    size_t pos = res.find(from);
+    while (pos != std::string::npos) {
+        // Replace the substring with the specified string
+        res.replace(pos, from.size(), to);
+
+        // Find the next occurrence of the substring
+        pos = res.find(from, pos + to.size());
+    }
+    return res;
+}
+
 namespace impl {
 tl::expected<size_t, Error> getCurlyBracketIdx(const std::string_view& str) {
     for (size_t idx = 0; idx < str.size(); ++idx) {
@@ -102,7 +113,7 @@ tl::expected<size_t, Error> getCurlyBracketIdx(const std::string_view& str) {
 tl::expected<std::string, Error> fmt(const std::string& s) {
     auto pos = impl::getCurlyBracketIdx(s);
     if (!pos.has_value()) {
-        return tl::make_unexpected(pos.error());
+        return tl::make_unexpected(std::move(pos.error()));
     }
 
     if (pos.value() != static_cast<size_t>(-1)) {

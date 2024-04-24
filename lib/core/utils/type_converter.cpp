@@ -47,7 +47,7 @@ tl::expected<void, std::error_code> fillStructFields(std::list<StructFieldInfo>&
     for (const auto* field : structDecl->fields()) {
         auto fieldDataType = toOklStructFieldInfo(*field);
         if (!fieldDataType) {
-            return tl::make_unexpected(fieldDataType.error());
+            return tl::make_unexpected(std::move(fieldDataType.error()));
         }
         fields.push_back(fieldDataType.value());
     }
@@ -85,7 +85,7 @@ tl::expected<void, std::error_code> fillTupleElement(
     auto elementType = getBaseType(type);
     auto elementDType = toOklDataTypeImpl(elementType, ctx);
     if (!elementDType) {
-        return tl::make_unexpected(elementDType.error());
+        return tl::make_unexpected(std::move(elementDType.error()));
     }
     tupleElementDType->elementDType = elementDType.value();
 
@@ -116,7 +116,7 @@ tl::expected<DataType, std::error_code> toOklDataTypeImpl(const QualType& type, 
             // Fill type of each struct field
             auto fillRes = fillStructFields(res.fields, type.getTypePtr());
             if (!fillRes) {
-                return tl::make_unexpected(fillRes.error());
+                return tl::make_unexpected(std::move(fillRes.error()));
             }
             break;
         }
@@ -124,14 +124,14 @@ tl::expected<DataType, std::error_code> toOklDataTypeImpl(const QualType& type, 
             res.tupleElementDType = std::make_shared<TupleElementDataType>();
             auto fillRes = fillTupleElement(type, res.tupleElementDType, ctx);
             if (!fillRes) {
-                return tl::make_unexpected(fillRes.error());
+                return tl::make_unexpected(std::move(fillRes.error()));
             }
             break;
         }
         case DatatypeCategory::ENUM: {
             auto fillRes = fillEnumNames(res.enumNames, type.getTypePtr());
             if (!fillRes) {
-                return tl::make_unexpected(fillRes.error());
+                return tl::make_unexpected(std::move(fillRes.error()));
             }
             break;
         }
@@ -195,7 +195,7 @@ tl::expected<StructFieldInfo, std::error_code> toOklStructFieldInfo(const clang:
     }
     auto dt = toOklDataType(var);
     if (!dt) {
-        return tl::make_unexpected(dt.error());
+        return tl::make_unexpected(std::move(dt.error()));
     }
 
     StructFieldInfo res{.dtype = dt.value(), .name = var.getNameAsString()};
@@ -234,7 +234,7 @@ tl::expected<KernelInfo, std::error_code> toOklKernelInfo(const FunctionDecl& fd
         }
         auto arg = toOklArgInfo(*param);
         if (!arg) {
-            return tl::make_unexpected(arg.error());
+            return tl::make_unexpected(std::move(arg.error()));
         }
         ret.args.emplace_back(std::move(arg.value()));
     }

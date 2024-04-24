@@ -22,6 +22,7 @@ std::string pointerToStr(const void* ptr);
                                                   const std::string_view& sep,
                                                   int maxN = -1,
                                                   bool keepEmpty = true);
+[[nodiscard]] std::string replace(std::string_view str, std::string_view from, std::string_view to);
 
 template <typename T, bool>
 std::optional<T> parseStrTo(std::string_view& str);

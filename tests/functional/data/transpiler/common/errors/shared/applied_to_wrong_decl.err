@@ -1,0 +1,3 @@
+applied_to_wrong_decl.cpp:1:1: error: 'shared' attribute only applies to variable or type declaration
+    1 | @shared int shared_func() {
+      | ^

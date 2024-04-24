@@ -131,9 +131,11 @@ FsmStepStatus processTokenByFsm(OklAttributePrarserFsm& fsm, const Token& token)
                 fsm.attr.tok_indecies.push_back(fsm.token_cursor);
                 fsm.attr.params += [&](const auto& token) {
                     auto token_str = fsm.pp.getSpelling(token);
+                    clang::StringRef token_str_ref(token_str);
+                    auto stripped_token_str = token_str_ref.trim('\"');
                     return token.getKind() != tok::string_literal
                                ? token_str
-                               : std::string(llvm::formatv("\"{0}\"", token_str));
+                               : std::string(fmt::format("\\\"{}\\\"", stripped_token_str));
                 }(token);
                 return FsmStepStatus::TokenProcessed;
             }

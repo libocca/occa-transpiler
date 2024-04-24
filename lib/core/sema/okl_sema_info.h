@@ -100,6 +100,7 @@ struct OklLoopInfo {
 
     // Returns true if updated successfully
     [[nodiscard]] bool updateAutoWithSpecificAxis();
+    [[nodiscard]] bool isLastOuter();
 };
 
 struct OklKernelInfo {

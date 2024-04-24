@@ -41,7 +41,7 @@ struct KernelAttribute : public ParsedAttrInfo {
         auto returnTypeStr = func->getReturnType().getAsString();
         if (returnTypeStr != "void") {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type)
-                << attr << "functions with [void] return" << returnTypeStr;
+                << attr << ":" << "functions with [void] return types";
             return false;
         }
 
@@ -59,7 +59,7 @@ HandleResult parseKernelAttrParams(SessionStage& stage,
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    HandlerManager::registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME, parseKernelAttrParams);
+__attribute__((constructor)) void registerKernelAttrFrontend() {
+    registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME, parseKernelAttrParams);
 }
 }  // namespace

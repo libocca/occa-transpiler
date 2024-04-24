@@ -31,10 +31,9 @@ struct HandlerKey<T, std::enable_if_t<T == HandleType::BACKEND>> : public Handle
 };
 
 template <typename F>
-inline bool HandlerManager::registerBackendHandler(TargetBackend backend,
-                                                   std::string attr,
+inline bool registerBackendHandler(TargetBackend backend, std::string attr,
                                                    F& func) {
-    return _map().insert(HandlerKey<HandleType::BACKEND>(backend, attr), func);
+    return HandlerManager::_map().insert(HandlerKey<HandleType::BACKEND>(backend, attr), func);
 };
 
 }  // namespace oklt

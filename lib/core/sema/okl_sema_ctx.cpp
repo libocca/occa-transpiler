@@ -48,7 +48,7 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(SessionStage& stage,
                                                  OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto parsedLoopInfo = parseForStmt(stage, stmt, attr);
     if (!parsedLoopInfo) {
-        return parsedLoopInfo;
+        return tl::make_unexpected(std::move(parsedLoopInfo.error()));
     }
     parsedLoopInfo->type = loopTypeAxis.types;
     parsedLoopInfo->axis = loopTypeAxis.axis;
@@ -220,7 +220,12 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(SessionStage
                                                                     const clang::ForStmt& stmt,
                                                                     const clang::Attr* attr,
                                                                     const std::any* params) {
-    assert(_parsingKernInfo);
+    if (!_parsingKernInfo) {
+        // NOTE: original OKL silently removes attribute
+        return tl::make_unexpected(
+            Error{std::error_code{}, "Attributed loop outside [@kernel] function"});
+    }
+
     auto loopTypeAxis = getLoopAxisType(params);
 
     // TODO: currently missing diagnostic on at least one [@outer] loop must be present
@@ -250,11 +255,16 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(SessionStage
             children.emplace_back(loopInfo);
 
             auto& child = children.back();
-            if (isTopLevelAttributed(loopTypeAxis, *_parsingKernInfo)) {
+            if (isTopLevelAttributed(loopTypeAxis, *_parsingKernInfo) &&
+                loopTypeAxis.types.front() == LoopType::Outer) {
                 _parsingKernInfo->topLevelOuterLoops.push_back(&child);
             }
             child.parent = _parsingKernInfo->currentLoop;
             _parsingKernInfo->currentLoop = &child;
+            if (_parsingKernInfo->loopMap.count(&child.stmt)) {
+                return tl::make_unexpected(
+                    Error{std::error_code(), "Multiple attributes on one loop"});
+            }
             _parsingKernInfo->loopMap.emplace(&child.stmt, &child);
             return {};
         });

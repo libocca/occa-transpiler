@@ -67,8 +67,8 @@ HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, co
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, rewriter);
 
-    if (auto verified = verifyLoops(kernelInfo); !verified) {
-        return verified;
+    if (auto verified = verifyLoops(s, kernelInfo); !verified) {
+        return tl::make_unexpected(std::move(verified.error()));
     }
 
     auto startPos = getAttrFullSourceRange(a).getBegin();

@@ -10,14 +10,14 @@ using namespace oklt;
 using namespace clang;
 
 __attribute__((constructor)) void registerHIPExclusiveAttrBackend() {
-    auto ok = HandlerManager::registerBackendHandler(
+    auto ok = registerBackendHandler(
         TargetBackend::HIP, EXCLUSIVE_ATTR_NAME, cuda_subset::handleExclusiveAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[HIP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 
-    ok = HandlerManager::registerBackendHandler(
+    ok = registerBackendHandler(
         TargetBackend::HIP, EXCLUSIVE_ATTR_NAME, defaultHandleExclusiveStmtAttribute);
 
     if (!ok) {

@@ -28,8 +28,7 @@ HandleResult handleNoBarrierStmtAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok =
-        HandlerManager::registerCommonHandler(NO_BARRIER_ATTR_NAME, handleNoBarrierStmtAttribute);
+    auto ok = registerCommonHandler(NO_BARRIER_ATTR_NAME, handleNoBarrierStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("Failed to register {} attribute handler", NO_BARRIER_ATTR_NAME);
