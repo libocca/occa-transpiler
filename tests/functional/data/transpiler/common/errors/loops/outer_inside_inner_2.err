@@ -1,0 +1,3 @@
+outer_inside_inner_2.cpp:5:9: error: Cannot have [@inner] loop outside of an [@outer] loop
+    5 |         @tile(4, @outer, @inner) for (int j = 0; j < 10; ++j) {
+      |         ^

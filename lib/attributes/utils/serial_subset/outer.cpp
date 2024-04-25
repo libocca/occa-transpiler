@@ -9,6 +9,8 @@
 namespace oklt::serial_subset {
 using namespace clang;
 
+const std::string exlusiveBeginText = "\nint _occa_exclusive_index;\n";
+
 HandleResult handleOuterAttribute(SessionStage& s,
                                   const ForStmt& stmt,
                                   const Attr& a,
@@ -26,6 +28,13 @@ HandleResult handleOuterAttribute(SessionStage& s,
     }
 
     removeAttribute(s, a);
+
+    auto compStmt = dyn_cast_or_null<CompoundStmt>(stmt.getBody());
+    if (loopInfo->exclusiveInfo.declared) {
+        auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
+        s.getRewriter().InsertTextAfter(indexLoc, exlusiveBeginText);
+    }
+
     return {};
 }
 

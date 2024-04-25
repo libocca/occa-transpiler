@@ -46,5 +46,41 @@
             "launcher": ""
         },
         "reference": "transpiler/common/errors/exclusive/does_not_take_arguments.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "openmp",
+            "source": "transpiler/common/errors/exclusive/inside_inner_1.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/exclusive/inside_inner_1.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "openmp",
+            "source": "transpiler/common/errors/exclusive/inside_inner_2.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/exclusive/inside_inner_2.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "openmp",
+            "source": "transpiler/common/errors/exclusive/inside_inner_3.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/exclusive/inside_inner_3.err"
     }
 ]

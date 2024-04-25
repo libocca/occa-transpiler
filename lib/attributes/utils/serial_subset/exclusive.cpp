@@ -20,13 +20,16 @@ HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, 
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(
-            Error{{}, "@exclusive: failed to fetch loop meta data from sema"});
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
     }
-
-    auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
-    if (!compStmt || !loopInfo->isLastOuter()) {
+    if (loopInfo && loopInfo->has(LoopType::Inner)) {
+        return tl::make_unexpected(
+            Error{{}, "Cannot define [@exclusive] variables inside an [@inner] loop"});
+    }
+    auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
+    bool isInnerChild = child && child->has(LoopType::Inner);
+    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
@@ -35,11 +38,6 @@ HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, 
 
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.RemoveText(attrRange);
-
-    if (!loopInfo->exclusiveInfo.declared) {
-        auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
-        rewriter.InsertTextAfter(indexLoc, outerLoopText);
-    }
 
     // Find max size of inner loops
     size_t sz = 0;

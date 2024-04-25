@@ -94,5 +94,17 @@
             "launcher": ""
         },
         "reference": "transpiler/common/errors/loops/outer_inside_inner.err"
+    },
+    {
+        "action": "normalize_and_transpile",
+        "compare": "error_message",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/common/errors/loops/outer_inside_inner_2.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/common/errors/loops/outer_inside_inner_2.err"
     }
 ]

@@ -16,6 +16,7 @@ namespace oklt::serial_subset {
 using namespace clang;
 
 namespace {
+const std::string exlusiveBeginText = "int _occa_exclusive_index;\n";
 const std::string exclusiveNullText = "_occa_exclusive_index = 0;\n";
 const std::string exclusiveIncText = "++_occa_exclusive_index;\n";
 
@@ -153,20 +154,17 @@ HandleResult handleTileAttribute(SessionStage& s,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
+    auto& rewriter = s.getRewriter();
     removeAttribute(s, a);
 
-    auto& rewriter = s.getRewriter();
-
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    s.getRewriter().RemoveText(attr_range);
-
     auto parent = loopInfo->getAttributedParent();
+    auto child = loopInfo->getFirstAttributedChild();
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && parent->has(LoopType::Outer) && loopInfo->is(LoopType::Inner)) {
-        if (parent->exclusiveInfo.declared) {
-            s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
+    if (loopInfo->type[0] == LoopType::Inner) {
+        if (parent && parent->exclusiveInfo.declared) {
+            rewriter.InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
         }
     }
 
@@ -174,22 +172,34 @@ HandleResult handleTileAttribute(SessionStage& s,
     std::string prefixCode;
 
     // First loop. usually `@outer`
-    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
+    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt, rewriter);
 
-    // `@inner` loop just after `@outer`
-    // Top most `@inner` loop
-    if (parent && loopInfo->is(LoopType::Outer, LoopType::Inner)) {
-        if (loopInfo->exclusiveInfo.declared) {
+    // `@tile(@outer, ...)` loop
+    if (loopInfo->type[0] == LoopType::Outer) {
+        // `@tile(@outer)` with `@exclusive`
+        if (loopInfo->type[1] == LoopType::Regular && loopInfo->exclusiveInfo.declared) {
+            prefixCode += (!prefixCode.empty() ? "\n" : "") + exlusiveBeginText;
+        }
+        // `@tile(@outer, @inner)` loop with parent having `@exclusive`
+        if (loopInfo->type[1] == LoopType::Inner && parent && parent->exclusiveInfo.declared) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
 
     // Second loop. usually `@inner`
-    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
+    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt, rewriter);
+
+    // `@tile(@outer, ...)` loop
+    if (loopInfo->type[0] == LoopType::Outer) {
+        // `@tile(@outer, @inner)` or @tile(@outer, @outer)` with `@exclusive`
+        if (loopInfo->type[1] != LoopType::Regular && loopInfo->exclusiveInfo.declared) {
+            prefixCode += (!prefixCode.empty() ? "\n" : "") + exlusiveBeginText;
+        }
+    }
 
     // Check code
     if (params->check) {
-        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
+        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt, rewriter);
     }
 
     // Replace `for` statement body from LParent to RParen.
@@ -204,7 +214,17 @@ HandleResult handleTileAttribute(SessionStage& s,
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
-            rewriter.InsertTextBefore(incLoc, exclusiveIncText);
+
+            std::string suffixCode = "";
+            if (parenCnt > 1) {
+                size_t cnt = 0;
+                cnt += params->check;
+                cnt += loopInfo->has(LoopType::Regular);
+                parenCnt -= cnt;
+                suffixCode += getScopesCloseStr(cnt);
+            }
+            suffixCode += (!suffixCode.empty() ? "\n" : "") + exclusiveIncText;
+            rewriter.InsertText(incLoc, suffixCode, true, true);
         }
     }
 

@@ -9,5 +9,16 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/serial/exclusive/exclusive_builtin_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/exclusive/bug_196.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/exclusive/bug_196_ref.cpp"
   }
 ]

@@ -21,10 +21,20 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo || !loopInfo->isLastOuter()) {
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
+    }
+    if (loopInfo && loopInfo->has(LoopType::Inner)) {
+        return tl::make_unexpected(
+            Error{{}, "Cannot define [@shared] variables inside an [@inner] loop"});
+    }
+    auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
+    bool isInnerChild = child && child->has(LoopType::Inner);
+    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
+
     auto newDeclaration =
         util::fmt(
             "auto & {} = "
