@@ -45,21 +45,28 @@ struct TranspilerSession {
 
     const UserInput& getInput() const { return _input; }
 
-    UserInput& getInput() { return _input; }
-
     const UserOutput& getOutput() const { return _output; }
 
     UserOutput& getOutput() { return _output; }
 
-    void moveOutputToInput() {
-        _input.source = _output.normalized.source;
-        _input.headers = _output.normalized.headers;
+    const std::string& getSource() const { return _source; }
+    std::string& getSource() { return _source; }
+
+    const std::map<std::string, std::string>& getHeaders() const { return _headers; }
+    std::map<std::string, std::string>& getHeaders() { return _headers; }
+
+    void updateSourceHeaders() {
+        _source = _output.normalized.source;
+        _headers = _output.normalized.headers;
     }
 
    private:
     // TODO add methods for user input/output
-    UserInput _input;
+    const UserInput _input;
     UserOutput _output;
+
+    std::string _source;                          ///< Current source code (changes between stages)
+    std::map<std::string, std::string> _headers;  ///< Current headers (changes between stages)
 
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;

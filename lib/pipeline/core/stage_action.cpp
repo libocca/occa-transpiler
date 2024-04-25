@@ -22,12 +22,12 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
         return false;
     }
 
-    auto& input = _session->getInput();
-    if (!input.headers.empty()) {
+    const auto& headers = _session->getHeaders();
+    if (!headers.empty()) {
         auto& fm = compiler.getFileManager();
         auto vfs = fm.getVirtualFileSystemPtr();
 
-        auto overlayFs = makeOverlayFs(vfs, input.headers);
+        auto overlayFs = makeOverlayFs(vfs, headers);
         fm.setVirtualFileSystem(overlayFs);
     }
 
@@ -47,7 +47,7 @@ void StageAction::EndSourceFileAction() {
 
     // copy transformed headers and merge untouched headers for the next stage
     auto transformedHeaders = _stage->getRewriterResultForHeaders();
-    transformedHeaders.fileMap.merge(input.headers);
+    transformedHeaders.fileMap.merge(_session->getHeaders());
     output.normalized.headers = std::move(transformedHeaders.fileMap);
 }
 

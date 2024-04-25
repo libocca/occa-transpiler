@@ -84,7 +84,7 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
     // merging operation move the source to destination map so clone headers
     // to preserve them for possible laucher generator
-    auto clone = stage.getSession().getInput().headers;
+    auto clone = stage.getSession().getHeaders();
     inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
     return inputs;
@@ -100,8 +100,8 @@ tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
     ppOutOpt.ShowIncludeDirectives = false;
 
     const std::string FUSED_KERNEL_FILENAME_BASE = "fused_inc_kernel";
-    std::time_t ct = std::time(0);
-    std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + ctime(&ct) + ".cpp";
+    const auto& hash = stage.getSession().getInput().hash;
+    std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + hash + ".cpp";
     invocation->getFrontendOpts().OutputFile = outputFileName;
 
     // set options from parent compiler

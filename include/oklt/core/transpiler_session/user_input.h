@@ -8,12 +8,13 @@
 namespace oklt {
 
 struct UserInput {
-    TargetBackend backend;
-    std::string source;
-    std::map<std::string, std::string> headers;
-    std::filesystem::path sourcePath;
-    std::vector<std::filesystem::path> inlcudeDirectories;
-    std::vector<std::string> defines;
+    TargetBackend backend;                                  ///< The target backend.
+    std::string source;                                     ///< The source code of OKL program.
+    std::map<std::string, std::string> headers;             ///< The headers.
+    std::filesystem::path sourcePath;                       ///< The path to the source file.
+    std::vector<std::filesystem::path> includeDirectories;  ///< The include directories.
+    std::vector<std::string> defines;                       ///< The defined macroses.
+    std::string hash;                                       ///< OKL hash
 };
 
 }  // namespace oklt
