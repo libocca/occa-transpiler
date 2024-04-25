@@ -101,7 +101,9 @@ tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
 
     const std::string FUSED_KERNEL_FILENAME_BASE = "fused_inc_kernel";
     std::time_t ct = std::time(0);
-    std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + ctime(&ct) + ".cpp";
+    char timeString[std::size("yyyy-mm-ddThh:mm:ssZ")];
+    std::strftime(timeString, std::size(timeString), "%FT%TZ", std::gmtime(&ct));
+    std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + std::string(timeString) + ".cpp";
     invocation->getFrontendOpts().OutputFile = outputFileName;
 
     // set options from parent compiler

@@ -102,12 +102,14 @@ HandleResult handleGlobalFunction(SessionStage& s,
     auto spacedModifier = funcQualifier + " ";
 
     // If function is @kernel, we don't handle it
-    for (auto* attr : decl.getAttrs()) {
-        if (attr->getNormalizedFullName() == KERNEL_ATTR_NAME) {
-            SPDLOG_DEBUG(
-                "Global function handler skipped function {}, since it has @kernel attribute",
-                decl.getNameAsString());
-            return {};
+    if(decl.hasAttrs()) {
+        for (auto* attr : decl.getAttrs()) {
+            if (attr->getNormalizedFullName() == KERNEL_ATTR_NAME) {
+                SPDLOG_DEBUG(
+                    "Global function handler skipped function {}, since it has @kernel attribute",
+                    decl.getNameAsString());
+                return {};
+            }
         }
     }
 

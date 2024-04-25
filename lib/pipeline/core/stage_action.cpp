@@ -1,5 +1,6 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/vfs/overlay_fs.h"
+#include "core/builtin_headers/intrinsic_impl.h"
 
 #include "pipeline/core/stage_action.h"
 
@@ -9,6 +10,10 @@
 
 namespace oklt {
 using namespace clang;
+
+
+const std::string StageAction::INTRINSIC_INCLUDE_FILENAME = "./okl_intrinsic.h";
+
 /**
  * @brief Base class for run a stage of transpiler pipeline
  */
@@ -23,13 +28,16 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
     }
 
     auto& input = _session->getInput();
-    if (!input.headers.empty()) {
-        auto& fm = compiler.getFileManager();
-        auto vfs = fm.getVirtualFileSystemPtr();
 
-        auto overlayFs = makeOverlayFs(vfs, input.headers);
-        fm.setVirtualFileSystem(overlayFs);
-    }
+    std::string intrinsicSource = getIntrinsicIncSource(_stage->getBackend());
+    input.headers.insert(std::make_pair(INTRINSIC_INCLUDE_FILENAME, intrinsicSource));
+
+    auto& fm = compiler.getFileManager();
+    auto vfs = fm.getVirtualFileSystemPtr();
+
+    auto overlayFs = makeOverlayFs(vfs, input.headers);
+    fm.setVirtualFileSystem(overlayFs);
+
 
     return true;
 }

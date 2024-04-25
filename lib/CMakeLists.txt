@@ -175,6 +175,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/rewriter/rewriter_proxy.cpp
     core/rewriter/rewriter_fabric.cpp
 
+    core/builtin_headers/intrinsic_impl.cpp
+    core/builtin_headers/intrinsic_impl.h
+
     core/handler_manager/handler_manager.cpp
     core/handler_manager/handler_map.cpp
 
@@ -264,6 +267,27 @@ target_link_libraries(occa-transpiler
         $<BUILD_INTERFACE:spdlog::spdlog_header_only>
         ${CLANG_LIBS}
 )
+
+embed_resource_txt(resources/okl_intrinsic_cuda.h
+    core/builtin_headers/okl_intrinsic_cuda.h
+    INTRINSIC_CUDA
+)
+
+embed_resource_txt(resources/okl_intrinsic_dpcpp.h
+    core/builtin_headers/okl_intrinsic_dpcpp.h
+    INTRINSIC_DPCPP
+)
+
+embed_resource_txt(resources/okl_intrinsic_hip.h
+    core/builtin_headers/okl_intrinsic_hip.h
+    INTRINSIC_HIP
+)
+
+embed_resource_txt(resources/okl_intrinsic_openmp.h
+    core/builtin_headers/okl_intrinsic_openmp.h
+    INTRINSIC_OPENMP
+)
+
 
 add_custom_command(TARGET occa-transpiler
     # Run after all other rules within the target have been executed

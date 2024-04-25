@@ -27,6 +27,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 include(cmake/CPM_0.38.6.cmake)
+include(cmake/EmbedResource.cmake)
 
 find_package(LLVM 17 REQUIRED CONFIG)
 find_package(Clang 17 REQUIRED CONFIG)
