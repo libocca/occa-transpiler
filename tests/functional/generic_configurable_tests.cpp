@@ -109,7 +109,7 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
     return oklt::UserInput{.backend = expectedBackend.value(),
                            .source = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
-                           .inlcudeDirectories = includes,
+                           .includeDirectories = includes,
                            .defines = defs};
 }
 

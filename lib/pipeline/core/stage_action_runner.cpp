@@ -43,7 +43,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
         args.push_back(std::move(def));
     }
 
-    for (const auto& includePath : input.inlcudeDirectories) {
+    for (const auto& includePath : input.includeDirectories) {
         std::string incPath = "-I" + includePath.string();
         args.push_back(std::move(incPath));
     }
