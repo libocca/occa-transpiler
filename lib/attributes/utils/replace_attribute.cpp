@@ -2,6 +2,7 @@
 #include "attributes/attribute_names.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
+#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/utils/var_decl.h"
 
 #include <clang/AST/AST.h>
@@ -41,6 +42,18 @@ HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r,
 
     return {};
 }
+bool isIntrinsicHeader(SessionStage& s,
+                       const clang::Decl& decl) {
+    auto funcLoc = decl.getLocation();
+    const auto &sm = s.getCompiler().getSourceManager();
+    auto fid = sm.getFileID(funcLoc);
+    const auto *fileEntry = sm.getFileEntryForID(fid);
+    if(fileEntry) {
+        return fileEntry->getName().str() == INTRINSIC_INCLUDE_FILENAME;
+    }
+    return false;
+}
+
 }  // namespace
 
 namespace oklt {
@@ -56,6 +69,10 @@ HandleResult handleGlobalConstant(SessionStage& s,
     }
 
     if (!isGlobalConstVariable(decl)) {
+        return {};
+    }
+
+    if(isIntrinsicHeader(s, decl)) {
         return {};
     }
 
@@ -94,6 +111,10 @@ HandleResult handleGlobalFunction(SessionStage& s,
                                   const std::string& funcQualifier) {
     // skip built in functions or with invalid soucce location
     if (decl.getLocation().isInvalid() || decl.isInlineBuiltinDeclaration()) {
+        return {};
+    }
+
+    if(isIntrinsicHeader(s, decl)) {
         return {};
     }
 

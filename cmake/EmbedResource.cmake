@@ -19,23 +19,14 @@ function(embed_resource_txt
         endif()
     endif()
 
-    file(STRINGS
-            "${resource_file_name}"
-            content_lines
-            # ENCODING
-    )
-    set(content "")
-    list(LENGTH content_lines list_size)
-    math(EXPR list_max_index ${list_size}-1)
-    foreach(index RANGE ${list_max_index})
-        list(GET content_lines ${index} line_value)
-        string(APPEND content "\"${line_value}\"\n")
-    endforeach()
+    file(READ
+        "${resource_file_name}"
+        content)
 
     set(array_definition
 "#pragma once
 
-static constexpr const char ${variable_name}[] =\n{\n${content}\n};")
+static constexpr const char ${variable_name}[] = R\"delim(\n${content}\n)delim\";")
 
     set(source "// Auto generated file.\n${array_definition}\n")
 

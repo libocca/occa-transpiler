@@ -4,7 +4,6 @@
 
 namespace oklt {
 
-// constexpr const char
-
+constexpr const char INTRINSIC_INCLUDE_FILENAME[] = "./okl_intrinsic.h";
 std::string getIntrinsicIncSource(TargetBackend backend);
 }

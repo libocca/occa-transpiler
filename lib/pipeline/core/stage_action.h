@@ -38,7 +38,6 @@ class StageAction : public clang::ASTFrontendAction {
     std::unique_ptr<SessionStage> _stage;
     SharedTranspilerSession _session;
     std::string _name;
-    static const std::string INTRINSIC_INCLUDE_FILENAME;
 };
 
 }  // namespace oklt

@@ -11,9 +11,6 @@
 namespace oklt {
 using namespace clang;
 
-
-const std::string StageAction::INTRINSIC_INCLUDE_FILENAME = "./okl_intrinsic.h";
-
 /**
  * @brief Base class for run a stage of transpiler pipeline
  */
@@ -21,7 +18,6 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
     // create stage
     _stage = std::make_unique<SessionStage>(*_session, compiler, getRewriterType());
 
-    //
     if (!compiler.hasFileManager()) {
         SPDLOG_ERROR("no file manager at call of {}", __FUNCTION__);
         return false;
@@ -30,14 +26,12 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
     auto& input = _session->getInput();
 
     std::string intrinsicSource = getIntrinsicIncSource(_stage->getBackend());
-    input.headers.insert(std::make_pair(INTRINSIC_INCLUDE_FILENAME, intrinsicSource));
-
+    input.headers.emplace(INTRINSIC_INCLUDE_FILENAME, intrinsicSource);
     auto& fm = compiler.getFileManager();
     auto vfs = fm.getVirtualFileSystemPtr();
 
     auto overlayFs = makeOverlayFs(vfs, input.headers);
     fm.setVirtualFileSystem(overlayFs);
-
 
     return true;
 }
