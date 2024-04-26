@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
             UserInput input{.backend = TargetBackend::CUDA,
                             .sourceCode = std::move(sourceCode),
                             .sourcePath = std::filesystem::path(filePath),
-                            .inlcudeDirectories = {},
+                            .includeDirectories = {},
                             .defines = {}};
             auto result = normalizeAndTranspile(std::move(input));
             if (!result) {
