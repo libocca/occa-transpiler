@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.26)
 project(occa-transpiler VERSION 0.0.1 LANGUAGES C CXX)
 
 option(TRANSPILER_TESTS "build transpiler library tests" ON)
+option(BUILD_DOCUMENTATION "Create the HTML+PDF API documentation (requires Doxygen)" OFF)
 
 # Add custom modules path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -73,16 +74,19 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/oklt)
 
 find_package(Doxygen)
-if (DOXYGEN_FOUND)
-    set(DOXYGEN_IN ${CMAKE_SOURCE_DIR}/docs/Doxyfile.in)
-    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+if (CMAKE_BUILD_TYPE STREQUAL "Release" OR BUILD_DOCUMENTATION)
+    if (DOXYGEN_FOUND)
+        set(DOXYGEN_IN ${CMAKE_SOURCE_DIR}/docs/Doxyfile.in)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-    add_custom_target(generate_documentation ALL
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            VERBATIM )
-else (DOXYGEN_FOUND)
-    message("Doxygen need to be installed to generate the doxygen documentation")
-endif (DOXYGEN_FOUND)
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+        add_custom_target(generate_documentation ALL
+                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                VERBATIM )
+    else (DOXYGEN_FOUND)
+        message("Doxygen need to be installed to generate the doxygen documentation")
+    endif (DOXYGEN_FOUND)
+endif()

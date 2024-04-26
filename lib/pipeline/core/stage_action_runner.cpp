@@ -20,8 +20,9 @@ using namespace clang::tooling;
 namespace oklt {
 
 SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspilerSession session) {
-    auto& input = session->getInput();
-    if (input.source.empty()) {
+    const auto& input = session->getInput();
+    const auto& source = session->getStagedSource();
+    if (source.empty()) {
         SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltPipelineErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
@@ -29,7 +30,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     }
 
     SPDLOG_INFO("start: {}", stageName);
-    SPDLOG_TRACE("input source:\n{}\n", input.source);
+    SPDLOG_TRACE("input source:\n{}\n", source);
 
     Twine toolName = "clang";//stageName;
 
@@ -63,7 +64,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
         return tl::make_unexpected(std::vector<Error>{err});
     }
 
-    Twine code(input.source);
+    Twine code(source);
     bool ret = runToolOnCodeWithArgs(std::move(stageAction),
                                      code,
                                      args,
@@ -84,8 +85,8 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     }
 
     // prepare input for the next stage of pipeline
-    session->moveOutputToInput();
-    SPDLOG_TRACE("output source:\n{}\n", input.source);
+    session->updateSourceHeaders();
+    SPDLOG_TRACE("output source:\n{}\n", session->getStagedSource());
 
     return session;
 }

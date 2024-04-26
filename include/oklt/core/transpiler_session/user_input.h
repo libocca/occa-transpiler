@@ -18,6 +18,7 @@ struct UserInput {
     std::filesystem::path sourcePath;                       ///< The path to the source file.
     std::vector<std::filesystem::path> includeDirectories;  ///< The include directories.
     std::vector<std::string> defines;                       ///< The defined macroses.
+    std::string hash;                                       ///< OKL hash
 };
 
 }  // namespace oklt

@@ -26,6 +26,15 @@ using SharedTranspilerSession = std::shared_ptr<TranspilerSession>;
 
 struct TranspilerSession {
     /**
+     * @brief Represents file and headers on a current stage.
+     *
+     */
+    struct StagedFiles {
+        std::string source;  ///< Current source code (changes between stages)
+        std::map<std::string, std::string> headers;  ///< Current headers (changes between stages)
+    };
+
+    /**
      * @brief Factory method to create a shared pointer to a TranspilerSession with UserInput.
      * @param input The user input.
      * @return A shared pointer to a TranspilerSession.
@@ -81,21 +90,29 @@ struct TranspilerSession {
 
     const UserInput& getInput() const { return _input; }
 
-    UserInput& getInput() { return _input; }
-
     const UserOutput& getOutput() const { return _output; }
 
     UserOutput& getOutput() { return _output; }
 
-    void moveOutputToInput() {
-        _input.source = _output.normalized.source;
-        _input.headers = _output.normalized.headers;
+    const std::string& getStagedSource() const { return _stagedFiles.source; }
+    std::string& getStagedSource() { return _stagedFiles.source; }
+
+    const std::map<std::string, std::string>& getStagedHeaders() const {
+        return _stagedFiles.headers;
+    }
+    std::map<std::string, std::string>& getStagedHeaders() { return _stagedFiles.headers; }
+
+    void updateSourceHeaders() {
+        _stagedFiles.source = _output.normalized.source;
+        _stagedFiles.headers = _output.normalized.headers;
     }
 
    private:
     // TODO add methods for user input/output
-    UserInput _input;
+    const UserInput _input;
     UserOutput _output;
+
+    StagedFiles _stagedFiles;
 
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
