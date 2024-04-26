@@ -23,8 +23,7 @@ HandleResult handleSimdLengthStmtAttribute(SessionStage& s,
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (loopInfo && !loopInfo->parent) {
-        bool isValidLoop = !loopInfo->isTiled() && loopInfo->is(LoopType::Outer);
-        if (isValidLoop && params->size > 0) {
+        if (loopInfo->has(LoopType::Outer) && params->size > 0) {
             loopInfo->simdLength = params->size;
         }
     }
