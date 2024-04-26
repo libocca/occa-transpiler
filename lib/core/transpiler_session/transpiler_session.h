@@ -25,15 +25,51 @@ class SessionStage;
 using SharedTranspilerSession = std::shared_ptr<TranspilerSession>;
 
 struct TranspilerSession {
+    /**
+     * @brief Factory method to create a shared pointer to a TranspilerSession with UserInput.
+     * @param input The user input.
+     * @return A shared pointer to a TranspilerSession.
+     */
     static SharedTranspilerSession make(UserInput);
+    /**
+     * @brief Factory method to create a shared pointer to a TranspilerSession with a target backend
+     * and source code.
+     * @param backend The target backend.
+     * @param sourceCode The source code.
+     * @return A shared pointer to a TranspilerSession.
+     */
     static SharedTranspilerSession make(TargetBackend backend, std::string sourceCode);
 
+    /**
+     * @brief Constructor for TranspilerSession with a target backend and source code.
+     * @param backend The target backend.
+     * @param sourceCode The source code.
+     */
     explicit TranspilerSession(TargetBackend backend, std::string sourceCode);
+    /**
+     * @brief Constructor for TranspilerSession with UserInput.
+     * @param input The user input.
+     */
     explicit TranspilerSession(UserInput input);
 
+    /**
+     * @brief Pushes a diagnostic message to the session.
+     * @param diag The diagnostic message.
+     * @param stage The current session stage.
+     */
     void pushDiagnosticMessage(clang::StoredDiagnostic& message, SessionStage& stage);
 
+    /**
+     * @brief Adds an error to the session.
+     * @param ec The error code.
+     * @param desc The error description.
+     */
     void pushError(std::error_code ec, std::string desc);
+
+    /**
+     * @brief Adds a warning to the session.
+     * @param desc The warning description.
+     */
     void pushWarning(std::string desc);
     [[nodiscard]] const std::vector<Error>& getErrors() const;
     std::vector<Error>& getErrors();

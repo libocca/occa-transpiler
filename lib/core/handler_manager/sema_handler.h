@@ -7,7 +7,7 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/Decl.h>
 #include <clang/AST/Stmt.h>
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 #include <tl/expected.hpp>
 
 #include <any>

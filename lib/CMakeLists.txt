@@ -202,6 +202,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     util/io_helper.cpp
     util/string_utils.cpp
+    util/string_utils.hpp
 
     pipeline/normalizer.cpp
     pipeline/transpiler.cpp

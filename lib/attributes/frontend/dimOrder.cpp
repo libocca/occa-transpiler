@@ -6,7 +6,7 @@
 #include "attributes/utils/parser_impl.hpp"
 #include "params/dim.h"
 
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>

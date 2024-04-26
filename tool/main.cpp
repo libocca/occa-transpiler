@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
                 .backend = oklt::TargetBackend::CUDA,
                 .source = std::move(input_source.value()),
                 .sourcePath = sourcePath,
-                .inlcudeDirectories = std::move(includes),
+                .includeDirectories = std::move(includes),
                 .defines = std::move(defines),
             });
             if (!result) {
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
             oklt::UserInput input{.backend = backend.value(),
                                   .source = sourceCode,
                                   .sourcePath = sourcePath,
-                                  .inlcudeDirectories = std::move(includes),
+                                  .includeDirectories = std::move(includes),
                                   .defines = std::move(defines)};
 
             oklt::UserResult result = [](auto&& input, auto need_normalize) {

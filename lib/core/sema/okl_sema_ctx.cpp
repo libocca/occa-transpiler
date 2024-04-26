@@ -9,7 +9,7 @@
 #include "oklt/core/kernel_metadata.h"
 
 #include <oklt/core/error.h>
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include <clang/AST/Attr.h>
 
@@ -41,6 +41,15 @@ LoopAxisTypes getLoopAxisType(const std::any* param) {
     return res;
 }
 
+/**
+ * @brief Function to create OklLoopInfo.
+ * @param stage The current session stage.
+ * @param stmt The for statement to parse.
+ * @param attr The attribute of the for statement.
+ * @param loopTypeAxis The types and axis of this loop.
+ * @param kernelInfo The parsed kernel information.
+ * @return An expected value containing the parsed loop information or an error.
+ */
 tl::expected<OklLoopInfo, Error> makeOklLoopInfo(SessionStage& stage,
                                                  const clang::ForStmt& stmt,
                                                  const clang::Attr* attr,
@@ -55,8 +64,14 @@ tl::expected<OklLoopInfo, Error> makeOklLoopInfo(SessionStage& stage,
     return parsedLoopInfo;
 }
 
-// check if loop types inside one loop are legal. firstType/lastType - first and alst non regular
-// loop type
+/**
+ * @brief Function to check if loop types inside one loop are legal. Sets firstType and lastType to
+ * first and second loop types.
+ * @param loopTypes The types of the loops.
+ * @param firstType The first non-regular loop type.
+ * @param lastType The last non-regular loop type.
+ * @return True if the loop level is legal, false otherwise.
+ */
 bool isLegalLoopLevel(LoopTypes loopTypes, LoopType& firstType, LoopType& lastType) {
     lastType = LoopType::Regular;
     firstType = LoopType::Regular;
@@ -77,6 +92,12 @@ bool isLegalLoopLevel(LoopTypes loopTypes, LoopType& firstType, LoopType& lastTy
     return true;
 }
 
+/**
+ * @brief Function to check if loop type of child is legal corresponding to parent loop type.
+ * @param childTypes The types of the child loops.
+ * @param parentTypes The types of the parent loops.
+ * @return True if the loop level is legal, false otherwise.
+ */
 bool isLegalLoopLevel(LoopTypes childTypes, LoopTypes parentTypes = {LoopType::Regular}) {
     LoopType firstParentType = LoopType::Regular, lastParentType = LoopType::Regular;
     LoopType firstChildType = LoopType::Regular, lastChildType = LoopType::Regular;
@@ -102,10 +123,20 @@ bool isLegalLoopLevel(LoopTypes childTypes, LoopTypes parentTypes = {LoopType::R
     return false;
 }
 
+/**
+ * @brief Function to check if the top loop level is legal.
+ * @param loopType The types of the loops.
+ * @return True if the top loop level is legal, false otherwise.
+ */
 bool isLegalTopLoopLevel(LoopTypes loopType) {
     return loopType.front() == LoopType::Outer;
 }
 
+/**
+ * @brief Function to check if the given axis types are regular.
+ * @param axisTypes The axis types to check.
+ * @return True if the axis types are regular, false otherwise.
+ */
 bool isRegular(const LoopAxisTypes& axisTypes) {
     for (auto& type : axisTypes.types) {
         if (type != LoopType::Regular) {
@@ -115,6 +146,12 @@ bool isRegular(const LoopAxisTypes& axisTypes) {
     return true;
 }
 
+/**
+ * @brief Function to check if given axis and type of a loop is top level in loops structure.
+ * @param axisTypes The axis types to check.
+ * @param parsedKernelInfo The current parsed kernel information.
+ * @return True if the top level is attributed, false otherwise.
+ */
 bool isTopLevelAttributed(const LoopAxisTypes& axisTypes,
                           const OklSemaCtx::ParsedKernelInfo& parsedKernelInfo) {
     if (isRegular(axisTypes)) {
