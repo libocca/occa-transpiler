@@ -1,5 +1,7 @@
 #include <oklt/core/error.h>
 
+#include "core/sys/setup.h"
+
 #include "pipeline/core/error_codes.h"
 #include "pipeline/core/stage_action_registry.h"
 #include "pipeline/core/stage_action_runner.h"
@@ -29,14 +31,14 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     SPDLOG_INFO("start: {}", stageName);
     SPDLOG_TRACE("input source:\n{}\n", input.source);
 
-    Twine toolName = stageName;
+    Twine toolName = "clang";//stageName;
 
     auto cppFileNamePath = input.sourcePath;
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
     // TODO get this info from user input aka json prop file
     std::vector<std::string> args = {
-        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I."};
+        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I.", getISystemOpt()};
 
     for (const auto& define : input.defines) {
         std::string def = "-D" + define;

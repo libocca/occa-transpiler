@@ -15,7 +15,9 @@ const std::string CUDA_PL_PRIM_INC = "<cuda_pipeline_primitives.h>";
 
 std::vector<std::string_view> getBackendHeader(SessionStage& s) {
     auto defines = s.getSession().getInput().defines;
-    auto hasAsyncMode = std::find(defines.begin(), defines.end(), "USE_ASYNC_READ");
+    auto hasAsyncMode = std::find_if(defines.begin(), defines.end(), [](const std::string& d) {
+        return d.find("USE_ASYNC_READ") != std::string::npos;
+    });
     if (hasAsyncMode == defines.end()) {
         return {CUDA_RT_INC};
     }
