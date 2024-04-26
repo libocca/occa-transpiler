@@ -19,15 +19,15 @@ using namespace oklt;
 using namespace clang;
 
 const std::string EXTERN_C = "extern \"C\"";
-const std::string DPCPP_ADDITIONAL_ARGUMENTS = "sycl::queue * queue_,sycl::nd_range<3> * range_";
+// const std::string DPCPP_ADDITIONAL_ARGUMENTS = "sycl::queue * queue_,sycl::nd_range<3> * range_";
 const std::string INNER_SIZES_FMT = "[[sycl::reqd_work_group_size({},{},{})]]";
+const std::string SIMD_LEGHT_FMT = "[[intel::reqd_sub_group_size({})]]";
 const std::string SUBMIT_QUEUE =
     R"(queue_->submit(
     [&](sycl::handler & handler_) {
       handler_.parallel_for(
         *range_,
-        [=](sycl::nd_item<3> item_) {
-)";
+        [=](sycl::nd_item<3> item_))";
 const std::string suffixCode =
     R"(
         }
@@ -38,6 +38,16 @@ const std::string suffixCode =
 
 std::string getFunctionName(const FunctionDecl& func, size_t n) {
     return util::fmt("_occa_{}_{}", func.getNameAsString(), n).value();
+}
+
+std::string genFunctionSimdLengthStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
+    if (!info || info->simdLength.value_or(-1) <= 0) {
+        return "";
+    }
+
+    std::stringstream out;
+    out << " " << util::fmt(SIMD_LEGHT_FMT, info->simdLength.value()).value();
+    return out.str();
 }
 
 std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
@@ -131,7 +141,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
 
-        handleChildAttr(s, child->stmt, MAX_INNER_DIMS);
+        handleChildAttr(s, child->stmt, MAX_INNER_DIMS_NAME);
 
         std::stringstream out;
         if (n != 0) {
@@ -140,7 +150,7 @@ HandleResult handleKernelAttribute(SessionStage& s,
         }
         out << getFunctionAttributesStr(func, child);
         out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
-        out << SUBMIT_QUEUE;
+        out << SUBMIT_QUEUE << genFunctionSimdLengthStr(func, child) << " {\n";
 
         auto endPos = getAttrFullSourceRange(*child->attr).getBegin().getLocWithOffset(-1);
         rewriter.ReplaceText(SourceRange{startPos, endPos}, out.str());

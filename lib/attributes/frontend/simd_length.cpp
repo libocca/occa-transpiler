@@ -1,7 +1,7 @@
 #include "attributes/attribute_names.h"
+#include "attributes/frontend/params/loop.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "attributes/frontend/params/loop.h"
 
 #include "core/handler_manager/parse_handler.h"
 
@@ -13,15 +13,15 @@ namespace {
 using namespace clang;
 using namespace oklt;
 
-constexpr ParsedAttrInfo::Spelling MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, MAX_INNER_DIMS_NAME},
-    {ParsedAttr::AS_GNU, MAX_INNER_DIMS_NAME}};
+constexpr ParsedAttrInfo::Spelling SIMD_LENGTH_ATTRIBUTE_SPELLINGS[] = {
+    {ParsedAttr::AS_CXX11, SIMD_LENGTH_NAME},
+    {ParsedAttr::AS_GNU, SIMD_LENGTH_NAME}};
 
-struct MaxInnerDims : public ParsedAttrInfo {
-    MaxInnerDims() {
+struct SimdLengthAttribute : public ParsedAttrInfo {
+    SimdLengthAttribute() {
         NumArgs = 1;
         OptArgs = 0;
-        Spellings = MAX_INNER_DIMS_ATTRIBUTE_SPELLINGS;
+        Spellings = SIMD_LENGTH_ATTRIBUTE_SPELLINGS;
         AttrKind = clang::AttributeCommonInfo::AT_Suppress;
         IsStmt = true;
     }
@@ -47,32 +47,30 @@ struct MaxInnerDims : public ParsedAttrInfo {
     }
 };
 
-HandleResult parseMaxInnerDims(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
+HandleResult parseSimdLengthAttrParams(SessionStage& stage,
+                                       const clang::Attr& attr,
+                                       OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
-        return tl::make_unexpected(Error{{}, "[@max_inner_dims] does not take kwargs"});
+        return tl::make_unexpected(Error{{}, "[@simd_length] does not take kwargs"});
     }
 
-    if (data.args.empty()) {
-        return tl::make_unexpected(Error{{}, "[@max_inner_dims] expects at least one argument"});
+    if (data.args.size() != 1) {
+        return tl::make_unexpected(Error{{}, "[@simd_length] takes one argument"});
     }
 
-    if (data.args.size() > 3) {
-        return tl::make_unexpected(Error{{}, "[@max_inner_dims] takes at most 3 arguments"});
+    auto sz = data.get<int>(0);
+    if (!sz) {
+        return tl::make_unexpected(Error{{}, "[@simd_length] take an integer argument"});
+    } else if (sz.value() < 0) {
+        return tl::make_unexpected(Error{{}, "[@simd_length] arguments must be positive!"});
     }
 
-    AttributedLoopInnerSize ret{};
-    for (auto i = size_t(0); i < data.args.size(); ++i) {
-        auto dimSize = data.get<int>(i);
-        if (!dimSize.has_value() || dimSize.value() < 0) {
-            return tl::make_unexpected(Error{{}, "[@max_inner_dims] arguments must be positive!"});
-        }
-        ret.size[i] = dimSize.value();
-    }
+    auto ret = AttributedLoopSimdLength{.size = sz.value_or(-1)};
 
     return ret;
 }
 
-__attribute__((constructor)) void registerMaxInnerDimsAttrFrontend() {
-    registerAttrFrontend<MaxInnerDims>(MAX_INNER_DIMS_NAME, parseMaxInnerDims);
+__attribute__((constructor)) void registerSimdLengthAttrFrontend() {
+    registerAttrFrontend<SimdLengthAttribute>(SIMD_LENGTH_NAME, parseSimdLengthAttrParams);
 }
 }  // namespace

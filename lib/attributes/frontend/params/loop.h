@@ -25,4 +25,8 @@ struct AttributedLoopInnerSize {
     std::array<int, N_AXIS> size = {-1, -1, -1};
 };
 
+struct AttributedLoopSimdLength {
+    int size = -1;
+};
+
 }  // namespace oklt
