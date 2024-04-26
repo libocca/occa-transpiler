@@ -1,5 +1,5 @@
 #include <oklt/core/kernel_metadata.h>
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"

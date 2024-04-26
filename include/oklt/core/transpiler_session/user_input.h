@@ -2,11 +2,15 @@
 
 #include <oklt/core/target_backends.h>
 
-#include <vector>
+#include <filesystem>
 #include <map>
+#include <vector>
 
 namespace oklt {
 
+/**
+ * @brief Represents the user input for transpilation, normalization or both
+ */
 struct UserInput {
     TargetBackend backend;                                  ///< The target backend.
     std::string source;                                     ///< The source code of OKL program.

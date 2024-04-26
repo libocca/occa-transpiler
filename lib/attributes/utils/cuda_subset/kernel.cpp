@@ -8,7 +8,7 @@
 #include "core/utils/type_converter.h"
 #include "pipeline/core/error_codes.h"
 
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include <spdlog/spdlog.h>
 

@@ -1,6 +1,6 @@
+#include "attributes/utils/kernel_utils.h"
 #include <oklt/core/kernel_metadata.h>
 #include "attributes/attribute_names.h"
-#include "attributes/utils/kernel_utils.h"
 #include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
@@ -17,11 +17,20 @@ namespace oklt {
 using namespace clang;
 
 namespace {
+/**
+ * @brief A structure representing a node in the loop tree.
+ */
 struct LoopTreeNode {
-    OklLoopInfo* loop;
-    uint32_t typeIdx = 0;  // type can be complex (@tile), so index indicates concrete type
+    OklLoopInfo* loop;     ///< A pointer to the loop information.
+    uint32_t typeIdx = 0;  ///< The index indicating the concrete type of the loop.
 };
 
+/**
+ * @brief Function to get the next attributed type index in the loop types.
+ * @param loopTypes The types of the loops.
+ * @param currIdx The current index.
+ * @return The next attributed type index if it exists, -1 otherwise.
+ */
 int32_t getNextAttributedTypeIdx(const LoopTypes& loopTypes, int32_t currIdx) {
     while (++currIdx < loopTypes.size()) {
         if (loopTypes[currIdx] != LoopType::Regular) {
@@ -31,6 +40,12 @@ int32_t getNextAttributedTypeIdx(const LoopTypes& loopTypes, int32_t currIdx) {
     return -1;
 }
 
+/**
+ * @brief Function to verify the loop structure recursively using Breadth-First Search (BFS).
+ * @param queue A queue of loop tree nodes to verify.
+ * @return An expected void value if the loop structure is valid, an unexpected pair of a pointer to
+ * the problematic statement and an error message otherwise.
+ */
 tl::expected<void, std::pair<const clang::ForStmt*, std::string>> verifyLoopStructureRecursiveBFS(
     std::deque<LoopTreeNode>& queue) {
     // Leaf - stop condition
@@ -101,8 +116,13 @@ tl::expected<void, std::pair<const clang::ForStmt*, std::string>> verifyLoopStru
     return verifyLoopStructureRecursiveBFS(nextQueue);
 }
 
-// All leafs must be at the same level and all levels must have the same type
-/* Returns pair of failed loop, and error message if failed*/
+/**
+ * @brief Function to verify the loop structure. All leafs must be at the same level and all levels
+ * must have the same type.
+ * @param topLevelOuterLoops A list of pointers to the top level outer loops.
+ * @return An expected void value if the loop structure is valid, an unexpected pair of a pointer to
+ * the problematic statement and an error message otherwise.
+ */
 tl::expected<void, std::pair<const clang::ForStmt*, std::string>> verifyLoopStructure(
     const std::list<OklLoopInfo*>& topLevelOuterLoops) {
     std::deque<LoopTreeNode> q;
@@ -133,7 +153,14 @@ const clang::Attr* getFirstLoopAttribute(const clang::ForStmt* forStmt, SessionS
 
 }  // namespace
 
-tl::expected<void, Error> verifyLoops(SessionStage& stage, OklSemaCtx::ParsedKernelInfo& kernelInfo) {
+/**
+ * @brief Function to verify the loops tree in a kernel.
+ * @param stage The current session stage.
+ * @param kernelInfo The parsed kernel information.
+ * @return An expected void value if the loops are valid, an unexpected error otherwise.
+ */
+tl::expected<void, Error> verifyLoops(SessionStage& stage,
+                                      OklSemaCtx::ParsedKernelInfo& kernelInfo) {
     auto& topOuterLoops = kernelInfo.topLevelOuterLoops;
     if (topOuterLoops.empty()) {
         // If there is outer somewhere, but not on the top level
@@ -178,8 +205,6 @@ tl::expected<void, Error> verifyLoops(SessionStage& stage, OklSemaCtx::ParsedKer
                   failedLoopAttribute == nullptr ? std::any() : failedLoopAttribute->getRange()});
     }
     return {};
-    // return tl::make_unexpected(
-    // Error{OkltPipelineErrorCode::MISSING_INNER_LOOP, "Missing an [@inner] loop"});
 }
 
 const clang::AttributedStmt* getAttributedStmt(SessionStage& s, const clang::Stmt& stmt) {
