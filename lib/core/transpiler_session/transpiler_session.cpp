@@ -148,11 +148,11 @@ SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::stri
 
 TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode)
     : _input{backend, std::move(sourceCode)},
-      _stagedFile{_input.source} {}
+      _stagedFiles{_input.source} {}
 
 TranspilerSession::TranspilerSession(UserInput input)
     : _input(std::move(input)),
-      _stagedFile{_input.source, _input.headers} {}
+      _stagedFiles{_input.source, _input.headers} {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& diag, SessionStage& stage) {
     auto errorMsg = getErrorMessage(diag, stage);

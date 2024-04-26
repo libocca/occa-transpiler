@@ -54,15 +54,15 @@ struct TranspilerSession {
 
     UserOutput& getOutput() { return _output; }
 
-    const std::string& getStagedSource() const { return _stagedFile.source; }
-    std::string& getStagedSource() { return _stagedFile.source; }
+    const std::string& getStagedSource() const { return _stagedFiles.source; }
+    std::string& getStagedSource() { return _stagedFiles.source; }
 
-    const std::map<std::string, std::string>& getStagedHeaders() const { return _stagedFile.headers; }
-    std::map<std::string, std::string>& getStagedHeaders() { return _stagedFile.headers; }
+    const std::map<std::string, std::string>& getStagedHeaders() const { return _stagedFiles.headers; }
+    std::map<std::string, std::string>& getStagedHeaders() { return _stagedFiles.headers; }
 
     void updateSourceHeaders() {
-        _stagedFile.source = _output.normalized.source;
-        _stagedFile.headers = _output.normalized.headers;
+        _stagedFiles.source = _output.normalized.source;
+        _stagedFiles.headers = _output.normalized.headers;
     }
 
    private:
@@ -70,7 +70,7 @@ struct TranspilerSession {
     const UserInput _input;
     UserOutput _output;
 
-    StagedFiles _stagedFile;
+    StagedFiles _stagedFiles;
 
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
