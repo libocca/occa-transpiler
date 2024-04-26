@@ -25,7 +25,7 @@ class SessionStage;
 using SharedTranspilerSession = std::shared_ptr<TranspilerSession>;
 
 struct TranspilerSession {
-    struct StagedFile {
+    struct StagedFiles {
         std::string source;  ///< Current source code (changes between stages)
         std::map<std::string, std::string> headers;  ///< Current headers (changes between stages)
     };
@@ -70,7 +70,7 @@ struct TranspilerSession {
     const UserInput _input;
     UserOutput _output;
 
-    StagedFile _stagedFile;
+    StagedFiles _stagedFile;
 
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
