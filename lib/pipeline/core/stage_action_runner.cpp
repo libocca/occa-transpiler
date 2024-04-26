@@ -19,7 +19,7 @@ namespace oklt {
 
 SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspilerSession session) {
     const auto& input = session->getInput();
-    const auto& source = session->getSource();
+    const auto& source = session->getStagedSource();
     if (source.empty()) {
         SPDLOG_ERROR("Input source string is empty");
         auto error =
@@ -84,7 +84,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
 
     // prepare input for the next stage of pipeline
     session->updateSourceHeaders();
-    SPDLOG_TRACE("output source:\n{}\n", session->getSource());
+    SPDLOG_TRACE("output source:\n{}\n", session->getStagedSource());
 
     return session;
 }

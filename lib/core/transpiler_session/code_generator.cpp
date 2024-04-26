@@ -84,7 +84,7 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto inputs = stage.getRewriterResultForHeaders();
     // merging operation move the source to destination map so clone headers
     // to preserve them for possible laucher generator
-    auto clone = stage.getSession().getHeaders();
+    auto clone = stage.getSession().getStagedHeaders();
     inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
     return inputs;

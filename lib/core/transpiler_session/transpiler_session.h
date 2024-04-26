@@ -25,6 +25,11 @@ class SessionStage;
 using SharedTranspilerSession = std::shared_ptr<TranspilerSession>;
 
 struct TranspilerSession {
+    struct StagedFile {
+        std::string source;  ///< Current source code (changes between stages)
+        std::map<std::string, std::string> headers;  ///< Current headers (changes between stages)
+    };
+
     static SharedTranspilerSession make(UserInput);
     static SharedTranspilerSession make(TargetBackend backend, std::string sourceCode);
 
@@ -49,15 +54,15 @@ struct TranspilerSession {
 
     UserOutput& getOutput() { return _output; }
 
-    const std::string& getSource() const { return _source; }
-    std::string& getSource() { return _source; }
+    const std::string& getStagedSource() const { return _stagedFile.source; }
+    std::string& getStagedSource() { return _stagedFile.source; }
 
-    const std::map<std::string, std::string>& getHeaders() const { return _headers; }
-    std::map<std::string, std::string>& getHeaders() { return _headers; }
+    const std::map<std::string, std::string>& getStagedHeaders() const { return _stagedFile.headers; }
+    std::map<std::string, std::string>& getStagedHeaders() { return _stagedFile.headers; }
 
     void updateSourceHeaders() {
-        _source = _output.normalized.source;
-        _headers = _output.normalized.headers;
+        _stagedFile.source = _output.normalized.source;
+        _stagedFile.headers = _output.normalized.headers;
     }
 
    private:
@@ -65,8 +70,7 @@ struct TranspilerSession {
     const UserInput _input;
     UserOutput _output;
 
-    std::string _source;                          ///< Current source code (changes between stages)
-    std::map<std::string, std::string> _headers;  ///< Current headers (changes between stages)
+    StagedFile _stagedFile;
 
     std::vector<Error> _errors;
     std::vector<Warning> _warnings;
