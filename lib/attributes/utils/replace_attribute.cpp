@@ -1,8 +1,8 @@
 #include "attributes/utils/replace_attribute.h"
 #include "attributes/attribute_names.h"
+#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
-#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/utils/var_decl.h"
 
 #include <clang/AST/AST.h>
@@ -15,8 +15,7 @@ using namespace oklt;
 using namespace clang;
 
 template <typename T>
-HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r,
-                                       const std::string& modifier_) {
+HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r, const std::string& modifier_) {
     auto modifier = modifier_ + " ";
     // for all explicit constructors/methods add qualifier
     for (const auto& method : node.methods()) {
@@ -42,18 +41,6 @@ HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r,
 
     return {};
 }
-bool isIntrinsicHeader(SessionStage& s,
-                       const clang::Decl& decl) {
-    auto funcLoc = decl.getLocation();
-    const auto &sm = s.getCompiler().getSourceManager();
-    auto fid = sm.getFileID(funcLoc);
-    const auto *fileEntry = sm.getFileEntryForID(fid);
-    if(fileEntry) {
-        return fileEntry->getName().str() == INTRINSIC_INCLUDE_FILENAME;
-    }
-    return false;
-}
-
 }  // namespace
 
 namespace oklt {
@@ -62,17 +49,12 @@ using namespace clang;
 HandleResult handleGlobalConstant(SessionStage& s,
                                   const clang::VarDecl& decl,
                                   const std::string& qualifier) {
-
     // skip decl with invalid soucce location
     if (decl.getLocation().isInvalid()) {
         return {};
     }
 
     if (!isGlobalConstVariable(decl)) {
-        return {};
-    }
-
-    if(isIntrinsicHeader(s, decl)) {
         return {};
     }
 
@@ -114,16 +96,12 @@ HandleResult handleGlobalFunction(SessionStage& s,
         return {};
     }
 
-    if(isIntrinsicHeader(s, decl)) {
-        return {};
-    }
-
     // INFO: Check if function is not attributed with OKL attribute
     auto loc = decl.getSourceRange().getBegin();
     auto spacedModifier = funcQualifier + " ";
 
     // If function is @kernel, we don't handle it
-    if(decl.hasAttrs()) {
+    if (decl.hasAttrs()) {
         for (auto* attr : decl.getAttrs()) {
             if (attr->getNormalizedFullName() == KERNEL_ATTR_NAME) {
                 SPDLOG_DEBUG(

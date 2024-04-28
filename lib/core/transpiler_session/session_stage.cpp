@@ -2,6 +2,8 @@
 #include "core/diag/diag_consumer.h"
 #include "core/handler_manager/handler_manager.h"
 #include "core/transpiler_session/transpiler_session.h"
+#include "core/builtin_headers/intrinsic_impl.h"
+#include "core/vfs/overlay_fs.h"
 
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>

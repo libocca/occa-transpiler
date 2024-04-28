@@ -1,6 +1,6 @@
+#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/vfs/overlay_fs.h"
-#include "core/builtin_headers/intrinsic_impl.h"
 
 #include "pipeline/core/stage_action.h"
 
@@ -22,16 +22,7 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
         SPDLOG_ERROR("no file manager at call of {}", __FUNCTION__);
         return false;
     }
-
-    auto& input = _session->getInput();
-
-    std::string intrinsicSource = getIntrinsicIncSource(_stage->getBackend());
-    input.headers.emplace(INTRINSIC_INCLUDE_FILENAME, intrinsicSource);
-    auto& fm = compiler.getFileManager();
-    auto vfs = fm.getVirtualFileSystemPtr();
-
-    auto overlayFs = makeOverlayFs(vfs, input.headers);
-    fm.setVirtualFileSystem(overlayFs);
+    addInstrinsicStub(*_session.get(), compiler);
 
     return true;
 }

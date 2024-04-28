@@ -1,4 +1,5 @@
 #include "core/transpiler_session/header_info.h"
+#include "core/builtin_headers/intrinsic_impl.h"
 
 namespace {}
 namespace oklt {
@@ -17,6 +18,10 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
                                                     clang::StringRef relativePath,
                                                     const clang::Module* imported,
                                                     clang::SrcMgr::CharacteristicKind fileType) {
+    if(!deps.useOklIntrinsic) {
+        deps.useOklIntrinsic = fileName == INTRINSIC_INCLUDE_FILENAME;
+    }
+
     auto currentFileType = sm.getFileCharacteristic(hashLoc);
     if (clang::SrcMgr::isSystem(currentFileType)) {
         return;

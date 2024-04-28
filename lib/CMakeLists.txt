@@ -283,9 +283,9 @@ embed_resource_txt(resources/okl_intrinsic_hip.h
     INTRINSIC_HIP
 )
 
-embed_resource_txt(resources/okl_intrinsic_openmp.h
-    core/builtin_headers/okl_intrinsic_openmp.h
-    INTRINSIC_OPENMP
+embed_resource_txt(resources/okl_intrinsic_host.h
+    core/builtin_headers/okl_intrinsic_host.h
+    INTRINSIC_HOST
 )
 
 

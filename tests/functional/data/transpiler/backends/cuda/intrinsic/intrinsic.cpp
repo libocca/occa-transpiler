@@ -4,10 +4,8 @@
 @kernel void intrinsic_builtin(const float* fVec, float* fSum) {
     @outer for (int i = 0; i < 1; ++i) {
         @inner for (int j = 0; j < 1; ++j) {
-            float value = okl_intrinsic_exp10(fVec[i]);
+            float value = okl_exp10f(fVec[i]);
             @atomic* fSum += value;		    
-            //@atomic* iSum += iVec[0];
-            //@atomic* fSum += fVec[0];
         }
     }
 }

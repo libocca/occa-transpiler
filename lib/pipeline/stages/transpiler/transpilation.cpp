@@ -14,6 +14,7 @@
 #include "pipeline/core/stage_action.h"
 #include "pipeline/core/stage_action_names.h"
 #include "pipeline/core/stage_action_registry.h"
+#include "core/builtin_headers/intrinsic_impl.h"
 
 #include <clang/AST/RecursiveASTVisitor.h>
 
@@ -202,6 +203,15 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
     return {};
 }
 
+bool isIntrinsicHeader(const clang::SourceManager& sm, const clang::SourceLocation &loc) {
+    auto fid = sm.getFileID(loc);
+    const auto* fileEntry = sm.getFileEntryForID(fid);
+    if (fileEntry) {
+        return fileEntry->getName().str() == INTRINSIC_INCLUDE_FILENAME;
+    }
+    return false;
+}
+
 template <typename NodeType>
 bool skipNode(SessionStage& s, const NodeType& n) {
     const auto& sm = s.getCompiler().getSourceManager();
@@ -212,6 +222,10 @@ bool skipNode(SessionStage& s, const NodeType& n) {
     }
 
     if (sm.isInSystemMacro(loc)) {
+        return true;
+    }
+
+    if(isIntrinsicHeader(sm, loc)) {
         return true;
     }
 
