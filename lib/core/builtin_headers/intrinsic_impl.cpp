@@ -39,7 +39,8 @@ IntrinsicInfo getIntrinsicInfo(TargetBackend backend) {
                 std::string(INTRINSIC_HOST),
                 {
                  "stddef.h",
-                 "cmath"
+                 "cmath",
+                 "cstring",
                 }
             };
         default:
