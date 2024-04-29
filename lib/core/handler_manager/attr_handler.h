@@ -3,7 +3,7 @@
 #include "core/handler_manager/handler_manager.h"
 #include "util/type_traits.h"
 
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include <clang/AST/ASTTypeTraits.h>
 #include <clang/AST/Attr.h>

@@ -30,6 +30,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
     attributes/frontend/max_inner_dims.cpp
+    attributes/frontend/simd_length.cpp
 
     # Backends common
     attributes/utils/parser.h
@@ -143,6 +144,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/dim_order.cpp
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/no_barrier.cpp
+    attributes/backend/common/simd_length.cpp
 
     # Sema
     core/sema/okl_sema_ctx.cpp
@@ -168,6 +170,9 @@ set (OCCA_TRANSPILER_SOURCES
     core/vfs/overlay_fs.cpp
 
     core/logger.cpp
+
+    core/sys/setup.h
+    core/sys/setup.cpp
 
     core/rewriter/delta/delta_trees.cpp
 
@@ -202,6 +207,7 @@ set (OCCA_TRANSPILER_SOURCES
 
     util/io_helper.cpp
     util/string_utils.cpp
+    util/string_utils.hpp
 
     pipeline/normalizer.cpp
     pipeline/transpiler.cpp

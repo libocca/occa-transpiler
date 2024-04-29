@@ -40,7 +40,7 @@ void StageAction::EndSourceFileAction() {
 
     // copy transformed headers and merge untouched headers for the next stage
     auto transformedHeaders = _stage->getRewriterResultForHeaders();
-    transformedHeaders.fileMap.merge(input.headers);
+    transformedHeaders.fileMap.merge(_session->getStagedHeaders());
     output.normalized.headers = std::move(transformedHeaders.fileMap);
 }
 

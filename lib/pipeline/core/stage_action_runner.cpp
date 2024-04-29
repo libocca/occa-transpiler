@@ -1,5 +1,7 @@
 #include <oklt/core/error.h>
 
+#include "core/sys/setup.h"
+
 #include "pipeline/core/error_codes.h"
 #include "pipeline/core/stage_action_registry.h"
 #include "pipeline/core/stage_action_runner.h"
@@ -18,8 +20,9 @@ using namespace clang::tooling;
 namespace oklt {
 
 SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspilerSession session) {
-    auto& input = session->getInput();
-    if (input.source.empty()) {
+    const auto& input = session->getInput();
+    const auto& source = session->getStagedSource();
+    if (source.empty()) {
         SPDLOG_ERROR("Input source string is empty");
         auto error =
             makeError(OkltPipelineErrorCode::EMPTY_SOURCE_STRING, "input source string is empty");
@@ -27,23 +30,23 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     }
 
     SPDLOG_INFO("start: {}", stageName);
-    SPDLOG_TRACE("input source:\n{}\n", input.source);
+    SPDLOG_TRACE("input source:\n{}\n", source);
 
-    Twine toolName = stageName;
+    Twine toolName = "clang";//stageName;
 
     auto cppFileNamePath = input.sourcePath;
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
     // TODO get this info from user input aka json prop file
     std::vector<std::string> args = {
-        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I."};
+        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I.", getISystemOpt()};
 
     for (const auto& define : input.defines) {
         std::string def = "-D" + define;
         args.push_back(std::move(def));
     }
 
-    for (const auto& includePath : input.inlcudeDirectories) {
+    for (const auto& includePath : input.includeDirectories) {
         std::string incPath = "-I" + includePath.string();
         args.push_back(std::move(incPath));
     }
@@ -61,7 +64,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
         return tl::make_unexpected(std::vector<Error>{err});
     }
 
-    Twine code(input.source);
+    Twine code(source);
     bool ret = runToolOnCodeWithArgs(std::move(stageAction),
                                      code,
                                      args,
@@ -82,8 +85,8 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     }
 
     // prepare input for the next stage of pipeline
-    session->moveOutputToInput();
-    SPDLOG_TRACE("output source:\n{}\n", input.source);
+    session->updateSourceHeaders();
+    SPDLOG_TRACE("output source:\n{}\n", session->getStagedSource());
 
     return session;
 }

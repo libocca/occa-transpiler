@@ -42,10 +42,10 @@ HandleResult handleMaxInnerDimsStmtAttribute(SessionStage& s,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = registerCommonHandler(MAX_INNER_DIMS, handleMaxInnerDimsStmtAttribute);
+    auto ok = registerCommonHandler(MAX_INNER_DIMS_NAME, handleMaxInnerDimsStmtAttribute);
 
     if (!ok) {
-        SPDLOG_ERROR("Failed to register {} attribute handler", MAX_INNER_DIMS);
+        SPDLOG_ERROR("Failed to register {} attribute handler", MAX_INNER_DIMS_NAME);
     }
 }
 }  // namespace

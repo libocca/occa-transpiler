@@ -18,6 +18,11 @@
 namespace {
 using namespace oklt;
 
+/**
+ * @brief Find the first non-whitespace character in a string.
+ * @param str The string to search.
+ * @return An iterator pointing to the first non-whitespace character, or str.cend() if none found.
+ */
 std::string::const_iterator firstNonWhiteCharacter(const std::string& str) {
     if (str.empty()) {
         return str.cend();
@@ -29,6 +34,13 @@ std::string::const_iterator firstNonWhiteCharacter(const std::string& str) {
     return it;
 }
 
+/**
+ * @brief Substitute the original column in a diagnostic message if needed. It is needed in case of
+ * normalizer modified original source line.
+ * @param diag The diagnostic message.
+ * @param stage The current session stage.
+ * @return A diagnostic message with the column substituted if needed.
+ */
 clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic& diag,
                                                          SessionStage& stage) {
     auto& sm = stage.getCompiler().getSourceManager();
@@ -67,6 +79,11 @@ clang::StoredDiagnostic substituteOriginalColumnIfNeeded(clang::StoredDiagnostic
 
     return diag;
 }
+/**
+ * @brief Removes the 'okl_' prefix from the attribute name in an error message.
+ * @param input The input string.
+ * @return The input string with the 'okl_' prefix removed before attribute name
+ */
 std::string removeOklPrefix(const std::string& input) {
     // match word 'okl_' prefix proceeding 'attribute' word
     std::regex pattern(fmt::format(R"('{}(.+?)' attribute)", OKL_ATTR_PREFIX));
@@ -78,6 +95,15 @@ std::string removeOklPrefix(const std::string& input) {
     return result;
 }
 
+/**
+ * @brief Substitutes the original line for a given row in the error message. Substitution is done
+ * only if normalization modified the original line.
+ * @param input The input string -- error message.
+ * @param ol The original lines.
+ * @param fid The file ID.
+ * @param row The row number.
+ * @return The input string with the original line substituted for the given row.
+ */
 std::string& substituteOriginalLineForRow(std::string& input,
                                           const OriginalLines& ol,
                                           clang::FileID fid,
@@ -107,6 +133,14 @@ std::string& substituteOriginalLineForRow(std::string& input,
 }  // namespace
 
 namespace oklt {
+
+/**
+ * @brief Substitutes the original line in a diagnostic message if needed (needed in case of
+ * normalization).
+ * @param diag The diagnostic message.
+ * @param stage The current session stage.
+ * @return A diagnostic message with the original line substituted if needed.
+ */
 std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
                                            std::string errorMsg,
                                            SessionStage& stage) {
@@ -125,6 +159,12 @@ std::string substituteOriginalLineIfNeeded(clang::StoredDiagnostic& diag,
     return errorMsg;
 }
 
+/**
+ * @brief Retrieves the error message from a diagnostic.
+ * @param diag Stored diagnostic
+ * @param stage The current session stage.
+ * @return The error message.
+ */
 std::string getErrorMessage(clang::StoredDiagnostic& diag, SessionStage& stage) {
     diag = substituteOriginalColumnIfNeeded(diag, stage);
 
@@ -146,13 +186,13 @@ SharedTranspilerSession TranspilerSession::make(TargetBackend backend, std::stri
     return std::make_shared<TranspilerSession>(backend, sourceCode);
 }
 
-TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode) {
-    _input.backend = backend;
-    _input.source = std::move(sourceCode);
-}
+TranspilerSession::TranspilerSession(TargetBackend backend, std::string sourceCode)
+    : _input{backend, std::move(sourceCode)},
+      _stagedFiles{_input.source} {}
 
 TranspilerSession::TranspilerSession(UserInput input)
-    : _input(std::move(input)) {}
+    : _input(std::move(input)),
+      _stagedFiles{_input.source, _input.headers} {}
 
 void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& diag, SessionStage& stage) {
     auto errorMsg = getErrorMessage(diag, stage);
@@ -164,8 +204,6 @@ void TranspilerSession::pushDiagnosticMessage(clang::StoredDiagnostic& diag, Ses
     }
 }
 
-bool setCurrentKernelInfo(KernelInfo* ki);
-[[nodiscard]] KernelInfo* getCurrentKernelInfo();
 void TranspilerSession::pushError(std::error_code ec, std::string desc) {
     _errors.push_back(Error{ec, std::move(desc)});
 }

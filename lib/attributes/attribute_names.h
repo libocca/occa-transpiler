@@ -14,7 +14,8 @@ constexpr const char BARRIER_ATTR_NAME[] = "okl_barrier";
 constexpr const char NO_BARRIER_ATTR_NAME[] = "okl_nobarrier";
 constexpr const char EXCLUSIVE_ATTR_NAME[] = "okl_exclusive";
 constexpr const char ATOMIC_ATTR_NAME[] = "okl_atomic";
-constexpr const char MAX_INNER_DIMS[] = "okl_max_inner_dims";
+constexpr const char MAX_INNER_DIMS_NAME[] = "okl_max_inner_dims";
+constexpr const char SIMD_LENGTH_NAME[] = "okl_simd_length";
 
 const int CXX_ATTRIBUTE_BEGIN_TO_NAME_OFFSET = 2;
 const int GNU_ATTRIBUTE_BEGIN_TO_NAME_OFFSET = 15;

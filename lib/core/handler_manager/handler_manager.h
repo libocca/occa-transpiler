@@ -1,7 +1,7 @@
 #pragma once
 
 #include <oklt/core/error.h>
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include "core/handler_manager/handler_map.h"
 #include "core/handler_manager/result.h"
