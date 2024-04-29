@@ -51,12 +51,12 @@ IntrinsicInfo getIntrinsicInfo(TargetBackend backend) {
 void addInstrinsicStub(TranspilerSession &session,
                        clang::CompilerInstance &compiler)
 {
-    auto& input = session.getInput();
-    input.headers.emplace(INTRINSIC_INCLUDE_FILENAME,std::string());
+    auto& headers = session.getStagedHeaders();
+    headers.emplace(INTRINSIC_INCLUDE_FILENAME,std::string());
     auto& fm = compiler.getFileManager();
     auto vfs = fm.getVirtualFileSystemPtr();
 
-    auto overlayFs = makeOverlayFs(vfs, input.headers);
+    auto overlayFs = makeOverlayFs(vfs, headers);
     fm.setVirtualFileSystem(overlayFs);
 }
 
