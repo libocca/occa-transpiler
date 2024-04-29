@@ -19,7 +19,6 @@ using namespace oklt;
 using namespace clang;
 
 const std::string EXTERN_C = "extern \"C\"";
-// const std::string DPCPP_ADDITIONAL_ARGUMENTS = "sycl::queue * queue_,sycl::nd_range<3> * range_";
 const std::string INNER_SIZES_FMT = "[[sycl::reqd_work_group_size({},{},{})]]";
 const std::string SIMD_LEGHT_FMT = "[[intel::reqd_sub_group_size({})]]";
 const std::string SUBMIT_QUEUE =
