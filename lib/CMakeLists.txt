@@ -30,7 +30,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
     attributes/frontend/max_inner_dims.cpp
-        attributes/frontend/simd_length.cpp
+    attributes/frontend/simd_length.cpp
 
     # Backends common
     attributes/utils/parser.h
@@ -144,7 +144,7 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/common/dim_order.cpp
     attributes/backend/common/max_inner_dims.cpp
     attributes/backend/common/no_barrier.cpp
-        attributes/backend/common/simd_length.cpp
+    attributes/backend/common/simd_length.cpp
 
     # Sema
     core/sema/okl_sema_ctx.cpp
