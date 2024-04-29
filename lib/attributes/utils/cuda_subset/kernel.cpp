@@ -81,7 +81,7 @@ HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, co
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
 
-        handleChildAttr(s, child->stmt, MAX_INNER_DIMS);
+        handleChildAttr(s, child->stmt, MAX_INNER_DIMS_NAME);
 
         std::stringstream out;
         if (n != 0) {

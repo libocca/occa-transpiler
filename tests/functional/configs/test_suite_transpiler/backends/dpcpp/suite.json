@@ -3,6 +3,7 @@
     "tile.json",
     "inner_outer.json",
     "max_inner_dims.json",
+    "simd_length.json",
     "shared.json",
     "restrict.json",
     "atomic.json",

@@ -87,6 +87,7 @@ struct OklLoopInfo {
     AttributedTypeInfo exclusiveInfo;
 
     std::optional<OptSizes> overridenInnerSizes;
+    std::optional<int> simdLength;
 
     struct {
         std::string typeName;           ///< Name of type of loop variable.
