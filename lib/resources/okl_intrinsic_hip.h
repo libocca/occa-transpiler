@@ -31,6 +31,15 @@ inline __device__ void okl_memcpy_async(void* dst_shared,
                              size_t size_and_align,
                              size_t zfill=0)
 {
+    size_t i = 0;
+    // copy
+    for (; i < size_and_align - zfill; ++i) {
+        ((char*)dst_shared)[i] = ((char*)src_global)[i];
+    }
+    // zero-fill
+    for (; i < size_and_align; ++i) {
+        ((char*)dst_shared)[i] = 0;
+    }
 }
 
 inline __device__ void okl_pipeline_commit() {
