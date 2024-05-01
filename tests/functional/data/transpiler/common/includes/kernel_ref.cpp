@@ -1,8 +1,8 @@
 #include <cuda_runtime.h>
 
 struct Data {
-    float* __restrict__ Data::data;
-    int* __restrict__ Data::idxs;
+    float* __restrict__ data;
+    int* __restrict__ idxs;
 };
 
 __constant__ int SIZE = 128;

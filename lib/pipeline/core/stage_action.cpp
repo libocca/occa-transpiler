@@ -1,3 +1,4 @@
+#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/vfs/overlay_fs.h"
 
@@ -9,6 +10,7 @@
 
 namespace oklt {
 using namespace clang;
+
 /**
  * @brief Base class for run a stage of transpiler pipeline
  */
@@ -16,20 +18,11 @@ bool StageAction::PrepareToExecuteAction(clang::CompilerInstance& compiler) {
     // create stage
     _stage = std::make_unique<SessionStage>(*_session, compiler, getRewriterType());
 
-    //
     if (!compiler.hasFileManager()) {
         SPDLOG_ERROR("no file manager at call of {}", __FUNCTION__);
         return false;
     }
-
-    const auto& headers = _session->getStagedHeaders();
-    if (!headers.empty()) {
-        auto& fm = compiler.getFileManager();
-        auto vfs = fm.getVirtualFileSystemPtr();
-
-        auto overlayFs = makeOverlayFs(vfs, headers);
-        fm.setVirtualFileSystem(overlayFs);
-    }
+    addInstrinsicStub(*_session.get(), compiler);
 
     return true;
 }

@@ -1,5 +1,6 @@
 #include "attributes/utils/replace_attribute.h"
 #include "attributes/attribute_names.h"
+#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"
@@ -14,8 +15,7 @@ using namespace oklt;
 using namespace clang;
 
 template <typename T>
-HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r,
-                                       const std::string& modifier_) {
+HandleResult handleCXXRecordImpl(const T& node, oklt::Rewriter& r, const std::string& modifier_) {
     auto modifier = modifier_ + " ";
     // for all explicit constructors/methods add qualifier
     for (const auto& method : node.methods()) {
@@ -49,7 +49,6 @@ using namespace clang;
 HandleResult handleGlobalConstant(SessionStage& s,
                                   const clang::VarDecl& decl,
                                   const std::string& qualifier) {
-
     // skip decl with invalid soucce location
     if (decl.getLocation().isInvalid()) {
         return {};
@@ -102,12 +101,14 @@ HandleResult handleGlobalFunction(SessionStage& s,
     auto spacedModifier = funcQualifier + " ";
 
     // If function is @kernel, we don't handle it
-    for (auto* attr : decl.getAttrs()) {
-        if (attr->getNormalizedFullName() == KERNEL_ATTR_NAME) {
-            SPDLOG_DEBUG(
-                "Global function handler skipped function {}, since it has @kernel attribute",
-                decl.getNameAsString());
-            return {};
+    if (decl.hasAttrs()) {
+        for (auto* attr : decl.getAttrs()) {
+            if (attr->getNormalizedFullName() == KERNEL_ATTR_NAME) {
+                SPDLOG_DEBUG(
+                    "Global function handler skipped function {}, since it has @kernel attribute",
+                    decl.getNameAsString());
+                return {};
+            }
         }
     }
 

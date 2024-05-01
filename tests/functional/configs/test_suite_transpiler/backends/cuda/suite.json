@@ -10,5 +10,7 @@
     "exclusive.json",
     "cxx_record.json",
     "macro.json",
-    "implicit.json"
+    "implicit.json",
+    "includes.json",
+    "intrinsics.json"
 ]

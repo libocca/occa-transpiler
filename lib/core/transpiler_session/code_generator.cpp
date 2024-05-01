@@ -6,6 +6,8 @@
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
 
+#include "core/builtin_headers/intrinsic_impl.h"
+
 #include "core/handler_manager/handler_manager.h"
 
 #include "core/utils/attributes.h"
@@ -141,10 +143,22 @@ tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
     return preprocessedAndFused.value();
 }
 
-std::string restoreSystemAndBackendHeaders(std::string& input, const HeaderDepsInfo& deps) {
+std::string restoreSystemAndBackendHeaders(
+    TargetBackend backend,
+    std::string& input,
+    const HeaderDepsInfo& deps)
+{
     // insert backend specific headers and namespaces
     for (auto it = deps.backendNss.rbegin(); it < deps.backendNss.rend(); ++it) {
         input.insert(0, *it);
+    }
+
+    if(deps.useOklIntrinsic) {
+        auto intrinsicHeaders = embedInstrinsic(input, backend);
+
+        for (auto it = intrinsicHeaders.rbegin(); it < intrinsicHeaders.rend(); ++it) {
+            input.insert(0, "#include <" + *it + ">\n");
+        }
     }
 
     for (auto it = deps.backendHeaders.rbegin(); it < deps.backendHeaders.rend(); ++it) {
@@ -172,7 +186,9 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
         return preprocessedResult;
     }
 
-    auto finalTranspiledKernel = restoreSystemAndBackendHeaders(preprocessedResult.value(), deps);
+    auto finalTranspiledKernel = restoreSystemAndBackendHeaders(stage.getBackend(),
+                                                                preprocessedResult.value(),
+                                                                deps);
     return finalTranspiledKernel;
 }
 }  // namespace

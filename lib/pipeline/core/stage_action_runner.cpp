@@ -77,7 +77,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     if (!warnings.empty()) {
         SPDLOG_INFO("{} warnings: ", stageName);
         for (const auto& w : warnings) {
-            llvm::outs() << w.desc << "\n";
+            SPDLOG_WARN(w.desc );
         }
     }
     if (!ret || !session->getErrors().empty()) {
