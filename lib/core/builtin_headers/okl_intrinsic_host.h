@@ -4,6 +4,7 @@
 static constexpr const char INTRINSIC_HOST[] = R"delim(
 namespace {
 //Math functions
+[[maybe_unused]]
 inline  float okl_exp10f(float x) {
     return exp10f(x);
 }
@@ -34,7 +35,7 @@ inline void okl_memcpy_async(void* dst_shared,
 {
     std::memcpy(dst_shared, src_global, size_and_align - zfill);
     if(zfill) {
-        std::memset(&dst_shared[size_and_align - zfill], 0, zfill);
+        std::memset(&(((char *)dst_shared)[size_and_align - zfill]), 0, zfill);
     }
 }
 

@@ -2,6 +2,7 @@ namespace {
 //Math functions
 
 //Single presicion
+[[maybe_unused]]
 float okl_exp10f (float x) {
     return exp10f(x);
 }

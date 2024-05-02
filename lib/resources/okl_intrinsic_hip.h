@@ -1,4 +1,11 @@
 namespace {
+
+//Single presicion
+[[maybe_unused]]
+inline __device__ float okl_exp10f (float x) {
+    return exp10f(x);
+}
+
 // Warp Shuffle Functions
 template<class T>
 inline __device__ T okl_shfl_sync(unsigned mask, T var, int srcLane, int width=warpSize)

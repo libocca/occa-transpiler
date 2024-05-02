@@ -2,6 +2,7 @@ namespace {
 //Math functions
 
 //Single presicion
+[[maybe_unused]]
 inline __device__ float okl_exp10f (float x) {
     return exp10f(x);
 }
