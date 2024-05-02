@@ -29,9 +29,15 @@ HandleResult handleSharedAttribute(SessionStage& s, const clang::Decl& d, const 
     }
     auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
     bool isInnerChild = child && child->has(LoopType::Inner);
-    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
-        return tl::make_unexpected(
-            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+
+    // This diagnostic is applied only to variable declaration
+    // TODO: if variable of type declared with @shared is not between @outer and @inner, error is
+    // not risen
+    if (!clang::isa<clang::TypeDecl>(d)) {
+        if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
+            return tl::make_unexpected(
+                Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+        }
     }
 
     s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);
