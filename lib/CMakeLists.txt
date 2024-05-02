@@ -234,16 +234,16 @@ set (OCCA_TRANSPILER_SOURCES
 )
 
 CPMAddPackage(NAME expected
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/expected
+    SOURCE_DIR ${ROOT_DIR}/deps/expected
     OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/json
+    SOURCE_DIR ${ROOT_DIR}/deps/json
     OPTIONS "JSON_BuildTests OFF")
 
 CPMAddPackage(NAME spdlog
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
+  SOURCE_DIR ${ROOT_DIR}/deps/spdlog
   OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 set(LLVM_LINK_COMPONENTS Support)

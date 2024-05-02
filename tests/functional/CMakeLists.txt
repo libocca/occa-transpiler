@@ -7,12 +7,12 @@ CPMAddPackage(
 
 CPMAddPackage(
   NAME argparser
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/argparse
+  SOURCE_DIR ${ROOT_DIR}/deps/argparse
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-   SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/json
+   SOURCE_DIR ${ROOT_DIR}/deps/json
    OPTIONS "JSON_BuildTests OFF")
 
 CPMAddPackage(NAME spdlog
