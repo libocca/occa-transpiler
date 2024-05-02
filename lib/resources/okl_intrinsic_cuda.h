@@ -34,6 +34,7 @@ T okl_shfl_xor_sync(unsigned mask, T var, int laneMask, int width=warpSize)
 }
 
 // Pipeline Primitives Interface
+[[maybe_unused]]
 _CUDA_PIPELINE_STATIC_QUALIFIER
 void okl_memcpy_async(void* __restrict__ dst_shared,
                       const void* __restrict__ src_global,
@@ -43,11 +44,13 @@ void okl_memcpy_async(void* __restrict__ dst_shared,
     __pipeline_memcpy_async(dst_shared, src_global, size_and_align);
 }
 
+[[maybe_unused]]
 _CUDA_PIPELINE_STATIC_QUALIFIER
 void okl_pipeline_commit() {
     __pipeline_commit();
 }
 
+[[maybe_unused]]
 _CUDA_PIPELINE_STATIC_QUALIFIER
  void okl_pipeline_wait_prior(size_t N) {
     __pipeline_wait_prior(N);

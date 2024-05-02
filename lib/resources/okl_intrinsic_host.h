@@ -24,6 +24,7 @@ inline T okl_shfl_down_sync(unsigned mask, T var, unsigned int delta, int width)
     return T();
 }
 
+[[maybe_unused]]
 inline void okl_memcpy_async(void* dst_shared,
                             const void*  src_global,
                             size_t size_and_align,
@@ -35,11 +36,13 @@ inline void okl_memcpy_async(void* dst_shared,
     }
 }
 
+[[maybe_unused]]
 inline void okl_pipeline_commit()
 {
 
 }
 
+[[maybe_unused]]
 void okl_pipeline_wait_prior(size_t)
 {
 
