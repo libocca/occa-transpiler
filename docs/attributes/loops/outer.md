@@ -5,7 +5,7 @@
 @outer[(0|1|2)]
 ```
 
-- Can be appltied to only for loops
+- Can be applied to only for loops
 
 ## Semantics
 - Parallelize loop

@@ -7,7 +7,9 @@
 - Can be applied only to a for loop
 
 ## Idea
-split loop into two loops so that first loop iterates overa range with step of tile size and second loop iterates over tile size with step `inc`:
+
+split loop into two loops so that first loop iterates over a range with step of tile size and second loop iterates over
+tile size with step `inc`:
 ```C++
 @tile(tile_size) for (int i = start; i < end; i+=inc) { ... }
 ```
