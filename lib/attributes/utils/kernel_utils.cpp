@@ -40,6 +40,13 @@ int32_t getNextAttributedTypeIdx(const LoopTypes& loopTypes, int32_t currIdx) {
     return -1;
 }
 
+/**
+ * @brief Function to add all children of a loop having at least one attributed children to the
+ * queue.
+ *
+ * @param queue next queue of BFS traversal
+ * @param loop loop to add children of
+ */
 void addLoopChildrenToQueue(std::deque<LoopTreeNode>& queue, OklLoopInfo& loop) {
     for (auto& child : loop.children) {
         if (!child.isRegular()) {
