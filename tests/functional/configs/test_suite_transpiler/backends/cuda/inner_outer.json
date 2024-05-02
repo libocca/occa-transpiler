@@ -42,5 +42,16 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/cuda/outer_inner/outer_inner_split_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "cuda",
+      "source": "transpiler/backends/cuda/outer_inner/outer_inner_regular_at_same_level_as_attributed.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/cuda/outer_inner/outer_inner_regular_at_same_level_as_attributed_ref.cpp"
   }
 ]
