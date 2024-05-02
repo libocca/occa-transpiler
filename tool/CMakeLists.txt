@@ -3,12 +3,12 @@ project (occa-tool VERSION 0.0.1 LANGUAGES CXX)
 
 CPMAddPackage(
   NAME argparser
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/argparse
+  SOURCE_DIR ${ROOT_DIR}/deps/argparse
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME spdlog
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
+  SOURCE_DIR ${ROOT_DIR}/deps/spdlog
   OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 
