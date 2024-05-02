@@ -116,3 +116,11 @@ void many_dims(const int* B @dim(10, 10)) {
     B(1, 1) = 10;
     B(1, 1) = 10;
 }
+
+@kernel void dim_order_with_dim(int* mat34 @dim(3, 4) @dimOrder(1, 0)) {
+    @outer for (int i = 0; i < 32; ++i) {
+        @inner for (int j = 0; j < 32; ++j) {
+            mat34(1, 2) = 12;
+        }
+    }
+}

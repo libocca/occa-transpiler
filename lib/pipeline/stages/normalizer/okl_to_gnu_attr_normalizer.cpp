@@ -22,7 +22,8 @@ bool isProbablyOklSpecificForStmt(Token left, Token right) {
 }
 
 bool isProbablyAtBeginnigOfExpr(Token left, Token right) {
-    return (left.isOneOf(tok::semi, tok::l_brace, tok::r_paren) && !right.is(tok::semi));
+    return (left.isOneOf(tok::semi, tok::l_brace, tok::r_paren) &&
+            !right.isOneOf(tok::semi, tok::r_paren));
 }
 
 Token getLeftNeigbour(const OklAttribute& attr, const std::vector<Token>& tokens) {

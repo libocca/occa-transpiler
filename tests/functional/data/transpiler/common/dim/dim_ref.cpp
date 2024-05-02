@@ -167,3 +167,13 @@ __device__ void many_dims(const int* B) {
     B[1 + (10 * (1))] = 10;
     B[1 + (10 * (1))] = 10;
 }
+
+extern "C" __global__ __launch_bounds__(32) void _occa_dim_order_with_dim_0(int* mat34) {
+    {
+        int i = (0) + blockIdx.x;
+        {
+            int j = (0) + threadIdx.x;
+            mat34[2 + (4 * (1))] = 12;
+        }
+    }
+}
