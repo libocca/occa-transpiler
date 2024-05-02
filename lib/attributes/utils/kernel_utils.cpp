@@ -40,6 +40,17 @@ int32_t getNextAttributedTypeIdx(const LoopTypes& loopTypes, int32_t currIdx) {
     return -1;
 }
 
+void addLoopChildrenToQueue(std::deque<LoopTreeNode>& queue, OklLoopInfo& loop) {
+    for (auto& child : loop.children) {
+        if (!child.isRegular()) {
+            queue.push_back({&child});
+        } else {
+            // Add all children of regular loop
+            addLoopChildrenToQueue(queue, child);
+        }
+    }
+}
+
 /**
  * @brief Function to verify the loop structure recursively using Breadth-First Search (BFS).
  * @param queue A queue of loop tree nodes to verify.
@@ -101,9 +112,7 @@ tl::expected<void, std::pair<const clang::ForStmt*, std::string>> verifyLoopStru
                 node.typeIdx = nextTiledTypeIdx;
                 nextQueue.push_back(node);
             } else if (currHasChildren) {
-                for (auto& child : node.loop->children) {
-                    nextQueue.push_back(LoopTreeNode{&child});
-                }
+                addLoopChildrenToQueue(nextQueue, *node.loop);
             } else {
                 // Missing child loop case
                 return tl::make_unexpected(
