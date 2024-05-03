@@ -5,7 +5,7 @@ static constexpr const char INTRINSIC_CUDA[] = R"delim(
 namespace {
 //Math functions
 
-//Single presicion
+//Single precision
 [[maybe_unused]]
 inline __device__ float okl_exp10f (float x) {
     return exp10f(x);

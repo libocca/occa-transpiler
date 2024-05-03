@@ -109,7 +109,11 @@ class GnuToStdAttrNormalizerVisitor : public RecursiveASTVisitor<GnuToStdAttrNor
           _sm(stage.getCompiler().getSourceManager()) {}
 
     bool TraverseAttributedStmt(AttributedStmt* as) {
-        assert(as != nullptr && "attributed statement is nullptr");
+        if (!as) {
+            SPDLOG_WARN("attributed statement is nullptr");
+            return false;
+        }
+
         if (_sm.isInSystemHeader(as->getEndLoc())) {
             return true;
         }
@@ -122,7 +126,11 @@ class GnuToStdAttrNormalizerVisitor : public RecursiveASTVisitor<GnuToStdAttrNor
     }
 
     bool TraverseDecl(clang::Decl* d) {
-        assert(d != nullptr && "declaration is nullptr");
+        if (!d) {
+            SPDLOG_WARN("declaration is nullptr");
+            return false;
+        }
+
         if (_sm.isInSystemHeader(d->getLocation())) {
             return true;
         }
