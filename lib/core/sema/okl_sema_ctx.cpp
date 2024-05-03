@@ -1,5 +1,7 @@
+#include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"
 #include "attributes/frontend/params/tile.h"
+#include "attributes/utils/utils.h"
 
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
@@ -302,6 +304,7 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(SessionStage
                 return tl::make_unexpected(
                     Error{std::error_code(), "Multiple attributes on one loop"});
             }
+
             _parsingKernInfo->loopMap.emplace(&child.stmt, &child);
             return {};
         });

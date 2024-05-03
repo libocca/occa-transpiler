@@ -14,7 +14,7 @@ namespace oklt {
 
 [[nodiscard]] bool OklLoopInfo::shouldSync() {
     // 1. There should be shared memory usage somewhere inside loop
-    if (!sharedInfo.used) {
+    if (!sharedInfo.used || sharedInfo.nobarrierApplied) {
         return false;
     }
 
