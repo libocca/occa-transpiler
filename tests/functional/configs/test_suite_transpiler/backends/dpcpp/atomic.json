@@ -86,5 +86,16 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/dpcpp/atomic/atomic_dec_ref.cpp"
-     }
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "dpcpp",
+            "source": "transpiler/backends/dpcpp/atomic/atomic_compound_statement.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/dpcpp/atomic/atomic_compound_statement_ref.cpp"
+    }
 ]
