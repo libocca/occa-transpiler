@@ -78,6 +78,8 @@ tl::expected<std::string, Error> buildNewExpression(SessionStage& stage,
                                                     const Attr& attr,
                                                     const clang::Stmt& stmt);
 
+// TODO: Replicates legacy occa transpiler behavior. Seems to be incorrect that each statement is
+// made atomic, and not the whole block.
 tl::expected<std::string, Error> buildCompoundStmt(SessionStage& stage,
                                                    const Attr& attr,
                                                    const CompoundStmt& op) {
