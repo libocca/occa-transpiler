@@ -66,3 +66,6 @@ Possible values:
 - warn
 - err
 - critical
+
+
+## [Documentation](./docs/README.md)
