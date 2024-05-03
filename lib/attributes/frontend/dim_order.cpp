@@ -34,7 +34,7 @@ struct DimOrderAttribute : public ParsedAttrInfo {
         if (!isa<VarDecl, ParmVarDecl, TypedefDecl, FieldDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
                 << attr << attr.isDeclspecAttribute()
-                << "type, struct/union/class field or variable declarations";
+                << "type or variable declarations";
             return false;
         }
         return true;
@@ -46,7 +46,7 @@ struct DimOrderAttribute : public ParsedAttrInfo {
         // INFO: fail for all statements
         sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
             << attr << attr.isDeclspecAttribute()
-            << "type, struct/union/class field or variable declarations";
+            << "type or variable declarations";
         return false;
     }
 
