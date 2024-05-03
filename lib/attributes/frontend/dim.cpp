@@ -32,7 +32,7 @@ struct DimAttribute : public ParsedAttrInfo {
     bool diagAppertainsToDecl(clang::Sema& sema,
                               const clang::ParsedAttr& attr,
                               const clang::Decl* decl) const override {
-        if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
+        if (!isa<VarDecl, ParmVarDecl, TypeDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
                 << attr << attr.isDeclspecAttribute()
                 << "type or variable declarations";
