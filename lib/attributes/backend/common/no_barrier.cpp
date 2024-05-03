@@ -14,15 +14,8 @@ HandleResult handleNoBarrierStmtAttribute(SessionStage& s,
                                           const clang::ForStmt& forStmt,
                                           const clang::Attr& a) {
     SPDLOG_DEBUG("Handle [@nobarrier] attribute");
-    auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
-    auto loopInfo = sema.getLoopInfo(forStmt);
-    if (!loopInfo) {
-        return tl::make_unexpected(
-            Error{{}, "@nobarrier: failed to fetch loop meta data from sema"});
-    }
-
-    loopInfo->sharedInfo.used = false;
-
+    // NOTE: enforcing no synchronization after @inner loop is moved to sema:
+    // okl_sema_ctx.cpp::handleNoBarrier
     removeAttribute(s, a);
     return {};
 }

@@ -1,5 +1,7 @@
+#include "attributes/attribute_names.h"
 #include "attributes/frontend/params/loop.h"
 #include "attributes/frontend/params/tile.h"
+#include "attributes/utils/utils.h"
 
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
@@ -167,6 +169,20 @@ bool isTopLevelAttributed(const LoopAxisTypes& axisTypes,
     return true;
 }
 
+void handleNoBarrier(SessionStage& stage, OklLoopInfo& loopInfo) {
+    auto attrForStmt = getAttributedStmt(stage, *clang::dyn_cast<clang::Stmt>(&loopInfo.stmt));
+    if (!attrForStmt) {
+        return;
+    }
+
+    for (const auto* attr : attrForStmt->getAttrs()) {
+        if (attr->getNormalizedFullName() == NO_BARRIER_ATTR_NAME) {
+            loopInfo.sharedInfo.nobarrierApplied = true;
+            return;
+        }
+    }
+}
+
 }  // namespace
 
 namespace oklt {
@@ -302,6 +318,11 @@ tl::expected<void, Error> OklSemaCtx::startParsingAttributedForLoop(SessionStage
                 return tl::make_unexpected(
                     Error{std::error_code(), "Multiple attributes on one loop"});
             }
+
+            // In case @nobarrier applies to @inner loop, we must mark this here. We can't rely on
+            // @nobarrier handler, since there is no defined order of handlers calling
+            handleNoBarrier(stage, child);
+
             _parsingKernInfo->loopMap.emplace(&child.stmt, &child);
             return {};
         });

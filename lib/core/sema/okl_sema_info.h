@@ -38,6 +38,7 @@ struct OklLoopInfo {
     struct AttributedTypeInfo {
         bool declared = false;
         bool used = false;
+        bool nobarrierApplied = false;
     };
 
     using OptSize = std::optional<size_t>;

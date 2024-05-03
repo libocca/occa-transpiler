@@ -1,10 +1,11 @@
 #include "attributes/utils/kernel_utils.h"
-#include <oklt/core/kernel_metadata.h>
+#include "attributes/utils/utils.h"
 #include "attributes/attribute_names.h"
 #include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "pipeline/core/error_codes.h"
+#include <oklt/core/kernel_metadata.h>
 
 #include <clang/AST/ParentMapContext.h>
 
@@ -221,15 +222,6 @@ tl::expected<void, Error> verifyLoops(SessionStage& stage,
                   failedLoopAttribute == nullptr ? std::any() : failedLoopAttribute->getRange()});
     }
     return {};
-}
-
-const clang::AttributedStmt* getAttributedStmt(SessionStage& s, const clang::Stmt& stmt) {
-    auto& ctx = s.getCompiler().getASTContext();
-    const auto parents = ctx.getParentMapContext().getParents(stmt);
-    if (parents.empty())
-        return nullptr;
-
-    return parents[0].get<clang::AttributedStmt>();
 }
 
 tl::expected<std::any, Error> handleChildAttr(SessionStage& s,
