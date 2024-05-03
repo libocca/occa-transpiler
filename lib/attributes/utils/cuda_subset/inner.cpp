@@ -22,6 +22,8 @@ HandleResult handleInnerAttribute(SessionStage& s,
                                   const clang::Attr& a,
                                   const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@inner] attribute");
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -33,16 +35,15 @@ HandleResult handleInnerAttribute(SessionStage& s,
     // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
     updatedParams.axis = loopInfo->axis.front();
 
-    int openedScopeCounter = 0;
-    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
-    auto suffixCode = buildCloseScopes(openedScopeCounter);
     std::string afterRBraceCode = "";
     if (loopInfo->shouldSync()) {
         afterRBraceCode += cuda_subset::SYNC_THREADS_BARRIER + ";\n";
     }
 
-    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
+    int openedScopeCounter = 0;
+    auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
+        *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
+    auto suffixCode = buildCloseScopes(openedScopeCounter);
 
     return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, true);
 }

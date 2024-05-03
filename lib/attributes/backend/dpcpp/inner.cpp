@@ -17,6 +17,8 @@ HandleResult handleInnerAttribute(SessionStage& s,
                                   const clang::Attr& a,
                                   const AttributedLoop* params) {
     SPDLOG_DEBUG("Handle [@inner] attribute");
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@inner params nullptr"});
     }
@@ -41,7 +43,6 @@ HandleResult handleInnerAttribute(SessionStage& s,
         afterRBraceCode += dpcpp::SYNC_THREADS_BARRIER + ";\n";
     }
 
-    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
     return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, true);
 }
