@@ -103,6 +103,10 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
         throw std::logic_error(expectedBackend.error());
     }
     auto sourceFullPath = dataDir / source;
+
+    // add path to kernel source code headers lookup
+    includes.emplace_back(sourceFullPath.parent_path().string());
+
     std::ifstream sourceFile{sourceFullPath};
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 

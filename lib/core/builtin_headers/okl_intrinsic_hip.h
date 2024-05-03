@@ -3,6 +3,13 @@
 
 static constexpr const char INTRINSIC_HIP[] = R"delim(
 namespace {
+
+//Single presicion
+[[maybe_unused]]
+inline __device__ float okl_exp10f (float x) {
+    return exp10f(x);
+}
+
 // Warp Shuffle Functions
 template<class T>
 inline __device__ T okl_shfl_sync(unsigned mask, T var, int srcLane, int width=warpSize)
@@ -30,6 +37,7 @@ inline __device__
 }
 
 
+[[maybe_unused]]
 inline __device__ void okl_memcpy_async(void* dst_shared,
                              const void* src_global,
                              size_t size_and_align,
@@ -46,9 +54,11 @@ inline __device__ void okl_memcpy_async(void* dst_shared,
     }
 }
 
+[[maybe_unused]]
 inline __device__ void okl_pipeline_commit() {
 }
 
+[[maybe_unused]]
 inline __device__ void __pipeline_wait_prior(size_t N) {
 }
 }
