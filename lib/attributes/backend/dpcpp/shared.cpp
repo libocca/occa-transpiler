@@ -11,6 +11,7 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
+// TODO: There is no TypeDecl handler in DPCPP backend
 HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 

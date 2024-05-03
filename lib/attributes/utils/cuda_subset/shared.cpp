@@ -31,13 +31,15 @@ HandleResult handleSharedAttribute(SessionStage& s, const clang::Decl& d, const 
     bool isInnerChild = child && child->has(LoopType::Inner);
 
     // This diagnostic is applied only to variable declaration
-    // TODO: if variable of type declared with @shared is not between @outer and @inner, error is
-    // not risen
+    // TODO: if var of type declared with @shared is not between @outer and @inner, error isnt risen
     if (!clang::isa<clang::TypeDecl>(d)) {
         if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
             return tl::make_unexpected(
                 Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
         }
+    } else {
+        // Push warning that can't check that typedef @shared var is between outer and inner loop
+        s.pushWarning("Using [@shared] with typedef doesn't have proper semantic validation yet");
     }
 
     s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);

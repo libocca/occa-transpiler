@@ -1,6 +1,6 @@
 #include "attributes/utils/default_handlers.h"
-#include "core/sema/okl_sema_ctx.h"
 #include "core/handler_manager/result.h"
+#include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
@@ -26,9 +26,15 @@ HandleResult handleExclusiveAttribute(SessionStage& stage,
     }
     auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
     bool isInnerChild = child && child->has(LoopType::Inner);
-    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
-        return tl::make_unexpected(
-            Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
+    if (!clang::isa<clang::TypeDecl>(decl)) {
+        if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
+            return tl::make_unexpected(Error{
+                {}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
+        }
+    } else {
+        // Push warning that can't check that typedef @exclusive var is between outer and inner loop
+        stage.pushWarning(
+            "Using [@exclusive] with typedef doesn't have proper semantic validation yet");
     }
 
     stage.getRewriter().RemoveText(getAttrFullSourceRange(attr));
