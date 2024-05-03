@@ -74,26 +74,54 @@ tl::expected<std::string, Error> buildCXXCopyOp(SessionStage& stage,
         rigthStr);
 }
 
+tl::expected<std::string, Error> buildNewExpression(SessionStage& stage,
+                                                    const Attr& attr,
+                                                    const clang::Stmt& stmt);
+
+// TODO: Replicates legacy occa transpiler behavior. Seems to be incorrect that each statement is
+// made atomic, and not the whole block.
+tl::expected<std::string, Error> buildCompoundStmt(SessionStage& stage,
+                                                   const Attr& attr,
+                                                   const CompoundStmt& op) {
+    std::string res = "{";
+    for (auto& stmt : op.body()) {
+        auto newExpr = buildNewExpression(stage, attr, *stmt);
+        if (!newExpr) {
+            return tl::make_unexpected(newExpr.error());
+        }
+        res += newExpr.value() + ";\n";
+    }
+    res += "}";
+    return res;
+}
+
+tl::expected<std::string, Error> buildNewExpression(SessionStage& stage,
+                                                    const Attr& attr,
+                                                    const clang::Stmt& stmt) {
+    if (isa<BinaryOperator>(stmt)) {
+        const BinaryOperator* binOp = cast<BinaryOperator>(&stmt);
+        return buildBinOp(stage, attr, *binOp);
+    }
+    if (isa<UnaryOperator>(stmt)) {
+        const UnaryOperator* unOp = cast<UnaryOperator>(&stmt);
+        return buildUnOp(stage, attr, *unOp);
+    }
+    if (isa<CXXOperatorCallExpr>(stmt)) {
+        const CXXOperatorCallExpr* op = cast<CXXOperatorCallExpr>(&stmt);
+        return buildCXXCopyOp(stage, attr, *op);
+    }
+    if (isa<CompoundStmt>(stmt)) {
+        const CompoundStmt* compoundStmt = cast<CompoundStmt>(&stmt);
+        return buildCompoundStmt(stage, attr, *compoundStmt);
+    }
+    return tl::make_unexpected(Error{{}, "Error: Unable to transform general @atomic code"});
+}
+
 HandleResult handleAtomicAttribute(SessionStage& stage,
                                    const clang::Stmt& stmt,
                                    const clang::Attr& attr) {
     auto& ctx = stage.getCompiler().getASTContext();
-    auto newExpression = [&]() -> tl::expected<std::string, Error> {
-        if (isa<BinaryOperator>(stmt)) {
-            const BinaryOperator* binOp = cast<BinaryOperator>(&stmt);
-            return buildBinOp(stage, attr, *binOp);
-        }
-        if (isa<UnaryOperator>(stmt)) {
-            const UnaryOperator* unOp = cast<UnaryOperator>(&stmt);
-            return buildUnOp(stage, attr, *unOp);
-        }
-        if (isa<CXXOperatorCallExpr>(stmt)) {
-            const CXXOperatorCallExpr* op = cast<CXXOperatorCallExpr>(&stmt);
-            return buildCXXCopyOp(stage, attr, *op);
-        }
-
-        return getSourceText(*dyn_cast<Expr>(&stmt), ctx);
-    }();
+    auto newExpression = buildNewExpression(stage, attr, stmt);
     if (!newExpression) {
         return tl::make_unexpected(newExpression.error());
     }
