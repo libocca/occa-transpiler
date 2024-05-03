@@ -82,7 +82,7 @@ find_package(Doxygen)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR BUILD_DOCUMENTATION)
     if (DOXYGEN_FOUND)
-        set(DOXYGEN_IN ${CMAKE_SOURCE_DIR}/docs/Doxyfile.in)
+	set(DOXYGEN_IN ${ROOT_DIR}/docs/Doxyfile.in)
         set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
         configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
