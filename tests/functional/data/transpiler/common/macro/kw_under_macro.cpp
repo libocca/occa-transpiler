@@ -1,4 +1,4 @@
-#define __restrict__ @ restrict
+#define __restrict__ @restrict
 #define __shared__ @shared
 
 #define BLOCK_SYNC(a, b) \
@@ -6,11 +6,12 @@
     b += 1;              \
     @barrier;
 
+#define __magic__
 typedef struct {
-    __restrict__ float* b;
-    @ restrict float* c;
+   __magic__  __restrict__ float* b;
+   __magic__  @restrict float* c;
 } S;
-@ restrict float* aa;
+@restrict float* aa;
 
 @kernel void hello_kern(S* a) {
     for (int i = 0; i < 10; ++i; @outer) {

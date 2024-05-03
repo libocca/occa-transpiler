@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.26)
 project(occa-transpiler VERSION 0.0.1 LANGUAGES C CXX)
 
 option(TRANSPILER_TESTS "build transpiler library tests" ON)
+option(BUILD_DOCUMENTATION "Create the HTML+PDF API documentation (requires Doxygen)" OFF)
 
 # Add custom modules path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -19,12 +20,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(ROOT_DIR ${PROJECT_SOURCE_DIR})
+
 # Set default build type to Release
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-include(cmake/CPM.cmake)
+include(cmake/CPM_0.38.6.cmake)
+include(cmake/EmbedResource.cmake)
+include(cmake/GitSubmodules.cmake)
 
 find_package(LLVM 17 REQUIRED CONFIG)
 find_package(Clang 17 REQUIRED CONFIG)
@@ -36,6 +41,9 @@ set(LLVM_REQUIRES_RTTI ON)
 include(AddLLVM)
 
 set(CLANG_LIBS libclang clangTooling clangFrontendTool)
+
+
+init_submodules(${ROOT_DIR})
 
 add_subdirectory(lib)
 add_subdirectory(tool)
@@ -69,3 +77,21 @@ configure_file(cmake/oklt-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/oklt-confi
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/oklt-config.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/oklt)
+
+find_package(Doxygen)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release" OR BUILD_DOCUMENTATION)
+    if (DOXYGEN_FOUND)
+	set(DOXYGEN_IN ${ROOT_DIR}/docs/Doxyfile.in)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+        add_custom_target(generate_documentation ALL
+                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                VERBATIM )
+    else (DOXYGEN_FOUND)
+        message("Doxygen need to be installed to generate the doxygen documentation")
+    endif (DOXYGEN_FOUND)
+endif()

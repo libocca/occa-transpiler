@@ -1,0 +1,3 @@
+outer_applied_to_decl.cpp:3:9: error: 'outer' attribute only applies to for statement
+    3 |         @outer int shm[10];
+      |         ^

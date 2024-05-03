@@ -1,15 +1,17 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
 using namespace clang;
 
-const std::string prefixText = "#pragma omp parallel for\n";
+const std::string prefixText = "\n#pragma omp parallel for\n";
 
-HandleResult handleOPENMPOuterAttribute(const Attr& a,
+HandleResult handleOPENMPOuterAttribute(SessionStage& s,
                                         const ForStmt& stmt,
-                                        const AttributedLoop* params,
-                                        SessionStage& s) {
+                                        const Attr& a,
+                                        const AttributedLoop* params) {
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(stmt);
     if (!loopInfo) {
@@ -22,16 +24,15 @@ HandleResult handleOPENMPOuterAttribute(const Attr& a,
         s.getRewriter().InsertText(stmt.getBeginLoc(), prefixText, false, true);
     }
 
-    return serial_subset::handleOuterAttribute(a, stmt, params, s);
+    return serial_subset::handleOuterAttribute(s, stmt, a, params);
 }
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, OUTER_ATTR_NAME},
-        makeSpecificAttrHandle(handleOPENMPOuterAttribute));
+    auto ok =
+        registerBackendHandler(TargetBackend::OPENMP, OUTER_ATTR_NAME, handleOPENMPOuterAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << OUTER_ATTR_NAME << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", OUTER_ATTR_NAME);
     }
 }
 }  // namespace

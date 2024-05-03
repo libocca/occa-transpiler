@@ -39,9 +39,11 @@ struct function_traits<x_Result(x_Args...)> {
 
 template <typename FuncType, std::size_t I>
 struct func_param_type {
-    using type =
-        typename std::tuple_element_t<I - 1, typename function_traits<FuncType>::arguments>;
+    using type = typename std::tuple_element_t<I, typename function_traits<FuncType>::arguments>;
 };
+
+template <typename FuncType, std::size_t I>
+using func_param_type_t = typename func_param_type<FuncType, I>::type;
 
 template <typename FuncType>
 struct func_num_arguments {

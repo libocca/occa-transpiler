@@ -1,24 +1,41 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/implicid_handler.h"
 
 #include <clang/AST/DeclCXX.h>
+#include <clang/AST/DeclTemplate.h>
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
 const std::string HIP_FUNCTION_QUALIFIER = "__device__";
 
-HandleResult handleHIPCXXRecord(const clang::CXXRecordDecl& d, SessionStage& s) {
-    return handleCXXRecord(d, s, HIP_FUNCTION_QUALIFIER);
+HandleResult handleClassRecord(SessionStage& s, const CXXRecordDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
+}
+
+HandleResult handleClassTemplateSpecialization(SessionStage& s,
+                                               const clang::ClassTemplateSpecializationDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
+}
+
+HandleResult handleClassTemplatePartialSpecialization(
+    SessionStage& s,
+    const clang::ClassTemplatePartialSpecializationDecl& d) {
+    return handleCXXRecord(s, d, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::CXXRecord},
-        makeSpecificImplicitHandle(handleHIPCXXRecord));
+    auto ok = registerImplicitHandler(TargetBackend::HIP, handleClassRecord);
+
+    ok &= registerImplicitHandler(TargetBackend::HIP, handleClassTemplateSpecialization);
+
+    ok &= registerImplicitHandler(TargetBackend::HIP, handleClassTemplatePartialSpecialization);
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global function (CUDA)\n";
+        SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");
     }
 }
 }  // namespace

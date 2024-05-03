@@ -8,6 +8,7 @@
 
 #include <oklt/util/io_helper.h>
 
+#include <spdlog/spdlog.h>
 #include <argparse/argparse.hpp>
 #include <filesystem>
 #include <fstream>
@@ -92,15 +93,16 @@ int main(int argc, char* argv[]) {
     try {
         program.parse_args(argc, argv);
         if (program.is_subcommand_used(normalize_command)) {
-            auto input = std::filesystem::path(normalize_command.get("-i"));
+            auto sourcePath = std::filesystem::path(normalize_command.get("-i"));
             auto output = std::filesystem::path(normalize_command.get("-o"));
             if (output.empty()) {
-                output = build_normalization_output_filename(input);
+                output = build_normalization_output_filename(sourcePath);
             }
 
-            auto input_source = oklt::util::readFileAsStr(input);
+            auto input_source = oklt::util::readFileAsStr(sourcePath);
             if (!input_source) {
-                std::cout << "err: " << input_source.error() << " to read file " << input << '\n';
+                std::cout << "err: " << input_source.error() << " to read file " << sourcePath
+                          << '\n';
                 return 1;
             }
 
@@ -115,8 +117,9 @@ int main(int argc, char* argv[]) {
             }
             auto result = oklt::normalize({
                 .backend = oklt::TargetBackend::CUDA,
-                .sourceCode = std::move(input_source.value()),
-                .inlcudeDirectories = std::move(includes),
+                .source = std::move(input_source.value()),
+                .sourcePath = sourcePath,
+                .includeDirectories = std::move(includes),
                 .defines = std::move(defines),
             });
             if (!result) {
@@ -124,29 +127,30 @@ int main(int argc, char* argv[]) {
                 for (const auto& error : result.error()) {
                     std::cout << error.desc << std::endl;
                 }
-                std::cout << "err to normalize file " << input << '\n';
+                std::cout << "err to normalize file " << sourcePath << '\n';
                 return 1;
             }
 
-            std::cout << "file " << input << " is normalized\n\n"
-                      << result.value().normalized.sourceCode;
-            oklt::util::writeFileAsStr(output, result.value().normalized.sourceCode);
+            std::cout << "file " << sourcePath << " is normalized\n\n"
+                      << result.value().normalized.source;
+            oklt::util::writeFileAsStr(output, result.value().normalized.source);
+            // TODO dump headers as well
 
             return 0;
         } else {
-            auto source_path = std::filesystem::path(transpile_command.get("-i"));
+            auto sourcePath = std::filesystem::path(transpile_command.get("-i"));
             auto backend = oklt::backendFromString(transpile_command.get("-b"));
             auto need_normalize = transpile_command.get<bool>("--normalize");
 
             auto transpilation_output = std::filesystem::path(transpile_command.get("-o"));
             if (transpilation_output.empty()) {
-                transpilation_output = build_transpilation_output_filename(source_path);
+                transpilation_output = build_transpilation_output_filename(sourcePath);
             }
             auto transpilation_meta = build_meta_filename(transpilation_output);
 
             auto launcher_output = std::filesystem::path(transpile_command.get("-l"));
             if (launcher_output.empty()) {
-                launcher_output = build_launcher_output_filename(source_path);
+                launcher_output = build_launcher_output_filename(sourcePath);
             }
             auto launcher_meta = build_meta_filename(launcher_output);
 
@@ -162,24 +166,15 @@ int main(int argc, char* argv[]) {
 
             auto normalization_output = std::filesystem::path(transpile_command.get("-n"));
             if (normalization_output.empty()) {
-                normalization_output = build_normalization_output_filename(source_path);
+                normalization_output = build_normalization_output_filename(sourcePath);
             }
 
-            oklt::AstProcessorType procType = [&]() {
-                auto semaType = transpile_command.get("-s");
-                if (semaType == "with-sema") {
-                    return oklt::AstProcessorType::OKL_WITH_SEMA;
-                }
-                return oklt::AstProcessorType::OKL_NO_SEMA;
-            }();
-
-            std::ifstream ifs(source_path.string());
+            std::ifstream ifs(sourcePath.string());
             std::string sourceCode{std::istreambuf_iterator<char>(ifs), {}};
             oklt::UserInput input{.backend = backend.value(),
-                                  .astProcType = procType,
-                                  .sourceCode = sourceCode,
-                                  .sourcePath = source_path,
-                                  .inlcudeDirectories = std::move(includes),
+                                  .source = sourceCode,
+                                  .sourcePath = sourcePath,
+                                  .includeDirectories = std::move(includes),
                                   .defines = std::move(defines)};
 
             oklt::UserResult result = [](auto&& input, auto need_normalize) {
@@ -192,21 +187,21 @@ int main(int argc, char* argv[]) {
 
             if (result) {
                 oklt::UserOutput userOutput = result.value();
-                // oklt::util::writeFileAsStr(normalization_output.string(),
-                // userOutput.normalized.sourceCode);
-                oklt::util::writeFileAsStr(transpilation_output.string(),
-                                           userOutput.kernel.sourceCode);
-                oklt::util::writeFileAsStr(transpilation_meta, userOutput.kernel.metadataJson);
-                if (!userOutput.launcher.sourceCode.empty()) {
+
+                oklt::util::writeFileAsStr(transpilation_output.string(), userOutput.kernel.source);
+                oklt::util::writeFileAsStr(transpilation_meta, userOutput.kernel.metadata);
+
+                if (!userOutput.launcher.source.empty()) {
                     oklt::util::writeFileAsStr(launcher_output.string(),
-                                               userOutput.launcher.sourceCode);
-                    oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadataJson);
+                                               userOutput.launcher.source);
+                    oklt::util::writeFileAsStr(launcher_meta, userOutput.launcher.metadata);
                 }
-                std::cout << "Transpiling success : true" << std::endl;
+                std::cout << result.value().kernel.source;
+                SPDLOG_INFO("Transpilation success");
             } else {
-                std::cout << "Transpiling errors: " << std::endl;
+                SPDLOG_ERROR("Transpilation failed");
                 for (const auto& error : result.error()) {
-                    std::cout << error.desc << std::endl;
+                    std::cerr << error.desc << "\n";
                 }
             }
         }

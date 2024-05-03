@@ -1,11 +1,10 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
-#include "core/transpiler_session/session_stage.h"
-
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
-#include "params/empty_params.h"
+#include "attributes/frontend/params/empty_params.h"
+
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -17,9 +16,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling EXCLUSIVE_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "exclusive"},
     {ParsedAttr::AS_CXX11, EXCLUSIVE_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_exclusive"}};
+    {ParsedAttr::AS_GNU, EXCLUSIVE_ATTR_NAME}};
 
 struct ExclusiveAttribute : public ParsedAttrInfo {
     ExclusiveAttribute() {
@@ -105,9 +103,9 @@ struct ExclusiveAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseExclusiveAttrParams(const clang::Attr& attr,
-                                     OKLParsedAttr& data,
-                                     SessionStage& stage) {
+HandleResult parseExclusiveAttrParams(SessionStage& stage,
+                                      const clang::Attr& attr,
+                                      OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@exclusive] does not take arguments"});
     }
@@ -116,7 +114,6 @@ ParseResult parseExclusiveAttrParams(const clang::Attr& attr,
 }
 
 __attribute__((constructor)) void registerKernelHandler() {
-    AttributeManager::instance().registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME,
-                                                                          parseExclusiveAttrParams);
+    registerAttrFrontend<ExclusiveAttribute>(EXCLUSIVE_ATTR_NAME, parseExclusiveAttrParams);
 }
 }  // namespace

@@ -1,0 +1,3 @@
+dim_wrong_too_many_args.cpp:1:24: error: Too many dimensions, expected 2 argument(s)
+    1 | typedef float* mat89_f @dim(8, 9);
+      |                        ^

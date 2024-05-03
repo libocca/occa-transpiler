@@ -1,6 +1,6 @@
 #include "attributes/frontend/params/barrier.h"
 #include "attributes/frontend/params/tile.h"
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 
 namespace clang {
 class Attr;
@@ -16,28 +16,28 @@ class SessionStage;
 }
 
 namespace oklt::cuda_subset {
-HandleResult handleTileAttribute(const clang::Attr&,
+HandleResult handleTileAttribute(SessionStage&,
                                  const clang::ForStmt&,
-                                 const TileParams* params,
-                                 SessionStage&);
-HandleResult handleInnerAttribute(const clang::Attr&,
+                                 const clang::Attr&,
+                                 const TileParams* params);
+HandleResult handleInnerAttribute(SessionStage&,
                                   const clang::ForStmt&,
-                                  const AttributedLoop* params,
-                                  SessionStage&);
-HandleResult handleOuterAttribute(const clang::Attr&,
+                                  const clang::Attr&,
+                                  const AttributedLoop* params);
+HandleResult handleOuterAttribute(SessionStage&,
                                   const clang::ForStmt&,
-                                  const AttributedLoop* params,
-                                  SessionStage&);
-HandleResult handleAtomicAttribute(const clang::Attr&, const clang::Stmt&, SessionStage&);
+                                  const clang::Attr&,
+                                  const AttributedLoop* params);
+HandleResult handleAtomicAttribute(SessionStage&, const clang::Stmt&, const clang::Attr&);
 
-HandleResult handleKernelAttribute(const clang::Attr&, const clang::FunctionDecl&, SessionStage&);
-HandleResult handleSharedAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
-HandleResult handleRestrictAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
+HandleResult handleKernelAttribute(SessionStage&, const clang::FunctionDecl&, const clang::Attr&);
+HandleResult handleSharedAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleRestrictAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 
-HandleResult handleExclusiveAttribute(const clang::Attr&, const clang::Decl&, SessionStage&);
-HandleResult handleBarrierAttribute(const clang::Attr&,
-                                    const clang::Stmt&,
-                                    const oklt::AttributedBarrier*,
-                                    SessionStage&);
+HandleResult handleExclusiveAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+oklt::HandleResult handleBarrierAttribute(SessionStage&,
+                                          const clang::Stmt&,
+                                          const clang::Attr&,
+                                          const oklt::AttributedBarrier*);
 
 }  // namespace oklt::cuda_subset

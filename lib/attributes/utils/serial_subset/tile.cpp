@@ -1,20 +1,22 @@
+#include <oklt/core/kernel_metadata.h>
+#include "util/string_utils.hpp"
+
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
-#include "oklt/core/kernel_metadata.h"
-
-#include <oklt/util/string_utils.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
+#include <spdlog/spdlog.h>
 namespace oklt::serial_subset {
 using namespace clang;
 
 namespace {
+const std::string exlusiveBeginText = "int _occa_exclusive_index;\n";
 const std::string exclusiveNullText = "_occa_exclusive_index = 0;\n";
 const std::string exclusiveIncText = "++_occa_exclusive_index;\n";
 
@@ -34,7 +36,7 @@ std::string buildFirstLoopString([[maybe_unused]] const ForStmt& stmt,
                                  const OklLoopInfo& forLoop,
                                  [[maybe_unused]] const TileParams* params,
                                  size_t& parenCnt,
-                                 clang::Rewriter& rewriter) {
+                                 oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
@@ -69,7 +71,7 @@ std::string buildSecondLoopString(const ForStmt& stmt,
                                   const OklLoopInfo& forLoop,
                                   const TileParams* params,
                                   size_t& parenCnt,
-                                  clang::Rewriter& rewriter) {
+                                  oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
@@ -117,7 +119,7 @@ std::string buildCheckString(const ForStmt& stmt,
                              const OklLoopInfo& forLoop,
                              [[maybe_unused]] const TileParams* params,
                              size_t& parenCnt,
-                             clang::Rewriter& rewriter) {
+                             oklt::Rewriter& rewriter) {
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
     auto ret = util::fmt("if ({} {} {})",
@@ -136,10 +138,12 @@ std::string buildCheckString(const ForStmt& stmt,
 
 }  // namespace
 
-HandleResult handleTileAttribute(const Attr& a,
+HandleResult handleTileAttribute(SessionStage& s,
                                  const ForStmt& stmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+                                 const Attr& a,
+                                 const TileParams* params) {
+    SPDLOG_DEBUG("Handle [@tile] attribute");
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
     }
@@ -149,29 +153,18 @@ HandleResult handleTileAttribute(const Attr& a,
     if (!loopInfo) {
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << "type: " << loopInfo->var.typeName << ", name: " << loopInfo->var.name
-                 << ", initValue: " << loopInfo->range.start
-                 << "), Cond(rhsExpr: " << loopInfo->range.end
-                 << "), Inc(rhsInc: " << loopInfo->inc.val << ", isUnary: " << loopInfo->isUnary()
-                 << ")\n";
-#endif
-
-    removeAttribute(a, s);
 
     auto& rewriter = s.getRewriter();
-
-    SourceRange attr_range = getAttrFullSourceRange(a);
-    s.getRewriter().RemoveText(attr_range);
+    removeAttribute(s, a);
 
     auto parent = loopInfo->getAttributedParent();
+    auto child = loopInfo->getFirstAttributedChild();
 
     // `@inner` loop just after `@outer`
     // Top most `@inner` loop
-    if (parent && parent->has(LoopType::Outer) && loopInfo->is(LoopType::Inner)) {
-        if (parent->exclusiveInfo.declared) {
-            s.getRewriter().InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
+    if (loopInfo->type[0] == LoopType::Inner) {
+        if (parent && parent->exclusiveInfo.declared) {
+            rewriter.InsertText(stmt.getBeginLoc(), exclusiveNullText, false, true);
         }
     }
 
@@ -179,22 +172,34 @@ HandleResult handleTileAttribute(const Attr& a,
     std::string prefixCode;
 
     // First loop. usually `@outer`
-    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
+    prefixCode += buildFirstLoopString(stmt, *loopInfo, params, parenCnt, rewriter);
 
-    // `@inner` loop just after `@outer`
-    // Top most `@inner` loop
-    if (parent && loopInfo->is(LoopType::Outer, LoopType::Inner)) {
-        if (loopInfo->exclusiveInfo.declared) {
+    // `@tile(@outer, ...)` loop
+    if (loopInfo->type[0] == LoopType::Outer) {
+        // `@tile(@outer)` with `@exclusive`
+        if (loopInfo->type[1] == LoopType::Regular && loopInfo->exclusiveInfo.declared) {
+            prefixCode += (!prefixCode.empty() ? "\n" : "") + exlusiveBeginText;
+        }
+        // `@tile(@outer, @inner)` loop with parent having `@exclusive`
+        if (loopInfo->type[1] == LoopType::Inner && parent && parent->exclusiveInfo.declared) {
             prefixCode += (!prefixCode.empty() ? "\n" : "") + exclusiveNullText;
         }
     }
 
     // Second loop. usually `@inner`
-    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
+    prefixCode += buildSecondLoopString(stmt, *loopInfo, params, parenCnt, rewriter);
+
+    // `@tile(@outer, ...)` loop
+    if (loopInfo->type[0] == LoopType::Outer) {
+        // `@tile(@outer, @inner)` or @tile(@outer, @outer)` with `@exclusive`
+        if (loopInfo->type[1] != LoopType::Regular && loopInfo->exclusiveInfo.declared) {
+            prefixCode += (!prefixCode.empty() ? "\n" : "") + exlusiveBeginText;
+        }
+    }
 
     // Check code
     if (params->check) {
-        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt, s.getRewriter());
+        prefixCode += buildCheckString(stmt, *loopInfo, params, parenCnt, rewriter);
     }
 
     // Replace `for` statement body from LParent to RParen.
@@ -209,7 +214,17 @@ HandleResult handleTileAttribute(const Attr& a,
             auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
             SourceLocation incLoc =
                 compStmt ? compStmt->getRBracLoc().getLocWithOffset(-1) : stmt.getEndLoc();
-            rewriter.InsertTextBefore(incLoc, exclusiveIncText);
+
+            std::string suffixCode = "";
+            if (parenCnt > 1) {
+                size_t cnt = 0;
+                cnt += params->check;
+                cnt += loopInfo->has(LoopType::Regular);
+                parenCnt -= cnt;
+                suffixCode += getScopesCloseStr(cnt);
+            }
+            suffixCode += (!suffixCode.empty() ? "\n" : "") + exclusiveIncText;
+            rewriter.InsertText(incLoc, suffixCode, true, true);
         }
     }
 

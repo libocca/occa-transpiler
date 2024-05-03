@@ -1,9 +1,7 @@
-#include "oklt/util/string_utils.h"
+#include "util/string_utils.hpp"
 
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
-
-#include <sstream>
 
 namespace oklt::util {
 using namespace llvm;
@@ -13,24 +11,6 @@ std::string toLower(const std::string& str) {
     result.reserve(str.size());
     std::transform(str.begin(), str.end(), std::back_inserter(result), ::tolower);
     return result;
-}
-
-std::string toCamelCase(std::string str) {
-    std::size_t res_ind = 0;
-    for (int i = 0; i < str.length(); i++) {
-        // check for spaces in the sentence
-        if (str[i] == ' ' || str[i] == '_') {
-            // conversion into upper case
-            str[i + 1] = ::toupper(str[i + 1]);
-            continue;
-        }
-        // If not space, copy character
-        else {
-            str[res_ind++] = str[i];
-        }
-    }
-    // return string to main
-    return str.substr(0, res_ind);
 }
 
 std::string pointerToStr(const void* ptr) {
@@ -85,6 +65,19 @@ std::vector<std::string_view> split(const std::string_view& str,
     return ret;
 }
 
+std::string replace(std::string_view str, std::string_view from, std::string_view to) {
+    auto res = std::string(str);
+    size_t pos = res.find(from);
+    while (pos != std::string::npos) {
+        // Replace the substring with the specified string
+        res.replace(pos, from.size(), to);
+
+        // Find the next occurrence of the substring
+        pos = res.find(from, pos + to.size());
+    }
+    return res;
+}
+
 namespace impl {
 tl::expected<size_t, Error> getCurlyBracketIdx(const std::string_view& str) {
     for (size_t idx = 0; idx < str.size(); ++idx) {
@@ -102,7 +95,7 @@ tl::expected<size_t, Error> getCurlyBracketIdx(const std::string_view& str) {
 tl::expected<std::string, Error> fmt(const std::string& s) {
     auto pos = impl::getCurlyBracketIdx(s);
     if (!pos.has_value()) {
-        return tl::make_unexpected(pos.error());
+        return tl::make_unexpected(std::move(pos.error()));
     }
 
     if (pos.value() != static_cast<size_t>(-1)) {

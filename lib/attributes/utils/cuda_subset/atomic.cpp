@@ -1,8 +1,8 @@
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/Attr.h>
@@ -13,9 +13,9 @@ using namespace clang;
 using BinOpMapT = std::map<BinaryOperatorKind, std::string>;
 using UnaryOpMapT = std::map<UnaryOperatorKind, std::string>;
 
-HandleResult handleBinOp(const BinaryOperator& binOp,
+HandleResult handleBinOp(SessionStage& stage,
+                         const BinaryOperator& binOp,
                          const Attr& attr,
-                         SessionStage& stage,
                          const BinOpMapT& binaryConvertMap) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto it = binaryConvertMap.find(binOp.getOpcode());
@@ -23,7 +23,7 @@ HandleResult handleBinOp(const BinaryOperator& binOp,
         auto binOpStr = getSourceText(binOp, ctx);
         std::string description = "Atomic does not support this operation: " + binOpStr;
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
     auto left = binOp.getLHS();
@@ -31,7 +31,7 @@ HandleResult handleBinOp(const BinaryOperator& binOp,
         auto leftText = getSourceText(*left, ctx);
         std::string description = leftText + ": is not lvalue";
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
     }
 
     auto leftText = getSourceText(*left, ctx);
@@ -44,9 +44,9 @@ HandleResult handleBinOp(const BinaryOperator& binOp,
     return {};
 }
 
-HandleResult handleUnOp(const UnaryOperator& unOp,
+HandleResult handleUnOp(SessionStage& stage,
+                        const UnaryOperator& unOp,
                         const Attr& attr,
-                        SessionStage& stage,
                         const UnaryOpMapT& atomicUnaryMap) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto it = atomicUnaryMap.find(unOp.getOpcode());
@@ -54,7 +54,7 @@ HandleResult handleUnOp(const UnaryOperator& unOp,
         auto binOpStr = getSourceText(unOp, ctx);
         std::string description = "Atomic does not support this operation: " + binOpStr;
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
     auto expr = unOp.getSubExpr();
     auto unOpText = getSourceText(*expr, ctx);
@@ -66,9 +66,9 @@ HandleResult handleUnOp(const UnaryOperator& unOp,
     return {};
 }
 
-HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
+HandleResult handleCXXCopyOp(SessionStage& stage,
+                             const CXXOperatorCallExpr& assignOp,
                              const Attr& attr,
-                             SessionStage& stage,
                              const BinOpMapT& binaryConvertMap) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto numArgs = assignOp.getNumArgs();
@@ -76,7 +76,7 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
         auto exprStr = getSourceText(assignOp, ctx);
         std::string description = "Atomic does not support this operation: " + exprStr;
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
     auto left = assignOp.getArg(0);
@@ -85,7 +85,7 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
         auto leftText = getSourceText(*left, ctx);
         std::string description = leftText + ": is not lvalue";
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NON_LVALUE_EXPR), description});
     }
 
     auto leftText = getSourceText(*left, ctx);
@@ -103,7 +103,7 @@ HandleResult handleCXXCopyOp(const CXXOperatorCallExpr& assignOp,
 
 namespace oklt::cuda_subset {
 
-HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionStage& stage) {
+HandleResult handleAtomicAttribute(SessionStage& stage, const Stmt& stmt, const Attr& attr) {
     static const BinOpMapT atomicBinaryMap = {
         {BinaryOperatorKind::BO_Assign, "atomicExch"},
         {BinaryOperatorKind::BO_AddAssign, "atomicAdd"},
@@ -121,15 +121,15 @@ HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionSt
 
     auto& ctx = stage.getCompiler().getASTContext();
     if (const auto binOp = dyn_cast_or_null<BinaryOperator>(&stmt)) {
-        return handleBinOp(*binOp, attr, stage, atomicBinaryMap);
+        return handleBinOp(stage, *binOp, attr, atomicBinaryMap);
     }
 
     if (const auto unOp = dyn_cast_or_null<UnaryOperator>(&stmt)) {
-        return handleUnOp(*unOp, attr, stage, atomicUnaryMap);
+        return handleUnOp(stage, *unOp, attr, atomicUnaryMap);
     }
 
     if (const auto assignOp = dyn_cast_or_null<CXXOperatorCallExpr>(&stmt)) {
-        return handleCXXCopyOp(*assignOp, attr, stage, atomicBinaryMap);
+        return handleCXXCopyOp(stage, *assignOp, attr, atomicBinaryMap);
     }
 
     // INFO: for Expr there must be used different overloaded getSourceText method
@@ -138,7 +138,7 @@ HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionSt
         std::string description = "Atomic does not support this operation: " + exprStr;
 
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
     }
 
     // INFO: looks like it's really statemet that actually should not happen
@@ -146,6 +146,6 @@ HandleResult handleAtomicAttribute(const Attr& attr, const Stmt& stmt, SessionSt
     std::string description = "Atomic does not support this operation: " + stmtStr;
 
     return tl::make_unexpected(
-        Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
+        Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP), description});
 }
 }  // namespace oklt::cuda_subset

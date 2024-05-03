@@ -1,16 +1,17 @@
 #include "attributes/backend/serial/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPKernelHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, KERNEL_ATTR_NAME},
-        makeSpecificAttrHandle(serial_subset::handleKernelAttribute));
+    auto ok = registerBackendHandler(
+        TargetBackend::SERIAL, KERNEL_ATTR_NAME, serial_subset::handleKernelAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << KERNEL_ATTR_NAME
-                     << " attribute handler (Serial)\n";
+        SPDLOG_ERROR("[SERIAL] Failed to register {} attribute handler", KERNEL_ATTR_NAME);
     }
 }
 }  // namespace

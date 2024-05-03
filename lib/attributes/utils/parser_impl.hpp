@@ -1,7 +1,6 @@
 #pragma once
 
 #include "attributes/utils/parser.h"
-#include "parser.h"
 #include "util/type_traits.h"
 
 #include <llvm/ADT/APFloat.h>
@@ -212,7 +211,7 @@ bool OKLParsedAttr::isa(size_t n) {
 };
 
 template <typename T>
-std::optional<T> OKLParsedAttr::get(std::string_view k) {
+std::optional<T> OKLParsedAttr::get(const std::string& k) {
     auto it = kwargs.find(k);
     if (it != kwargs.end()) {
         if constexpr (std::is_same_v<T, OKLAttrParam>)
@@ -223,7 +222,7 @@ std::optional<T> OKLParsedAttr::get(std::string_view k) {
 };
 
 template <typename T>
-T OKLParsedAttr::get(std::string_view k, T&& u) {
+T OKLParsedAttr::get(const std::string& k, T&& u) {
     auto it = kwargs.find(k);
     if (it != kwargs.end()) {
         if constexpr (std::is_same_v<T, OKLAttrParam>)
@@ -234,7 +233,7 @@ T OKLParsedAttr::get(std::string_view k, T&& u) {
 };
 
 template <typename... T>
-bool OKLParsedAttr::isa(std::string_view k) {
+bool OKLParsedAttr::isa(const std::string& k) {
     auto it = kwargs.find(k);
     if (it != kwargs.end())
         return it->second.isa<T...>();

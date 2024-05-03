@@ -1,4 +1,4 @@
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
@@ -34,7 +34,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter) {
+                                             oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -68,7 +68,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter) {
+                                             oklt::Rewriter& rewriter) {
     static_cast<void>(params);
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = getIdxVariable(loop);
@@ -98,7 +98,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                          const AttributedLoop& regularLoop,
                                          const TileParams* params,
                                          int& openedScopeCounter,
-                                         clang::Rewriter& rewriter) {
+                                         oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
@@ -123,7 +123,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                           const AttributedLoop& regularLoop,
                                           const TileParams* params,
                                           int& openedScopeCounter,
-                                          clang::Rewriter& rewriter) {
+                                          oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto& stmt = forLoop.stmt;
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -173,7 +173,7 @@ namespace inner_outer {
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
                                        int& openedScopeCounter,
-                                       clang::Rewriter& rewriter) {
+                                       oklt::Rewriter& rewriter) {
     static_cast<void>(openedScopeCounter);
     auto idx = getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";

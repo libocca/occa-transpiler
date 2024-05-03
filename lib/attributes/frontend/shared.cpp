@@ -1,6 +1,6 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include "attributes/utils/parser.h"
@@ -16,9 +16,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling SHARED_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "shared"},
     {ParsedAttr::AS_CXX11, SHARED_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_shared"}};
+    {ParsedAttr::AS_GNU, SHARED_ATTR_NAME}};
 
 struct SharedAttribute : public ParsedAttrInfo {
     SharedAttribute() {
@@ -113,9 +112,9 @@ struct SharedAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseSharedAttrParams(const clang::Attr& attr,
-                                  OKLParsedAttr& data,
-                                  SessionStage& stage) {
+HandleResult parseSharedAttrParams(SessionStage& stage,
+                                   const clang::Attr& attr,
+                                  OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@shared] does not take arguments"});
     }
@@ -123,8 +122,7 @@ ParseResult parseSharedAttrParams(const clang::Attr& attr,
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME,
-                                                                       parseSharedAttrParams);
+__attribute__((constructor)) void registerSharedAttrFrontend() {
+    registerAttrFrontend<SharedAttribute>(SHARED_ATTR_NAME, parseSharedAttrParams);
 }
 }  // namespace

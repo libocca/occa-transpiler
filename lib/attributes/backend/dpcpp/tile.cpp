@@ -1,21 +1,23 @@
 #include <oklt/core/kernel_metadata.h>
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include "attributes/attribute_names.h"
 #include "attributes/backend/dpcpp/common.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/code_gen.h"
-#include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "attributes/utils/tile_utils.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/utils/kernel_utils.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/range_to_string.h"
 
 #include <clang/Rewrite/Core/Rewriter.h>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
+using namespace clang;
 
 std::string getTiledVariableName(const OklLoopInfo& forLoop) {
     return "_occa_tiled_" + forLoop.var.name;
@@ -25,7 +27,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter) {
+                                             oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = dpcpp::getIdxVariable(loop);
     auto op = forLoop.IsInc() ? "+" : "-";
@@ -60,7 +62,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter) {
+                                             oklt::Rewriter& rewriter) {
     static_cast<void>(params);
     auto tiledVar = getTiledVariableName(forLoop);
     auto idx = dpcpp::getIdxVariable(loop);
@@ -91,7 +93,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                          const AttributedLoop& regularLoop,
                                          const TileParams* params,
                                          int& openedScopeCounter,
-                                         clang::Rewriter& rewriter) {
+                                         oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto assignUpdate = forLoop.IsInc() ? "+=" : "-=";
     auto cmpOpStr = getCondCompStr(forLoop.condition.op);
@@ -117,7 +119,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                           const AttributedLoop& regularLoop,
                                           const TileParams* params,
                                           int& openedScopeCounter,
-                                          clang::Rewriter& rewriter) {
+                                          oklt::Rewriter& rewriter) {
     auto tiledVar = getTiledVariableName(forLoop);
     auto op = forLoop.IsInc() ? "+" : "-";
     auto cmp = forLoop.IsInc() ? "<" : ">";
@@ -166,12 +168,11 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
                              const TileParams* params,
                              const LoopOrder& ord,
                              int& openedScopeCounter,
-                             clang::Rewriter& rewriter) {
-    // TODO: this logic should be based on first or second loop, not inner/outer/regular
+                             oklt::Rewriter& rewriter) {
     static std::map<
         std::tuple<LoopType, LoopOrder>,
         std::function<std::string(
-            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, clang::Rewriter&)>>
+            const OklLoopInfo&, const AttributedLoop&, const TileParams*, int&, oklt::Rewriter&)>>
         mapping{
             {{LoopType::Inner, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
             {{LoopType::Outer, LoopOrder::First}, buildIinnerOuterLoopIdxLineFirst},
@@ -187,14 +188,13 @@ std::string buildLoopIdxLine(const OklLoopInfo& forLoop,
 std::string buildCheckLine(const OklLoopInfo& forLoop,
                            const TileParams* tileParams,
                            int& openedScopeCounter,
-                           clang::Rewriter& rewriter) {
+                           oklt::Rewriter& rewriter) {
     if (!tileParams->check) {
         return "";
     }
 
     auto cmpStr = getCondCompStr(forLoop.condition.op);
 
-    // TODO: parse cmp operator
     auto res = util::fmt("if ({} {} {})",
                          forLoop.var.name,
                          cmpStr,
@@ -210,11 +210,10 @@ std::string buildCheckLine(const OklLoopInfo& forLoop,
     return res;
 }
 
-// TODO: add check handling
 std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
                                   const TileParams* tileParams,
                                   int& openedScopeCounter,
-                                  clang::Rewriter& rewriter) {
+                                  oklt::Rewriter& rewriter) {
     std::string res;
     res += buildLoopIdxLine(forLoop, tileParams, LoopOrder::First, openedScopeCounter, rewriter);
     res += buildLoopIdxLine(forLoop, tileParams, LoopOrder::Second, openedScopeCounter, rewriter);
@@ -222,10 +221,12 @@ std::string buildPreffixTiledCode(const OklLoopInfo& forLoop,
     return res;
 }
 
-HandleResult handleTileAttribute(const clang::Attr& a,
+HandleResult handleTileAttribute(SessionStage& s,
                                  const clang::ForStmt& forStmt,
-                                 const TileParams* params,
-                                 SessionStage& s) {
+                                 const clang::Attr& a,
+                                 const TileParams* params) {
+    SPDLOG_DEBUG("Handle [@tile] attribute");
+
     if (!params) {
         return tl::make_unexpected(Error{std::error_code(), "@tile params nullptr"});
     }
@@ -237,37 +238,30 @@ HandleResult handleTileAttribute(const clang::Attr& a,
         return tl::make_unexpected(Error{{}, "@tile: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = tileParamsHandleAutoAxis(*params, *loopInfo);
-    if (!updatedParams) {
-        return tl::make_unexpected(updatedParams.error());
-    }
+    auto updatedParams = *params;
+    // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
+    updatedParams.firstLoop.axis = loopInfo->axis[0];
+    updatedParams.secondLoop.axis = loopInfo->axis[1];
 
     int openedScopeCounter = 0;
-    auto prefixCode = buildPreffixTiledCode(
-        *loopInfo, &updatedParams.value(), openedScopeCounter, s.getRewriter());
+    auto prefixCode =
+        buildPreffixTiledCode(*loopInfo, &updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
+    std::string afterRBraceCode = "";
     if (loopInfo->shouldSync()) {
-        suffixCode += dpcpp::SYNC_THREADS_BARRIER + ";";
+        afterRBraceCode += dpcpp::SYNC_THREADS_BARRIER + ";";
     }
 
-#ifdef TRANSPILER_DEBUG_LOG
-    const auto& md = *loopInfo;
-    llvm::outs() << "[DEBUG] Handle @tile. Parsed for loop: Init("
-                 << ", name: " << md.var.name << ", initValue: " << md.range.start
-                 << "), Cond(rhsExpr: " << md.range.end << "), Inc(rhsInc: " << md.inc.val
-                 << ", isUnary: " << md.isUnary() << ")\n";
-#endif
+    handleChildAttr(s, forStmt, NO_BARRIER_ATTR_NAME);
 
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, false);
 }
 
 __attribute__((constructor)) void registerDpcppTileAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, TILE_ATTR_NAME}, makeSpecificAttrHandle(handleTileAttribute));
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, TILE_ATTR_NAME, handleTileAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register" << TILE_ATTR_NAME
-                     << "attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", TILE_ATTR_NAME);
     }
 }
 }  // namespace

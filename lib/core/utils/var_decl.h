@@ -48,6 +48,11 @@ bool isConstPointerToConst(const DeclType& var) {
 template <typename DeclType>
 bool isGlobalConstVariable(const DeclType& var) {
     static_assert(std::is_base_of_v<clang::Decl, DeclType>);
+    // Skip constexpr
+    if (var.isConstexpr()) {
+        return false;
+    }
+
     // Should be global variable
     if (var.isLocalVarDecl() && !var.hasGlobalStorage()) {
         return false;

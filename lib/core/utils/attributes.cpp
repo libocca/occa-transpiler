@@ -1,21 +1,20 @@
-#include "core/utils/attributes.h"
+#include "attributes/attribute_names.h"
+
 #include "core/transpiler_session/session_stage.h"
+#include "core/utils/attributes.h"
 
 #include <clang/AST/Attr.h>
 
 namespace oklt {
 using namespace clang;
 
-bool removeAttribute(const clang::Attr& attr, SessionStage& stage) {
+bool removeAttribute(SessionStage& stage, const clang::Attr& attr) {
     auto& rewriter = stage.getRewriter();
     auto range = getAttrFullSourceRange(attr);
     // INFO: sometimes rewrite functions does the job but return false value
     rewriter.RemoveText(range);
     return true;
 }
-
-const std::string OKL_GNU_PREFIX = "okl_";
-const std::string OKL_CXX_PREFIX = "okl::";
 
 constexpr SourceLocation::IntTy CXX11_ATTR_PREFIX_LEN = std::char_traits<char>::length("[[");
 constexpr SourceLocation::IntTy CXX11_ATTR_SUFFIX_LEN = std::char_traits<char>::length("]]");
@@ -43,8 +42,7 @@ bool isOklAttribute(const clang::Attr& attr) {
     if (!isa<AnnotateAttr, AnnotateTypeAttr, SuppressAttr>(attr)) {
         return false;
     }
-    return StringRef(attr.getNormalizedFullName()).starts_with(OKL_GNU_PREFIX) ||
-           StringRef(attr.getNormalizedFullName()).starts_with(OKL_CXX_PREFIX);
+    return StringRef(attr.getNormalizedFullName()).starts_with(OKL_ATTR_PREFIX);
 }
 
 }  // namespace oklt

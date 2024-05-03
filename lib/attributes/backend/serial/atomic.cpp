@@ -1,16 +1,17 @@
 #include "attributes/backend/serial/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPAtomicHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, ATOMIC_ATTR_NAME},
-        AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
+    auto ok = registerBackendHandler(
+        TargetBackend::SERIAL, ATOMIC_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME
-                     << " attribute handler (Serial)\n";
+        SPDLOG_ERROR("[SERIAL] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);
     }
 }
 }  // namespace

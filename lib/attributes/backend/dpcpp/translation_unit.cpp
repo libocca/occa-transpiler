@@ -1,25 +1,24 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
+#include "core/handler_manager/implicid_handler.h"
 
-#include <clang/AST/Decl.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
-HandleResult handleTranslationUnitDpcpp(const clang::TranslationUnitDecl& decl, SessionStage& s) {
-    const std::string SYCL_INCLUDE = "<CL/sycl.hpp>\nusing namespace sycl;\n";
-    return oklt::handleTranslationUnit(decl, s, SYCL_INCLUDE);
+const std::string_view SYCL_INCLUDE = "<CL/sycl.hpp>";
+const std::string_view SYCL_NS = "sycl";
+
+HandleResult handleTranslationUnitDpcpp(SessionStage& s, const clang::TranslationUnitDecl& decl) {
+    return oklt::handleTranslationUnit(s, decl, {SYCL_INCLUDE}, {SYCL_NS});
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::DPCPP, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleTranslationUnitDpcpp));
+    auto ok = registerImplicitHandler(TargetBackend::DPCPP, handleTranslationUnitDpcpp);
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register implicit handler for translation unit");
     }
 }
 }  // namespace

@@ -2,6 +2,8 @@
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
+#include <spdlog/spdlog.h>
+
 namespace clang {
 class Stmt;
 }  // namespace clang
@@ -9,82 +11,84 @@ class Stmt;
 namespace oklt {
 class SessionStage;
 
-HandleResult emptyHandleStmtAttribute(const clang::Attr& a, const clang::Stmt&, SessionStage&) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called empty " << a.getNormalizedFullName() << " stmt handler\n";
-#endif
+HandleResult emptyHandleStmtAttribute(SessionStage&, const clang::Stmt&, const clang::Attr& a) {
+    SPDLOG_DEBUG("Called empty {} stmt handler", a.getNormalizedFullName());
     return {};
 }
 
-HandleResult emptyHandleDeclAttribute(const clang::Attr& a, const clang::Decl&, SessionStage&) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called empty " << a.getNormalizedFullName() << " decl handler\n";
-#endif
+HandleResult emptyHandleDeclAttribute(SessionStage&, const clang::Decl&, const clang::Attr& a) {
+    SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
+
     return {};
 }
 
-HandleResult defaultHandleSharedStmtAttribute(const clang::Attr& a,
+HandleResult defaultHandleSharedStmtAttribute(SessionStage& stage,
                                               const clang::Stmt& stmt,
-                                              SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " stmt handler\n";
-#endif
+                                              const clang::Attr& a) {
+    SPDLOG_DEBUG("Called empty {} stmt handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();
     if (!currLoop) {
         return {};
     }
+
     currLoop->markSharedUsed();
+
     return {};
 }
 
-HandleResult defaultHandleExclusiveStmtAttribute(const clang::Attr& a,
+HandleResult defaultHandleExclusiveStmtAttribute(SessionStage& stage,
                                                  const clang::Stmt& stmt,
-                                                 SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " stmt handler\n";
-#endif
+                                                 const clang::Attr& a) {
+    SPDLOG_DEBUG("Called empty {} stmt handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
     auto* currLoop = sema.getLoopInfo();
     if (!currLoop) {
         return {};
     }
+
     currLoop->markExclusiveUsed();
+
     return {};
 }
 
-HandleResult defaultHandleSharedDeclAttribute(const clang::Attr& a,
+HandleResult defaultHandleSharedDeclAttribute(SessionStage& stage,
                                               const clang::Decl& d,
-                                              SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " decl handler\n";
-#endif
+                                              const clang::Attr& a) {
+    SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto* currLoop = sema.getLoopInfo();
-    if (!currLoop) {
+    auto* loopInfo = sema.getLoopInfo();
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
+    }
+    if (!loopInfo) {
         return {};
     }
-    currLoop->sharedInfo.declared = true;
+
+    loopInfo->sharedInfo.declared = true;
 
     return {};
 }
 
-HandleResult defaultHandleExclusiveDeclAttribute(const clang::Attr& a,
+HandleResult defaultHandleExclusiveDeclAttribute(SessionStage& stage,
                                                  const clang::Decl& d,
-                                                 SessionStage& stage) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "Called default " << a.getNormalizedFullName() << " decl handler\n";
-#endif
+                                                 const clang::Attr& a) {
+    SPDLOG_DEBUG("Called empty {} decl handler", a.getNormalizedFullName());
 
     auto& sema = stage.tryEmplaceUserCtx<OklSemaCtx>();
-    auto* currLoop = sema.getLoopInfo();
-    if (!currLoop) {
+    auto* loopInfo = sema.getLoopInfo();
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
+    }
+    if (!loopInfo) {
         return {};
     }
-    currLoop->exclusiveInfo.declared = true;
+
+    loopInfo->exclusiveInfo.declared = true;
+
     return {};
 }
 

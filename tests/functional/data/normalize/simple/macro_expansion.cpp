@@ -17,7 +17,7 @@ __okl_inline__ int fastMul(float a) {
     return a * 1.f;
 }
 
-@kernel void simple_function(const float* inputArray @ restrict,
+@kernel void simple_function(const float* inputArray @restrict,
                              float* outputArray,
                              float value,
                              int size) {

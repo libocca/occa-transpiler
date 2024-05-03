@@ -6,16 +6,18 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  argparser
-  GITHUB_REPOSITORY p-ranav/argparse
-  GIT_TAG v3.0
+  NAME argparser
+  SOURCE_DIR ${ROOT_DIR}/deps/argparse
   OPTIONS "ARGPARSE_BUILD_TESTS OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-    VERSION 3.11.2
-    GITHUB_REPOSITORY nlohmann/json
-    OPTIONS "JSON_BuildTests OFF")
+   SOURCE_DIR ${ROOT_DIR}/deps/json
+   OPTIONS "JSON_BuildTests OFF")
+
+CPMAddPackage(NAME spdlog
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog
+  OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 add_library(GTest::GTest INTERFACE IMPORTED)
 target_link_libraries(GTest::GTest INTERFACE gtest)
@@ -42,7 +44,7 @@ target_include_directories(occa-transpiler-tests
     )
 
 target_compile_definitions(occa-transpiler-tests
-       	PRIVATE
+	PRIVATE
         ${LLVM_DEFINITIONS})
 
 target_link_libraries(occa-transpiler-tests
@@ -51,6 +53,7 @@ target_link_libraries(occa-transpiler-tests
         argparse
 	nlohmann_json::nlohmann_json
         occa-transpiler
+        spdlog::spdlog_header_only
 )
 
 add_custom_command(TARGET occa-transpiler-tests POST_BUILD

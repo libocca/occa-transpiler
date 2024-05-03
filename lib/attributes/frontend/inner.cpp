@@ -1,11 +1,9 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/loop.h"
+#include "attributes/frontend/params/loop.h"
 
-#include <oklt/util/string_utils.h>
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -17,9 +15,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling INNER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "inner"},
     {ParsedAttr::AS_CXX11, INNER_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_inner"}};
+    {ParsedAttr::AS_GNU, INNER_ATTR_NAME}};
 
 struct InnerAttribute : public ParsedAttrInfo {
     InnerAttribute() {
@@ -51,9 +48,9 @@ struct InnerAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseInnerAttrParams(const clang::Attr& attr,
-                                 OKLParsedAttr& data,
-                                 SessionStage& stage) {
+HandleResult parseInnerAttrParams(SessionStage& stage,
+                                  const clang::Attr& attr,
+                                  OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@inner] does not take kwargs"});
     }
@@ -77,8 +74,7 @@ ParseResult parseInnerAttrParams(const clang::Attr& attr,
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME,
-                                                                      parseInnerAttrParams);
+__attribute__((constructor)) void registerInnerAttrFrontend() {
+    registerAttrFrontend<InnerAttribute>(INNER_ATTR_NAME, parseInnerAttrParams);
 }
 }  // namespace

@@ -5,35 +5,32 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(NORMALIZER_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
-option(OKL_SEMA_DEBUG_LOG "Log normalizer debug messages in stdout" OFF)
-option(TRANSPILER_DEBUG_LOG "Log transpiler debug messages in stdout" OFF)
-
 set (OCCA_TRANSPILER_SOURCES
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/ast_processor_types.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/target_backends.h
+    ${ROOT_DIR}/include/oklt/core/target_backends.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_input.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/transpiler_session/user_output.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/core/kernel_metadata.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_input.h
+    ${ROOT_DIR}/include/oklt/core/transpiler_session/user_output.h
+    ${ROOT_DIR}/include/oklt/core/kernel_metadata.h
 
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/normalizer.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/pipeline/transpiler.h
-    ${CMAKE_SOURCE_DIR}/include/oklt/util/format.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer_and_transpiler.h
+    ${ROOT_DIR}/include/oklt/pipeline/normalizer.h
+    ${ROOT_DIR}/include/oklt/pipeline/transpiler.h
+    ${ROOT_DIR}/include/oklt/util/format.h
 
     attributes/frontend/barrier.cpp
-    attributes/frontend/nobarrier.cpp
+    attributes/frontend/no_barrier.cpp
     attributes/frontend/exclusive.cpp
     attributes/frontend/atomic.cpp
     attributes/frontend/dim.cpp
-    attributes/frontend/dimOrder.cpp
+    attributes/frontend/dim_order.cpp
     attributes/frontend/inner.cpp
     attributes/frontend/kernel.cpp
     attributes/frontend/outer.cpp
     attributes/frontend/restrict.cpp
     attributes/frontend/shared.cpp
     attributes/frontend/tile.cpp
+    attributes/frontend/max_inner_dims.cpp
+    attributes/frontend/simd_length.cpp
 
     # Backends common
     attributes/utils/parser.h
@@ -43,11 +40,11 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/code_gen.cpp
     attributes/utils/replace_attribute.h
     attributes/utils/replace_attribute.cpp
-    attributes/utils/tile_utils.cpp
-    attributes/utils/tile_utils.h
-    attributes/utils/inner_outer_utils.cpp
-    attributes/utils/inner_outer_utils.h
     attributes/utils/default_handlers.cpp
+    attributes/utils/kernel_utils.cpp
+    attributes/utils/kernel_utils.h
+    attributes/utils/utils.cpp
+    attributes/utils/utils.h
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
@@ -147,44 +144,56 @@ set (OCCA_TRANSPILER_SOURCES
     # sugar attribute
     attributes/backend/common/dim.cpp
     attributes/backend/common/dim_order.cpp
+    attributes/backend/common/max_inner_dims.cpp
+    attributes/backend/common/no_barrier.cpp
+    attributes/backend/common/simd_length.cpp
 
-    core/ast_processor_manager/ast_processor_manager.cpp
-
-    core/ast_processors/okl_sema_processor/processor.cpp
-    core/ast_processors/okl_sema_processor/handlers/function.h
-    core/ast_processors/okl_sema_processor/handlers/function.cpp
-    core/ast_processors/okl_sema_processor/handlers/loop.h
-    core/ast_processors/okl_sema_processor/handlers/loop.cpp
-
-    core/ast_traversal/transpile_ast_consumer.cpp
-    core/ast_traversal/transpile_frontend_action.cpp
-    core/ast_traversal/preorder_traversal_nlr.cpp
-
+    # Sema
     core/sema/okl_sema_ctx.cpp
     core/sema/okl_sema_ctx.h
     core/sema/okl_sema_info.cpp
     core/sema/okl_sema_info.h
+    core/sema/processor.cpp
+    core/sema/handlers/function.h
+    core/sema/handlers/function.cpp
+    core/sema/handlers/loop.h
+    core/sema/handlers/loop.cpp
 
+    # Lexer
+    core/lex/lexer.h
+    core/lex/lexer.cpp
+
+    # Diagnostics
     core/diag/diag_consumer.cpp
+    core/diag/builtin_handlers/ignore_undecl_indent.cpp
 
     core/kernel_metadata.cpp
 
     core/vfs/overlay_fs.cpp
 
-    core/attribute_manager/attr_decl_handler.cpp
-    core/attribute_manager/attr_stmt_handler.cpp
-    core/attribute_manager/attribute_manager.cpp
-    core/attribute_manager/attributed_type_map.cpp
-    core/attribute_manager/backend_attribute_map.cpp
-    core/attribute_manager/common_attribute_map.cpp
-    core/attribute_manager/implicit_handlers/implicit_handler_map.cpp
-    core/attribute_manager/implicit_handlers/decl_handler.cpp
-    core/attribute_manager/implicit_handlers/stmt_handler.cpp
+    core/logger.cpp
+
+    core/sys/setup.h
+    core/sys/setup.cpp
+
+    core/rewriter/delta/delta_trees.cpp
+
+    core/rewriter/impl/dtree_rewriter_proxy.cpp
+    core/rewriter/rewriter_proxy.cpp
+    core/rewriter/rewriter_fabric.cpp
+
+    core/builtin_headers/intrinsic_impl.cpp
+    core/builtin_headers/intrinsic_impl.h
+
+    core/handler_manager/handler_manager.cpp
+    core/handler_manager/handler_map.cpp
 
     core/transpiler_session/transpiler_session.cpp
+    core/transpiler_session/attributed_type_map.cpp
     core/transpiler_session/session_stage.cpp
     core/transpiler_session/header_info.cpp
     core/transpiler_session/code_generator.cpp
+    core/transpiler_session/original_source_mapper.cpp
 
     core/target_backends.cpp
 
@@ -200,63 +209,62 @@ set (OCCA_TRANSPILER_SOURCES
 
     util/io_helper.cpp
     util/string_utils.cpp
+    util/string_utils.hpp
 
     pipeline/normalizer.cpp
     pipeline/transpiler.cpp
     pipeline/normalizer_and_transpiler.cpp
-    pipeline/stages/transpiler/transpiler.cpp
-    pipeline/stages/transpiler/transpiler.h
-    pipeline/stages/transpiler/error_codes.cpp
-    pipeline/stages/transpiler/error_codes.h
 
-    pipeline/stages/normalizer/normalizer.cpp
-    pipeline/stages/normalizer/normalizer.h
-    pipeline/stages/normalizer/error_codes.cpp
-    pipeline/stages/normalizer/error_codes.h
-    pipeline/stages/normalizer/impl/expand_macro_stage.cpp
-    pipeline/stages/normalizer/impl/okl_to_gnu_stage.cpp
-    pipeline/stages/normalizer/impl/gnu_to_std_cpp_stage.cpp
-    pipeline/stages/normalizer/impl/okl_attr_traverser.cpp
+    pipeline/core/stage_action.cpp
+    pipeline/core/stage_action.h
+    pipeline/core/stage_action_runner.cpp
+    pipeline/core/stage_action_runner.h
+    pipeline/core/stage_action_registry.h
+    pipeline/core/stage_action_registry.cpp
+    pipeline/core/error_codes.cpp
+    pipeline/core/error_codes.h
+
+    pipeline/utils/okl_attribute_traverser.cpp
+    pipeline/utils/okl_attribute_traverser.h
+    pipeline/utils/okl_attribute.h
+
+    pipeline/stages/preprocessor/okl_directive_expansion.cpp
+    pipeline/stages/preprocessor/macro_expansion.cpp
+    pipeline/stages/normalizer/okl_to_gnu_attr_normalizer.cpp
+    pipeline/stages/normalizer/gnu_to_std_cpp_attr_normalizer.cpp
+    pipeline/stages/transpiler/transpilation.cpp
 )
 
-CPMAddPackage(expected
-    GITHUB_REPOSITORY
-    TartanLlama/expected
-    GIT_TAG v1.1.0
+CPMAddPackage(NAME expected
+    SOURCE_DIR ${ROOT_DIR}/deps/expected
     OPTIONS "EXPECTED_BUILD_TESTS OFF" "EXPECTED_BUILD_PACKAGE OFF"
 )
 
 CPMAddPackage(NAME nlohmann_json
-    VERSION 3.11.2
-    GITHUB_REPOSITORY nlohmann/json
+    SOURCE_DIR ${ROOT_DIR}/deps/json
     OPTIONS "JSON_BuildTests OFF")
+
+CPMAddPackage(NAME spdlog
+  SOURCE_DIR ${ROOT_DIR}/deps/spdlog
+  OPTIONS "SPDLOG_BUILD_EXAMPLE OFF" "SPDLOG_NO_EXCEPTIONS ON")
 
 set(LLVM_LINK_COMPONENTS Support)
 
 add_llvm_library(occa-transpiler SHARED
      ${OCCA_TRANSPILER_SOURCES})
 
-if (NORMALIZER_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DNORMALIZER_DEBUG_LOG=1)
-endif()
-
-if (OKL_SEMA_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DOKL_SEMA_DEBUG_LOG=1)
-endif()
-
-if (TRANSPILER_DEBUG_LOG)
-  target_compile_definitions(occa-transpiler PRIVATE -DTRANSPILER_DEBUG_LOG=1)
-endif()
+# Make sure that spdlog macro supports all logging levels
+target_compile_definitions(occa-transpiler PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 
 target_include_directories(occa-transpiler
       PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${ROOT_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       PRIVATE
         ${LLVM_INCLUDE_DIRS}
         ${LIBCLANG_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/lib/
+        ${ROOT_DIR}/lib/
 )
 
 target_link_libraries(occa-transpiler
@@ -264,8 +272,30 @@ target_link_libraries(occa-transpiler
         $<BUILD_INTERFACE:tl::expected>
     PRIVATE
         $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>
+        $<BUILD_INTERFACE:spdlog::spdlog_header_only>
         ${CLANG_LIBS}
 )
+
+embed_resource_txt(resources/okl_intrinsic_cuda.h
+    core/builtin_headers/okl_intrinsic_cuda.h
+    INTRINSIC_CUDA
+)
+
+embed_resource_txt(resources/okl_intrinsic_dpcpp.h
+    core/builtin_headers/okl_intrinsic_dpcpp.h
+    INTRINSIC_DPCPP
+)
+
+embed_resource_txt(resources/okl_intrinsic_hip.h
+    core/builtin_headers/okl_intrinsic_hip.h
+    INTRINSIC_HIP
+)
+
+embed_resource_txt(resources/okl_intrinsic_host.h
+    core/builtin_headers/okl_intrinsic_host.h
+    INTRINSIC_HOST
+)
+
 
 add_custom_command(TARGET occa-transpiler
     # Run after all other rules within the target have been executed

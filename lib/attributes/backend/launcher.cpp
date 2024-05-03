@@ -1,19 +1,21 @@
 #include "attributes/attribute_names.h"
 #include "attributes/frontend/params/tile.h"
 #include "attributes/utils/serial_subset/handle.h"
-#include "core/attribute_manager/attr_stmt_handler.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/attr_handler.h"
+#include "core/handler_manager/backend_handler.h"
+#include "core/handler_manager/implicid_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/sema/okl_sema_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
 #include "core/utils/type_converter.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
 
 #include <oklt/core/kernel_metadata.h>
 
 #include <clang/Rewrite/Core/Rewriter.h>
+#include <spdlog/spdlog.h>
 
 // #define OKL_LAUNCHER_RECURSIVE
 
@@ -25,7 +27,7 @@ const std::string includeOCCA = "<occa/core/kernel.hpp>";
 const std::string externC = "extern \"C\"";
 
 struct LoopMetaData {
-    AttributedLoopTypes type = {LoopType::Regular};
+    LoopTypes type = {LoopType::Regular};
 
     struct {
         std::string type;
@@ -69,7 +71,7 @@ struct LoopMetaData {
         };
     };
 
-    explicit LoopMetaData(const OklLoopInfo& l, const Rewriter& r) {
+    explicit LoopMetaData(const OklLoopInfo& l, const oklt::Rewriter& r) {
         type = l.type;
         var.type = l.var.typeName;
         var.name = l.var.name;
@@ -104,10 +106,11 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
     kernelInfo.args.clear();
     kernelInfo.args.reserve(func.getNumParams() + 1);
 
-    kernelInfo.args.emplace_back(ArgumentInfo{.is_const = false,
-                                              .dtype = DataType{.type = DatatypeCategory::CUSTOM},
-                                              .name = "deviceKernels",
-                                              .is_ptr = true});
+    kernelInfo.args.emplace_back(
+        ArgumentInfo{.is_const = false,
+                     .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
+                     .name = "deviceKernels",
+                     .is_ptr = true});
     out << util::fmt("{} {} {}", "occa::modeKernel_t", "**", "deviceKernels").value();
 
     for (auto p : func.parameters()) {
@@ -126,7 +129,7 @@ std::string getFunctionParamStr(const FunctionDecl& func, KernelInfo& kernelInfo
         } else {
             kernelInfo.args.emplace_back(
                 ArgumentInfo{.is_const = false,
-                             .dtype = DataType{.type = DatatypeCategory::CUSTOM},
+                             .dtype = DataType{.typeCategory = DatatypeCategory::CUSTOM},
                              .name = p->getNameAsString(),
                              .is_ptr = true});
             out << util::fmt("{} {} {}", "occa::modeMemory_t", "*", p->getNameAsString()).value();
@@ -198,13 +201,13 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
 }
 #endif
 
-std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const Rewriter& r) {
+std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const oklt::Rewriter& r) {
     auto sz = util::parseStrTo<size_t>(loopInfo.tileSize);
 
     // Prepare first loop
     auto firstMeta = LoopMetaData(loopInfo, r);
     firstMeta.var.name = getTiledVariableName(firstMeta);
-    if (sz.value_or(1024) > 1) {
+    if (sz.value_or(1024) > 0) {
         if (firstMeta.inc.val.empty()) {
             firstMeta.inc.val = loopInfo.tileSize;
             switch (firstMeta.inc.op.uo) {
@@ -233,7 +236,7 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
             secondMeta.condition.op = BinOp::Gt;
             break;
     }
-    if (sz.value_or(1024) > 1) {
+    if (sz.value_or(1024) > 0) {
         secondMeta.range.end = "(" + firstMeta.var.name + " + " + loopInfo.tileSize + ")";
     } else {
         secondMeta.range.end = firstMeta.var.name;
@@ -242,10 +245,10 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
     return {firstMeta, secondMeta};
 }
 
-std::string getRootLoopBody(const FunctionDecl& decl,
+std::string getRootLoopBody(SessionStage& s,
+                            const FunctionDecl& decl,
                             OklLoopInfo& loopInfo,
-                            size_t loopNo,
-                            SessionStage& s) {
+                            size_t loopNo) {
     std::stringstream out;
     auto& r = s.getRewriter();
 
@@ -266,7 +269,7 @@ std::string getRootLoopBody(const FunctionDecl& decl,
         // NOTE: Tile is a special case
         if (child->isTiled()) {
             auto& am = s.getAttrManager();
-            auto params = std::any_cast<TileParams>(am.parseAttr(child->attr, s).value());
+            auto params = std::any_cast<TileParams>(am.parseAttr(s, *child->attr).value());
 
             auto [firstMeta, secondMeta] = splitTileAttr(*child, r);
             //  if (metadata.type.size() > 0)
@@ -348,35 +351,30 @@ std::string getRootLoopBody(const FunctionDecl& decl,
     return out.str();
 }
 
-HandleResult handleLauncherTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
+HandleResult handleLauncherTranslationUnit(SessionStage& s, const TranslationUnitDecl& d) {
     auto& sm = s.getCompiler().getSourceManager();
     auto mainFileId = sm.getMainFileID();
     auto loc = sm.getLocForStartOfFile(mainFileId);
 
-#ifdef TRANSPILER_DEBUG_LOG
-    auto offset = sm.getFileOffset(d.getLocation());
-    llvm::outs() << "[DEBUG] Found translation unit, offset: " << offset << "\n";
-#endif
+    SPDLOG_DEBUG("Handle translation unit");
 
     //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
-    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendDeps;
+    auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendHeaders;
     backendDeps.clear();
     backendDeps.emplace_back("#include " + std::string(includeOCCA) + "\n\n");
 
     return {};
 }
-HandleResult handleLauncherKernelAttribute(const Attr& a,
+HandleResult handleLauncherKernelAttribute(SessionStage& s,
                                            const FunctionDecl& func,
-                                           SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+                                           const Attr& a) {
+    SPDLOG_DEBUG("Handle attribute: {}", a.getNormalizedFullName());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();
 
     if (!sema.getParsingKernelInfo()) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
                                          "handleKernelAttribute"});
     }
 
@@ -396,13 +394,16 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
     rewriter.ReplaceText(paramsRange, paramStr);
 
     size_t n = 0;
-    for (auto& loop : kernelInfo.children) {
-        removeAttribute(loop.attr, s);
+    for (auto* loop : kernelInfo.topLevelOuterLoops) {
+        if (!loop) {
+            continue;
+        }
+        removeAttribute(s, *loop->attr);
 
-        auto body = getRootLoopBody(func, loop, n, s);
+        auto body = getRootLoopBody(s, func, *loop, n);
         // NOTE: rewriter order matter! First get body, then remove, otherwise UB !!!
-        rewriter.RemoveText(SourceRange{loop.stmt.getForLoc(), loop.stmt.getRParenLoc()});
-        rewriter.ReplaceText(loop.stmt.getBody()->getSourceRange(), body);
+        rewriter.RemoveText(SourceRange{loop->stmt.getForLoc(), loop->stmt.getRParenLoc()});
+        rewriter.ReplaceText(loop->stmt.getBody()->getSourceRange(), body);
         ++n;
     }
 
@@ -410,37 +411,33 @@ HandleResult handleLauncherKernelAttribute(const Attr& a,
 }
 
 __attribute__((constructor)) void registerLauncherHandler() {
-#define REG_ATTR_HANDLE(NAME, BODY)                                                             \
-    {                                                                                           \
-        auto ok = oklt::AttributeManager::instance().registerBackendHandler(                    \
-            {TargetBackend::_LAUNCHER, NAME}, BODY);                                            \
-        if (!ok) {                                                                              \
-            llvm::errs() << "failed to register " << NAME << " attribute handler (Launcher)\n"; \
-        }                                                                                       \
+#define REG_ATTR_HANDLE(NAME, BODY)                                                   \
+    {                                                                                 \
+        auto ok = registerBackendHandler(TargetBackend::_LAUNCHER, NAME, BODY);       \
+        if (!ok) {                                                                    \
+            SPDLOG_ERROR("Failed to register {} attribute handler (Launcher)", NAME); \
+        }                                                                             \
     }
 
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::_LAUNCHER, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleLauncherTranslationUnit));
+    auto ok = registerImplicitHandler(TargetBackend::_LAUNCHER, handleLauncherTranslationUnit);
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (Launcher)\n";
+        SPDLOG_ERROR("Failed to register implicit handler for translation unit (Launcher)");
     }
 
-    REG_ATTR_HANDLE(KERNEL_ATTR_NAME, makeSpecificAttrHandle(handleLauncherKernelAttribute));
-    REG_ATTR_HANDLE(OUTER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(INNER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(TILE_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
+    REG_ATTR_HANDLE(KERNEL_ATTR_NAME, handleLauncherKernelAttribute);
+    REG_ATTR_HANDLE(OUTER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(INNER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(TILE_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
-    REG_ATTR_HANDLE(ATOMIC_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(BARRIER_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
-    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, AttrDeclHandler{serial_subset::handleEmptyDeclAttribute});
-    REG_ATTR_HANDLE(SHARED_ATTR_NAME, AttrDeclHandler{serial_subset::handleEmptyDeclAttribute});
-    REG_ATTR_HANDLE(SHARED_ATTR_NAME, AttrStmtHandler{serial_subset::handleEmptyStmtAttribute});
+    REG_ATTR_HANDLE(ATOMIC_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(BARRIER_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, serial_subset::handleEmptyDeclAttribute);
+    REG_ATTR_HANDLE(EXCLUSIVE_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyDeclAttribute);
+    REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
-    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME,
-                    makeSpecificAttrHandle(serial_subset::handleRestrictAttribute));
+    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME, serial_subset::handleRestrictAttribute);
 
 #undef REG_ATTR_HANDLE
 }

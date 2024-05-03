@@ -7,11 +7,13 @@
 #include <oklt/pipeline/normalizer_and_transpiler.h>
 #include <oklt/pipeline/transpiler.h>
 #include <oklt/util/format.h>
-#include <oklt/util/string_utils.h>
 
 #include <nlohmann/json.hpp>
 
 #include <gtest/gtest.h>
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
+
 #include <fstream>
 
 using json = nlohmann::json;
@@ -19,7 +21,32 @@ namespace fs = std::filesystem;
 using namespace oklt::tests;
 
 enum struct Action { NORMALIZER, TRANSPILER, NORMALIZE_AND_TRANSPILE };
-enum struct Compare { SOURCE, METADATA };
+enum struct Compare { SOURCE, METADATA, ERROR_MESSAGE };
+
+std::string toLower(const std::string& str) {
+    std::string result;
+    result.reserve(str.size());
+    std::transform(str.begin(), str.end(), std::back_inserter(result), ::tolower);
+    return result;
+}
+
+std::string toCamelCase(std::string str) {
+    std::size_t res_ind = 0;
+    for (int i = 0; i < str.length(); i++) {
+        // check for spaces in the sentence
+        if (str[i] == ' ' || str[i] == '_') {
+            // conversion into upper case
+            str[i + 1] = ::toupper(str[i + 1]);
+            continue;
+        }
+        // If not space, copy character
+        else {
+            str[res_ind++] = str[i];
+        }
+    }
+    // return string to main
+    return str.substr(0, res_ind);
+}
 
 tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
     static const std::map<std::string, Action> actions = {
@@ -27,7 +54,7 @@ tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
         {"transpiler", Action::TRANSPILER},
         {"normalize_and_transpile", Action::NORMALIZE_AND_TRANSPILE},
     };
-    auto it = actions.find(oklt::util::toLower(v));
+    auto it = actions.find(toLower(v));
     if (it != actions.cend()) {
         return it->second;
     }
@@ -35,12 +62,13 @@ tl::expected<Action, std::string> buildActionFrom(const std::string& v) {
 }
 
 tl::expected<Compare, std::string> buildCompareFrom(const std::string& v) {
-    static const std::map<std::string, Compare> actions = {
+    static const std::map<std::string, Compare> compares = {
         {"source", Compare::SOURCE},
         {"metadata", Compare::METADATA},
+        {"error_message", Compare::ERROR_MESSAGE},
     };
-    auto it = actions.find(oklt::util::toLower(v));
-    if (it != actions.cend()) {
+    auto it = compares.find(toLower(v));
+    if (it != compares.cend()) {
         return it->second;
     }
     return tl::unexpected<std::string>("Unknown compare is used");
@@ -56,8 +84,7 @@ oklt::UserInput NormalizeActionConfig::build(const fs::path& dataDir) const {
     auto sourceFullPath = dataDir / source;
     std::ifstream sourceFile{sourceFullPath};
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
-    return oklt::UserInput{.backend = oklt::TargetBackend::CUDA,
-                           .sourceCode = std::move(sourceCode)};
+    return oklt::UserInput{.backend = oklt::TargetBackend::CUDA, .source = std::move(sourceCode)};
 }
 
 struct TranspileActionConfig {
@@ -76,16 +103,43 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
         throw std::logic_error(expectedBackend.error());
     }
     auto sourceFullPath = dataDir / source;
+
+    // add path to kernel source code headers lookup
+    includes.emplace_back(sourceFullPath.parent_path().string());
+
     std::ifstream sourceFile{sourceFullPath};
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
     return oklt::UserInput{.backend = expectedBackend.value(),
-                           .astProcType = oklt::AstProcessorType::OKL_WITH_SEMA,
-                           .sourceCode = std::move(sourceCode),
+                           .source = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
-                           .inlcudeDirectories = includes,
+                           .includeDirectories = includes,
                            .defines = defs};
 }
+
+namespace {
+void compareError(const std::string& sourceFilePath,
+                  const oklt::UserResult& res,
+                  const std::string& refErrorMessage) {
+    // TODO: currently compare only first error to the whole file. There can be
+    // multiple errors
+    EXPECT_EQ(res.has_value(), refErrorMessage.empty())
+        << "No error when expected, or vice versa: " << sourceFilePath;
+    ASSERT_FALSE(res.error().empty()) << "Failed silently? No error message: " << sourceFilePath;
+    auto normalizeError = res.error().front();
+    auto errorMessage = normalizeError.desc;
+
+    // Since path to file in error message depends on pwd, we have to replace it with just filename
+    // Error must start with sourceFilePath
+    auto filename = fs::path(sourceFilePath).filename().string();
+    if (errorMessage.find(sourceFilePath) == 0) {
+        errorMessage.replace(0, sourceFilePath.size(), filename);
+    }
+
+    EXPECT_EQ(errorMessage, refErrorMessage)
+        << "Error message is different for file: " << sourceFilePath;
+}
+}  // namespace
 
 class GenericTest : public testing::TestWithParam<std::string> {};
 
@@ -127,21 +181,33 @@ TEST_P(GenericTest, OCCATests) {
                     continue;
                 }
                 auto conf = actionConfig->get<NormalizeActionConfig>();
-                auto normalizeResult = oklt::normalize(conf.build(dataDir));
-                if (!normalizeResult) {
+                auto input = conf.build(dataDir);
+                SPDLOG_INFO("Run Normalize action for {}", input.sourcePath.string());
+                auto normalizeResult = oklt::normalize(input);
+                if (!normalizeResult && cmp != Compare::ERROR_MESSAGE) {
                     EXPECT_TRUE(false) << "File: " << conf.source << std::endl
                                        << "Normalize error occur" << std::endl;
                 }
 
                 std::ifstream referenceFile(referencePath);
                 std::string reference{std::istreambuf_iterator<char>(referenceFile), {}};
-                if (cmp == Compare::SOURCE) {
-                    std::string formatedReference = oklt::format(reference);
-                    std::string normalizedSource =
-                        oklt::format(normalizeResult.value().normalized.sourceCode);
-                    EXPECT_EQ(formatedReference, normalizedSource);
-                } else {
-                    EXPECT_EQ(reference, normalizeResult.value().normalized.metadataJson);
+                switch (cmp) {
+                    case Compare::SOURCE: {
+                        std::string formatedReference = oklt::format(reference);
+                        std::string normalizedSource =
+                            oklt::format(normalizeResult.value().normalized.source);
+                        EXPECT_EQ(formatedReference, normalizedSource)
+                            << fmt::format("Failed compare {} with generated normalized source",
+                                           referencePath.string());
+                        break;
+                    }
+                    case Compare::METADATA: {
+                        break;
+                    }
+                    case Compare::ERROR_MESSAGE: {
+                        compareError(input.sourcePath, normalizeResult, reference);
+                        break;
+                    }
                 }
 
             } break;
@@ -152,9 +218,11 @@ TEST_P(GenericTest, OCCATests) {
                     continue;
                 }
                 auto conf = actionConfig->get<TranspileActionConfig>();
-                auto transpileResult = oklt::transpile(conf.build(dataDir));
+                auto input = conf.build(dataDir);
+                SPDLOG_INFO("Run Transpile action for {}", input.sourcePath.string());
+                auto transpileResult = oklt::transpile(input);
 
-                if (!transpileResult) {
+                if (!transpileResult && cmp != Compare::ERROR_MESSAGE) {
                     std::string error;
                     for (const auto& e : transpileResult.error()) {
                         error += e.desc + "\n";
@@ -165,14 +233,30 @@ TEST_P(GenericTest, OCCATests) {
 
                 std::ifstream referenceFile(referencePath);
                 std::string reference{std::istreambuf_iterator<char>(referenceFile), {}};
-                if (cmp == Compare::SOURCE) {
-                    std::string formatedReference = oklt::format(reference);
-                    std::string transpiledSource =
-                        oklt::format(transpileResult.value().kernel.sourceCode);
-                    EXPECT_EQ(formatedReference, transpiledSource);
-                } else {
-                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson);
+                switch (cmp) {
+                    case Compare::SOURCE: {
+                        std::string formatedReference = oklt::format(reference);
+                        std::string transpiledSource =
+                            oklt::format(transpileResult.value().kernel.source);
+                        EXPECT_EQ(formatedReference, transpiledSource) << fmt::format(
+                            "Failed compare {} with generated normalization metadataJson",
+                            referencePath.string());
+
+                        break;
+                    }
+                    case Compare::METADATA: {
+                        EXPECT_EQ(reference, transpileResult.value().kernel.metadata)
+                            << fmt::format("Failed compare {} with generated kernel metadataJson",
+                                           referencePath.string());
+
+                        break;
+                    }
+                    case Compare::ERROR_MESSAGE: {
+                        compareError(input.sourcePath, transpileResult, reference);
+                        break;
+                    }
                 }
+
             } break;
             case Action::NORMALIZE_AND_TRANSPILE: {
                 auto actionConfig = testCase.find("action_config");
@@ -181,9 +265,11 @@ TEST_P(GenericTest, OCCATests) {
                     continue;
                 }
                 auto conf = actionConfig->get<TranspileActionConfig>();
-                auto transpileResult = oklt::normalizeAndTranspile(conf.build(dataDir));
+                auto input = conf.build(dataDir);
+                SPDLOG_INFO("Run Normalize and Transpile action for {}", input.sourcePath.string());
+                auto transpileResult = oklt::normalizeAndTranspile(input);
 
-                if (!transpileResult) {
+                if (!transpileResult && cmp != Compare::ERROR_MESSAGE) {
                     std::string error;
                     for (const auto& e : transpileResult.error()) {
                         error += e.desc + "\n";
@@ -194,15 +280,30 @@ TEST_P(GenericTest, OCCATests) {
 
                 std::ifstream referenceFile(referencePath);
                 std::string reference{std::istreambuf_iterator<char>(referenceFile), {}};
-                if (cmp == Compare::SOURCE) {
-                    std::string formatedReference = oklt::format(reference);
-                    std::string transpiledSource =
-                        oklt::format(transpileResult.value().kernel.sourceCode);
-                    EXPECT_EQ(formatedReference, transpiledSource);
-                } else {
-                    EXPECT_EQ(reference, transpileResult.value().kernel.metadataJson);
+                switch (cmp) {
+                    case Compare::SOURCE: {
+                        std::string formatedReference = oklt::format(reference);
+                        std::string transpiledSource =
+                            oklt::format(transpileResult.value().kernel.source);
+                        EXPECT_EQ(formatedReference, transpiledSource) << fmt::format(
+                            "Failed compare {} with generated normalized and transpiled",
+                            referencePath.string());
+                        break;
+                    }
+                    case Compare::METADATA: {
+                        EXPECT_EQ(reference, transpileResult.value().kernel.metadata)
+                            << fmt::format("Failed compare {} with generated kernel metadataJson",
+                                           referencePath.string());
+
+                        break;
+                    }
+                    case Compare::ERROR_MESSAGE: {
+                        compareError(input.sourcePath, transpileResult, reference);
+                        break;
+                    }
                 }
-            } break;
+                break;
+            }
         }
     }
 }
@@ -211,7 +312,7 @@ struct GenericConfigTestNamePrinter {
     std::string operator()(const testing::TestParamInfo<std::string>& info) const {
         std::filesystem::path fullPath(info.param);
         auto fileName = fullPath.stem();
-        return oklt::util::toCamelCase(fileName.string());
+        return toCamelCase(fileName.string());
     }
 };
 

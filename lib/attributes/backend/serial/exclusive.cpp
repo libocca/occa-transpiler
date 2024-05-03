@@ -1,19 +1,19 @@
 #include "attributes/backend/serial/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(serial_subset::handleExclusiveExprAttribute));
-    ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::SERIAL, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(serial_subset::handleExclusiveDeclAttribute));
+    auto ok = registerBackendHandler(
+        TargetBackend::SERIAL, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveExprAttribute);
+    ok &= registerBackendHandler(
+        TargetBackend::SERIAL, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveDeclAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME
-                     << " attribute handler (Serial)\n";
+        SPDLOG_ERROR("[SERIAL] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 }
 }  // namespace

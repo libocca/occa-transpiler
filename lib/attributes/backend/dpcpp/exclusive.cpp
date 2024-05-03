@@ -1,37 +1,24 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/utils/attributes.h"
+#include "core/handler_manager/backend_handler.h"
 
 #include <clang/AST/Attr.h>
-#include <clang/AST/Stmt.h>
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
 using namespace clang;
-HandleResult handleExclusiveAttribute(const clang::Attr& a,
-                                      const clang::Decl& decl,
-                                      SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] handle attribute: @exclusive\n";
-#endif
-    s.getRewriter().RemoveText(getAttrFullSourceRange(a));
-    return defaultHandleExclusiveDeclAttribute(a, decl, s);
-}
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(handleExclusiveAttribute));
+    auto ok = registerBackendHandler(
+        TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, cuda_subset::handleExclusiveAttribute);
 
-    ok &= oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME},
-        makeSpecificAttrHandle(defaultHandleExclusiveStmtAttribute));
+    ok &= registerBackendHandler(
+        TargetBackend::DPCPP, EXCLUSIVE_ATTR_NAME, defaultHandleExclusiveStmtAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << EXCLUSIVE_ATTR_NAME
-                     << " attribute handler (DPCPP)\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
     }
 }
 }  // namespace

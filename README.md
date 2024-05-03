@@ -10,9 +10,15 @@
 ## Build
 ### Setup llvm 
 ```bash
-wget https://github.com/opencollab/llvm-jenkins.debian.net/blob/master/llvm.sh
+wget https://raw.githubusercontent.com/opencollab/llvm-jenkins.debian.net/master/llvm.sh
 sudo ./llvm.sh 17 all
 rm llvm.sh
+```
+
+### Submodules
+```bash
+git submodule init
+git submodule update
 ```
 
 ### Compile
@@ -49,3 +55,17 @@ Optional arguments:
   --normalize    should normalize before transpiling 
   -o, --output   optional output file [nargs=0..1] [default: ""]
 ```
+
+### Logging
+Logging level can be set with `OKLT_LOG_LEVEL` enviroment variable.
+
+Possible values:
+- trace
+- debug
+- info
+- warn
+- err
+- critical
+
+
+## [Documentation](./docs/README.md)

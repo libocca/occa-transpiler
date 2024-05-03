@@ -38,8 +38,8 @@ extern "C" __global__ void _occa_addVectors_0(const int entries,
                     }
                     ab[i] = add(a[i], b[k]);
                 }
-                __syncthreads();
             }
+            __syncthreads();
             {
                 int _occa_tiled_j = (0) + (((4) * 1) * threadIdx.z);
                 {
@@ -53,8 +53,8 @@ extern "C" __global__ void _occa_addVectors_0(const int entries,
                         }
                     }
                 }
-                __syncthreads();
             }
+            __syncthreads();
             {
                 int j = (0) + ((1) * threadIdx.z);
                 shm[j] = 0;

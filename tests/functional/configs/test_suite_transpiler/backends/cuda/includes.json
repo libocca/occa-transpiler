@@ -1,0 +1,13 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/includes/kernel.cpp",
+            "includes": ["data/transpiler/backends/cuda/includes"],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/includes/kernel_ref.cpp"
+    }
+]

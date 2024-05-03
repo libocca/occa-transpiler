@@ -1,12 +1,17 @@
+#include "attributes/attribute_names.h"
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
+
 #include "core/transpiler_session/session_stage.h"
 
+#include <clang/Basic/TargetInfo.h>
 #include <clang/AST/Attr.h>
 #include <clang/Basic/CharInfo.h>
+#include <clang/Basic/TargetInfo.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/LiteralSupport.h>
 #include <clang/Lex/Preprocessor.h>
+
 #include <llvm/ADT/StringExtras.h>
 
 namespace {
@@ -76,16 +81,14 @@ unsigned getIntegerWidth(NumericLiteralParser& Literal, const TargetInfo& TI) {
 const llvm::fltSemantics& getFloatFormat(NumericLiteralParser& Literal, const TargetInfo& TI) {
     assert(Literal.isFloatingLiteral() && "Expected floating point literal");
     if (Literal.isHalf) {  // float16_t ?
-        return TI.getFloatFormat();
-        //        return TI.getHalfFormat();
+        return TI.getFloatFormat();  // return TI.getHalfFormat();
     } else if (Literal.isFloat) {  // float, float32_t
         return TI.getFloatFormat();
     } else if (Literal.isFloat16) {  // float16_t
         return TI.getFloatFormat();
         //        return TI.getBFloat16Format();
     } else if (Literal.isFloat128) {  // float128_t
-                                      //        return TI.getLongDoubleFormat();
-        return TI.getFloat128Format();
+        return TI.getFloat128Format();  // return TI.getLongDoubleFormat();
     } else {
         return TI.getDoubleFormat();  // double, float64_t
     }
@@ -297,8 +300,7 @@ class AttrParamParser {
             return std::nullopt;
         }
 
-        auto name = std::string("okl::") + TokIt->getRawIdentifier().str();
-
+        auto name = OKL_ATTR_PREFIX + TokIt->getRawIdentifier().str();
         auto buffer = StringRef(rawStart, SM.getCharacterData(TokIt->getEndLoc()) - rawStart);
 
         ++TokIt;
@@ -348,7 +350,7 @@ class AttrParamParser {
                         break;
                     }
 
-                    ret.kwargs.insert_or_assign(name, v.value());
+                    ret.kwargs.insert_or_assign(name.str(), v.value());
                     isParsed = true;
                 }
             }
@@ -430,7 +432,7 @@ class AttrParamParser {
 namespace oklt {
 using namespace clang;
 
-OKLParsedAttr ParseOKLAttr(const clang::Attr& attr, SessionStage& stage) {
+OKLParsedAttr ParseOKLAttr(SessionStage& stage, const clang::Attr& attr) {
     assert((isa<AnnotateAttr>(attr) || isa<SuppressAttr>(attr)) &&
            "We only support AnnotateAttr or SuppressAttr");
 

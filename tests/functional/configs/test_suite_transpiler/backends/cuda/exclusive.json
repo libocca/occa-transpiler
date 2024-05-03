@@ -9,5 +9,17 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/cuda/exclusive/exclusive_builtin_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "cuda",
+            "source": "transpiler/backends/cuda/exclusive/exclusive_in_typedecl.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/cuda/exclusive/exclusive_in_typedecl_ref.cpp"
      }
+
 ]

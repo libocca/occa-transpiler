@@ -17,7 +17,8 @@ struct ComplexTypeFloat {
   template <typename T> __device__ ComplexTypeFloat(T in);
 };
 
-extern "C" __global__ void _occa_reductionWithSharedMemory_0(const int entries,
+extern "C" __global__
+__launch_bounds__(16) void _occa_reductionWithSharedMemory_0(const int entries,
                                                              const float *vec) {
   {
     int _occa_tiled_i = (0) + ((16) * blockIdx.x);

@@ -16,10 +16,9 @@ int main(int argc, char* argv[]) {
         if (ifs) {
             std::string sourceCode{std::istreambuf_iterator<char>(ifs), {}};
             UserInput input{.backend = TargetBackend::CUDA,
-                            .astProcType = AstProcessorType::OKL_WITH_SEMA,
                             .sourceCode = std::move(sourceCode),
                             .sourcePath = std::filesystem::path(filePath),
-                            .inlcudeDirectories = {},
+                            .includeDirectories = {},
                             .defines = {}};
             auto result = normalizeAndTranspile(std::move(input));
             if (!result) {

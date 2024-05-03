@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/rewriter/rewriter_proxy.h"
+
 #include <clang/Lex/Lexer.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 
@@ -9,15 +11,15 @@ namespace clang {
 class ASTContext;
 class Expr;
 class Stmt;
+class Decl;
 }  // namespace clang
 
 namespace oklt {
 std::string getSourceText(const clang::SourceRange& range, clang::ASTContext& ctx);
 std::string getSourceText(const clang::Expr& expr, clang::ASTContext& ctx);
-std::string prettyPrint(const clang::Stmt& stmt, clang::ASTContext& ctx);
 
 template <typename NodeType>
-std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter) {
+std::string getSourceText(const NodeType& node, const oklt::Rewriter& rewriter) {
     auto& sourceManager = rewriter.getSourceMgr();
     auto& opts = rewriter.getLangOpts();
     return clang::Lexer::getSourceText(
@@ -26,12 +28,12 @@ std::string getSourceText(const NodeType& node, const clang::Rewriter& rewriter)
 }
 
 template <typename NodeType>
-std::string getLatestSourceText(const NodeType& node, const clang::Rewriter& rewriter) {
+std::string getLatestSourceText(const NodeType& node, const oklt::Rewriter& rewriter) {
     return rewriter.getRewrittenText(node.getSourceRange());
 }
 
 template <typename NodeType>
-std::string getLatestSourceText(const NodeType* node, const clang::Rewriter& rewriter) {
+std::string getLatestSourceText(const NodeType* node, const oklt::Rewriter& rewriter) {
     return getLatestSourceText(*node, rewriter);
 }
 }  // namespace oklt

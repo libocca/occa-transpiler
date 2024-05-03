@@ -1,5 +1,5 @@
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
@@ -7,29 +7,43 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/DeclBase.h>
 
+#include <spdlog/spdlog.h>
+
 namespace {
 const std::string SHARED_MODIFIER = "__shared__";
 }
 namespace oklt::cuda_subset {
-HandleResult handleSharedAttribute(const clang::Attr& a, const clang::Decl& d, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
-    std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
+HandleResult handleSharedAttribute(SessionStage& s, const clang::Decl& d, const clang::Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
 
-    Error sharedError{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"};
+    std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(sharedError);
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
     }
-    auto* loopBelowInfo = loopInfo->getFirstAttributedChild();
-    if (!loopBelowInfo || !(loopInfo->is(LoopType::Outer) && loopBelowInfo->is(LoopType::Inner))) {
-        return tl::make_unexpected(sharedError);
+    if (loopInfo && loopInfo->has(LoopType::Inner)) {
+        return tl::make_unexpected(
+            Error{{}, "Cannot define [@shared] variables inside an [@inner] loop"});
+    }
+    auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
+    bool isInnerChild = child && child->has(LoopType::Inner);
+
+    // This diagnostic is applied only to variable declaration
+    // TODO: if var of type declared with @shared is not between @outer and @inner, error isnt risen
+    if (!clang::isa<clang::TypeDecl>(d)) {
+        if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
+            return tl::make_unexpected(
+                Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
+        }
+    } else {
+        // Push warning that can't check that typedef @shared var is between outer and inner loop
+        s.pushWarning("Using [@shared] with typedef doesn't have proper semantic validation yet");
     }
 
     s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);
-    return defaultHandleSharedDeclAttribute(a, d, s);
+
+    return defaultHandleSharedDeclAttribute(s, d, a);
 }
 }  // namespace oklt::cuda_subset

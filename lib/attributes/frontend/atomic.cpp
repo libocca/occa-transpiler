@@ -1,10 +1,9 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
-
+#include "attributes/frontend/params/empty_params.h"
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
-#include "params/empty_params.h"
+
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/Sema.h>
@@ -15,9 +14,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling ATOMIC_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "atomic"},
     {ParsedAttr::AS_CXX11, ATOMIC_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_atomic"}};
+    {ParsedAttr::AS_GNU, ATOMIC_ATTR_NAME}};
 
 struct AtomicAttribute : public ParsedAttrInfo {
     AtomicAttribute() {
@@ -48,7 +46,7 @@ struct AtomicAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseAtomicAttrParams(const Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
+HandleResult parseAtomicAttrParams(SessionStage& stage, const Attr& attr, OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@atomic] does not take arguments"});
     }
@@ -56,8 +54,7 @@ ParseResult parseAtomicAttrParams(const Attr& attr, OKLParsedAttr& data, Session
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME,
-                                                                       parseAtomicAttrParams);
+__attribute__((constructor)) void registerAtomicAttrFrontend() {
+    registerAttrFrontend<AtomicAttribute>(ATOMIC_ATTR_NAME, parseAtomicAttrParams);
 }
 }  // namespace

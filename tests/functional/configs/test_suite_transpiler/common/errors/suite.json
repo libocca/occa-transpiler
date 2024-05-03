@@ -1,0 +1,10 @@
+[
+    "loops.json",
+    "kernel.json",
+    "shared.json",
+    "dim.json",
+    "atomic.json",
+    "barrier.json",
+    "exclusive.json",
+    "restrict.json"
+]

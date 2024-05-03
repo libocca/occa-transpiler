@@ -1,24 +1,20 @@
+#include "attributes/frontend/params/barrier.h"
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/barrier.h"
 
-#include <oklt/util/string_utils.h>
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling BARRIER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "barrier"},
     {ParsedAttr::AS_CXX11, BARRIER_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_barrier"}};
+    {ParsedAttr::AS_GNU, BARRIER_ATTR_NAME}};
 
 struct BarrierAttribute : public ParsedAttrInfo {
     BarrierAttribute() {
@@ -50,9 +46,9 @@ struct BarrierAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseBarrierAttrParams(const clang::Attr& attr,
-                                   OKLParsedAttr& data,
-                                   SessionStage& stage) {
+HandleResult parseBarrierAttrParams(SessionStage& stage,
+                                    const clang::Attr& attr,
+                                    OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@barrier] does not take kwargs"});
     }
@@ -85,8 +81,7 @@ ParseResult parseBarrierAttrParams(const clang::Attr& attr,
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME,
-                                                                        parseBarrierAttrParams);
+__attribute__((constructor)) void registerBarrierAttrFrontend() {
+    registerAttrFrontend<BarrierAttribute>(BARRIER_ATTR_NAME, parseBarrierAttrParams);
 }
 }  // namespace

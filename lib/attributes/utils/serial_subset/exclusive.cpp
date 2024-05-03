@@ -1,10 +1,11 @@
+#include <oklt/core/kernel_metadata.h>
+
 #include "attributes/utils/default_handlers.h"
-#include "core/attribute_manager/attribute_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 
-#include "oklt/core/kernel_metadata.h"
+#include <spdlog/spdlog.h>
 
 namespace oklt::serial_subset {
 using namespace clang;
@@ -14,25 +15,22 @@ const std::string outerLoopText = "\nint _occa_exclusive_index;";
 const std::string exlusiveExprText = "[_occa_exclusive_index]";
 }  // namespace
 
-HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+// TODO: There is no TypeDecl handler for openmp handler
+HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (decl)");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
-    if (!loopInfo) {
-        return tl::make_unexpected(
-            Error{{}, "@exclusive: failed to fetch loop meta data from sema"});
+    if (loopInfo && loopInfo->isRegular()) {
+        loopInfo = loopInfo->getAttributedParent();
     }
-
-    auto compStmt = dyn_cast_or_null<CompoundStmt>(loopInfo->stmt.getBody());
-    if (!compStmt || !loopInfo->is(LoopType::Outer)) {
+    if (loopInfo && loopInfo->has(LoopType::Inner)) {
         return tl::make_unexpected(
-            Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
+            Error{{}, "Cannot define [@exclusive] variables inside an [@inner] loop"});
     }
-
-    auto child = loopInfo->getFirstAttributedChild();
-    if (!child || !child->is(LoopType::Inner)) {
+    auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
+    bool isInnerChild = child && child->has(LoopType::Inner);
+    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
         return tl::make_unexpected(
             Error{{}, "Must define [@exclusive] variables between [@outer] and [@inner] loops"});
     }
@@ -42,20 +40,15 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
     SourceRange attrRange = getAttrFullSourceRange(a);
     rewriter.RemoveText(attrRange);
 
-    if (!loopInfo->exclusiveInfo.declared) {
-        auto indexLoc = compStmt->getLBracLoc().getLocWithOffset(1);
-        rewriter.InsertTextAfter(indexLoc, outerLoopText);
-    }
-
     // Find max size of inner loops
     size_t sz = 0;
     for (auto child : loopInfo->children) {
-        auto v = child.getSize();
-        if (!v.has_value()) {
+        auto v = child.getInnerSizes();
+        if (v.hasNullOpts()) {
             sz = 1024;
             break;
         }
-        sz = std::max(v.value(), sz);
+        sz = std::max(v.product(), sz);
     }
     std::string varSuffix = "[" + std::to_string(sz) + "]";
 
@@ -68,13 +61,12 @@ HandleResult handleExclusiveDeclAttribute(const Attr& a, const VarDecl& decl, Se
         rewriter.InsertTextAfter(decl.getEndLoc().getLocWithOffset(1), "}");
     }
 
-    return defaultHandleExclusiveDeclAttribute(a, decl, s);
+    return defaultHandleExclusiveDeclAttribute(s, decl, a);
 }
 
-HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "handle attribute: " << a.getNormalizedFullName() << '\n';
-#endif
+HandleResult handleExclusiveExprAttribute(SessionStage& s, const DeclRefExpr& expr, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (stmt)");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
     if (!loopInfo) {
@@ -84,7 +76,7 @@ HandleResult handleExclusiveExprAttribute(const Attr& a, const DeclRefExpr& expr
 
     auto loc = expr.getLocation().getLocWithOffset(expr.getNameInfo().getAsString().size());
     s.getRewriter().InsertTextAfter(loc, exlusiveExprText);
-    return defaultHandleExclusiveStmtAttribute(a, expr, s);
+    return defaultHandleExclusiveStmtAttribute(s, expr, a);
 }
 
 }  // namespace oklt::serial_subset

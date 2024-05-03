@@ -1,25 +1,26 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
+#include "core/handler_manager/implicid_handler.h"
 
-#include <clang/AST/Decl.h>
+#include <spdlog/spdlog.h>
+
+namespace oklt {
+class SessionStage;
+}
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
 const std::string HIP_RT_INC = "<hip/hip_runtime.h>";
-HandleResult handleTranslationUnit(const TranslationUnitDecl& d, SessionStage& s) {
-    return handleTranslationUnit(d, s, HIP_RT_INC);
+HandleResult handleTU(SessionStage& s, const TranslationUnitDecl& d) {
+    return handleTranslationUnit(s, d, {HIP_RT_INC});
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::TranslationUnit},
-        makeSpecificImplicitHandle(handleTranslationUnit));
+    auto ok = registerImplicitHandler(TargetBackend::HIP, handleTU);
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for translation unit (HIP)\n";
+        SPDLOG_ERROR("[HIP] Failed to register implicit handler for translation unit");
     }
 }
 }  // namespace

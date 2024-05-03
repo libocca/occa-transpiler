@@ -29,7 +29,9 @@ using HeaderIncStack = std::vector<HeaderDep>;
 
 struct HeaderDepsInfo {
     std::vector<HeaderDep> topLevelDeps;
-    std::vector<std::string> backendDeps;
+    std::vector<std::string> backendHeaders;
+    std::vector<std::string> backendNss;
+    bool useOklIntrinsic = false;
 };
 
 class InclusionDirectiveCallback : public clang::PPCallbacks {

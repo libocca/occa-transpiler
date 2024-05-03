@@ -1,11 +1,16 @@
 [
     "tile.json",
     "inner_outer.json",
+    "max_inner_dims.json",
     "shared.json",
     "restrict.json",
     "atomic.json",
     "barrier.json",
+    "nobarrier.json",
     "exclusive.json",
     "cxx_record.json",
-    "macro.json"
+    "macro.json",
+    "implicit.json",
+    "includes.json",
+    "intrinsics.json"
 ]

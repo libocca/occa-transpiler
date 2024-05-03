@@ -1,10 +1,16 @@
+#include "attributes/attribute_names.h"
 #include "attributes/utils/cuda_subset/handle.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "attributes/utils/kernel_utils.h"
+#include "core/handler_manager/handler_manager.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/type_converter.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
+
+#include "util/string_utils.hpp"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace clang;
@@ -18,16 +24,22 @@ std::string getFunctionName(const FunctionDecl& func, size_t n) {
 }
 
 std::string getFunctionAttributesStr([[maybe_unused]] const FunctionDecl& func, OklLoopInfo* info) {
-  std::stringstream out;
+    std::stringstream out;
     out << KERNEL_DEFINITION;
 
-    // TODO: add __launch_bounds__
+    if (info) {
+        auto sizes = info->getInnerSizes();
+        if (!sizes.hasNullOpts()) {
+            auto prod = sizes.product();
+            out << " " << util::fmt(KERNEL_BOUNDS, prod).value();
+        }
+    }
 
     out << " ";
     return out.str();
 }
 
-std::string getFunctionParamStr(const FunctionDecl& func, Rewriter& r) {
+std::string getFunctionParamStr(const FunctionDecl& func, oklt::Rewriter& r) {
     auto typeLoc = func.getFunctionTypeLoc();
     return r.getRewrittenText(typeLoc.getParensRange());
 }
@@ -37,19 +49,15 @@ std::string getFunctionParamStr(const FunctionDecl& func, Rewriter& r) {
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, SessionStage& s) {
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @kernel attribute: return type: "
-                 << func.getReturnType().getAsString()
-                 << ", old kernel name: " << func.getNameAsString() << '\n';
-#endif
+HandleResult handleKernelAttribute(SessionStage& s, const FunctionDecl& func, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@kernel] attribute for function '{}'", func.getNameAsString());
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto& rewriter = s.getRewriter();
 
     auto oklKernelInfo = toOklKernelInfo(func);
     if (!sema.isParsingOklKernel() || !oklKernelInfo) {
-        return tl::make_unexpected(Error{OkltTranspilerErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
+        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
                                          "handleKernelAttribute"});
     }
 
@@ -59,32 +67,34 @@ HandleResult handleKernelAttribute(const Attr& a, const FunctionDecl& func, Sess
     auto typeStr = rewriter.getRewrittenText(func.getReturnTypeSourceRange());
     auto paramStr = getFunctionParamStr(func, rewriter);
 
-    if (kernelInfo.children.empty()) {
-        rewriter.ReplaceText(getAttrFullSourceRange(a), getFunctionAttributesStr(func, nullptr));
-        rewriter.ReplaceText(func.getNameInfo().getSourceRange(), getFunctionName(func, 0));
-
-        return {};
+    if (auto verified = verifyLoops(s, kernelInfo); !verified) {
+        return tl::make_unexpected(std::move(verified.error()));
     }
 
     auto startPos = getAttrFullSourceRange(a).getBegin();
     size_t n = 0;
-    for (auto& child : kernelInfo.children) {
+    for (auto* child : kernelInfo.topLevelOuterLoops) {
+        if (!child) {
+            continue;
+        }
         kernels.push_back(oklKernelInfo.value());
         auto& meta = kernels.back();
         meta.name = getFunctionName(func, n);
+
+        handleChildAttr(s, child->stmt, MAX_INNER_DIMS_NAME);
 
         std::stringstream out;
         if (n != 0) {
             out << "}\n\n";
         }
-        out << getFunctionAttributesStr(func, &child);
+        out << getFunctionAttributesStr(func, child);
         out << typeStr << " " << getFunctionName(func, n) << paramStr << " {\n";
 
-        auto endPos = getAttrFullSourceRange(child.attr).getBegin();
+        auto endPos = getAttrFullSourceRange(*child->attr).getBegin();
         rewriter.ReplaceText(SourceRange{startPos, endPos}, out.str());
 
-        auto body = dyn_cast_or_null<CompoundStmt>(child.stmt.getBody());
-        startPos = (body ? body->getEndLoc() : child.stmt.getRParenLoc()).getLocWithOffset(1);
+        auto body = dyn_cast_or_null<CompoundStmt>(child->stmt.getBody());
+        startPos = (body ? body->getEndLoc() : child->stmt.getRParenLoc()).getLocWithOffset(1);
         ++n;
     }
 

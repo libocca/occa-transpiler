@@ -1,17 +1,19 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/backend_handler.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/attributes.h"
 #include "core/utils/range_to_string.h"
-#include "pipeline/stages/transpiler/error_codes.h"
+#include "pipeline/core/error_codes.h"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
 using namespace clang;
 
-tl::expected<std::string, Error> buildBinOp(const BinaryOperator& binOp,
+tl::expected<std::string, Error> buildBinOp(SessionStage& stage,
                                             const Attr& attr,
-                                            SessionStage& stage) {
+                                            const BinaryOperator& binOp) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto left = getSourceText(*binOp.getLHS(), ctx);
     auto right = getSourceText(*binOp.getRHS(), ctx);
@@ -26,9 +28,9 @@ tl::expected<std::string, Error> buildBinOp(const BinaryOperator& binOp,
         right);
 }
 
-tl::expected<std::string, Error> buildUnOp(const UnaryOperator& unOp,
+tl::expected<std::string, Error> buildUnOp(SessionStage& stage,
                                            const Attr& attr,
-                                           SessionStage& stage) {
+                                           const UnaryOperator& unOp) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto expr = getSourceText(*unOp.getSubExpr(), ctx);
     auto op = unOp.getOpcodeStr(unOp.getOpcode()).str();
@@ -41,15 +43,15 @@ tl::expected<std::string, Error> buildUnOp(const UnaryOperator& unOp,
         op);
 }
 
-tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
+tl::expected<std::string, Error> buildCXXCopyOp(SessionStage& stage,
                                                 const Attr& attr,
-                                                SessionStage& stage) {
+                                                const CXXOperatorCallExpr& op) {
     auto& ctx = stage.getCompiler().getASTContext();
     auto numArgs = op.getNumArgs();
     if (op.getOperator() != OverloadedOperatorKind::OO_Equal || numArgs != 2) {
         auto exprStr = getSourceText(op, ctx);
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NOT_SUPPORTED_OP),
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NOT_SUPPORTED_OP),
                   "Unsupported atomic operation: " + exprStr});
     }
     auto left = op.getArg(0);
@@ -61,7 +63,7 @@ tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
     if (!left->isLValue()) {
         auto leftText = getSourceText(*left, ctx);
         return tl::make_unexpected(
-            Error{make_error_code(OkltTranspilerErrorCode::ATOMIC_NON_LVALUE_EXPR),
+            Error{make_error_code(OkltPipelineErrorCode::ATOMIC_NON_LVALUE_EXPR),
                   leftText + ": is not lvalue"});
     }
     return util::fmt(
@@ -72,33 +74,59 @@ tl::expected<std::string, Error> buildCXXCopyOp(const CXXOperatorCallExpr& op,
         rigthStr);
 }
 
-HandleResult handleAtomicAttribute(const clang::Attr& attr,
-                                   const clang::Stmt& stmt,
-                                   SessionStage& stage) {
-    auto& ctx = stage.getCompiler().getASTContext();
-    auto newExpression = [&]() -> tl::expected<std::string, Error> {
-        if (isa<BinaryOperator>(stmt)) {
-            const BinaryOperator* binOp = cast<BinaryOperator>(&stmt);
-            return buildBinOp(*binOp, attr, stage);
-        }
-        if (isa<UnaryOperator>(stmt)) {
-            const UnaryOperator* unOp = cast<UnaryOperator>(&stmt);
-            return buildUnOp(*unOp, attr, stage);
-        }
-        if (isa<CXXOperatorCallExpr>(stmt)) {
-            const CXXOperatorCallExpr* op = cast<CXXOperatorCallExpr>(&stmt);
-            return buildCXXCopyOp(*op, attr, stage);
-        }
+tl::expected<std::string, Error> buildNewExpression(SessionStage& stage,
+                                                    const Attr& attr,
+                                                    const clang::Stmt& stmt);
 
-        return getSourceText(*dyn_cast<Expr>(&stmt), ctx);
-    }();
+// TODO: Replicates legacy occa transpiler behavior. Seems to be incorrect that each statement is
+// made atomic, and not the whole block.
+tl::expected<std::string, Error> buildCompoundStmt(SessionStage& stage,
+                                                   const Attr& attr,
+                                                   const CompoundStmt& op) {
+    std::string res = "{";
+    for (auto& stmt : op.body()) {
+        auto newExpr = buildNewExpression(stage, attr, *stmt);
+        if (!newExpr) {
+            return tl::make_unexpected(newExpr.error());
+        }
+        res += newExpr.value() + ";\n";
+    }
+    res += "}";
+    return res;
+}
+
+tl::expected<std::string, Error> buildNewExpression(SessionStage& stage,
+                                                    const Attr& attr,
+                                                    const clang::Stmt& stmt) {
+    if (isa<BinaryOperator>(stmt)) {
+        const BinaryOperator* binOp = cast<BinaryOperator>(&stmt);
+        return buildBinOp(stage, attr, *binOp);
+    }
+    if (isa<UnaryOperator>(stmt)) {
+        const UnaryOperator* unOp = cast<UnaryOperator>(&stmt);
+        return buildUnOp(stage, attr, *unOp);
+    }
+    if (isa<CXXOperatorCallExpr>(stmt)) {
+        const CXXOperatorCallExpr* op = cast<CXXOperatorCallExpr>(&stmt);
+        return buildCXXCopyOp(stage, attr, *op);
+    }
+    if (isa<CompoundStmt>(stmt)) {
+        const CompoundStmt* compoundStmt = cast<CompoundStmt>(&stmt);
+        return buildCompoundStmt(stage, attr, *compoundStmt);
+    }
+    return tl::make_unexpected(Error{{}, "Error: Unable to transform general @atomic code"});
+}
+
+HandleResult handleAtomicAttribute(SessionStage& stage,
+                                   const clang::Stmt& stmt,
+                                   const clang::Attr& attr) {
+    auto& ctx = stage.getCompiler().getASTContext();
+    auto newExpression = buildNewExpression(stage, attr, stmt);
     if (!newExpression) {
         return tl::make_unexpected(newExpression.error());
     }
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @atomic.\n";
-#endif
+    SPDLOG_DEBUG("Handle [@atomic] attribute");
 
     SourceRange range(getAttrFullSourceRange(attr).getBegin(), stmt.getEndLoc());
     stage.getRewriter().ReplaceText(range, newExpression.value());
@@ -107,12 +135,10 @@ HandleResult handleAtomicAttribute(const clang::Attr& attr,
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::DPCPP, ATOMIC_ATTR_NAME}, makeSpecificAttrHandle(handleAtomicAttribute));
+    auto ok = registerBackendHandler(TargetBackend::DPCPP, ATOMIC_ATTR_NAME, handleAtomicAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << ATOMIC_ATTR_NAME
-                     << " attribute handler for DPCPP backend\n";
+        SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", ATOMIC_ATTR_NAME);
     }
 }
 }  // namespace

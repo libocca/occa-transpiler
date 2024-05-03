@@ -1,13 +1,11 @@
+#include "attributes/frontend/params/dim.h"
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/attribute_manager/attributed_type_map.h"
-#include "core/diag/diag_handler.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/dim.h"
 
-#include <oklt/util/string_utils.h>
+#include "core/diag/diag_handler.h"
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/attributed_type_map.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -19,9 +17,8 @@ using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling DIM_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "dim"},
     {ParsedAttr::AS_CXX11, DIM_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_dim"}};
+    {ParsedAttr::AS_GNU, DIM_ATTR_NAME}};
 
 struct DimAttribute : public ParsedAttrInfo {
     DimAttribute() {
@@ -35,10 +32,10 @@ struct DimAttribute : public ParsedAttrInfo {
     bool diagAppertainsToDecl(clang::Sema& sema,
                               const clang::ParsedAttr& attr,
                               const clang::Decl* decl) const override {
-        if (!isa<VarDecl, ParmVarDecl, TypeDecl, FieldDecl>(decl)) {
+        if (!isa<VarDecl, ParmVarDecl, TypeDecl>(decl)) {
             sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
                 << attr << attr.isDeclspecAttribute()
-                << "type, struct/union/class field or variable declarations";
+                << "type or variable declarations";
             return false;
         }
         return true;
@@ -50,7 +47,7 @@ struct DimAttribute : public ParsedAttrInfo {
         // INFO: fail for all statements
         sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
             << attr << attr.isDeclspecAttribute()
-            << "type, struct/union/class field or variable declarations";
+            << "type or variable declarations";
         return false;
     }
 
@@ -136,7 +133,7 @@ class DimDiagHandler : public DiagHandler {
     }
 };
 
-ParseResult parseDimAttrParams(const clang::Attr& attr, OKLParsedAttr& data, SessionStage& stage) {
+HandleResult parseDimAttrParams(SessionStage& stage, const clang::Attr& attr, OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@dim] does not take kwargs"});
     }
@@ -154,10 +151,9 @@ ParseResult parseDimAttrParams(const clang::Attr& attr, OKLParsedAttr& data, Ses
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME,
-                                                                    parseDimAttrParams);
+__attribute__((constructor)) void registerDimAttrFrontend() {
+    registerAttrFrontend<DimAttribute>(DIM_ATTR_NAME, parseDimAttrParams);
     // for suppression of func call error that potentially is dim calls
-    static oklt::DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
+    static DiagHandlerRegistry::Add<DimDiagHandler> diag_dim("DimDiagHandler", "");
 }
 }  // namespace

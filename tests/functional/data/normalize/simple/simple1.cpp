@@ -1,4 +1,4 @@
-@kernel void simple_function(const float* inputArray @ restrict,
+@kernel void simple_function(const float* inputArray @restrict,
                              float* outputArray,
                              float value,
                              int size) {

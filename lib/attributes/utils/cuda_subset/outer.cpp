@@ -1,23 +1,26 @@
-#include <oklt/util/string_utils.h>
+#include "util/string_utils.hpp"
 
 #include "attributes/frontend/params/loop.h"
 #include "attributes/utils/code_gen.h"
 #include "attributes/utils/cuda_subset/loop_code_gen.h"
-#include "attributes/utils/inner_outer_utils.h"
 
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <clang/AST/Decl.h>
 
+#include <spdlog/spdlog.h>
+
 namespace oklt::cuda_subset {
 using namespace clang;
 
-HandleResult handleOuterAttribute(const clang::Attr& a,
+HandleResult handleOuterAttribute(SessionStage& s,
                                   const clang::ForStmt& forStmt,
-                                  const AttributedLoop* params,
-                                  SessionStage& s) {
+                                  const clang::Attr& a,
+                                  const AttributedLoop* params) {
+    SPDLOG_DEBUG("Handle [@outer] attribute");
+
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo(forStmt);
     if (!loopInfo) {
@@ -25,20 +28,16 @@ HandleResult handleOuterAttribute(const clang::Attr& a,
             .ec = std::error_code(), .desc = "@outer: failed to fetch loop meta data from sema"});
     }
 
-    auto updatedParams = innerOuterParamsHandleAutoAxis(*params, *loopInfo, LoopType::Outer);
-    if (!updatedParams) {
-        return tl::make_unexpected(updatedParams.error());
-    }
+    auto updatedParams = *params;
+    // Auto Axis in loopInfo are replaced with specific. TODO: maybe somehow update params earlier?
+    updatedParams.axis = loopInfo->axis.front();
 
     int openedScopeCounter = 0;
     auto prefixCode = inner_outer::buildInnerOuterLoopIdxLine(
-        *loopInfo, updatedParams.value(), openedScopeCounter, s.getRewriter());
+        *loopInfo, updatedParams, openedScopeCounter, s.getRewriter());
     auto suffixCode = buildCloseScopes(openedScopeCounter);
 
-#ifdef TRANSPILER_DEBUG_LOG
-    llvm::outs() << "[DEBUG] Handle @outer attribute\n";
-#endif
-    return replaceAttributedLoop(a, forStmt, prefixCode, suffixCode, s, true);
+    return replaceAttributedLoop(s, forStmt, a, suffixCode, prefixCode, true);
 }
 
 }  // namespace oklt::cuda_subset

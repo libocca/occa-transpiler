@@ -1,0 +1,3 @@
+inside_inner_1.cpp:4:9: error: Cannot define [@exclusive] variables inside an [@inner] loop
+    4 |         @exclusive int k;
+      |         ^

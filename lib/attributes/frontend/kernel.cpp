@@ -1,10 +1,9 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-#include "core/transpiler_session/session_stage.h"
-
 #include "attributes/utils/parser.h"
-#include "attributes/utils/parser_impl.hpp"
-#include "params/empty_params.h"
+#include "attributes/frontend/params/empty_params.h"
+
+#include "core/handler_manager/parse_handler.h"
+#include "core/transpiler_session/session_stage.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/Sema.h>
@@ -16,8 +15,7 @@ using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling KERNEL_ATTRIBUTE_SPELLINGS[] = {
     {ParsedAttr::AS_CXX11, KERNEL_ATTR_NAME},
-    {ParsedAttr::AS_CXX11, "kernel"},
-    {ParsedAttr::AS_GNU, "okl_kernel"}};
+    {ParsedAttr::AS_GNU, KERNEL_ATTR_NAME}};
 
 struct KernelAttribute : public ParsedAttrInfo {
     KernelAttribute() {
@@ -34,7 +32,7 @@ struct KernelAttribute : public ParsedAttrInfo {
         //       in this case there is no need to make attribute !!!
         // INFO: this attribute appertains to functions only.
         if (!isa<FunctionDecl>(decl)) {
-            sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type_str)
+            sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type)
                 << attr << attr.isDeclspecAttribute() << "functions";
             return false;
         }
@@ -42,8 +40,8 @@ struct KernelAttribute : public ParsedAttrInfo {
         auto func = dyn_cast<FunctionDecl>(decl);
         auto returnTypeStr = func->getReturnType().getAsString();
         if (returnTypeStr != "void") {
-            sema.Diag(attr.getLoc(), diag::err_type_attribute_wrong_type)
-                << attr << "functions with [void] return" << returnTypeStr;
+            sema.Diag(attr.getLoc(), diag::err_attribute_wrong_decl_type)
+                << attr << ":" << "functions with [void] return types";
             return false;
         }
 
@@ -51,9 +49,9 @@ struct KernelAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseKernelAttrParams(const clang::Attr& attr,
-                                  OKLParsedAttr& data,
-                                  SessionStage& stage) {
+HandleResult parseKernelAttrParams(SessionStage& stage,
+                                   const clang::Attr& attr,
+                                   OKLParsedAttr& data) {
     if (!data.args.empty() || !data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@kernel] does not take arguments"});
     }
@@ -61,8 +59,7 @@ ParseResult parseKernelAttrParams(const clang::Attr& attr,
     return EmptyParams{};
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME,
-                                                                       parseKernelAttrParams);
+__attribute__((constructor)) void registerKernelAttrFrontend() {
+    registerAttrFrontend<KernelAttribute>(KERNEL_ATTR_NAME, parseKernelAttrParams);
 }
 }  // namespace

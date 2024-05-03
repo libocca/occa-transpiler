@@ -31,5 +31,27 @@
       "launcher": ""
     },
     "reference": "transpiler/backends/serial/shared/shared_template_type_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/shared/shared_between_tiles.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/shared/shared_between_tiles_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "serial",
+      "source": "transpiler/backends/serial/shared/shared_in_typedecl.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/serial/shared/shared_in_typedecl_ref.cpp"
   }
 ]

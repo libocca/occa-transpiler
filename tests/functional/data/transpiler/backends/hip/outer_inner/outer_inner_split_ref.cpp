@@ -1,9 +1,9 @@
 #include <hip/hip_runtime.h>
 
-extern "C" __global__ void _occa_test0_0(const int entries,
-                                         const float* a,
-                                         const float* b,
-                                         float* ab) {
+extern "C" __global__ __launch_bounds__(70) void _occa_test0_0(const int entries,
+                                                               const float* a,
+                                                               const float* b,
+                                                               float* ab) {
     {
         int x = (0) + blockIdx.z;
         // int before1 = 1 + before0;
@@ -55,10 +55,10 @@ extern "C" __global__ void _occa_test0_0(const int entries,
     }
 }
 
-extern "C" __global__ void _occa_test0_1(const int entries,
-                                         const float* a,
-                                         const float* b,
-                                         float* ab) {
+extern "C" __global__ __launch_bounds__(70) void _occa_test0_1(const int entries,
+                                                               const float* a,
+                                                               const float* b,
+                                                               float* ab) {
     {
         int x = (0) + blockIdx.z;
         // int before1 = 1 + before00;

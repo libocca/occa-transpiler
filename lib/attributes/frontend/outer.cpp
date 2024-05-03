@@ -1,25 +1,21 @@
 #include "attributes/attribute_names.h"
-#include "core/attribute_manager/attribute_manager.h"
-
 #include "attributes/utils/parser.h"
 #include "attributes/utils/parser_impl.hpp"
-#include "params/loop.h"
+#include "attributes/frontend/params/loop.h"
 
-#include <oklt/util/string_utils.h>
+#include "core/handler_manager/parse_handler.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
 #include <clang/Sema/Sema.h>
 
 namespace {
-
 using namespace clang;
 using namespace oklt;
 
 constexpr ParsedAttrInfo::Spelling OUTER_ATTRIBUTE_SPELLINGS[] = {
-    {ParsedAttr::AS_CXX11, "outer"},
     {ParsedAttr::AS_CXX11, OUTER_ATTR_NAME},
-    {ParsedAttr::AS_GNU, "okl_outer"}};
+    {ParsedAttr::AS_GNU, OUTER_ATTR_NAME}};
 
 struct OuterAttribute : public ParsedAttrInfo {
     OuterAttribute() {
@@ -51,9 +47,9 @@ struct OuterAttribute : public ParsedAttrInfo {
     }
 };
 
-ParseResult parseOuterAttrParams(const clang::Attr& attr,
-                                 OKLParsedAttr& data,
-                                 SessionStage& stage) {
+HandleResult parseOuterAttrParams(SessionStage& stage,
+                                  const clang::Attr& attr,
+                                 OKLParsedAttr& data) {
     if (!data.kwargs.empty()) {
         return tl::make_unexpected(Error{{}, "[@outer] does not take kwargs"});
     }
@@ -77,8 +73,7 @@ ParseResult parseOuterAttrParams(const clang::Attr& attr,
     return ret;
 }
 
-__attribute__((constructor)) void registerAttrFrontend() {
-    AttributeManager::instance().registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME,
-                                                                      parseOuterAttrParams);
+__attribute__((constructor)) void registerOuterAttrFrontend() {
+    registerAttrFrontend<OuterAttribute>(OUTER_ATTR_NAME, parseOuterAttrParams);
 }
 }  // namespace

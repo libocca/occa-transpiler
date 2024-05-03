@@ -1,21 +1,22 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/implicid_handler.h"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
-HandleResult handleHIPGlobalFunction(const clang::FunctionDecl& decl, oklt::SessionStage& s) {
+HandleResult handleHIPGlobalFunction(oklt::SessionStage& s, const clang::FunctionDecl& decl) {
     const std::string HIP_FUNCTION_QUALIFIER = "__device__";
-    return oklt::handleGlobalFunction(decl, s, HIP_FUNCTION_QUALIFIER);
+    return oklt::handleGlobalFunction(s, decl, HIP_FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerHIPKernelHandler() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::HIP, clang::Decl::Kind::Function},
-        makeSpecificImplicitHandle(handleHIPGlobalFunction));
+    auto ok = registerImplicitHandler(TargetBackend::HIP, handleHIPGlobalFunction);
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global function (HIP)\n";
+        SPDLOG_ERROR("[HIP] Failed to register implicit handler for global function");
     }
 }
 }  // namespace

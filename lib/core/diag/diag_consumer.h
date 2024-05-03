@@ -18,8 +18,11 @@ class DiagConsumer : public clang::DiagnosticConsumer {
     void HandleDiagnostic(clang::DiagnosticsEngine::Level Level,
                           const clang::Diagnostic& Info) override;
 
+    bool IncludeInDiagnosticCounts() const override;
+
    protected:
     SessionStage& _session;
+    std::atomic_flag _includeDiag = true;
 };
 
 }  // namespace oklt

@@ -1,15 +1,17 @@
 #include "attributes/backend/openmp/common.h"
 
+#include <spdlog/spdlog.h>
+
 namespace {
 using namespace oklt;
+using namespace clang;
 
 __attribute__((constructor)) void registerOPENMPOuterHandler() {
-    auto ok = oklt::AttributeManager::instance().registerBackendHandler(
-        {TargetBackend::OPENMP, INNER_ATTR_NAME},
-        makeSpecificAttrHandle(serial_subset::handleInnerAttribute));
+    auto ok = registerBackendHandler(
+        TargetBackend::OPENMP, INNER_ATTR_NAME, serial_subset::handleInnerAttribute);
 
     if (!ok) {
-        llvm::errs() << "failed to register " << INNER_ATTR_NAME << " attribute handler (OpenMP)\n";
+        SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", INNER_ATTR_NAME);
     }
 }
 }  // namespace

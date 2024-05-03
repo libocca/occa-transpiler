@@ -1,21 +1,22 @@
 #include "attributes/utils/replace_attribute.h"
-#include "core/attribute_manager/attribute_manager.h"
+#include "core/handler_manager/implicid_handler.h"
+
+#include <spdlog/spdlog.h>
 
 namespace {
 using namespace oklt;
+using namespace clang;
 
-HandleResult handleGlobalConstant(const clang::VarDecl& decl, oklt::SessionStage& s) {
+HandleResult handleGlobalConstant(oklt::SessionStage& s, const clang::VarDecl& decl) {
     const std::string CUDA_CONST_QUALIFIER = "__constant__";
-    return oklt::handleGlobalConstant(decl, s, CUDA_CONST_QUALIFIER);
+    return oklt::handleGlobalConstant(s, decl, CUDA_CONST_QUALIFIER);
 }
 
 __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
-    auto ok = oklt::AttributeManager::instance().registerImplicitHandler(
-        {TargetBackend::CUDA, clang::Decl::Kind::Var},
-        makeSpecificImplicitHandle(handleGlobalConstant));
+    auto ok = registerImplicitHandler(TargetBackend::CUDA, handleGlobalConstant);
 
     if (!ok) {
-        llvm::errs() << "Failed to register implicit handler for global constant (CUDA)\n";
+        SPDLOG_ERROR("[CUDA] Failed to register implicit handler for global constant");
     }
 }
 }  // namespace

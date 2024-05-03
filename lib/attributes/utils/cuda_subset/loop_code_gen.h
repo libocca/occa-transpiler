@@ -1,7 +1,7 @@
 #pragma once
 
 #include "attributes/frontend/params/tile.h"
-#include "core/attribute_manager/result.h"
+#include "core/handler_manager/result.h"
 #include "core/transpiler_session/session_stage.h"
 
 #include <string>
@@ -23,7 +23,7 @@ std::string buildIinnerOuterLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter);
+                                             oklt::Rewriter& rewriter);
 
 // Produces something like: int i = _occa_tiled_i +- (inc * threadIdx.x);
 //                      or: int i = _occa_tiled_i +- (inc * blockIdx.x);
@@ -31,7 +31,7 @@ std::string buildInnerOuterLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                              const AttributedLoop& loop,
                                              const TileParams* params,
                                              int& openedScopeCounter,
-                                             clang::Rewriter& rewriter);
+                                             oklt::Rewriter& rewriter);
 
 // Produces something like:
 //      for (int _occa_tiled_i = start; _occa_tiled_i < end; _occa_tiled_i += tileSize) {
@@ -40,7 +40,7 @@ std::string buildRegularLoopIdxLineFirst(const OklLoopInfo& forLoop,
                                          const AttributedLoop& regularLoop,
                                          const TileParams* params,
                                          int& openedScopeCounter,
-                                         clang::Rewriter& rewriter);
+                                         oklt::Rewriter& rewriter);
 
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); ++i)
 // Produces something like: for (int i = _occa_tiled_i; i < (_occa_tiled_i + tileSize); i+=inc)
@@ -50,7 +50,7 @@ std::string buildRegularLoopIdxLineSecond(const OklLoopInfo& forLoop,
                                           const AttributedLoop& regularLoop,
                                           const TileParams* params,
                                           int& openedScopeCounter,
-                                          clang::Rewriter& rewriter);
+                                          oklt::Rewriter& rewriter);
 }  // namespace tile
 
 namespace inner_outer {
@@ -59,6 +59,6 @@ namespace inner_outer {
 std::string buildInnerOuterLoopIdxLine(const OklLoopInfo& forLoop,
                                        const AttributedLoop& loop,
                                        int& openedScopeCounter,
-                                       clang::Rewriter& rewriter);
+                                       oklt::Rewriter& rewriter);
 }  // namespace inner_outer
 }  // namespace oklt::cuda_subset
