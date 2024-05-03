@@ -9,8 +9,8 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/hip/shared/shared_builtin_types_ref.cpp"
-     },
-     {
+    },
+    {
         "action": "normalize_and_transpile",
         "action_config": {
             "backend": "hip",
@@ -20,8 +20,8 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/hip/shared/shared_struct_types_ref.cpp"
-     },
-     {
+    },
+    {
         "action": "normalize_and_transpile",
         "action_config": {
             "backend": "hip",
@@ -31,8 +31,8 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/hip/shared/shared_template_type_ref.cpp"
-     },
-     {
+    },
+    {
         "action": "normalize_and_transpile",
         "action_config": {
             "backend": "hip",
@@ -42,6 +42,16 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/hip/shared/shared_between_tiles_ref.cpp"
-     }
-
+    },
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/shared/shared_in_typedecl.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/hip/shared/shared_in_typedecl_ref.cpp"
+    }
 ]

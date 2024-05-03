@@ -35,12 +35,23 @@
   {
     "action": "normalize_and_transpile",
     "action_config": {
-        "backend": "openmp",
-        "source": "transpiler/backends/openmp/shared/shared_between_tiles.cpp",
-        "includes": [],
-        "defs": [],
-        "launcher": ""
+      "backend": "openmp",
+      "source": "transpiler/backends/openmp/shared/shared_between_tiles.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
     },
     "reference": "transpiler/backends/openmp/shared/shared_between_tiles_ref.cpp"
- }
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "openmp",
+      "source": "transpiler/backends/openmp/shared/shared_in_typedecl.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/openmp/shared/shared_in_typedecl_ref.cpp"
+  }
 ]

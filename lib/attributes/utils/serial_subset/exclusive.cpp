@@ -15,6 +15,7 @@ const std::string outerLoopText = "\nint _occa_exclusive_index;";
 const std::string exlusiveExprText = "[_occa_exclusive_index]";
 }  // namespace
 
+// TODO: There is no TypeDecl handler for openmp handler
 HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, const Attr& a) {
     SPDLOG_DEBUG("Handle [@exclusive] attribute (decl)");
 
