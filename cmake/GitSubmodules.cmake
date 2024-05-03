@@ -22,8 +22,5 @@ function(init_submodules
    message(STATUS "Submodule update has not been run")
  endif()
 
-  # if(NOT EXISTS "${project_dir}/extern/repo/CMakeLists.txt")
-  #   message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
-  # endif()
 endfunction()
 
