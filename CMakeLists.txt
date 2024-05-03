@@ -29,6 +29,7 @@ endif()
 
 include(cmake/CPM_0.38.6.cmake)
 include(cmake/EmbedResource.cmake)
+include(cmake/GitSubmodules.cmake)
 
 find_package(LLVM 17 REQUIRED CONFIG)
 find_package(Clang 17 REQUIRED CONFIG)
@@ -40,6 +41,9 @@ set(LLVM_REQUIRES_RTTI ON)
 include(AddLLVM)
 
 set(CLANG_LIBS libclang clangTooling clangFrontendTool)
+
+
+init_submodules(${ROOT_DIR})
 
 add_subdirectory(lib)
 add_subdirectory(tool)
