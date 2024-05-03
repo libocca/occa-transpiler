@@ -43,6 +43,8 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/utils/default_handlers.cpp
     attributes/utils/kernel_utils.cpp
     attributes/utils/kernel_utils.h
+    attributes/utils/utils.cpp
+    attributes/utils/utils.h
 
     # Cuda subset
     attributes/utils/cuda_subset/kernel.cpp
