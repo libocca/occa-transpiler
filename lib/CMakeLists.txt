@@ -276,23 +276,23 @@ target_link_libraries(occa-transpiler
         ${CLANG_LIBS}
 )
 
-embed_resource_txt(resources/okl_intrinsic_cuda.h
-    core/builtin_headers/okl_intrinsic_cuda.h
+embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_cuda.h
+    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_cuda.h
     INTRINSIC_CUDA
 )
 
-embed_resource_txt(resources/okl_intrinsic_dpcpp.h
-    core/builtin_headers/okl_intrinsic_dpcpp.h
+embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_dpcpp.h
+    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_dpcpp.h
     INTRINSIC_DPCPP
 )
 
-embed_resource_txt(resources/okl_intrinsic_hip.h
-    core/builtin_headers/okl_intrinsic_hip.h
+embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_hip.h
+    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_hip.h
     INTRINSIC_HIP
 )
 
-embed_resource_txt(resources/okl_intrinsic_host.h
-    core/builtin_headers/okl_intrinsic_host.h
+embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_host.h
+    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_host.h
     INTRINSIC_HOST
 )
 
