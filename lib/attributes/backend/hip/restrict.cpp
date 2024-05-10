@@ -12,7 +12,6 @@ using namespace clang;
 __attribute__((constructor)) void registerCUDARestrictHandler() {
     auto ok = registerBackendHandler(
         TargetBackend::HIP, RESTRICT_ATTR_NAME, cuda_subset::handleRestrictAttribute);
-
     ok &= registerBackendHandler(TargetBackend::HIP, RESTRICT_ATTR_NAME, emptyHandleStmtAttribute);
 
     if (!ok) {
