@@ -11,7 +11,11 @@ using namespace clang;
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok = registerBackendHandler(
-        TargetBackend::CUDA, SHARED_ATTR_NAME, cuda_subset::handleSharedAttribute);
+        TargetBackend::CUDA, SHARED_ATTR_NAME, cuda_subset::handleSharedDeclAttribute);
+    ok &= registerBackendHandler(
+        TargetBackend::CUDA, SHARED_ATTR_NAME, cuda_subset::handleSharedTypeAttribute);
+    ok &= registerBackendHandler(
+        TargetBackend::CUDA, SHARED_ATTR_NAME, cuda_subset::handleSharedVarAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= registerBackendHandler(

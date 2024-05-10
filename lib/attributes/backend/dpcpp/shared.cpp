@@ -11,14 +11,55 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-// TODO: There is no TypeDecl handler in DPCPP backend
-HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const Attr& a) {
+std::string getCleanTypeString(SessionStage& s, QualType t) {
+    static std::string annoTypeStr = " [[clang::annotate_type(...)]]";
+    auto str = t.getAsString();
+
+    auto pos = str.find(annoTypeStr);
+    while (pos != std::string::npos) {
+        str.replace(pos, annoTypeStr.size(), "");
+        pos = str.find(annoTypeStr);
+    }
+
+    return str;
+}
+
+HandleResult handleSharedDeclAttribute(SessionStage& s, const Decl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
-    auto varName = var.getNameAsString();
-    // Desugar since it is attributed (since it is @shared variable)
+    return removeAttribute(s, a);
+}
+
+HandleResult handleSharedTypeAttribute(SessionStage& s, const TypedefDecl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    removeAttribute(s, a);
+
+    auto typeName = decl.getDeclName().getAsString();
     auto typeStr =
-        QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString();
+        getCleanTypeString(s, QualType(decl.getTypeForDecl()->getUnqualifiedDesugaredType(), 0));
+
+    auto newDeclaration =
+        util::fmt(
+            "auto & {} = "
+            "*(sycl::ext::oneapi::group_local_memory_for_overwrite<typedef {}>(item_.get_group()))",
+            typeName,
+            typeStr)
+            .value();
+
+    s.getRewriter().ReplaceText(decl.getSourceRange(), newDeclaration);
+
+    return {};
+}
+
+HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& var, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    removeAttribute(s, a);
+
+    auto varName = var.getNameAsString();
+    auto typeStr = getCleanTypeString(
+        s, QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0));
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
@@ -31,6 +72,7 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
     }
     auto child = loopInfo ? loopInfo->getFirstAttributedChild() : nullptr;
     bool isInnerChild = child && child->has(LoopType::Inner);
+
     if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
         return tl::make_unexpected(
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
@@ -44,7 +86,7 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
             typeStr)
             .value();
 
-    SourceRange range(getAttrFullSourceRange(a).getBegin(), var.getSourceRange().getEnd());
+    SourceRange range(var.getBeginLoc(), var.getSourceRange().getEnd());
 
     s.getRewriter().ReplaceText(range, newDeclaration);
 
@@ -52,7 +94,10 @@ HandleResult handleSharedAttribute(SessionStage& s, const VarDecl& var, const At
 }
 
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
-    auto ok = registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedAttribute);
+    auto ok =
+        registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedDeclAttribute);
+    ok &= registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedTypeAttribute);
+    ok &= registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedVarAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
     ok &= registerBackendHandler(

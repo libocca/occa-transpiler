@@ -14,6 +14,17 @@
     "action": "normalize_and_transpile",
     "action_config": {
       "backend": "openmp",
+      "source": "transpiler/backends/openmp/exclusive/exclusive_in_typedecl.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/openmp/exclusive/exclusive_in_typedecl_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "openmp",
       "source": "transpiler/backends/openmp/exclusive/bug_196.cpp",
       "includes": [],
       "defs": [],

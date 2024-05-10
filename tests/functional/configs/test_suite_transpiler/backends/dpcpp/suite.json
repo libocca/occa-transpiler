@@ -9,5 +9,6 @@
     "atomic.json",
     "barrier.json",
     "nobarrier.json",
+  "exclusive.json",
     "macro.json"
 ]

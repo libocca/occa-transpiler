@@ -7,6 +7,8 @@ class Attr;
 class Stmt;
 class ForStmt;
 class Decl;
+class VarDecl;
+class TypedefDecl;
 class FunctionDecl;
 class ParmVarDecl;
 }  // namespace clang
@@ -31,7 +33,11 @@ HandleResult handleOuterAttribute(SessionStage&,
 HandleResult handleAtomicAttribute(SessionStage&, const clang::Stmt&, const clang::Attr&);
 
 HandleResult handleKernelAttribute(SessionStage&, const clang::FunctionDecl&, const clang::Attr&);
-HandleResult handleSharedAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleSharedDeclAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleSharedTypeAttribute(SessionStage&,
+                                       const clang::TypedefDecl&,
+                                       const clang::Attr&);
+HandleResult handleSharedVarAttribute(SessionStage&, const clang::VarDecl&, const clang::Attr&);
 HandleResult handleRestrictAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 
 HandleResult handleExclusiveAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);

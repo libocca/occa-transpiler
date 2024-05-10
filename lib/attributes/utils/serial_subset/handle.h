@@ -35,7 +35,8 @@ HandleResult handleKernelAttribute(SessionStage&, const clang::FunctionDecl&, co
 HandleResult handleSharedAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 HandleResult handleRestrictAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 
-HandleResult handleExclusiveDeclAttribute(SessionStage&, const clang::VarDecl&, const clang::Attr&);
+HandleResult handleExclusiveDeclAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleExclusiveVarAttribute(SessionStage&, const clang::VarDecl&, const clang::Attr&);
 HandleResult handleExclusiveExprAttribute(SessionStage&,
                                           const clang::DeclRefExpr&,
                                           const clang::Attr&);
