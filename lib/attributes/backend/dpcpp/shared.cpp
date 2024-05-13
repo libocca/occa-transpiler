@@ -1,5 +1,6 @@
 #include "attributes/attribute_names.h"
 #include "attributes/utils/default_handlers.h"
+#include "attributes/utils/utils.h"
 #include "core/handler_manager/backend_handler.h"
 #include "core/sema/okl_sema_ctx.h"
 #include "core/transpiler_session/session_stage.h"
@@ -11,45 +12,10 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
-std::string getCleanTypeString(SessionStage& s, QualType t) {
-    static std::string annoTypeStr = " [[clang::annotate_type(...)]]";
-    auto str = t.getAsString();
-
-    auto pos = str.find(annoTypeStr);
-    while (pos != std::string::npos) {
-        str.replace(pos, annoTypeStr.size(), "");
-        pos = str.find(annoTypeStr);
-    }
-
-    return str;
-}
-
 HandleResult handleSharedDeclAttribute(SessionStage& s, const Decl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
     return removeAttribute(s, a);
-}
-
-HandleResult handleSharedTypeAttribute(SessionStage& s, const TypedefDecl& decl, const Attr& a) {
-    SPDLOG_DEBUG("Handle [@shared] attribute");
-
-    removeAttribute(s, a);
-
-    auto typeName = decl.getDeclName().getAsString();
-    auto typeStr =
-        getCleanTypeString(s, QualType(decl.getTypeForDecl()->getUnqualifiedDesugaredType(), 0));
-
-    auto newDeclaration =
-        util::fmt(
-            "auto & {} = "
-            "*(sycl::ext::oneapi::group_local_memory_for_overwrite<typedef {}>(item_.get_group()))",
-            typeName,
-            typeStr)
-            .value();
-
-    s.getRewriter().ReplaceText(decl.getSourceRange(), newDeclaration);
-
-    return {};
 }
 
 HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& var, const Attr& a) {
@@ -58,8 +24,8 @@ HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& var, const
     removeAttribute(s, a);
 
     auto varName = var.getNameAsString();
-    auto typeStr = getCleanTypeString(
-        s, QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0));
+    auto typeStr =
+        getCleanTypeString(QualType(var.getType().getTypePtr()->getUnqualifiedDesugaredType(), 0));
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
@@ -96,7 +62,6 @@ HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& var, const
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok =
         registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedDeclAttribute);
-    ok &= registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedTypeAttribute);
     ok &= registerBackendHandler(TargetBackend::DPCPP, SHARED_ATTR_NAME, handleSharedVarAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr

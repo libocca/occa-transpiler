@@ -1,8 +1,7 @@
 #include <CL/sycl.hpp>
 using namespace sycl;
 
-auto& sh_float32_t =
-    *(sycl::ext::oneapi::group_local_memory_for_overwrite<typedef float>(item_.get_group()));
+typedef float sh_float32_t;
 
 extern "C" [[sycl::reqd_work_group_size(1, 1, 32)]] void _occa_test_kernel_0(
     sycl::queue* queue_,

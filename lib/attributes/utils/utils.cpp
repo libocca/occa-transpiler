@@ -12,4 +12,18 @@ const clang::AttributedStmt* getAttributedStmt(SessionStage& s, const clang::Stm
 
     return parents[0].get<clang::AttributedStmt>();
 }
+
+std::string getCleanTypeString(clang::QualType t) {
+    static std::string annoTypeStr = " [[clang::annotate_type(...)]]";
+    auto str = t.getAsString();
+
+    auto pos = str.find(annoTypeStr);
+    while (pos != std::string::npos) {
+        str.replace(pos, annoTypeStr.size(), "");
+        pos = str.find(annoTypeStr);
+    }
+
+    return str;
+}
+
 }  // namespace oklt

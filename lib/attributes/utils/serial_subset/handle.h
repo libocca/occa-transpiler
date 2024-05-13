@@ -32,7 +32,11 @@ HandleResult handleOuterAttribute(SessionStage&,
                                   const AttributedLoop* params);
 
 HandleResult handleKernelAttribute(SessionStage&, const clang::FunctionDecl&, const clang::Attr&);
-HandleResult handleSharedAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleSharedDeclAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
+HandleResult handleSharedTypeAttribute(SessionStage&,
+                                       const clang::TypedefDecl&,
+                                       const clang::Attr&);
+HandleResult handleSharedVarAttribute(SessionStage&, const clang::VarDecl&, const clang::Attr&);
 HandleResult handleRestrictAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
 
 HandleResult handleExclusiveDeclAttribute(SessionStage&, const clang::Decl&, const clang::Attr&);
