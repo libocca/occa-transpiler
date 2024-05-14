@@ -27,7 +27,7 @@ __attribute__((constructor)) void registerCUDARestrictHandler() {
     auto ok =
         registerBackendHandler(TargetBackend::DPCPP, RESTRICT_ATTR_NAME, handleRestrictAttribute);
 
-    ok &= registerBackendHandler(TargetBackend::CUDA, RESTRICT_ATTR_NAME, emptyHandleStmtAttribute);
+    ok &= registerBackendHandler(TargetBackend::DPCPP, RESTRICT_ATTR_NAME, emptyHandleStmtAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[DPCPP] Failed to register {} attribute handler", RESTRICT_ATTR_NAME);
