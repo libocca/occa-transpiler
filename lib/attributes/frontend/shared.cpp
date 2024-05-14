@@ -1,10 +1,9 @@
 #include "attributes/attribute_names.h"
+#include "attributes/frontend/params/empty_params.h"
+#include "attributes/utils/parser.h"
 #include "core/handler_manager/parse_handler.h"
 #include "core/transpiler_session/attributed_type_map.h"
 #include "core/transpiler_session/session_stage.h"
-
-#include "attributes/utils/parser.h"
-#include "params/empty_params.h"
 
 #include <clang/Basic/DiagnosticSema.h>
 #include <clang/Sema/ParsedAttr.h>
@@ -77,7 +76,7 @@ struct SharedAttribute : public ParsedAttrInfo {
             args.push_back(attr.getArgAsExpr(i));
         }
 
-        // TODO: Move attributed type registering to util, since dublication with other types
+        // TODO: Move attributed type registering to util, since duplication with other types
         auto* ctxAttr = AnnotateAttr::Create(sema.Context, name, args.data(), args.size(), attr);
         decl->addAttr(ctxAttr);
 

@@ -42,6 +42,17 @@
             "launcher": ""
         },
         "reference": "transpiler/backends/dpcpp/shared/shared_between_tiles_ref.cpp"
+     },
+     {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "dpcpp",
+            "source": "transpiler/backends/dpcpp/shared/shared_in_typedecl.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": ""
+        },
+        "reference": "transpiler/backends/dpcpp/shared/shared_in_typedecl_ref.cpp"
      }
 
 ]

@@ -10,8 +10,22 @@
 namespace oklt::serial_subset {
 using namespace clang;
 
-HandleResult handleSharedAttribute(SessionStage& s, const Decl& decl, const Attr& a) {
+HandleResult handleSharedDeclAttribute(SessionStage& s, const Decl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    return removeAttribute(s, a);
+}
+
+HandleResult handleSharedTypeAttribute(SessionStage& s, const TypedefDecl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    return removeAttribute(s, a);
+}
+
+HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    removeAttribute(s, a);
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
@@ -26,18 +40,10 @@ HandleResult handleSharedAttribute(SessionStage& s, const Decl& decl, const Attr
     bool isInnerChild = child && child->has(LoopType::Inner);
 
     // This diagnostic is applied only to variable declaration
-    // TODO: if var of type declared with @shared is not between @outer and @inner, error isnt risen
-    if (!clang::isa<clang::TypeDecl>(decl)) {
-        if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
-            return tl::make_unexpected(
-                Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
-        }
-    } else {
-        // Push warning that can't check that typedef @shared var is between outer and inner loop
-        s.pushWarning("Using [@shared] with typedef doesn't have proper semantic validation yet");
+    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
-
-    removeAttribute(s, a);
 
     return defaultHandleSharedDeclAttribute(s, decl, a);
 }

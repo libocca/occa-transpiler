@@ -13,6 +13,8 @@ __attribute__((constructor)) void registerOPENMPExclusiveHandler() {
         TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveExprAttribute);
     ok &= registerBackendHandler(
         TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveDeclAttribute);
+    ok &= registerBackendHandler(
+        TargetBackend::OPENMP, EXCLUSIVE_ATTR_NAME, serial_subset::handleExclusiveVarAttribute);
 
     if (!ok) {
         SPDLOG_ERROR("[OPENMP] Failed to register {} attribute handler", EXCLUSIVE_ATTR_NAME);
