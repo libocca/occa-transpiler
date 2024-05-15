@@ -1,0 +1,13 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/non_kernel_function.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/non_kernel_function_ref.cpp"
+  }
+]

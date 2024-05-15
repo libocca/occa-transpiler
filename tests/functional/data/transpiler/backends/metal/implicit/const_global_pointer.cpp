@@ -12,7 +12,7 @@ int* const ptr_const4 = 0;
 // Stupid formatting
 const int* ptr_const5 = 0;
 
-// At least one @kern function is requried
+// At least one @kern function is required
 @kernel void kern() {
     @outer for (int i = 0; i < 32; ++i) {
         @inner for (int j = 0; j < 32; ++j) {
