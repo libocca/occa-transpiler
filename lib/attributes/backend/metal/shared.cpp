@@ -17,17 +17,6 @@ HandleResult handleSharedDeclAttribute(SessionStage& s, const Decl& var, const A
     return removeAttribute(s, a);
 }
 
-HandleResult handleSharedTypeAttribute(SessionStage& s, const TypedefDecl& decl, const Attr& a) {
-    SPDLOG_DEBUG("Handle [@shared] attribute");
-
-    removeAttribute(s, a);
-
-    auto loc = decl.getTypeSourceInfo()->getTypeLoc().getBeginLoc();
-    s.getRewriter().InsertTextBefore(loc, SHARED_MODIFIER + " ");
-
-    return {};
-}
-
 HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& d, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
@@ -59,7 +48,6 @@ HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& d, const A
 __attribute__((constructor)) void registerCUDASharedAttrBackend() {
     auto ok =
         registerBackendHandler(TargetBackend::METAL, SHARED_ATTR_NAME, handleSharedDeclAttribute);
-    ok &= registerBackendHandler(TargetBackend::METAL, SHARED_ATTR_NAME, handleSharedTypeAttribute);
     ok &= registerBackendHandler(TargetBackend::METAL, SHARED_ATTR_NAME, handleSharedVarAttribute);
 
     // Empty Stmt handler since @shared variable is of attributed type, it is called on DeclRefExpr
