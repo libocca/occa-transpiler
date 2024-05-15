@@ -12,6 +12,7 @@ tl::expected<TargetBackend, std::string> backendFromString(const std::string& ty
         {"cuda", TargetBackend::CUDA},
         {"hip", TargetBackend::HIP},
         {"dpcpp", TargetBackend::DPCPP},
+        {"metal", TargetBackend::METAL},
         {"launcher", TargetBackend::_LAUNCHER},
     };
 
@@ -34,6 +35,8 @@ std::string backendToString(TargetBackend backend) {
             return std::string{"hip"};
         case TargetBackend::DPCPP:
             return std::string{"dpcpp"};
+        case TargetBackend::METAL:
+            return std::string{"metal"};
         case TargetBackend::_LAUNCHER:
             return std::string{"launcher"};
     }
@@ -55,6 +58,7 @@ bool isDeviceCategory(TargetBackend backend) {
         case TargetBackend::CUDA:
         case TargetBackend::HIP:
         case TargetBackend::DPCPP:
+        case TargetBackend::METAL:
             return true;
         default:
             return false;
