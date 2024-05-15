@@ -1,5 +1,6 @@
 [
   "tile.json",
+  "inner_outer.json",
   "barrier.json",
   "nobarrier.json",
   "restrict.json",
