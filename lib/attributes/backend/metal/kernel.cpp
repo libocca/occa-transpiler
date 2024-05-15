@@ -40,13 +40,15 @@ std::string getFunctionParamStr(SessionStage& stage,
         auto qt = p->getType();
         std::string typeStr = qt.getNonReferenceType().getAsString();
         if (qt->isPointerType()) {
-            typeStr = util::fmt("device {}", getCleanTypeString(qt.getNonReferenceType())).value();
+            auto qtStr = getCleanTypeString(
+                QualType(qt.getNonReferenceType().getTypePtr()->getUnqualifiedDesugaredType(), 0));
+            typeStr = util::fmt("device {}", qtStr).value();
         } else {
             qt.removeLocalConst();
-            typeStr = util::fmt("constant {} {}",
-                                getCleanTypeString(qt.getNonReferenceType()),
-                                (qt.getTypePtrOrNull() ? "&" : "*"))
-                          .value();
+            auto qtStr = getCleanTypeString(
+                QualType(qt.getNonReferenceType().getTypePtr()->getUnqualifiedDesugaredType(), 0));
+            typeStr =
+                util::fmt("constant {} {}", qtStr, (qt.getTypePtrOrNull() ? "&" : "*")).value();
         }
 
         if (m.has(func.getASTContext(), qt, {RESTRICT_ATTR_NAME})) {

@@ -1,4 +1,4 @@
-float* @ restrict myfn(float* a) {
+@ restrict float* myfn(float* a) {
     return a + 1;
 }
 
