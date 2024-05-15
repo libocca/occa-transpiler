@@ -1,5 +1,6 @@
 [
   "tile.json",
   "restrict.json",
+  "exclusive.json",
   "shared.json"
 ]
