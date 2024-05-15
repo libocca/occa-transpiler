@@ -29,7 +29,7 @@ template<class T>
 inline __device__
     T okl_shfl_xor_sync(unsigned mask, T var, int laneMask, int width=warpSize)
 {
-    return __shfl_xor_sync(mask, laneMask, width);
+    return __shfl_xor_sync(mask, var, laneMask, width);
 }
 
 
@@ -55,6 +55,6 @@ inline __device__ void okl_pipeline_commit() {
 }
 
 [[maybe_unused]]
-inline __device__ void __pipeline_wait_prior(size_t N) {
+inline __device__ void okl_pipeline_wait_prior(size_t N) {
 }
 }
