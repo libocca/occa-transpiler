@@ -438,6 +438,7 @@ __attribute__((constructor)) void registerLauncherHandler() {
     REG_ATTR_HANDLE(SHARED_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
     REG_ATTR_HANDLE(RESTRICT_ATTR_NAME, serial_subset::handleRestrictAttribute);
+    REG_ATTR_HANDLE(RESTRICT_ATTR_NAME, serial_subset::handleEmptyStmtAttribute);
 
 #undef REG_ATTR_HANDLE
 }
