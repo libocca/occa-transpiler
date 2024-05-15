@@ -26,7 +26,6 @@ HandleResult handleRestrictAttribute(SessionStage& s, const Decl& decl, const At
 __attribute__((constructor)) void registerCUDARestrictHandler() {
     auto ok =
         registerBackendHandler(TargetBackend::DPCPP, RESTRICT_ATTR_NAME, handleRestrictAttribute);
-
     ok &= registerBackendHandler(TargetBackend::DPCPP, RESTRICT_ATTR_NAME, emptyHandleStmtAttribute);
 
     if (!ok) {

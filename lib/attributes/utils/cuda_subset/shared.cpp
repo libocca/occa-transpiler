@@ -37,8 +37,6 @@ HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& d, const A
 
     removeAttribute(s, a);
 
-    std::string replacedAttribute = SHARED_MODIFIER + " ";
-
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
     if (loopInfo && loopInfo->isRegular()) {
@@ -57,7 +55,7 @@ HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& d, const A
             Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
-    s.getRewriter().InsertTextBefore(d.getTypeSpecStartLoc(), replacedAttribute);
+    s.getRewriter().InsertTextBefore(d.getTypeSpecStartLoc(), SHARED_MODIFIER + " ");
 
     return defaultHandleSharedDeclAttribute(s, d, a);
 }
