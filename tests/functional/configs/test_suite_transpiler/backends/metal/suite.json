@@ -1,5 +1,7 @@
 [
   "tile.json",
+  "barrier.json",
+  "nobarrier.json",
   "restrict.json",
   "exclusive.json",
   "shared.json"
