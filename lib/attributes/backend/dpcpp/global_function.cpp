@@ -8,8 +8,8 @@ using namespace oklt;
 using namespace clang;
 
 HandleResult handleGlobalFunctionDpcpp(oklt::SessionStage& s, const clang::FunctionDecl& decl) {
-    const std::string HIP_FUNCTION_QUALIFIER = "SYCL_EXTERNAL";
-    return oklt::handleGlobalFunction(s, decl, HIP_FUNCTION_QUALIFIER);
+    const std::string FUNCTION_QUALIFIER = "SYCL_EXTERNAL";
+    return oklt::handleGlobalFunction(s, decl, FUNCTION_QUALIFIER);
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {

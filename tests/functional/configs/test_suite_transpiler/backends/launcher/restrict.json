@@ -8,6 +8,6 @@
       "defs": [],
       "launcher": ""
     },
-    "reference": "transpiler/backends/launcher/restrict/bug_228.ref.cpp"
+    "reference": "transpiler/backends/launcher/restrict/bug_228_ref.cpp"
   }
 ]
