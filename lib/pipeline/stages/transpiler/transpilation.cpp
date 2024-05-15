@@ -409,6 +409,7 @@ class TranspilationConsumer : public clang::ASTConsumer {
 
             auto result = traversal->applyAstProcessor(tu);
             if (!result) {
+                _stage.pushError(result.error());
                 return;
             }
 
