@@ -68,17 +68,9 @@ std::string getFunctionParamStr(SessionStage& stage,
         out << ", ";
     }
 
-    // TODO: FIND the right Metadata
-    auto dt = DataType{.name = "uint3", .typeCategory = DatatypeCategory::BUILTIN};
-    kernelInfo.args.emplace_back(ArgumentInfo{
-        .is_const = false, .dtype = dt, .name = "_occa_group_position", .is_ptr = false});
     out << util::fmt(
                "{} {} [[{}]]", "uint3", "_occa_group_position", "threadgroup_position_in_grid")
                .value();
-
-    out << ", ";
-    kernelInfo.args.emplace_back(ArgumentInfo{
-        .is_const = false, .dtype = dt, .name = "_occa_thread_position", .is_ptr = false});
     out << util::fmt(
                "{} {} [[{}]]", "uint3", "_occa_thread_position", "thread_position_in_threadgroup")
                .value();
