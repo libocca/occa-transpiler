@@ -39,7 +39,7 @@ kernel void _occa_priority_issue_0(uint3 _occa_group_position [[threadgroup_posi
         }
         {
             int j = (0) + _occa_thread_position.x;
-            [[okl_atomic("")]] shm[i * j] += 32;
+            shm[i * j] += 32;
         }
     }
 }

@@ -5,6 +5,7 @@
   "max_inner_dims.json",
   "tile.json",
   "inner_outer.json",
+  "atomic.json",
   "barrier.json",
   "nobarrier.json",
   "restrict.json",

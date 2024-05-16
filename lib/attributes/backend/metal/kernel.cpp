@@ -71,6 +71,7 @@ std::string getFunctionParamStr(SessionStage& stage,
     out << util::fmt(
                "{} {} [[{}]]", "uint3", "_occa_group_position", "threadgroup_position_in_grid")
                .value();
+    out << ", ";
     out << util::fmt(
                "{} {} [[{}]]", "uint3", "_occa_thread_position", "thread_position_in_threadgroup")
                .value();
