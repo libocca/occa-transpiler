@@ -105,19 +105,19 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/common.cpp
     attributes/backend/dpcpp/common.h
 
-        # Metal
-        attributes/backend/metal/kernel.cpp
-        attributes/backend/metal/translation_unit.cpp
-        attributes/backend/metal/outer.cpp
-        attributes/backend/metal/inner.cpp
-        attributes/backend/metal/tile.cpp
-        attributes/backend/metal/shared.cpp
-        attributes/backend/metal/restrict.cpp
-        attributes/backend/metal/atomic.cpp
-        attributes/backend/metal/barrier.cpp
-        attributes/backend/metal/exclusive.cpp
-        attributes/backend/metal/common.cpp
-        attributes/backend/metal/common.h
+    # Metal
+    attributes/backend/metal/kernel.cpp
+    attributes/backend/metal/translation_unit.cpp
+    attributes/backend/metal/outer.cpp
+    attributes/backend/metal/inner.cpp
+    attributes/backend/metal/tile.cpp
+    attributes/backend/metal/shared.cpp
+    attributes/backend/metal/restrict.cpp
+    attributes/backend/metal/atomic.cpp
+    attributes/backend/metal/barrier.cpp
+    attributes/backend/metal/exclusive.cpp
+    attributes/backend/metal/common.cpp
+    attributes/backend/metal/common.h
 
     # Serial subset
     attributes/utils/serial_subset/empty.cpp
