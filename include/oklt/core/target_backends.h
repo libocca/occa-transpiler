@@ -14,6 +14,7 @@ enum struct TargetBackend : unsigned char {
     CUDA,    ///< CUDA backend.
     HIP,     ///< HIP backend.
     DPCPP,   ///< DPCPP backend.
+    METAL,   ///< Metal backend.
 
     _LAUNCHER,  ///< Launcher backend.
 };

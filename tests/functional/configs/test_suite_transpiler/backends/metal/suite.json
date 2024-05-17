@@ -1,0 +1,14 @@
+[
+  "implicit.json",
+  "const_global.json",
+  "non_kernel_function.json",
+  "max_inner_dims.json",
+  "tile.json",
+  "inner_outer.json",
+  "atomic.json",
+  "barrier.json",
+  "nobarrier.json",
+  "restrict.json",
+  "exclusive.json",
+  "shared.json"
+]

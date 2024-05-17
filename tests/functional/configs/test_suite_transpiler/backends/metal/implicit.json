@@ -1,0 +1,68 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/const_global_const_size_array.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/const_global_const_size_array_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/const_global_pointer.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/const_global_pointer_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/const_global_variable.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/const_global_variable_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/constexpr.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/constexpr_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/extern_const_global_array.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/extern_const_global_array_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/implicit/non_kernel_function.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/implicit/non_kernel_function_ref.cpp"
+  }
+]

@@ -1,0 +1,112 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_add.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_add_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_sub.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_sub_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_exch.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_exch_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_and.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_and_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_or.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_or_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_xor.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_xor_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_inc.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_inc_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_dec.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_dec_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/atomic_compound_statement.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/atomic_compound_statement_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "metal",
+      "source": "transpiler/backends/metal/atomic/issue_case.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/metal/atomic/issue_case_ref.cpp"
+  }
+]
