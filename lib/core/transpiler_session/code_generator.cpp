@@ -176,6 +176,10 @@ std::string restoreSystemAndBackendHeaders(
         }
         input.insert(0, "#include <" + dep.fileName + ">\n");
     }
+    
+    for (auto it = deps.backendDefines.rbegin(); it < deps.backendDefines.rend(); ++it) {
+        input.insert(0, *it);
+    }
 
     return input;
 }

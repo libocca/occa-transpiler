@@ -17,7 +17,7 @@ std::vector<std::string_view> getBackendHeader(SessionStage& s) {
 }
 
 HandleResult handleTranslationUnit(SessionStage& s, const TranslationUnitDecl& d) {
-    return handleTranslationUnit(s, d, getBackendHeader(s));
+    return handleTranslationUnit(s, d, getBackendHeader(s), {});
 }
 
 __attribute__((constructor)) void registerAttrBackend() {

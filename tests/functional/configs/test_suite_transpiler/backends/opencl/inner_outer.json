@@ -1,0 +1,57 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "opencl",
+      "source": "transpiler/backends/opencl/outer_inner/outer_inner_inc.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/opencl/outer_inner/outer_inner_inc_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "opencl",
+      "source": "transpiler/backends/opencl/outer_inner/outer_inner_dec.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/opencl/outer_inner/outer_inner_dec_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "opencl",
+      "source": "transpiler/backends/opencl/outer_inner/outer_inner_multiple.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/opencl/outer_inner/outer_inner_multiple_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "opencl",
+      "source": "transpiler/backends/opencl/outer_inner/outer_inner_split.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/opencl/outer_inner/outer_inner_split_ref.cpp"
+  },
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "opencl",
+      "source": "transpiler/backends/opencl/outer_inner/outer_inner_regular_at_same_level_as_attributed.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/opencl/outer_inner/outer_inner_regular_at_same_level_as_attributed_ref.cpp"
+  }
+]

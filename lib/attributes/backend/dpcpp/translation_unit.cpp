@@ -11,7 +11,7 @@ const std::string_view SYCL_INCLUDE = "<CL/sycl.hpp>";
 const std::string_view SYCL_NS = "sycl";
 
 HandleResult handleTranslationUnitDpcpp(SessionStage& s, const clang::TranslationUnitDecl& decl) {
-    return oklt::handleTranslationUnit(s, decl, {SYCL_INCLUDE}, {SYCL_NS});
+    return oklt::handleTranslationUnit(s, decl, {SYCL_INCLUDE}, {}, {SYCL_NS});
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {

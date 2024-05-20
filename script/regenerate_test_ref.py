@@ -9,7 +9,8 @@ class Backend(Enum):
     CUDA = 2
     HIP = 3
     DPCPP = 4
-    LAUNCHER = 5
+    OPENCL = 5
+    LAUNCHER = 6
 
     def from_str(s: str) -> "Backend":
         s = s.lower()
@@ -23,6 +24,8 @@ class Backend(Enum):
             return Backend.CUDA
         if s == "hip":
             return Backend.HIP
+        if s == "opencl":
+            return Backend.OPENCL
         if s == "launcher":
             return Backend.LAUNCHER
 
@@ -37,6 +40,8 @@ class Backend(Enum):
             return "cuda"
         if self == Backend.HIP:
             return "hip"
+        if self == Backend.OPENCL:
+            return "opencl"
         if self == Backend.LAUNCHER:
             return "launcher"
 
@@ -63,7 +68,7 @@ if __name__ == "__main__":
         "--data", "-d", type=str, required=True, help="Test data directory path"
     )
     parser.add_argument(
-        "--backend", "-b", type=str, required=True, help="serial/openmp/cuda/hip/dpcppp"
+        "--backend", "-b", type=str, required=True, help="serial/openmp/cuda/hip/dpcppp/opencl"
     )
     parser.add_argument(
         "--verbose", "-v", default=False, action="store_const", const=True
