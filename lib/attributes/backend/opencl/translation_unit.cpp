@@ -10,7 +10,7 @@ using namespace clang;
 const std::string_view OPENCL_PRAGMA = "#pragma OPENCL EXTENSON cl_khr_fp64 : enable";
 
 HandleResult handleTranslationUnitOpencl(SessionStage& s, const clang::TranslationUnitDecl& decl) {
-    return oklt::handleTranslationUnit(s, decl, {}, {OPENCL_PRAGMA}, {});
+    return oklt::handleTranslationUnit(s, decl, {}, {OPENCL_PRAGMA});
 }
 
 __attribute__((constructor)) void registerTranslationUnitAttrBackend() {

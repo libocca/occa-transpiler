@@ -13,7 +13,7 @@ using namespace clang;
 
 const std::string HIP_RT_INC = "<hip/hip_runtime.h>";
 HandleResult handleTU(SessionStage& s, const TranslationUnitDecl& d) {
-    return handleTranslationUnit(s, d, {HIP_RT_INC}, {});
+    return handleTranslationUnit(s, d, {HIP_RT_INC});
 }
 
 __attribute__((constructor)) void registerAttrBackend() {
