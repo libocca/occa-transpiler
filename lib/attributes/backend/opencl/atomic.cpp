@@ -19,7 +19,6 @@ HandleResult handleAtomicAttribute(SessionStage& stage, const Stmt& stmt, const 
     return {};
 }
 
-
 __attribute__((constructor)) void registerAttrBackend() {
     auto ok = registerBackendHandler(
         TargetBackend::OPENCL, ATOMIC_ATTR_NAME, handleAtomicAttribute);

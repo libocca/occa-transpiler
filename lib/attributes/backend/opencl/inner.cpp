@@ -43,7 +43,6 @@ HandleResult handleInnerAttribute(SessionStage& s,
         afterRBraceCode += opencl::SYNC_THREADS_BARRIER + ";\n";
     }
 
-
     return replaceAttributedLoop(s, forStmt, a, suffixCode, afterRBraceCode, prefixCode, true);
 }
 
