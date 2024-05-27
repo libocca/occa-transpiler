@@ -79,13 +79,12 @@ int main(int argc, char* argv[]) {
     transpile_command.add_argument("-l", "--launcher")
         .default_value("")
         .help("optional launcher output file");
+    transpile_command.add_argument("-e", "--external-intrinsic")
+        .default_value<std::string>("")
+        .help("optional external intrinsic path");
     transpile_command.add_argument("-n", "--normalizer-output")
         .default_value("")
         .help("optional normalization output file");
-    transpile_command.add_argument("-s", "--sema")
-        .help("sema: {no-sema, with-sema}")
-        .required()
-        .default_value("with-sema");
 
     program.add_subparser(normalize_command);
     program.add_subparser(transpile_command);
@@ -164,6 +163,12 @@ int main(int argc, char* argv[]) {
                 includes.push_back(includeStr);
             }
 
+            auto external_intrinsic = transpile_command.get("-e");
+            std::optional<std::filesystem::path> intrinsic_path;
+            if (!external_intrinsic.empty()) {
+                intrinsic_path = external_intrinsic;
+            }
+
             auto normalization_output = std::filesystem::path(transpile_command.get("-n"));
             if (normalization_output.empty()) {
                 normalization_output = build_normalization_output_filename(sourcePath);
@@ -175,7 +180,8 @@ int main(int argc, char* argv[]) {
                                   .source = sourceCode,
                                   .sourcePath = sourcePath,
                                   .includeDirectories = std::move(includes),
-                                  .defines = std::move(defines)};
+                                  .defines = std::move(defines),
+                                  .userIntrincis = intrinsic_path};
 
             oklt::UserResult result = [](auto&& input, auto need_normalize) {
                 if (need_normalize) {

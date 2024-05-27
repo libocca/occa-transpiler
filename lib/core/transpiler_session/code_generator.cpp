@@ -6,7 +6,7 @@
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
 
-#include "core/builtin_headers/intrinsic_impl.h"
+#include "core/intrinsics/builtin_intrinsics.h"
 
 #include "core/handler_manager/handler_manager.h"
 
@@ -94,14 +94,17 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     // to preserve them for possible laucher generator
     auto clone = stage.getSession().getStagedHeaders();
     inputs.fileMap.merge(clone);
-    inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();std::ostringstream oss;
-oss << std::this_thread::get_id() << std::endl;
-printf("%s\n", oss.str().c_str());
+    inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
+
+    //    std::ostringstream oss;
+    //    oss << std::this_thread::get_id() << std::endl;
+    //    printf("%s\n", oss.str().c_str());
+
     return inputs;
 }
 
 tl::expected<std::string, Error> preprocesseInputs(SessionStage& stage,
-                                                    const TransformedFiles& inputs) {
+                                                   const TransformedFiles& inputs) {
     auto invocation = std::make_shared<CompilerInvocation>();
 
     auto& ppOutOpt = invocation->getPreprocessorOutputOpts();
@@ -147,17 +150,15 @@ tl::expected<std::string, Error> preprocesseInputs(SessionStage& stage,
     return preprocessedAndFused.value();
 }
 
-std::string restoreSystemAndBackendHeaders(
-    TargetBackend backend,
-    std::string& input,
-    const HeaderDepsInfo& deps)
-{
+std::string restoreSystemAndBackendHeaders(TargetBackend backend,
+                                           std::string& input,
+                                           const HeaderDepsInfo& deps) {
     // insert backend specific headers and namespaces
     for (auto it = deps.backendNss.rbegin(); it < deps.backendNss.rend(); ++it) {
         input.insert(0, *it);
     }
 
-    if(deps.useOklIntrinsic) {
+    if (deps.useOklIntrinsic) {
         auto intrinsicHeaders = embedInstrinsic(input, backend);
 
         for (auto it = intrinsicHeaders.rbegin(); it < intrinsicHeaders.rend(); ++it) {
@@ -190,9 +191,8 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
         return preprocessedResult;
     }
 
-    auto finalTranspiledKernel = restoreSystemAndBackendHeaders(stage.getBackend(),
-                                                                preprocessedResult.value(),
-                                                                deps);
+    auto finalTranspiledKernel =
+        restoreSystemAndBackendHeaders(stage.getBackend(), preprocessedResult.value(), deps);
     return finalTranspiledKernel;
 }
 }  // namespace

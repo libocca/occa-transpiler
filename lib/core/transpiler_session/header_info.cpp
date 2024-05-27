@@ -1,12 +1,19 @@
 #include "core/transpiler_session/header_info.h"
-#include "core/builtin_headers/intrinsic_impl.h"
+#include "core/intrinsics/builtin_intrinsics.h"
+#include "core/intrinsics/external_intrinsics.h"
+#include "core/transpiler_session/transpiler_session.h"
 
 namespace {}
 namespace oklt {
-InclusionDirectiveCallback::InclusionDirectiveCallback(HeaderDepsInfo& deps_,
-                                                       const clang::SourceManager& sm_)
+
+using namespace llvm;
+
+InclusionDirectiveCallback::InclusionDirectiveCallback(TranspilerSession& session,
+                                                       HeaderDepsInfo& deps_,
+                                                       clang::SourceManager& sm_)
     : deps(deps_),
-      sm(sm_) {}
+      sm(sm_),
+      _session(session) {}
 
 void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLoc,
                                                     const clang::Token& includeTok,
@@ -18,7 +25,7 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
                                                     clang::StringRef relativePath,
                                                     const clang::Module* imported,
                                                     clang::SrcMgr::CharacteristicKind fileType) {
-    if(!deps.useOklIntrinsic) {
+    if (!deps.useOklIntrinsic) {
         deps.useOklIntrinsic = fileName == INTRINSIC_INCLUDE_FILENAME;
     }
 
@@ -27,10 +34,13 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
         return;
     }
 
+    auto fileNameStr = fileName.str();
+    overrideExternalIntrinsic(_session, fileNameStr, file, sm);
+
     deps.topLevelDeps.push_back(HeaderDep{
         .hashLoc = hashLoc,
         .includeTok = includeTok,
-        .fileName = fileName.str(),
+        .fileName = fileNameStr,
         .isAngled = isAngled,
         .filenameRange = filenameRange,
         .file = file,
@@ -41,5 +51,4 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
 
     });
 }
-
 }  // namespace oklt

@@ -182,8 +182,10 @@ set (OCCA_TRANSPILER_SOURCES
     core/rewriter/rewriter_proxy.cpp
     core/rewriter/rewriter_fabric.cpp
 
-    core/builtin_headers/intrinsic_impl.cpp
-    core/builtin_headers/intrinsic_impl.h
+    core/intrinsics/builtin_intrinsics.h
+    core/intrinsics/builtin_intrinsics.cpp
+    core/intrinsics/external_intrinsics.h
+    core/intrinsics/external_intrinsics.cpp
 
     core/handler_manager/handler_manager.cpp
     core/handler_manager/handler_map.cpp
@@ -277,22 +279,22 @@ target_link_libraries(occa-transpiler
 )
 
 embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_cuda.h
-    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_cuda.h
+    ${ROOT_DIR}/lib/core/intrinsics/okl_intrinsic_cuda.h
     INTRINSIC_CUDA
 )
 
 embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_dpcpp.h
-    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_dpcpp.h
+    ${ROOT_DIR}/lib/core/intrinsics/okl_intrinsic_dpcpp.h
     INTRINSIC_DPCPP
 )
 
 embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_hip.h
-    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_hip.h
+    ${ROOT_DIR}/lib/core/intrinsics/okl_intrinsic_hip.h
     INTRINSIC_HIP
 )
 
 embed_resource_txt(${ROOT_DIR}/lib/resources/okl_intrinsic_host.h
-    ${ROOT_DIR}/lib/core/builtin_headers/okl_intrinsic_host.h
+    ${ROOT_DIR}/lib/core/intrinsics/okl_intrinsic_host.h
     INTRINSIC_HOST
 )
 

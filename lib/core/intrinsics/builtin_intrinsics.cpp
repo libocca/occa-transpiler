@@ -1,8 +1,8 @@
-#include "core/builtin_headers/intrinsic_impl.h"
-#include "core/builtin_headers/okl_intrinsic_cuda.h"
-#include "core/builtin_headers/okl_intrinsic_dpcpp.h"
-#include "core/builtin_headers/okl_intrinsic_hip.h"
-#include "core/builtin_headers/okl_intrinsic_host.h"
+#include "core/intrinsics/builtin_intrinsics.h"
+#include "core/intrinsics/okl_intrinsic_cuda.h"
+#include "core/intrinsics/okl_intrinsic_dpcpp.h"
+#include "core/intrinsics/okl_intrinsic_hip.h"
+#include "core/intrinsics/okl_intrinsic_host.h"
 
 #include <clang/Frontend/CompilerInstance.h>
 #include "core/transpiler_session/transpiler_session.h"

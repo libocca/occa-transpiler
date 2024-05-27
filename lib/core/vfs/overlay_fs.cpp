@@ -14,7 +14,8 @@ IntrusiveRefCntPtr<vfs::FileSystem> makeOverlayFs(IntrusiveRefCntPtr<vfs::FileSy
     overlayFs->pushOverlay(inMemoryFs);
 
     for (const auto& f : files) {
-        inMemoryFs->addFile(f.first, 0, MemoryBuffer::getMemBuffer(f.second));
+        std::time_t current_time = std::time(0);
+        inMemoryFs->addFile(f.first, current_time, MemoryBuffer::getMemBuffer(f.second));
     }
 
     return overlayFs;

@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace oklt {
@@ -19,6 +20,7 @@ struct UserInput {
     std::vector<std::filesystem::path> includeDirectories;  ///< The include directories.
     std::vector<std::string> defines;                       ///< The defined macroses.
     std::string hash;                                       ///< OKL hash
+    std::optional<std::filesystem::path> userIntrincis;     ///< OKL user external intrincis folder
 };
 
 }  // namespace oklt

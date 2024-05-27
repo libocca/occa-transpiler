@@ -66,7 +66,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(SessionStage& stage,
                                               const clang::Attr* a) {
     auto& ctx = stage.getCompiler().getASTContext();
     OklLoopInfo ret{.attr = a, .stmt = s};
-    const Expr *start, *end = nullptr;
+    const Expr *start = nullptr, *end = nullptr;
 
     if (isa<DeclStmt>(s.getInit())) {
         auto d = dyn_cast<DeclStmt>(s.getInit());
@@ -91,7 +91,7 @@ tl::expected<OklLoopInfo, Error> parseForStmt(SessionStage& stage,
         }
         ret.range.start = start;
 
-        auto child_count = std::distance(start->children().begin(), start->children().end());
+        // auto child_count = std::distance(start->children().begin(), start->children().end());
     }
 
     // Condition

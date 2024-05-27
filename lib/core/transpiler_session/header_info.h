@@ -11,7 +11,6 @@ struct TransformedFiles {
     // name to file content map
     std::map<std::string, std::string> fileMap;
 };
-
 // Stub to collect data from InclusionDirective callbacks.
 struct HeaderDep {
     clang::SourceLocation hashLoc;
@@ -34,9 +33,13 @@ struct HeaderDepsInfo {
     bool useOklIntrinsic = false;
 };
 
+class TranspilerSession;
+
 class InclusionDirectiveCallback : public clang::PPCallbacks {
    public:
-    InclusionDirectiveCallback(HeaderDepsInfo& depsInfo, const clang::SourceManager& sm);
+    InclusionDirectiveCallback(TranspilerSession& session,
+                               HeaderDepsInfo& depsInfo,
+                               clang::SourceManager& sm);
     void InclusionDirective(clang::SourceLocation HashLoc,
                             const clang::Token& IncludeTok,
                             clang::StringRef fileName,
@@ -47,8 +50,11 @@ class InclusionDirectiveCallback : public clang::PPCallbacks {
                             clang::StringRef RelativePath,
                             const clang::Module* Imported,
                             clang::SrcMgr::CharacteristicKind FileType) override;
+
+   private:
     HeaderDepsInfo& deps;
-    const clang::SourceManager& sm;
+    clang::SourceManager& sm;
+    TranspilerSession& _session;
 };
 
 }  // namespace oklt
