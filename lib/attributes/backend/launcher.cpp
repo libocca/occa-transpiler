@@ -201,7 +201,8 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
 }
 #endif
 
-std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const oklt::Rewriter& r) {
+std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo,
+                                                    const oklt::Rewriter& r) {
     auto sz = util::parseStrTo<size_t>(loopInfo.tileSize);
 
     // Prepare first loop
@@ -210,15 +211,11 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
     if (sz.value_or(1024) > 0) {
         if (firstMeta.inc.val.empty()) {
             firstMeta.inc.val = loopInfo.tileSize;
-            switch (firstMeta.inc.op.uo) {
-                case UnOp::PreInc:
-                case UnOp::PostInc:
-                    firstMeta.inc.op.bo = BinOp::AddAssign;
-                    break;
-                case UnOp::PreDec:
-                case UnOp::PostDec:
-                    firstMeta.inc.op.bo = BinOp::RemoveAssign;
-                    break;
+            if (firstMeta.inc.op.uo == UnOp::PreInc || firstMeta.inc.op.uo == UnOp::PostInc) {
+                firstMeta.inc.op.bo = BinOp::AddAssign;
+            }
+            if (firstMeta.inc.op.uo == UnOp::PreDec || firstMeta.inc.op.uo == UnOp::PostDec) {
+                firstMeta.inc.op.bo = BinOp::RemoveAssign;
             }
         } else {
             firstMeta.inc.val = "(" + loopInfo.tileSize + " * " + firstMeta.inc.val + ")";
@@ -228,13 +225,11 @@ std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const
     // Prepare second loop
     auto secondMeta = LoopMetaData(loopInfo, r);
     secondMeta.range.start = firstMeta.var.name;
-    switch (secondMeta.condition.op) {
-        case BinOp::Le:
-            secondMeta.condition.op = BinOp::Lt;
-            break;
-        case BinOp::Ge:
-            secondMeta.condition.op = BinOp::Gt;
-            break;
+    if (secondMeta.condition.op == BinOp::Le) {
+        secondMeta.condition.op = BinOp::Lt;
+    }
+    if (secondMeta.condition.op == BinOp::Ge) {
+        secondMeta.condition.op = BinOp::Gt;
     }
     if (sz.value_or(1024) > 0) {
         secondMeta.range.end = "(" + firstMeta.var.name + " + " + loopInfo.tileSize + ")";
@@ -374,8 +369,8 @@ HandleResult handleLauncherKernelAttribute(SessionStage& s,
     auto& rewriter = s.getRewriter();
 
     if (!sema.getParsingKernelInfo()) {
-        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
-                                         "handleKernelAttribute"});
+        return tl::make_unexpected(
+            Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL, "handleKernelAttribute"});
     }
 
     auto kernelInfo = *sema.getParsingKernelInfo();
