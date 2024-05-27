@@ -66,7 +66,8 @@ tl::expected<OklLoopInfo, Error> parseForStmt(SessionStage& stage,
                                               const clang::Attr* a) {
     auto& ctx = stage.getCompiler().getASTContext();
     OklLoopInfo ret{.attr = a, .stmt = s};
-    const Expr *start, *end = nullptr;
+    const Expr* start = nullptr;
+    const Expr* end = nullptr;
 
     if (isa<DeclStmt>(s.getInit())) {
         auto d = dyn_cast<DeclStmt>(s.getInit());
@@ -90,8 +91,11 @@ tl::expected<OklLoopInfo, Error> parseForStmt(SessionStage& stage,
             start = rsh->getSubExpr();
         }
         ret.range.start = start;
+    }
 
-        auto child_count = std::distance(start->children().begin(), start->children().end());
+    if (!start) {
+        return tl::make_unexpected(
+            Error{std::error_code(), "loop parse: not supported init statement"});
     }
 
     // Condition
