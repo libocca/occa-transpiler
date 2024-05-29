@@ -289,7 +289,7 @@ __attribute__((constructor)) void registeCUDAGlobalConstantHandler() {
 ```
 
 ### Rewriter
-This is one of the main tools used in the backend implementation. The general structure can be found here []. 
+This is one of the main tools used in the backend implementation. The general structure can be found [here](./documentation.pdf). 
 
 When using it, keep in mind that inserting it when performing a replace or delete operation can lead to errors. Therefore, you need to be sure of the cursor position when using insert or replace operations.
 
