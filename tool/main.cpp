@@ -80,8 +80,9 @@ int main(int argc, char* argv[]) {
         .default_value("")
         .help("optional launcher output file");
     transpile_command.add_argument("-e", "--external-intrinsic")
-        .default_value<std::string>("")
-        .help("optional external intrinsic path");
+        .default_value<std::vector<std::string>>({})
+        .append()
+        .help("Specify external intrinsics pathes");
     transpile_command.add_argument("-n", "--normalizer-output")
         .default_value("")
         .help("optional normalization output file");
@@ -163,10 +164,14 @@ int main(int argc, char* argv[]) {
                 includes.push_back(includeStr);
             }
 
-            auto external_intrinsic = transpile_command.get("-e");
-            std::optional<std::filesystem::path> intrinsic_path;
-            if (!external_intrinsic.empty()) {
-                intrinsic_path = external_intrinsic;
+            std::vector<std::string> intrinsicsStrs;
+            if(transpile_command.is_used("-e")) {
+                intrinsicsStrs = transpile_command.get<std::vector<std::string>>("-e");
+            }
+
+            std::vector<std::filesystem::path> intrinsics;
+            for (const auto &intrinsic: intrinsicsStrs) {
+                intrinsics.push_back(intrinsic);
             }
 
             auto normalization_output = std::filesystem::path(transpile_command.get("-n"));
@@ -181,7 +186,8 @@ int main(int argc, char* argv[]) {
                                   .sourcePath = sourcePath,
                                   .includeDirectories = std::move(includes),
                                   .defines = std::move(defines),
-                                  .userIntrincis = intrinsic_path};
+                                  .userIntrinsics = std::move(intrinsics)
+            };
 
             oklt::UserResult result = [](auto&& input, auto need_normalize) {
                 if (need_normalize) {

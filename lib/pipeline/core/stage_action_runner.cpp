@@ -55,10 +55,9 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
         args.push_back(std::move(incPath));
     }
 
-    if (input.userIntrincis) {
-        const auto& externalIntrincisDir = input.userIntrincis.value();
-        if (std::filesystem::exists(externalIntrincisDir)) {
-            auto parent = externalIntrincisDir.parent_path();
+    for (const auto& intrinsicPath : input.userIntrinsics) {
+        if (std::filesystem::exists(intrinsicPath)) {
+            auto parent = intrinsicPath.parent_path();
             std::string includeInctrincisPath = "-I" + parent.string();
             args.push_back(includeInctrincisPath);
         }

@@ -16,6 +16,32 @@
 
 #include <fstream>
 
+
+//// partial specialization (full specialization works too)
+//NLOHMANN_JSON_NAMESPACE_BEGIN
+//template <typename T>
+//struct adl_serializer<std::optional<T>> {
+//    static void to_json(json& j, const std::optional<T>& opt) {
+//        if (opt == std::nullopt) {
+//            j = nullptr;
+//        } else {
+//            j = *opt; // this will call adl_serializer<T>::to_json which will
+//                       // find the free function to_json in T's namespace!
+//        }
+//    }
+
+//    static void from_json(const json& j, std::optional<T>& opt) {
+//        if (j.is_null()) {
+//            opt = std::nullopt;
+//        } else {
+//            opt = j.template get<T>(); // same as above, but with
+//                                        // adl_serializer<T>::from_json
+//        }
+//    }
+//};
+//NLOHMANN_JSON_NAMESPACE_END
+
+
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 using namespace oklt::tests;
@@ -93,9 +119,24 @@ struct TranspileActionConfig {
     std::vector<std::filesystem::path> mutable includes;
     std::vector<std::string> mutable defs;
     std::filesystem::path launcher;
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TranspileActionConfig, backend, source, includes, defs, launcher)
+    std::optional<std::string> intrinsic = std::nullopt;
+    //NLOHMANN_DEFINE_TYPE_INTRUSIVE(TranspileActionConfig, backend, source, includes, defs, launcher, intrinsic)
     oklt::UserInput build(const fs::path& dataDir) const;
 };
+
+// void to_json(nlohmann::json& json, const TranspileActionConfig& dt);
+void from_json(const json& j, TranspileActionConfig& conf) {
+
+    j.at("backend").get_to(conf.backend);
+    j.at("source").get_to(conf.source);
+    j.at("includes").get_to(conf.includes);
+    j.at("defs").get_to(conf.defs);
+    j.at("launcher").get_to(conf.launcher);
+    auto it = j.find("intrinsic");
+    if(it != j.end()) {
+        conf.intrinsic = it->get<std::string>();
+    }
+}
 
 oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
     auto expectedBackend = oklt::backendFromString(backend);
@@ -110,11 +151,18 @@ oklt::UserInput TranspileActionConfig::build(const fs::path& dataDir) const {
     std::ifstream sourceFile{sourceFullPath};
     std::string sourceCode{std::istreambuf_iterator<char>(sourceFile), {}};
 
+    std::vector<std::filesystem::path> intrinsics;
+    if(intrinsic) {
+        fs::path fullIntrinsicPath = dataDir / std::filesystem::path(intrinsic.value());
+        intrinsics.push_back(std::move(fullIntrinsicPath));
+    }
     return oklt::UserInput{.backend = expectedBackend.value(),
                            .source = std::move(sourceCode),
                            .sourcePath = std::move(sourceFullPath),
                            .includeDirectories = includes,
-                           .defines = defs};
+                           .defines = defs,
+                           .userIntrinsics = std::move(intrinsics)
+    };
 }
 
 namespace {

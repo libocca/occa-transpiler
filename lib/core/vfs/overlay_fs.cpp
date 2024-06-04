@@ -1,5 +1,4 @@
 #include "core/vfs/overlay_fs.h"
-#include "core/transpiler_session/header_info.h"
 
 namespace oklt {
 using namespace llvm;
@@ -14,8 +13,7 @@ IntrusiveRefCntPtr<vfs::FileSystem> makeOverlayFs(IntrusiveRefCntPtr<vfs::FileSy
     overlayFs->pushOverlay(inMemoryFs);
 
     for (const auto& f : files) {
-        std::time_t current_time = std::time(0);
-        inMemoryFs->addFile(f.first, current_time, MemoryBuffer::getMemBuffer(f.second));
+        inMemoryFs->addFile(f.first, 0, MemoryBuffer::getMemBuffer(f.second));
     }
 
     return overlayFs;

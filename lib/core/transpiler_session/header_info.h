@@ -51,10 +51,19 @@ class InclusionDirectiveCallback : public clang::PPCallbacks {
                             const clang::Module* Imported,
                             clang::SrcMgr::CharacteristicKind FileType) override;
 
+    void FileChanged(clang::SourceLocation Loc,
+                     FileChangeReason Reason,
+                     clang::SrcMgr::CharacteristicKind FileType,
+                     clang::FileID PrevFID = clang::FileID()) override;
+
+    bool FileNotFound(clang::StringRef FileName) override;
+
    private:
     HeaderDepsInfo& deps;
     clang::SourceManager& sm;
     TranspilerSession& _session;
+    bool _isInExternalIntrinsic;
+    clang::FileID _extIntrinsicFID;
 };
 
 }  // namespace oklt

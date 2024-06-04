@@ -26,7 +26,8 @@ DiagConsumer::DiagConsumer(SessionStage& session)
       clang::DiagnosticConsumer(){};
 
 void DiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Diagnostic& Info) {
-    if (!_includeDiag.test_and_set()) {
+    if (!_includeDiag) {
+        _includeDiag = 1;
         return;
     }
 
@@ -44,13 +45,13 @@ bool DiagConsumer::IncludeInDiagnosticCounts() const {
 
     // Accept only Warning, Error and Fatal
     if (diagLevel < DiagnosticsEngine::Level::Warning) {
-        const_cast<std::atomic_flag&>(_includeDiag).clear();
+        _includeDiag = 0;
         return false;
     }
 
     for (auto& ptr : getDiagDiagHandleInstances()) {
         if (ptr->_id == info.getID() && ptr->HandleDiagnostic(_session, diagLevel, info)) {
-            const_cast<std::atomic_flag&>(_includeDiag).clear();
+            _includeDiag = 0;
             return false;
         }
     }

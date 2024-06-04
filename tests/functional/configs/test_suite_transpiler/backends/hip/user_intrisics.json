@@ -1,0 +1,14 @@
+[
+    {
+        "action": "normalize_and_transpile",
+        "action_config": {
+            "backend": "hip",
+            "source": "transpiler/backends/hip/user_intrinsics/user_intrinsics.cpp",
+            "includes": [],
+            "defs": [],
+            "launcher": "",
+            "intrinsic": "misc/custom_intrinsics"
+        },
+        "reference": "transpiler/backends/hip/user_intrinsics/user_intrinsics_ref.cpp"
+    }
+]

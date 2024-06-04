@@ -25,7 +25,7 @@ std::string toLower(const std::string& str);
  * @param str Prefix string
  * @return bool Is started with provided prefix
  */
-bool starts_with(const std::string& value, const std::string& prefix);
+bool startsWith(const std::string& value, const std::string& prefix);
 
 /**
  * @brief Convert a pointer to a string

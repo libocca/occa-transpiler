@@ -95,11 +95,6 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     auto clone = stage.getSession().getStagedHeaders();
     inputs.fileMap.merge(clone);
     inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
-
-    //    std::ostringstream oss;
-    //    oss << std::this_thread::get_id() << std::endl;
-    //    printf("%s\n", oss.str().c_str());
-
     return inputs;
 }
 

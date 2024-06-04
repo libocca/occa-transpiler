@@ -13,7 +13,7 @@ std::string toLower(const std::string& str) {
     return result;
 }
 
-bool starts_with(const std::string& value, const std::string& prefix) {
+bool startsWith(const std::string& value, const std::string& prefix) {
     return value.rfind(prefix, 0) == 0;
 }
 

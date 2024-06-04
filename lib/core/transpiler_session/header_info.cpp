@@ -13,7 +13,8 @@ InclusionDirectiveCallback::InclusionDirectiveCallback(TranspilerSession& sessio
                                                        clang::SourceManager& sm_)
     : deps(deps_),
       sm(sm_),
-      _session(session) {}
+      _session(session),
+      _isInExternalIntrinsic(false) {}
 
 void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLoc,
                                                     const clang::Token& includeTok,
@@ -35,7 +36,16 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
     }
 
     auto fileNameStr = fileName.str();
-    overrideExternalIntrinsic(_session, fileNameStr, file, sm);
+    auto isIntrinsic = overrideExternalIntrinsic(_session, fileNameStr, file, sm);
+    if (isIntrinsic) {
+        _extIntrinsicFID = sm.getFileID(hashLoc);
+    }
+
+    // INFO: force instrinsic includes to be system includes
+    //       they will be removed & attached to final transpiled source
+    if (_isInExternalIntrinsic) {
+        fileType = clang::SrcMgr::CharacteristicKind::C_System;
+    }
 
     deps.topLevelDeps.push_back(HeaderDep{
         .hashLoc = hashLoc,
@@ -51,4 +61,30 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
 
     });
 }
+
+void InclusionDirectiveCallback::FileChanged(clang::SourceLocation Loc,
+                                             FileChangeReason Reason,
+                                             clang::SrcMgr::CharacteristicKind FileType,
+                                             clang::FileID PrevFID) {
+    if (Reason == FileChangeReason::EnterFile) {
+        if (_extIntrinsicFID.isValid()) {
+            _isInExternalIntrinsic = PrevFID == _extIntrinsicFID;
+            return;
+        }
+    }
+
+    if (Reason == FileChangeReason::ExitFile) {
+        auto thisFID = sm.getFileID(Loc);
+        if (_extIntrinsicFID.isValid() && thisFID == _extIntrinsicFID) {
+            _extIntrinsicFID = clang::FileID();
+            _isInExternalIntrinsic = false;
+            return;
+        }
+    }
+}
+
+bool InclusionDirectiveCallback::FileNotFound(clang::StringRef FileName) {
+    return _isInExternalIntrinsic;
+}
+
 }  // namespace oklt

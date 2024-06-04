@@ -22,7 +22,7 @@ class DiagConsumer : public clang::DiagnosticConsumer {
 
    protected:
     SessionStage& _session;
-    std::atomic_flag _includeDiag = true;
+    mutable int _includeDiag = 0;
 };
 
 }  // namespace oklt

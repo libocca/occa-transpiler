@@ -90,8 +90,6 @@ tl::expected<OklLoopInfo, Error> parseForStmt(SessionStage& stage,
             start = rsh->getSubExpr();
         }
         ret.range.start = start;
-
-        // auto child_count = std::distance(start->children().begin(), start->children().end());
     }
 
     // Condition
