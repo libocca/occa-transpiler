@@ -19,8 +19,7 @@ struct UserInput {
     std::vector<std::filesystem::path> includeDirectories;  ///< The include directories.
     std::vector<std::string> defines;                       ///< The defined macroses.
     std::string hash;                                       ///< OKL hash
-    // TODO: change to std::vector
-    std::vector<std::filesystem::path> userIntrinsics;  ///< OKL user external intrincis folder
+    std::vector<std::filesystem::path> userIntrinsics;      ///< OKL user external intrincis folder
 };
 
 }  // namespace oklt
