@@ -45,21 +45,32 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
     //       they will be removed & attached to final transpiled source
     if (_isInExternalIntrinsic) {
         fileType = clang::SrcMgr::CharacteristicKind::C_System;
+        deps.externalIntrinsicDeps.push_back(HeaderDep{
+            .hashLoc = hashLoc,
+            .includeTok = includeTok,
+            .fileName = fileNameStr,
+            .isAngled = isAngled,
+            .filenameRange = filenameRange,
+            .file = file,
+            .searchPath = searchPath.str(),
+            .relativePath = relativePath.str(),
+            .imported = imported,
+            .fileType = fileType,
+        });
+    } else {
+        deps.topLevelDeps.push_back(HeaderDep{
+            .hashLoc = hashLoc,
+            .includeTok = includeTok,
+            .fileName = fileNameStr,
+            .isAngled = isAngled,
+            .filenameRange = filenameRange,
+            .file = file,
+            .searchPath = searchPath.str(),
+            .relativePath = relativePath.str(),
+            .imported = imported,
+            .fileType = fileType,
+        });
     }
-
-    deps.topLevelDeps.push_back(HeaderDep{
-        .hashLoc = hashLoc,
-        .includeTok = includeTok,
-        .fileName = fileNameStr,
-        .isAngled = isAngled,
-        .filenameRange = filenameRange,
-        .file = file,
-        .searchPath = searchPath.str(),
-        .relativePath = relativePath.str(),
-        .imported = imported,
-        .fileType = fileType,
-
-    });
 }
 
 void InclusionDirectiveCallback::FileChanged(clang::SourceLocation Loc,

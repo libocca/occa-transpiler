@@ -7,6 +7,7 @@
 #include "core/transpiler_session/transpiler_session.h"
 
 #include "core/intrinsics/builtin_intrinsics.h"
+#include "core/intrinsics/external_intrinsics.h"
 
 #include "core/handler_manager/handler_manager.h"
 
@@ -83,6 +84,12 @@ void removeSystemHeaders(SessionStage& stage, const HeaderDepsInfo& deps) {
         }
         SPDLOG_TRACE("remove system include {} {}", dep.relativePath, dep.fileName);
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});
+    }
+
+    for (const auto& intrinsicDep : deps.externalIntrinsicDeps) {
+        SPDLOG_TRACE(
+            "remove system include {} {}", intrinsicDep.relativePath, intrinsicDep.fileName);
+        rewriter.RemoveText({intrinsicDep.hashLoc, intrinsicDep.filenameRange.getEnd()});
     }
 }
 
@@ -165,6 +172,12 @@ std::string restoreSystemAndBackendHeaders(TargetBackend backend,
         input.insert(0, *it);
     }
 
+    if (backend != TargetBackend::_LAUNCHER) {
+        for (const auto& intrinsicDep : deps.externalIntrinsicDeps) {
+            input.insert(0, "#include <" + intrinsicDep.fileName + ">\n");
+        }
+    }
+
     // restore system headers
     for (const auto& dep : deps.topLevelDeps) {
         if (!clang::SrcMgr::isSystem(dep.fileType)) {
@@ -180,6 +193,10 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
     removeSystemHeaders(stage, deps);
 
     auto inputs = gatherTransformedFiles(stage);
+
+    if (stage.getBackend() == TargetBackend::_LAUNCHER) {
+        nullyExternalIntrinsics(inputs, stage.getSession());
+    }
 
     auto preprocessedResult = preprocesseInputs(stage, inputs);
     if (!preprocessedResult) {

@@ -30,6 +30,24 @@ tl::expected<fs::path, std::string> getIntrincisImplSourcePath(TargetBackend bac
     }
 }
 
+bool isExternalIntrinsicInclude(TranspilerSession& session, const std::string& fileName) {
+    const auto& userIntrinsic = session.getInput().userIntrinsics;
+    if (userIntrinsic.empty()) {
+        return false;
+    }
+    auto normalizedName = fileName;
+    if (util::startsWith(normalizedName, "./")) {
+        normalizedName = normalizedName.substr(2);
+    }
+    for (const auto& intrinsic : userIntrinsic) {
+        auto folderPrefix = intrinsic.filename().string();
+        if (util::startsWith(normalizedName, folderPrefix)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::optional<fs::path> getExternalInstrincisInclude(TranspilerSession& session,
                                                      const std::string& fileName) {
     const auto& userIntrinsic = session.getInput().userIntrinsics;
@@ -123,6 +141,18 @@ bool overrideExternalIntrinsic(TranspilerSession& session,
         return true;
     }
     return false;
+}
+
+void nullyExternalIntrinsics(TransformedFiles& inputs, TranspilerSession& session) {
+    const auto& intrinsics = session.getInput().userIntrinsics;
+    if (intrinsics.empty()) {
+        return;
+    }
+    for (auto& mappedFile : inputs.fileMap) {
+        if (isExternalIntrinsicInclude(session, mappedFile.first)) {
+            mappedFile.second.clear();
+        }
+    }
 }
 
 }  // namespace oklt
