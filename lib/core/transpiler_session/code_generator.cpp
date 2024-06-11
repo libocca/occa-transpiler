@@ -195,7 +195,8 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
     auto inputs = gatherTransformedFiles(stage);
 
     if (stage.getBackend() == TargetBackend::_LAUNCHER) {
-        nullyExternalIntrinsics(inputs, stage.getSession());
+        launcherExternalIntrinsics(
+            inputs, stage.getSession(), stage.getCompiler().getSourceManager());
     }
 
     auto preprocessedResult = preprocesseInputs(stage, inputs);

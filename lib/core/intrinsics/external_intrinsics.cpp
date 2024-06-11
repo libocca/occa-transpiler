@@ -25,9 +25,19 @@ tl::expected<fs::path, std::string> getIntrincisImplSourcePath(TargetBackend bac
             return intrincisPath / "openmp";
         case TargetBackend::SERIAL:
             return intrincisPath / "serial";
+        case TargetBackend::_LAUNCHER:
+            return intrincisPath / "launcher";
         default:
             return tl::make_unexpected("User intrinsic does not implement target backend");
     }
+}
+
+std::string normalizedFileName(const std::string& fileName) {
+    auto normalizedName = fileName;
+    if (util::startsWith(normalizedName, "./")) {
+        normalizedName = normalizedName.substr(2);
+    }
+    return normalizedName;
 }
 
 bool isExternalIntrinsicInclude(TranspilerSession& session, const std::string& fileName) {
@@ -35,10 +45,7 @@ bool isExternalIntrinsicInclude(TranspilerSession& session, const std::string& f
     if (userIntrinsic.empty()) {
         return false;
     }
-    auto normalizedName = fileName;
-    if (util::startsWith(normalizedName, "./")) {
-        normalizedName = normalizedName.substr(2);
-    }
+    auto normalizedName = normalizedFileName(fileName);
     for (const auto& intrinsic : userIntrinsic) {
         auto folderPrefix = intrinsic.filename().string();
         if (util::startsWith(normalizedName, folderPrefix)) {
@@ -54,9 +61,11 @@ std::optional<fs::path> getExternalInstrincisInclude(TranspilerSession& session,
     if (userIntrinsic.empty()) {
         return std::nullopt;
     }
+
+    auto normalizedName = normalizedFileName(fileName);
     for (const auto& intrinsic : userIntrinsic) {
         auto folderPrefix = intrinsic.filename().string();
-        if (util::startsWith(fileName, folderPrefix)) {
+        if (util::startsWith(normalizedName, folderPrefix)) {
             return intrinsic;
         }
     }
@@ -143,14 +152,25 @@ bool overrideExternalIntrinsic(TranspilerSession& session,
     return false;
 }
 
-void nullyExternalIntrinsics(TransformedFiles& inputs, TranspilerSession& session) {
+void launcherExternalIntrinsics(TransformedFiles& inputs,
+                                TranspilerSession& session,
+                                clang::SourceManager& sourceManager) {
     const auto& intrinsics = session.getInput().userIntrinsics;
     if (intrinsics.empty()) {
         return;
     }
+
     for (auto& mappedFile : inputs.fileMap) {
-        if (isExternalIntrinsicInclude(session, mappedFile.first)) {
-            mappedFile.second.clear();
+        auto maybeIntrinsicPath = getExternalInstrincisInclude(session, mappedFile.first);
+        if (maybeIntrinsicPath) {
+            auto intrinsicPath = maybeIntrinsicPath.value();
+            auto infoResult =
+                getExternalIntrinsicSource(TargetBackend::_LAUNCHER, intrinsicPath, sourceManager);
+            if (!infoResult) {
+                session.pushError(std::error_code(), infoResult.error());
+                return;
+            }
+            mappedFile.second = infoResult.value()->getBuffer().str();
         }
     }
 }

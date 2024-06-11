@@ -17,6 +17,8 @@ bool overrideExternalIntrinsic(TranspilerSession& session,
                                clang::OptionalFileEntryRef includedFile,
                                clang::SourceManager& sourceManager);
 
-void nullyExternalIntrinsics(TransformedFiles& inputs, TranspilerSession& session);
+void launcherExternalIntrinsics(TransformedFiles& inputs,
+                                TranspilerSession& session,
+                                clang::SourceManager& sourceManager);
 
 }  // namespace oklt
