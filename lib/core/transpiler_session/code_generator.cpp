@@ -130,7 +130,9 @@ tl::expected<std::string, Error> preprocesseInputs(SessionStage& stage,
     invocation->getFrontendOpts().Inputs.push_back(
         FrontendInputFile("okl_kernel.cpp", Language::CXX));
     invocation->getFrontendOpts().ProgramAction = frontend::PrintPreprocessedInput;
-    invocation->getTargetOpts().Triple = "i386-unknown-linux-gnu";
+    // "i386-unknown-linux-gnu";
+    invocation->getTargetOpts().Triple = stage.getCompiler().getTargetOpts().Triple;
+
 
     CompilerInstance compiler;
     compiler.setInvocation(std::move(invocation));
