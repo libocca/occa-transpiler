@@ -38,7 +38,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
     // TODO get this info from user input aka json prop file
-    std::vector<std::string> args = {"-arch=x86_64",
+    std::vector<std::string> args = {"-arch x86_64",
                                      "-std=c++17",
                                      "-Wno-extra-tokens",
                                      "-Wno-invalid-pp-token",
