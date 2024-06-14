@@ -38,6 +38,7 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
     auto fileNameStr = fileName.str();
     auto isIntrinsic = overrideExternalIntrinsic(_session, fileNameStr, file, sm);
     if (isIntrinsic) {
+        deps.externalIntrinsics.push_back(fileNameStr);
         _extIntrinsicFID = sm.getFileID(hashLoc);
     }
 

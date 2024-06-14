@@ -1,6 +1,7 @@
 #include "core/intrinsics/external_intrinsics.h"
 
 #include <clang/Frontend/CompilerInstance.h>
+#include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
 #include "util/string_utils.hpp"
 
@@ -152,27 +153,59 @@ bool overrideExternalIntrinsic(TranspilerSession& session,
     return false;
 }
 
-void launcherExternalIntrinsics(TransformedFiles& inputs,
-                                TranspilerSession& session,
-                                clang::SourceManager& sourceManager) {
+void nullyLauncherExternalIntrinsics(TransformedFiles& inputs, SessionStage& stage) {
+    if (stage.getBackend() != TargetBackend::_LAUNCHER) {
+        return;
+    }
+
+    auto& session = stage.getSession();
     const auto& intrinsics = session.getInput().userIntrinsics;
     if (intrinsics.empty()) {
         return;
     }
 
     for (auto& mappedFile : inputs.fileMap) {
-        auto maybeIntrinsicPath = getExternalInstrincisInclude(session, mappedFile.first);
-        if (maybeIntrinsicPath) {
-            auto intrinsicPath = maybeIntrinsicPath.value();
-            auto infoResult =
-                getExternalIntrinsicSource(TargetBackend::_LAUNCHER, intrinsicPath, sourceManager);
-            if (!infoResult) {
-                session.pushError(std::error_code(), infoResult.error());
-                return;
+        auto fileName = normalizedFileName(mappedFile.first);
+        for (const auto& includePath : intrinsics) {
+            auto folderPrefix = includePath.filename().string();
+            if (util::startsWith(fileName, folderPrefix)) {
+                mappedFile.second.clear();
             }
-            mappedFile.second = infoResult.value()->getBuffer().str();
         }
     }
 }
 
+void embedLauncherExternalIntrinsics(std::string& input,
+                                     const HeaderDepsInfo& info,
+                                     SessionStage& stage) {
+    auto backend = stage.getBackend();
+    if (backend != TargetBackend::_LAUNCHER) {
+        return;
+    }
+
+    const auto& usedIntrinsics = info.externalIntrinsics;
+    if (usedIntrinsics.empty()) {
+        return;
+    }
+
+    auto session = stage.getSession();
+    auto& sm = stage.getCompiler().getSourceManager();
+    for (const auto& includeIntrinsic : usedIntrinsics) {
+        auto maybeIntrinsicPath = getExternalInstrincisInclude(session, includeIntrinsic);
+        if (!maybeIntrinsicPath) {
+            std::string error = "Count not find implementation for " + includeIntrinsic;
+            session.pushError(std::error_code(), error);
+            return;
+        }
+        auto intrinsicPath = maybeIntrinsicPath.value();
+        auto infoResult = getExternalIntrinsicSource(backend, intrinsicPath, sm);
+        if (!infoResult) {
+            session.pushError(std::error_code(), infoResult.error());
+            return;
+        }
+        auto buffer = std::move(infoResult.value());
+        // INFO: make temporary buffer because pointer could be not null terminated
+        input.insert(0, buffer->getBuffer().str());
+    }
+}
 }  // namespace oklt

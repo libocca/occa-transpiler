@@ -30,6 +30,7 @@ struct HeaderDepsInfo {
     std::vector<HeaderDep> topLevelDeps;
     std::vector<std::string> backendHeaders;
     std::vector<std::string> backendNss;
+    std::vector<std::string> externalIntrinsics;
     std::vector<HeaderDep> externalIntrinsicDeps;
     bool useOklIntrinsic = false;
 };

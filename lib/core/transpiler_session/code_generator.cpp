@@ -152,9 +152,10 @@ tl::expected<std::string, Error> preprocesseInputs(SessionStage& stage,
     return preprocessedAndFused.value();
 }
 
-std::string restoreSystemAndBackendHeaders(TargetBackend backend,
+std::string restoreSystemAndBackendHeaders(SessionStage& stage,
                                            std::string& input,
                                            const HeaderDepsInfo& deps) {
+    auto backend = stage.getBackend();
     // insert backend specific headers and namespaces
     for (auto it = deps.backendNss.rbegin(); it < deps.backendNss.rend(); ++it) {
         input.insert(0, *it);
@@ -167,6 +168,8 @@ std::string restoreSystemAndBackendHeaders(TargetBackend backend,
             input.insert(0, "#include <" + *it + ">\n");
         }
     }
+
+    embedLauncherExternalIntrinsics(input, deps, stage);
 
     for (auto it = deps.backendHeaders.rbegin(); it < deps.backendHeaders.rend(); ++it) {
         input.insert(0, *it);
@@ -194,10 +197,7 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
 
     auto inputs = gatherTransformedFiles(stage);
 
-    if (stage.getBackend() == TargetBackend::_LAUNCHER) {
-        launcherExternalIntrinsics(
-            inputs, stage.getSession(), stage.getCompiler().getSourceManager());
-    }
+    nullyLauncherExternalIntrinsics(inputs, stage);
 
     auto preprocessedResult = preprocesseInputs(stage, inputs);
     if (!preprocessedResult) {
@@ -205,7 +205,7 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
     }
 
     auto finalTranspiledKernel =
-        restoreSystemAndBackendHeaders(stage.getBackend(), preprocessedResult.value(), deps);
+        restoreSystemAndBackendHeaders(stage, preprocessedResult.value(), deps);
     return finalTranspiledKernel;
 }
 }  // namespace
