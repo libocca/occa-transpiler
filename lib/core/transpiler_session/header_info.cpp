@@ -1,20 +1,19 @@
 #include "core/transpiler_session/header_info.h"
 #include "core/intrinsics/builtin_intrinsics.h"
 #include "core/intrinsics/external_intrinsics.h"
-#include "core/transpiler_session/transpiler_session.h"
+#include "core/transpiler_session/session_stage.h"
 
 namespace {}
 namespace oklt {
 
 using namespace llvm;
 
-InclusionDirectiveCallback::InclusionDirectiveCallback(TranspilerSession& session,
+InclusionDirectiveCallback::InclusionDirectiveCallback(SessionStage& stage,
                                                        HeaderDepsInfo& deps_,
                                                        clang::SourceManager& sm_)
     : deps(deps_),
       sm(sm_),
-      _session(session),
-      _isInExternalIntrinsic(false) {}
+      _stage(stage) {}
 
 void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLoc,
                                                     const clang::Token& includeTok,
@@ -36,67 +35,25 @@ void InclusionDirectiveCallback::InclusionDirective(clang::SourceLocation hashLo
     }
 
     auto fileNameStr = fileName.str();
-    auto isIntrinsic = overrideExternalIntrinsic(_session, fileNameStr, file, sm);
+    bool isIntrinsic = overrideExternalIntrinsic(_stage, deps, fileNameStr, file);
+
+    auto dep = HeaderDep{
+        .hashLoc = hashLoc,
+        .includeTok = includeTok,
+        .fileName = fileNameStr,
+        .isAngled = isAngled,
+        .filenameRange = filenameRange,
+        .file = file,
+        .searchPath = searchPath.str(),
+        .relativePath = relativePath.str(),
+        .imported = imported,
+        .fileType = fileType,
+    };
+
     if (isIntrinsic) {
-        deps.externalIntrinsics.push_back(fileNameStr);
-        _extIntrinsicFID = sm.getFileID(hashLoc);
-    }
-
-    // INFO: force instrinsic includes to be system includes
-    //       they will be removed & attached to final transpiled source
-    if (_isInExternalIntrinsic) {
-        fileType = clang::SrcMgr::CharacteristicKind::C_System;
-        deps.externalIntrinsicDeps.push_back(HeaderDep{
-            .hashLoc = hashLoc,
-            .includeTok = includeTok,
-            .fileName = fileNameStr,
-            .isAngled = isAngled,
-            .filenameRange = filenameRange,
-            .file = file,
-            .searchPath = searchPath.str(),
-            .relativePath = relativePath.str(),
-            .imported = imported,
-            .fileType = fileType,
-        });
+        deps.externalIntrinsicHeaders.push_back(std::move(dep));
     } else {
-        deps.topLevelDeps.push_back(HeaderDep{
-            .hashLoc = hashLoc,
-            .includeTok = includeTok,
-            .fileName = fileNameStr,
-            .isAngled = isAngled,
-            .filenameRange = filenameRange,
-            .file = file,
-            .searchPath = searchPath.str(),
-            .relativePath = relativePath.str(),
-            .imported = imported,
-            .fileType = fileType,
-        });
+        deps.topLevelDeps.push_back(std::move(dep));
     }
 }
-
-void InclusionDirectiveCallback::FileChanged(clang::SourceLocation Loc,
-                                             FileChangeReason Reason,
-                                             clang::SrcMgr::CharacteristicKind FileType,
-                                             clang::FileID PrevFID) {
-    if (Reason == FileChangeReason::EnterFile) {
-        if (_extIntrinsicFID.isValid()) {
-            _isInExternalIntrinsic = PrevFID == _extIntrinsicFID;
-            return;
-        }
-    }
-
-    if (Reason == FileChangeReason::ExitFile) {
-        auto thisFID = sm.getFileID(Loc);
-        if (_extIntrinsicFID.isValid() && thisFID == _extIntrinsicFID) {
-            _extIntrinsicFID = clang::FileID();
-            _isInExternalIntrinsic = false;
-            return;
-        }
-    }
-}
-
-bool InclusionDirectiveCallback::FileNotFound(clang::StringRef FileName) {
-    return _isInExternalIntrinsic;
-}
-
 }  // namespace oklt

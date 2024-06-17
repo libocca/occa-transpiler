@@ -30,16 +30,16 @@ struct HeaderDepsInfo {
     std::vector<HeaderDep> topLevelDeps;
     std::vector<std::string> backendHeaders;
     std::vector<std::string> backendNss;
-    std::vector<std::string> externalIntrinsics;
-    std::vector<HeaderDep> externalIntrinsicDeps;
+    std::vector<HeaderDep> externalIntrinsicHeaders;
+    std::map<std::string, std::string> externalIntrinsicsSources;
     bool useOklIntrinsic = false;
 };
 
-class TranspilerSession;
+class SessionStage;
 
 class InclusionDirectiveCallback : public clang::PPCallbacks {
    public:
-    InclusionDirectiveCallback(TranspilerSession& session,
+    InclusionDirectiveCallback(SessionStage& session,
                                HeaderDepsInfo& depsInfo,
                                clang::SourceManager& sm);
     void InclusionDirective(clang::SourceLocation HashLoc,
@@ -53,19 +53,10 @@ class InclusionDirectiveCallback : public clang::PPCallbacks {
                             const clang::Module* Imported,
                             clang::SrcMgr::CharacteristicKind FileType) override;
 
-    void FileChanged(clang::SourceLocation Loc,
-                     FileChangeReason Reason,
-                     clang::SrcMgr::CharacteristicKind FileType,
-                     clang::FileID PrevFID = clang::FileID()) override;
-
-    bool FileNotFound(clang::StringRef FileName) override;
-
    private:
     HeaderDepsInfo& deps;
     clang::SourceManager& sm;
-    TranspilerSession& _session;
-    bool _isInExternalIntrinsic;
-    clang::FileID _extIntrinsicFID;
+    SessionStage& _stage;
 };
 
 }  // namespace oklt

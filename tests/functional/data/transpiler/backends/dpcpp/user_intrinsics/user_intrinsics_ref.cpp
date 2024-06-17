@@ -1,5 +1,4 @@
 #include <CL/sycl.hpp>
-using namespace sycl;
 
 // INFO: from documentation
 //  isNaN
@@ -9,6 +8,8 @@ using namespace sycl;
 SYCL_EXTERNAL bool okl_is_nan(float value) {
   return __binary32_isNaN(value) == 1;
 }
+
+using namespace sycl;
 
 extern "C" [[sycl::reqd_work_group_size(1, 1, 32)]] void
 _occa_zero_nans_0(sycl::queue *queue_, sycl::nd_range<3> *range_, float *vec) {

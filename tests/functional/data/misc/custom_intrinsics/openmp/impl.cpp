@@ -1,6 +1,4 @@
-#pragma once
-
-//INFO: needed for std::isnan
+// INFO: needed for std::isnan
 #include <cmath>
 
 bool okl_is_nan(float value) {

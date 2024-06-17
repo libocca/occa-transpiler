@@ -1,7 +1,9 @@
+//INFO: needed for std::isnan
 #include <cmath>
 
-// INFO: needed for std::isnan
-bool okl_is_nan(float value) { return std::isnan(value); }
+bool okl_is_nan(float value) {
+  return std::isnan(value);
+}
 
 extern "C" void zero_nans(float *vec) {
   for (int i = 0; i < 32; ++i) {

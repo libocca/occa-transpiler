@@ -3,6 +3,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpiler_session.h"
+#include "oklt/util/io_helper.h"
 #include "util/string_utils.hpp"
 
 #include <algorithm>
@@ -73,10 +74,9 @@ std::optional<fs::path> getExternalInstrincisInclude(TranspilerSession& session,
     return std::nullopt;
 }
 
-tl::expected<std::unique_ptr<llvm::MemoryBuffer>, std::string> getExternalIntrinsicSource(
-    TargetBackend backend,
-    const fs::path& intrinsicPath,
-    clang::SourceManager& sm) {
+tl::expected<std::string, std::string> getExternalIntrinsicSource(TargetBackend backend,
+                                                                  const fs::path& intrinsicPath,
+                                                                  clang::SourceManager& sm) {
     auto implPathResult = getIntrincisImplSourcePath(backend, intrinsicPath);
     if (!implPathResult) {
         return tl::make_unexpected(implPathResult.error());
@@ -93,7 +93,7 @@ tl::expected<std::unique_ptr<llvm::MemoryBuffer>, std::string> getExternalIntrin
     }
 
     auto it = std::find_if(files.cbegin(), files.cend(), [](const fs::path& p) -> bool {
-        return p.extension().string() == std::string(".h");
+        return p.extension().string() == std::string(".cpp");
     });
 
     if (it == files.cend()) {
@@ -101,25 +101,20 @@ tl::expected<std::unique_ptr<llvm::MemoryBuffer>, std::string> getExternalIntrin
         return tl::make_unexpected(error);
     }
 
-    auto& fm = sm.getFileManager();
-    auto backendFilePath = it->string();
-    auto maybeReplacedFile = fm.getFile(backendFilePath);
-    if (!maybeReplacedFile) {
-        std::string error = "Can't open file: " + backendFilePath;
+    auto contentResult = util::readFileAsStr(*it);
+    if (!contentResult) {
+        std::string error = "Can't get memory buffer for: " + it->string();
         return tl::make_unexpected(error);
     }
-    auto maybeBuffer = fm.getBufferForFile(maybeReplacedFile.get());
-    if (!maybeBuffer) {
-        std::string error = "Can't get memory buffer for: " + backendFilePath;
-        return tl::make_unexpected(error);
-    }
-    return std::move(maybeBuffer.get());
+    return contentResult.value();
 }
 
-bool overrideExternalIntrinsic(TranspilerSession& session,
+bool overrideExternalIntrinsic(SessionStage& stage,
+                               HeaderDepsInfo& deps,
                                const std::string& includedFileName,
-                               clang::OptionalFileEntryRef includedFile,
-                               clang::SourceManager& sourceManager) {
+                               clang::OptionalFileEntryRef includedFile) {
+    auto& session = stage.getSession();
+    auto& sourceManager = stage.getCompiler().getSourceManager();
     const auto& userIntrinsics = session.getInput().userIntrinsics;
     if (!userIntrinsics.empty()) {
         auto maybeIntrinsicPath = getExternalInstrincisInclude(session, includedFileName);
@@ -127,25 +122,27 @@ bool overrideExternalIntrinsic(TranspilerSession& session,
             return false;
         }
         auto intrinsicPath = maybeIntrinsicPath.value();
-        auto infoResult =
-            getExternalIntrinsicSource(session.getInput().backend, intrinsicPath, sourceManager);
-        if (!infoResult) {
-            session.pushError(std::error_code(), infoResult.error());
+        auto intrinsicResult =
+            getExternalIntrinsicSource(stage.getBackend(), intrinsicPath, sourceManager);
+        if (!intrinsicResult) {
+            session.pushError(std::error_code(), intrinsicResult.error());
             return false;
         }
-        auto buffer = std::move(infoResult.value());
-        auto& fm = sourceManager.getFileManager();
+        deps.externalIntrinsicsSources[includedFileName] = std::move(intrinsicResult.value());
+
+        auto emptyExternalIntrinsic = MemoryBuffer::getMemBuffer("");
         if (includedFile) {
             auto fileRef = includedFile;
             const auto& fileEntry = fileRef->getFileEntry();
-            sourceManager.overrideFileContents(&fileEntry, std::move(buffer));
+            sourceManager.overrideFileContents(&fileEntry, std::move(emptyExternalIntrinsic));
         } else {
             // INFO: case when the file can be found by relative path
             //       it happens when the include path is relative to WORKING DIR path
+            auto& fm = sourceManager.getFileManager();
             auto maybeFileRef = fm.getFileRef(includedFileName);
             if (maybeFileRef) {
                 auto foundFileRef = maybeFileRef.get();
-                sourceManager.overrideFileContents(foundFileRef, std::move(buffer));
+                sourceManager.overrideFileContents(foundFileRef, std::move(emptyExternalIntrinsic));
             }
         }
         return true;
@@ -153,59 +150,28 @@ bool overrideExternalIntrinsic(TranspilerSession& session,
     return false;
 }
 
-void nullyLauncherExternalIntrinsics(TransformedFiles& inputs, SessionStage& stage) {
-    if (stage.getBackend() != TargetBackend::_LAUNCHER) {
+void updateExternalIntrinsicMap(SessionStage& stage, HeaderDepsInfo& deps) {
+    if (deps.externalIntrinsicsSources.empty()) {
         return;
     }
 
-    auto& session = stage.getSession();
-    const auto& intrinsics = session.getInput().userIntrinsics;
-    if (intrinsics.empty()) {
-        return;
-    }
-
-    for (auto& mappedFile : inputs.fileMap) {
-        auto fileName = normalizedFileName(mappedFile.first);
-        for (const auto& includePath : intrinsics) {
-            auto folderPrefix = includePath.filename().string();
-            if (util::startsWith(fileName, folderPrefix)) {
-                mappedFile.second.clear();
-            }
-        }
-    }
-}
-
-void embedLauncherExternalIntrinsics(std::string& input,
-                                     const HeaderDepsInfo& info,
-                                     SessionStage& stage) {
     auto backend = stage.getBackend();
-    if (backend != TargetBackend::_LAUNCHER) {
-        return;
-    }
-
-    const auto& usedIntrinsics = info.externalIntrinsics;
-    if (usedIntrinsics.empty()) {
-        return;
-    }
-
-    auto session = stage.getSession();
+    auto& session = stage.getSession();
     auto& sm = stage.getCompiler().getSourceManager();
-    for (const auto& includeIntrinsic : usedIntrinsics) {
-        auto maybeIntrinsicPath = getExternalInstrincisInclude(session, includeIntrinsic);
+    for (auto& mappedIntrinsic : deps.externalIntrinsicsSources) {
+        auto maybeIntrinsicPath = getExternalInstrincisInclude(session, mappedIntrinsic.first);
         if (!maybeIntrinsicPath) {
-            std::string error = "Count not find implementation for " + includeIntrinsic;
+            std::string error = "Count not find implementation for " + mappedIntrinsic.first;
             session.pushError(std::error_code(), error);
             return;
         }
         auto intrinsicPath = maybeIntrinsicPath.value();
-        auto infoResult = getExternalIntrinsicSource(backend, intrinsicPath, sm);
-        if (!infoResult) {
-            session.pushError(std::error_code(), infoResult.error());
+        auto intrinsicResult = getExternalIntrinsicSource(backend, intrinsicPath, sm);
+        if (!intrinsicResult) {
+            session.pushError(std::error_code(), intrinsicResult.error());
             return;
         }
-        auto buffer = std::move(infoResult.value());
-        // INFO: make temporary buffer because pointer could be not null terminated
-        input.insert(0, buffer->getBuffer().str());
+        mappedIntrinsic.second = std::move(intrinsicResult.value());
     }
 }
 }  // namespace oklt

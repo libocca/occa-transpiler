@@ -441,7 +441,7 @@ class Transpilation : public StageAction {
 
         auto& deps = _stage->tryEmplaceUserCtx<HeaderDepsInfo>();
         std::unique_ptr<PPCallbacks> callback = std::make_unique<InclusionDirectiveCallback>(
-            *_session, deps, compiler.getSourceManager());
+            *_stage, deps, compiler.getSourceManager());
         // setup preprocessor hook to gather all user/system includes
         compiler.getPreprocessor().addPPCallbacks(std::move(callback));
 

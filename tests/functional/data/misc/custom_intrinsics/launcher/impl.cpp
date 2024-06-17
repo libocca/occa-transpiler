@@ -1,5 +1,3 @@
-#pragma once
-
 //INFO: needs to keep the old OCCA compatibility
 // some types must be knonw for launcher
 

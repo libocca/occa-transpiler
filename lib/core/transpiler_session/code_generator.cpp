@@ -7,11 +7,11 @@
 #include "core/transpiler_session/transpiler_session.h"
 
 #include "core/intrinsics/builtin_intrinsics.h"
-#include "core/intrinsics/external_intrinsics.h"
+// #include "core/intrinsics/external_intrinsics.h"
 
 #include "core/handler_manager/handler_manager.h"
 
-#include "core/utils/attributes.h"
+// #include "core/utils/attributes.h"
 #include "core/vfs/overlay_fs.h"
 
 #include <clang/AST/Attr.h>
@@ -86,10 +86,8 @@ void removeSystemHeaders(SessionStage& stage, const HeaderDepsInfo& deps) {
         rewriter.RemoveText({dep.hashLoc, dep.filenameRange.getEnd()});
     }
 
-    for (const auto& intrinsicDep : deps.externalIntrinsicDeps) {
-        SPDLOG_TRACE(
-            "remove system include {} {}", intrinsicDep.relativePath, intrinsicDep.fileName);
-        rewriter.RemoveText({intrinsicDep.hashLoc, intrinsicDep.filenameRange.getEnd()});
+    for (const auto& intrinsic : deps.externalIntrinsicHeaders) {
+        rewriter.RemoveText({intrinsic.hashLoc, intrinsic.filenameRange.getEnd()});
     }
 }
 
@@ -169,16 +167,12 @@ std::string restoreSystemAndBackendHeaders(SessionStage& stage,
         }
     }
 
-    embedLauncherExternalIntrinsics(input, deps, stage);
+    for (const auto& externalIntrinsicSource : deps.externalIntrinsicsSources) {
+        input.insert(0, externalIntrinsicSource.second);
+    }
 
     for (auto it = deps.backendHeaders.rbegin(); it < deps.backendHeaders.rend(); ++it) {
         input.insert(0, *it);
-    }
-
-    if (backend != TargetBackend::_LAUNCHER) {
-        for (const auto& intrinsicDep : deps.externalIntrinsicDeps) {
-            input.insert(0, "#include <" + intrinsicDep.fileName + ">\n");
-        }
     }
 
     // restore system headers
@@ -196,8 +190,6 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
     removeSystemHeaders(stage, deps);
 
     auto inputs = gatherTransformedFiles(stage);
-
-    nullyLauncherExternalIntrinsics(inputs, stage);
 
     auto preprocessedResult = preprocesseInputs(stage, inputs);
     if (!preprocessedResult) {

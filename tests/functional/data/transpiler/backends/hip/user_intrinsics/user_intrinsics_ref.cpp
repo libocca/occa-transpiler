@@ -1,7 +1,8 @@
 #include <hip/hip_runtime.h>
 
 // INFO: relate to the documentation is must be supported natively
-//  https://rocm.docs.amd.com/projects/HIP/en/latest/reference/kernel_language.html#single-precision-mathematical-functions
+// https://rocm.docs.amd.com/projects/HIP/en/latest/reference/kernel_language.html#single-precision-mathematical-functions
+
 __device__ bool okl_is_nan(float value) { return isnan(value); }
 
 extern "C" __global__ __launch_bounds__(32) void _occa_zero_nans_0(float *vec) {
