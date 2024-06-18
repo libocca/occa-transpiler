@@ -32,14 +32,18 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     SPDLOG_INFO("start: {}", stageName);
     SPDLOG_TRACE("input source:\n{}\n", source);
 
-    Twine toolName = "clang";//stageName;
+    Twine toolName = "clang";  // stageName;
 
     auto cppFileNamePath = input.sourcePath;
     auto cppFileName = std::string(cppFileNamePath.replace_extension(".cpp"));
 
     // TODO get this info from user input aka json prop file
-    std::vector<std::string> args = {
-        "-std=c++17", "-Wno-extra-tokens", "-Wno-invalid-pp-token", "-fparse-all-comments", "-I.", getISystemOpt()};
+    std::vector<std::string> args = {"-std=c++17",
+                                     "-Wno-extra-tokens",
+                                     "-Wno-invalid-pp-token",
+                                     "-fparse-all-comments",
+                                     "-I.",
+                                     getISystemOpt()};
 
     for (const auto& define : input.defines) {
         std::string def = "-D" + define;
@@ -49,6 +53,14 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     for (const auto& includePath : input.includeDirectories) {
         std::string incPath = "-I" + includePath.string();
         args.push_back(std::move(incPath));
+    }
+
+    for (const auto& intrinsicPath : input.userIntrinsics) {
+        if (std::filesystem::exists(intrinsicPath)) {
+            auto parent = intrinsicPath.parent_path();
+            std::string includeInctrincisPath = "-I" + parent.string();
+            args.push_back(includeInctrincisPath);
+        }
     }
 
     auto stageAction = instantiateStageAction(stageName);
@@ -77,7 +89,7 @@ SharedTranspilerSessionResult runStageAction(StringRef stageName, SharedTranspil
     if (!warnings.empty()) {
         SPDLOG_INFO("{} warnings: ", stageName);
         for (const auto& w : warnings) {
-            SPDLOG_WARN(w.desc );
+            SPDLOG_WARN(w.desc);
         }
     }
     if (!ret || !session->getErrors().empty()) {

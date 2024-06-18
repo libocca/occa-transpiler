@@ -12,5 +12,6 @@
     "macro.json",
     "implicit.json",
     "includes.json",
-    "intrinsics.json"
+    "intrinsics.json",
+    "user_intrisics.json"
 ]

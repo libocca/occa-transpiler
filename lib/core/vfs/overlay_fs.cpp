@@ -1,5 +1,4 @@
 #include "core/vfs/overlay_fs.h"
-#include "core/transpiler_session/header_info.h"
 
 namespace oklt {
 using namespace llvm;

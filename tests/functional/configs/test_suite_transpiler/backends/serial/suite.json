@@ -8,5 +8,6 @@
   "barrier.json",
   "nobarrier.json",
   "exclusive.json",
-  "macro.json"
+  "macro.json",
+  "user_intrisics.json"
 ]

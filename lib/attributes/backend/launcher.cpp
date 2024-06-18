@@ -201,7 +201,8 @@ void collectLoops(OklLoopInfo& loopInfo, std::list<OklLoopInfo*>& out) {
 }
 #endif
 
-std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo, const oklt::Rewriter& r) {
+std::pair<LoopMetaData, LoopMetaData> splitTileAttr(OklLoopInfo& loopInfo,
+                                                    const oklt::Rewriter& r) {
     auto sz = util::parseStrTo<size_t>(loopInfo.tileSize);
 
     // Prepare first loop
@@ -358,7 +359,6 @@ HandleResult handleLauncherTranslationUnit(SessionStage& s, const TranslationUni
 
     SPDLOG_DEBUG("Handle translation unit");
 
-    //    s.getRewriter().InsertTextBefore(loc, "#include " + includeOCCA + "\n\n");
     auto& backendDeps = s.tryEmplaceUserCtx<HeaderDepsInfo>().backendHeaders;
     backendDeps.clear();
     backendDeps.emplace_back("#include " + std::string(includeOCCA) + "\n\n");
@@ -374,8 +374,8 @@ HandleResult handleLauncherKernelAttribute(SessionStage& s,
     auto& rewriter = s.getRewriter();
 
     if (!sema.getParsingKernelInfo()) {
-        return tl::make_unexpected(Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL,
-                                         "handleKernelAttribute"});
+        return tl::make_unexpected(
+            Error{OkltPipelineErrorCode::INTERNAL_ERROR_KERNEL_INFO_NULL, "handleKernelAttribute"});
     }
 
     auto kernelInfo = *sema.getParsingKernelInfo();

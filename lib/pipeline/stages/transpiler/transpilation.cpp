@@ -1,8 +1,8 @@
 #include <oklt/util/format.h>
 
-#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/diag/diag_consumer.h"
 #include "core/handler_manager/handler_manager.h"
+#include "core/intrinsics/builtin_intrinsics.h"
 #include "core/transpiler_session/attributed_type_map.h"
 #include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"
@@ -217,18 +217,19 @@ HandleResult runFromLeavesToRoot(TraversalType& traversal,
             }
             return result;
         }
-        transpilationAccumulator.push_back(TranspilationNode{.ki = ki, .li = cl, .attr = attr, .node = node});
+        transpilationAccumulator.push_back(
+            TranspilationNode{.ki = ki, .li = cl, .attr = attr, .node = node});
     }
 
     if (stage.getAttrManager().hasImplicitHandler(stage.getBackend(), node.getNodeKind())) {
-        transpilationAccumulator.push_back(TranspilationNode{
-            .ki = ki, .li = cl, .attr = nullptr, .node = node});
+        transpilationAccumulator.push_back(
+            TranspilationNode{.ki = ki, .li = cl, .attr = nullptr, .node = node});
     }
 
     return {};
 }
 
-bool isIntrinsicHeader(const clang::SourceManager& sm, const clang::SourceLocation &loc) {
+bool isIntrinsicHeader(const clang::SourceManager& sm, const clang::SourceLocation& loc) {
     auto fid = sm.getFileID(loc);
     const auto* fileEntry = sm.getFileEntryForID(fid);
     if (fileEntry) {
@@ -250,7 +251,7 @@ bool skipNode(SessionStage& s, const NodeType& n) {
         return true;
     }
 
-    if(isIntrinsicHeader(sm, loc)) {
+    if (isIntrinsicHeader(sm, loc)) {
         return true;
     }
 
@@ -416,7 +417,8 @@ class TranspilationConsumer : public clang::ASTConsumer {
             // no errors and empty output could mean that the source is already transpiled
             // so use input as output and lets the next stage try to figure out
             if (result->first.empty()) {
-                result->first = _stage.getSession().getStagedSource();;
+                result->first = _stage.getSession().getStagedSource();
+                ;
             }
             output.launcher.source = oklt::format(std::move(result->first));
             output.launcher.metadata = std::move(result->second);
@@ -438,8 +440,8 @@ class Transpilation : public StageAction {
         }
 
         auto& deps = _stage->tryEmplaceUserCtx<HeaderDepsInfo>();
-        std::unique_ptr<PPCallbacks> callback =
-            std::make_unique<InclusionDirectiveCallback>(deps, compiler.getSourceManager());
+        std::unique_ptr<PPCallbacks> callback = std::make_unique<InclusionDirectiveCallback>(
+            *_stage, deps, compiler.getSourceManager());
         // setup preprocessor hook to gather all user/system includes
         compiler.getPreprocessor().addPPCallbacks(std::move(callback));
 

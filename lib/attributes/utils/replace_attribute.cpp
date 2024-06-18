@@ -1,6 +1,5 @@
 #include "attributes/utils/replace_attribute.h"
 #include "attributes/attribute_names.h"
-#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/transpiler_session/header_info.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/utils/var_decl.h"

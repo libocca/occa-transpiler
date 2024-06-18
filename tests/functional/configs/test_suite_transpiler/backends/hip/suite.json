@@ -10,5 +10,6 @@
     "macro.json",
     "restrict.json",
     "exclusive.json",
-    "shared.json"
+    "shared.json",
+    "user_intrisics.json"
 ]

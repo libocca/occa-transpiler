@@ -14,6 +14,7 @@ constexpr const char INTRINSIC_INCLUDE_FILENAME[] = "okl_intrinsic.h";
 void addInstrinsicStub(TranspilerSession &session,
                        clang::CompilerInstance &compiler);
 
+
 std::vector<std::string> embedInstrinsic(std::string &input,
                                          TargetBackend backend);
 

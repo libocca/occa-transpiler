@@ -19,6 +19,15 @@ namespace oklt::util {
 std::string toLower(const std::string& str);
 
 /**
+ * @brief check a string starts with prefix value
+ *
+ * @param str Input string
+ * @param str Prefix string
+ * @return bool Is started with provided prefix
+ */
+bool startsWith(const std::string& value, const std::string& prefix);
+
+/**
  * @brief Convert a pointer to a string
  *
  * @param ptr Pointer to convert

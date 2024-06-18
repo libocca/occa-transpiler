@@ -1131,4 +1131,4 @@ secring.*
 *build*
 
 .vscode/
-lib/core/builtin_headers/okl_intrinsic_*
+lib/core/intrinsics/okl_intrinsic_*

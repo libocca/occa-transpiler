@@ -1,9 +1,8 @@
 #include "core/transpiler_session/session_stage.h"
 #include "core/diag/diag_consumer.h"
 #include "core/handler_manager/handler_manager.h"
+#include "core/intrinsics/external_intrinsics.h"
 #include "core/transpiler_session/transpiler_session.h"
-#include "core/builtin_headers/intrinsic_impl.h"
-#include "core/vfs/overlay_fs.h"
 
 #include <clang/AST/ParentMapContext.h>
 #include <clang/Basic/SourceManager.h>
@@ -35,6 +34,8 @@ void SessionStage::setLauncherMode() {
     _rewriter =
         std::make_unique<oklt::Rewriter>(_compiler.getSourceManager(), _compiler.getLangOpts());
     _backend = TargetBackend::_LAUNCHER;
+    auto& deps = tryEmplaceUserCtx<HeaderDepsInfo>();
+    updateExternalIntrinsicMap(*this, deps);
 }
 
 std::string SessionStage::getRewriterResultForMainFile() {
