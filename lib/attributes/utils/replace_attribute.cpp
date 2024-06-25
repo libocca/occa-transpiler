@@ -140,10 +140,15 @@ HandleResult handleCXXRecord(SessionStage& s,
 HandleResult handleTranslationUnit(SessionStage& s,
                                    const clang::TranslationUnitDecl& decl,
                                    std::vector<std::string_view> headers,
+                                   std::vector<std::string_view> defines,
                                    std::vector<std::string_view> ns) {
     SPDLOG_DEBUG("Handle translation unit");
 
     auto& deps = s.tryEmplaceUserCtx<HeaderDepsInfo>();
+    for (auto define : defines) {
+        deps.backendDefines.emplace_back(std::string(define) + "\n\n");
+    }
+    
     for (auto header : headers) {
         deps.backendHeaders.emplace_back("#include " + std::string(header) + "\n");
     }

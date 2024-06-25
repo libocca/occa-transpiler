@@ -105,6 +105,22 @@ set (OCCA_TRANSPILER_SOURCES
     attributes/backend/dpcpp/common.cpp
     attributes/backend/dpcpp/common.h
 
+    # OPENCL
+    attributes/backend/opencl/kernel.cpp
+    attributes/backend/opencl/translation_unit.cpp
+    attributes/backend/opencl/global_constant.cpp
+    attributes/backend/opencl/global_function.cpp
+    attributes/backend/opencl/outer.cpp
+    attributes/backend/opencl/inner.cpp
+    attributes/backend/opencl/tile.cpp
+    attributes/backend/opencl/shared.cpp
+    attributes/backend/opencl/restrict.cpp
+    attributes/backend/opencl/atomic.cpp
+    attributes/backend/opencl/barrier.cpp
+    attributes/backend/opencl/exclusive.cpp
+    attributes/backend/opencl/common.cpp
+    attributes/backend/opencl/common.h
+
     # Serial subset
     attributes/utils/serial_subset/empty.cpp
     attributes/utils/serial_subset/kernel.cpp

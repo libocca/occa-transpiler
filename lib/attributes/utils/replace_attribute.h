@@ -37,5 +37,6 @@ HandleResult handleCXXRecord(SessionStage&,
 HandleResult handleTranslationUnit(SessionStage& s,
                                    const clang::TranslationUnitDecl& decl,
                                    std::vector<std::string_view> headers,
+                                   std::vector<std::string_view> defines = {},
                                    std::vector<std::string_view> ns = {});
 }  // namespace oklt
