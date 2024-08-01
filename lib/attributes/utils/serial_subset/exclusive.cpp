@@ -15,9 +15,17 @@ const std::string outerLoopText = "\nint _occa_exclusive_index;";
 const std::string exlusiveExprText = "[_occa_exclusive_index]";
 }  // namespace
 
-// TODO: There is no TypeDecl handler for openmp handler
-HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, const Attr& a) {
-    SPDLOG_DEBUG("Handle [@exclusive] attribute (decl)");
+HandleResult handleExclusiveDeclAttribute(SessionStage& s, const Decl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (Decl)");
+
+    removeAttribute(s, a);
+    return {};
+}
+
+HandleResult handleExclusiveVarAttribute(SessionStage& s, const VarDecl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (VarDecl)");
+
+    removeAttribute(s, a);
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
@@ -36,9 +44,6 @@ HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, 
     }
 
     auto& rewriter = s.getRewriter();
-
-    SourceRange attrRange = getAttrFullSourceRange(a);
-    rewriter.RemoveText(attrRange);
 
     // Find max size of inner loops
     size_t sz = 0;
@@ -65,7 +70,7 @@ HandleResult handleExclusiveDeclAttribute(SessionStage& s, const VarDecl& decl, 
 }
 
 HandleResult handleExclusiveExprAttribute(SessionStage& s, const DeclRefExpr& expr, const Attr& a) {
-    SPDLOG_DEBUG("Handle [@exclusive] attribute (stmt)");
+    SPDLOG_DEBUG("Handle [@exclusive] attribute (DeclRefExpr)");
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();

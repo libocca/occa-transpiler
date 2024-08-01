@@ -22,6 +22,12 @@ namespace {
 using namespace oklt;
 using namespace clang;
 
+std::string getThreadId() {
+    std::ostringstream oss;
+    oss << std::this_thread::get_id() << std::endl;
+    return oss.str();
+}
+
 HandleResult applyTranspilationToAttrNode(SessionStage& stage,
                                           const DynTypedNode& node,
                                           const Attr& attr) {
@@ -88,11 +94,13 @@ TransformedFiles gatherTransformedFiles(SessionStage& stage) {
     // to preserve them for possible laucher generator
     auto clone = stage.getSession().getStagedHeaders();
     inputs.fileMap.merge(clone);
-    inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();
+    inputs.fileMap["okl_kernel.cpp"] = stage.getRewriterResultForMainFile();std::ostringstream oss;
+oss << std::this_thread::get_id() << std::endl;
+printf("%s\n", oss.str().c_str());
     return inputs;
 }
 
-tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
+tl::expected<std::string, Error> preprocesseInputs(SessionStage& stage,
                                                     const TransformedFiles& inputs) {
     auto invocation = std::make_shared<CompilerInvocation>();
 
@@ -101,9 +109,11 @@ tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
     ppOutOpt.ShowLineMarkers = false;
     ppOutOpt.ShowIncludeDirectives = false;
 
-    const std::string FUSED_KERNEL_FILENAME_BASE = "fused_inc_kernel";
     const auto& hash = stage.getSession().getInput().hash;
-    std::string outputFileName = FUSED_KERNEL_FILENAME_BASE + hash + ".cpp";
+    auto backendName = backendToString(stage.getBackend());
+    auto threadId = getThreadId();
+    auto outputFileName = fmt::format("preprocessed_{}_{}_{}", backendName, threadId, hash);
+    // TODO contribute to clang to support output to string
     invocation->getFrontendOpts().OutputFile = outputFileName;
 
     // set options from parent compiler
@@ -123,12 +133,6 @@ tl::expected<std::string, Error> preprocessedInputs(SessionStage& stage,
     compiler.createFileManager(makeOverlayFs(
         stage.getCompiler().getFileManager().getVirtualFileSystemPtr(), inputs.fileMap));
 
-    // XXX clang PrintPreprocessedInput action currently can provide output in two ways:
-    //     - print it into STDOUT
-    //     - write to the file
-    //     second addional option  is used to dump output into FS and then
-    //     read/delete it
-    //
     if (!ExecuteCompilerInvocation(&compiler)) {
         std::filesystem::remove(outputFileName);
         return tl::make_unexpected(Error{{}, "failed to make preprocessing okl_kernel.cpp: "});
@@ -181,7 +185,7 @@ tl::expected<std::string, Error> fuseIncludeDeps(SessionStage& stage, const Head
 
     auto inputs = gatherTransformedFiles(stage);
 
-    auto preprocessedResult = preprocessedInputs(stage, inputs);
+    auto preprocessedResult = preprocesseInputs(stage, inputs);
     if (!preprocessedResult) {
         return preprocessedResult;
     }

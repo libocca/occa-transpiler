@@ -31,9 +31,15 @@ include(cmake/CPM_0.38.6.cmake)
 include(cmake/EmbedResource.cmake)
 include(cmake/GitSubmodules.cmake)
 
-find_package(LLVM 17 REQUIRED CONFIG)
-find_package(Clang 17 REQUIRED CONFIG)
-
+# So far exactly version 17 is required
+# This is due to the fact that compatibility layer is required in transpiler code to support newer versions
+# This compatibility layer is topic for future releases
+if (NOT OCCA_LOCAL_CLANG_PATH)
+    find_package(Clang 17 REQUIRED)
+else()
+    find_package(Clang 17 PATHS ${OCCA_LOCAL_CLANG_PATH} NO_DEFAULT_PATH)
+    find_package(LLVM 17 PATHS ${OCCA_LOCAL_CLANG_PATH} NO_DEFAULT_PATH)
+endif()
 
 set(LLVM_ENABLE_RTTI ON)
 set(LLVM_REQUIRES_RTTI ON)

@@ -10,13 +10,15 @@ const std::string RESTRICT_MODIFIER = "__restrict__ ";
 }
 namespace oklt::cuda_subset {
 using namespace clang;
-HandleResult handleRestrictAttribute(SessionStage& s,
-                                     const clang::Decl& decl,
-                                     const clang::Attr& a) {
+
+HandleResult handleRestrictAttribute(SessionStage& s, const Decl& decl, const Attr& a) {
     SPDLOG_DEBUG("Handle [@restrict] attribute");
 
     removeAttribute(s, a);
-    s.getRewriter().InsertTextBefore(decl.getLocation(), RESTRICT_MODIFIER);
+    auto kind = decl.getKind();
+    if (isa<VarDecl, FieldDecl, FunctionDecl>(decl)) {
+        s.getRewriter().InsertTextBefore(decl.getLocation(), RESTRICT_MODIFIER);
+    }
 
     return {};
 }

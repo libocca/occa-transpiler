@@ -30,7 +30,7 @@ template<class T>
 inline __device__
 T okl_shfl_xor_sync(unsigned mask, T var, int laneMask, int width=warpSize)
 {
-    return __shfl_xor_sync(mask, laneMask, width);
+    return __shfl_xor_sync(mask, var, laneMask, width);
 }
 
 // Pipeline Primitives Interface

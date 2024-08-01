@@ -9,16 +9,17 @@ namespace oklt::serial_subset {
 using namespace clang;
 
 namespace {
-const std::string restrictText = "__restrict__ ";
+const std::string RESTRICT_MODIFIER = "__restrict__ ";
 }  // namespace
 
-HandleResult handleRestrictAttribute(SessionStage& s,
-                                     const clang::Decl& decl,
-                                     const clang::Attr& a) {
+HandleResult handleRestrictAttribute(SessionStage& s, const Decl& decl, const Attr& a) {
     SPDLOG_DEBUG("Handle [@restrict] attribute");
 
     removeAttribute(s, a);
-    s.getRewriter().InsertTextBefore(decl.getLocation(), restrictText);
+    if (isa<VarDecl, FieldDecl, FunctionDecl>(decl)) {
+        s.getRewriter().InsertTextBefore(decl.getLocation(), RESTRICT_MODIFIER);
+    }
+
     return {};
 }
 

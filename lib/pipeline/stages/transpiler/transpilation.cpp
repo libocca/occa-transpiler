@@ -1,20 +1,16 @@
 #include <oklt/util/format.h>
 
+#include "core/builtin_headers/intrinsic_impl.h"
 #include "core/diag/diag_consumer.h"
-#include "core/transpiler_session/session_stage.h"
-
 #include "core/handler_manager/handler_manager.h"
 #include "core/transpiler_session/attributed_type_map.h"
-
 #include "core/transpiler_session/code_generator.h"
 #include "core/transpiler_session/session_stage.h"
 #include "core/transpiler_session/transpilation_node.h"
 #include "core/transpiler_session/transpiler_session.h"
-
 #include "pipeline/core/stage_action.h"
 #include "pipeline/core/stage_action_names.h"
 #include "pipeline/core/stage_action_registry.h"
-#include "core/builtin_headers/intrinsic_impl.h"
 
 #include <clang/AST/RecursiveASTVisitor.h>
 
@@ -66,8 +62,30 @@ int getNodeType(const Stmt& s) {
     return s.getStmtClass();
 }
 
+tl::expected<std::set<const Attr*>, Error> tryGetVarAttrs(SessionStage& stage,
+                                                          const clang::VarDecl& decl) {
+    auto& attrTypeMap = stage.tryEmplaceUserCtx<AttributedTypeMap>();
+    auto& ctx = stage.getCompiler().getASTContext();
+    auto attrs = attrTypeMap.get(ctx, decl.getType());
+    auto res = std::set<const Attr*>(attrs.begin(), attrs.end());
+
+    auto ret = stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(decl));
+    if (ret) {
+        res.insert(ret.value().begin(), ret.value().end());
+    } else if (res.empty()) {
+        return tl::make_unexpected(std::move(ret.error()));
+    }
+
+    return res;
+}
+
 tl::expected<std::set<const Attr*>, Error> getNodeAttrs(SessionStage& stage, const Decl& decl) {
-    return stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(decl));
+    switch (getNodeType(decl)) {
+        case Decl::Var:
+            return tryGetVarAttrs(stage, cast<VarDecl>(decl));
+        default:
+            return stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(decl));
+    }
 }
 
 tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(SessionStage& stage,
@@ -76,6 +94,13 @@ tl::expected<std::set<const Attr*>, Error> tryGetDeclRefExprAttrs(SessionStage& 
     auto& ctx = stage.getCompiler().getASTContext();
     auto attrs = attrTypeMap.get(ctx, expr.getType());
     auto res = std::set<const Attr*>(attrs.begin(), attrs.end());
+
+    auto ret = stage.getAttrManager().checkAttrs(stage, DynTypedNode::create(expr));
+    if (ret) {
+        res.insert(ret.value().begin(), ret.value().end());
+    } else if (res.empty()) {
+        return tl::make_unexpected(std::move(ret.error()));
+    }
 
     return res;
 }
@@ -123,7 +148,7 @@ tl::expected<std::set<const Attr*>, Error> tryGetCallExprAttrs(SessionStage& sta
 }
 
 tl::expected<std::set<const Attr*>, Error> getNodeAttrs(SessionStage& stage, const Stmt& stmt) {
-    switch (stmt.getStmtClass()) {
+    switch (getNodeType(stmt)) {
         case Stmt::RecoveryExprClass:
             return tryGetRecoveryExprAttrs(stage, cast<RecoveryExpr>(stmt));
         case Stmt::CallExprClass:
@@ -384,6 +409,7 @@ class TranspilationConsumer : public clang::ASTConsumer {
 
             auto result = traversal->applyAstProcessor(tu);
             if (!result) {
+                _stage.pushError(result.error());
                 return;
             }
 

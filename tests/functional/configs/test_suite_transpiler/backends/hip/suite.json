@@ -9,5 +9,6 @@
     "nobarrier.json",
     "macro.json",
     "restrict.json",
+    "exclusive.json",
     "shared.json"
 ]

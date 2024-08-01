@@ -13,10 +13,29 @@ namespace {
 const std::string SHARED_MODIFIER = "__shared__";
 }
 namespace oklt::cuda_subset {
-HandleResult handleSharedAttribute(SessionStage& s, const clang::Decl& d, const clang::Attr& a) {
+using namespace clang;
+
+HandleResult handleSharedDeclAttribute(SessionStage& s, const Decl& var, const Attr& a) {
     SPDLOG_DEBUG("Handle [@shared] attribute");
 
-    std::string replacedAttribute = " " + SHARED_MODIFIER + " ";
+    return removeAttribute(s, a);
+}
+
+HandleResult handleSharedTypeAttribute(SessionStage& s, const TypedefDecl& decl, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    removeAttribute(s, a);
+
+    auto loc = decl.getTypeSourceInfo()->getTypeLoc().getBeginLoc();
+    s.getRewriter().InsertTextBefore(loc, SHARED_MODIFIER + " ");
+
+    return {};
+}
+
+HandleResult handleSharedVarAttribute(SessionStage& s, const VarDecl& d, const Attr& a) {
+    SPDLOG_DEBUG("Handle [@shared] attribute");
+
+    removeAttribute(s, a);
 
     auto& sema = s.tryEmplaceUserCtx<OklSemaCtx>();
     auto loopInfo = sema.getLoopInfo();
@@ -31,18 +50,12 @@ HandleResult handleSharedAttribute(SessionStage& s, const clang::Decl& d, const 
     bool isInnerChild = child && child->has(LoopType::Inner);
 
     // This diagnostic is applied only to variable declaration
-    // TODO: if var of type declared with @shared is not between @outer and @inner, error isnt risen
-    if (!clang::isa<clang::TypeDecl>(d)) {
-        if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
-            return tl::make_unexpected(
-                Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
-        }
-    } else {
-        // Push warning that can't check that typedef @shared var is between outer and inner loop
-        s.pushWarning("Using [@shared] with typedef doesn't have proper semantic validation yet");
+    if (!loopInfo || !loopInfo->has(LoopType::Outer) || !isInnerChild) {
+        return tl::make_unexpected(
+            Error{{}, "Must define [@shared] variables between [@outer] and [@inner] loops"});
     }
 
-    s.getRewriter().ReplaceText(getAttrFullSourceRange(a), replacedAttribute);
+    s.getRewriter().InsertTextBefore(d.getTypeSpecStartLoc(), SHARED_MODIFIER + " ");
 
     return defaultHandleSharedDeclAttribute(s, d, a);
 }

@@ -1,0 +1,13 @@
+[
+  {
+    "action": "normalize_and_transpile",
+    "action_config": {
+      "backend": "launcher",
+      "source": "transpiler/backends/launcher/restrict/bug_228.cpp",
+      "includes": [],
+      "defs": [],
+      "launcher": ""
+    },
+    "reference": "transpiler/backends/launcher/restrict/bug_228_ref.cpp"
+  }
+]
