@@ -21,8 +21,7 @@ rm llvm.sh
 git clone https://github.com/llvm/llvm-project.git
 cd llvm-project
 git checkout llvmorg-17.0.6
-cmake -S llvm -B build -G Ninja -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_INSTALL_PREFIX=<clang_install_prefix> -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=OFF -DLLVM_PARALLEL_LINK_JOBS=1
-ninja -C build -j$(nproc)
+cmake -S llvm -B build -G Ninja -DCMAKE_INSTALL_PREFIX=<clang_install_prefix>  -DCMAKE_BUILD_TYPE=Release -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_ENABLE_RTTI=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_DEFAULT_CMP0094=NEW -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF  -DLLVM_ENABLE_PROJECTS="polly;lld;lldb;clang-tools-extra;llvm;clang"  -DLLVM_ENABLE_RUNTIMES="libunwind;libcxx;libcxxabi;compiler-rt"  -DLLVM_REQUIRES_RTTI=ON-DLLVM_ENABLE_RTTI=ON  -DLLVM_ENABLE_EH=ON  -DLLVM_POLLY_LINK_INTO_TOOLS=ON  -DLLVM_ENABLE_Z3_SOLVER=ON
 ninja -C build install
 ```ninja -C buildininja -C buildmakemakeimakemakeimakmake
 **Note:** Replace `<clang_install_prefix>` with the desired installation path.
