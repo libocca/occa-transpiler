@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.26)
 project (occa-example VERSION 0.0.1 LANGUAGES CXX)
 
 list(APPEND CMAKE_PREFIX_PATH "$ENV{OKL_TRANSPILER}")

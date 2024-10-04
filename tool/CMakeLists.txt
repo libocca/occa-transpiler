@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.26)
 project (occa-tool VERSION 0.0.1 LANGUAGES CXX)
 
 CPMAddPackage(

@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-project(occa-transpiler VERSION 0.0.1 LANGUAGES C CXX)
+project(occa-transpiler VERSION 0.01 LANGUAGES C CXX)
 
 option(TRANSPILER_TESTS "build transpiler library tests" ON)
 option(BUILD_DOCUMENTATION "Create the HTML+PDF API documentation (requires Doxygen)" OFF)

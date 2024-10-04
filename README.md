@@ -3,7 +3,7 @@
 ## Requirements
 **Minimum:**
 - CMake v3.26 or newer
-- C++17 compiler
+- C++17 compiler(GCC 11 or newer)
 - C11 compiler
 - Clang 17(exactly)
 
@@ -20,7 +20,7 @@ rm llvm.sh
 ```
 
 #### Build clang from source
-```bash
+```NOTNObashNOO
 git clone https://github.com/llvm/llvm-project.git
 cd llvm-project
 git checkout llvmorg-17.0.6
@@ -30,7 +30,8 @@ ninja -C build install
 **Note:** Replace `<clang_install_prefix>` with the desired installation path. \
 **Note:** Replace `ninja` with `make` if you are using `make` as the build system. \
 **Note:** In case of 'make' build system, add `-j$(nproc)` with `-jN` where `N` is the number of cores you want to use for the build \
-          If your system has less than 32GB of RAM, it is recommended to use `-j1` instead of `-j$(nproc)` to avoid running out of memory on linkage step.
+          If your system has less than 32GB of RAM, it is recommended to use `-j1` instead of `-j$(nproc)` to avoid running out of memory on linkage step. \
+**Note:** Use the same version of compiler to build clang and tanspiler itself.
 
 ### Submodules
 ```bash
