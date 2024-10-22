@@ -30,6 +30,7 @@ command -v sed >/dev/null 2>&1 || { usage; echo >&2 "ERROR:I require sed but it'
 # requires gzip
 command -v gzip >/dev/null 2>&1 || { usage; echo >&2 "ERROR:I require gzip but it's not installed.  Aborting."; usage; exit 1; }
 
+export TMPDIR="/tmp/"
 export TARMODULE=`basename \`git rev-parse --show-toplevel\``
 export TARVERSION=`git describe --tags --abbrev=0 | sed 's/v//g'`
 export TARPREFIX="${TARMODULE}-${TARVERSION}"
